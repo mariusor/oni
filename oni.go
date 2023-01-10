@@ -32,11 +32,11 @@ type oni struct {
 
 type optionFn func(o *oni)
 
-func Oni(initFns ...optionFn) oni {
-	o := oni{}
+func Oni(initFns ...optionFn) *oni {
+	o := new(oni)
 
 	for _, fn := range initFns {
-		fn(&o)
+		fn(o)
 	}
 
 	if o.a.ID != "" && o.s != nil {
@@ -65,7 +65,7 @@ func Oni(initFns ...optionFn) oni {
 		if err != nil {
 			o.l.Errorf("%s", err.Error())
 		}
-		o.m = ActorRoutes(o.a)
+		o.setupRoutes()
 	}
 	return o
 }
@@ -114,7 +114,7 @@ func WithStoragePath(st string) optionFn {
 }
 
 // Run is the wrapper for starting the web-server and handling signals
-func (o oni) Run(c context.Context) error {
+func (o *oni) Run(c context.Context) error {
 	// Create a deadline to wait for.
 	ctx, cancelFn := context.WithTimeout(c, o.TimeOut)
 	defer cancelFn()
