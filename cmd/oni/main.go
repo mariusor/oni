@@ -33,7 +33,7 @@ func main() {
 	flag.Parse()
 
 	url := "https://oni.local"
-	if flag.NArg() > 0 {
+	if flag.NArg() == 1 {
 		url = flag.Arg(0)
 	}
 

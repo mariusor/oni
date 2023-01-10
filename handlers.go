@@ -93,6 +93,12 @@ func ServeItem(o oni) processing.ItemHandlerFn {
 				return nil
 			})
 		}
+		if vocab.ActorTypes.Contains(it.GetType()) {
+			vocab.OnActor(it, func(actor *vocab.Actor) error {
+				actor.PublicKey = PublicKey(actor.ID)
+				return nil
+			})
+		}
 
 		if o.l != nil {
 			o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
