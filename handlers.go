@@ -4,10 +4,22 @@ import (
 	"fmt"
 	"net/http"
 
+	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
 )
+
+// NotFound is a generic method to return an 404 error HTTP handler that
+func NotFound(l lw.Logger) errors.ErrorHandlerFn {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		st := http.StatusNotFound
+		if l != nil {
+			l.Warnf("%s %s %d %s", r.Method, irif(r), st, http.StatusText(st))
+		}
+		return errors.NotFoundf("%s not found", r.URL.Path)
+	}
+}
 
 func (o *oni) collectionRoutes(collections ...vocab.CollectionPath) {
 	actor := o.a
@@ -15,16 +27,16 @@ func (o *oni) collectionRoutes(collections ...vocab.CollectionPath) {
 	for _, collection := range collections {
 		path := base + string(collection)
 		if !ok {
-			o.m.Handle(path, http.NotFoundHandler())
+			o.m.Handle(path, NotFound(o.l))
 			continue
 		}
 		if !CollectionExists(actor, collection) {
-			o.m.Handle(path, http.NotFoundHandler())
+			o.m.Handle(path, NotFound(o.l))
 			continue
 		}
 		colPath, ok := IRIPath(collection.Of(actor.GetLink()).GetLink())
 		if !ok {
-			o.m.Handle(path, http.NotFoundHandler())
+			o.m.Handle(path, NotFound(o.l))
 			continue
 		}
 
@@ -37,7 +49,7 @@ func (o *oni) setupRoutes() {
 	o.m = http.NewServeMux()
 
 	if o.a.ID == "" {
-		o.m.Handle("/", http.NotFoundHandler())
+		o.m.Handle("/", NotFound(o.l))
 		return
 	}
 
@@ -82,7 +94,9 @@ func ServeItem(o oni) processing.ItemHandlerFn {
 			})
 		}
 
-		o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
+		if o.l != nil {
+			o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
+		}
 		return it, err
 	}
 }
@@ -105,7 +119,9 @@ func ServeCollection(o oni) processing.CollectionHandlerFn {
 			})
 		}
 
-		o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
+		if o.l != nil {
+			o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
+		}
 		return &res, err
 	}
 }
@@ -113,7 +129,9 @@ func ServeCollection(o oni) processing.CollectionHandlerFn {
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
 func ProcessActivity(o oni) processing.ActivityHandlerFn {
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
-		o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
+		if o.l != nil {
+			o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
+		}
 		return nil, http.StatusNotAcceptable, nil
 	}
 }

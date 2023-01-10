@@ -97,13 +97,14 @@ func ListenOn(listen string) optionFn {
 func emptyLogFn(_ string, _ ...any) {}
 
 func WithStoragePath(st string) optionFn {
-	conf := storage.Config{Path: st, ErrFn: emptyLogFn}
+	conf := storage.Config{Path: st, ErrFn: emptyLogFn, LogFn: emptyLogFn}
 
 	return func(o *oni) {
 		if o.l != nil {
 			conf.LogFn = o.l.Debugf
 			conf.ErrFn = o.l.Errorf
 		}
+		conf.LogFn("Using storage: %s", st)
 		st, err := storage.New(conf)
 		if err != nil {
 			conf.ErrFn("%s", err.Error())
@@ -145,17 +146,19 @@ func (o *oni) Run(c context.Context) error {
 		setters = append(setters, w.OnTCP(o.Listen))
 	}
 	logCtx := lw.Ctx{
-		"version":  Version,
-		"listenOn": o.Listen,
-		"TLS":      o.Secure,
+		"version": Version,
+		"socket":  o.Listen,
+		"TLS":     o.Secure,
 	}
 	if sockType != "" {
-		logCtx["listenOn"] = o.Listen + "[" + sockType + "]"
+		logCtx["socket"] = o.Listen + "[" + sockType + "]"
 	}
 
 	// Get start/stop functions for the http server
 	srvRun, srvStop := w.HttpServer(setters...)
-	o.l.WithContext(logCtx).Infof("Started")
+	if o.l != nil {
+		o.l.WithContext(logCtx).Infof("Started")
+	}
 
 	stopFn := func() {
 		if err := srvStop(ctx); err != nil {
@@ -165,7 +168,9 @@ func (o *oni) Run(c context.Context) error {
 
 	exit := w.RegisterSignalHandlers(w.SignalHandlers{
 		syscall.SIGHUP: func(_ chan int) {
-			o.l.Infof("SIGHUP received, reloading configuration")
+			if o.l != nil {
+				o.l.Infof("SIGHUP received, reloading configuration")
+			}
 			/*
 				if err := f.reload(); err != nil {
 					logger.Errorf("Failed: %+s", err.Error())
@@ -173,32 +178,44 @@ func (o *oni) Run(c context.Context) error {
 			*/
 		},
 		syscall.SIGINT: func(exit chan int) {
-			o.l.Infof("SIGINT received, stopping")
+			if o.l != nil {
+				o.l.Infof("SIGINT received, stopping")
+			}
 			exit <- 0
 		},
 		syscall.SIGTERM: func(exit chan int) {
-			o.l.Infof("SIGITERM received, force stopping")
+			if o.l != nil {
+				o.l.Infof("SIGITERM received, force stopping")
+			}
 			exit <- 0
 		},
 		syscall.SIGQUIT: func(exit chan int) {
-			o.l.Infof("SIGQUIT received, force stopping with core-dump")
+			if o.l != nil {
+				o.l.Infof("SIGQUIT received, force stopping with core-dump")
+			}
 			exit <- 0
 		},
 	}).Exec(func() error {
 		if err := srvRun(); err != nil {
-			o.l.Errorf(err.Error())
+			if o.l != nil {
+				o.l.Errorf(err.Error())
+			}
 			return err
 		}
 		var err error
 		// Doesn't block if no connections, but will otherwise wait until the timeout deadline.
 		go func(e error) {
-			o.l.Errorf(err.Error())
+			if o.l != nil {
+				o.l.Errorf(err.Error())
+			}
 			stopFn()
 		}(err)
 		return err
 	})
 	if exit == 0 {
-		o.l.Infof("Shutting down")
+		if o.l != nil {
+			o.l.Infof("Shutting down")
+		}
 	}
 	return nil
 }
