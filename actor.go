@@ -9,29 +9,28 @@ import (
 
 var (
 	pubB, prvB = generateRSAKeyPair()
-	privateKey = pem.EncodeToMemory(&prvB)
-	publicKey  = pem.EncodeToMemory(&pubB)
+	//privateKey = pem.EncodeToMemory(&prvB)
 
 	description = `Single actor ActivityPub service.
-Version %s`
+Version: %s`
 )
 
-func LoadActor(iri vocab.IRI, version string) vocab.Actor {
-	pub := vocab.PublicKey{}
-	if len(pubB.Bytes) > 0 {
-		pub.ID = vocab.IRI(fmt.Sprintf("%s#main", iri))
-		pub.Owner = iri
-		pub.PublicKeyPem = string(publicKey)
+func PublicKey(iri vocab.IRI) vocab.PublicKey {
+	return vocab.PublicKey{
+		ID:           vocab.IRI(fmt.Sprintf("%s#main", iri)),
+		Owner:        iri,
+		PublicKeyPem: string(pem.EncodeToMemory(&pubB)),
 	}
+}
 
+func defaultActor(iri vocab.IRI) vocab.Actor {
 	actor := vocab.Actor{
 		ID:                iri,
-		Type:              vocab.PersonType,
-		PreferredUsername: DefaultValue("marius"),
-		Summary:           DefaultValue(fmt.Sprintf(description, version)),
+		Type:              vocab.ApplicationType,
+		PreferredUsername: DefaultValue("oni"),
+		Summary:           DefaultValue(fmt.Sprintf(description, Version)),
 		Inbox:             vocab.Inbox.Of(iri),
-		Outbox:            vocab.Outbox.Of(iri),
-		PublicKey:         pub,
+		PublicKey:         PublicKey(iri),
 	}
 
 	return actor

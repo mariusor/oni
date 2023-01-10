@@ -11,7 +11,11 @@ import (
 	"git.sr.ht/~mariusor/lw"
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/processing"
+	storage "github.com/go-ap/storage-fs"
 )
+
+var Version = "(devel)"
 
 type oni struct {
 	Secure   bool
@@ -20,7 +24,8 @@ type oni struct {
 	Listen   string
 	TimeOut  time.Duration
 
-	v string
+	a vocab.Actor
+	s processing.Store
 	l lw.Logger
 	m *http.ServeMux
 }
@@ -29,8 +34,38 @@ type optionFn func(o *oni)
 
 func Oni(initFns ...optionFn) oni {
 	o := oni{}
+
 	for _, fn := range initFns {
 		fn(&o)
+	}
+
+	if o.a.ID != "" && o.s != nil {
+		it, err := o.s.Load(o.a.ID)
+		if err != nil {
+			o.l.Errorf("%s", err.Error())
+		}
+		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+			if col.Count() == 0 {
+				o.a.PublicKey = vocab.PublicKey{}
+				it, err := o.s.Save(o.a)
+				if err != nil {
+					return err
+				}
+				return vocab.OnActor(it, func(actor *vocab.Actor) error {
+					o.l.Infof("Persisted default actor")
+					o.a = *actor
+					return nil
+				})
+			}
+			return vocab.OnActor(col.First(), func(actor *vocab.Actor) error {
+				o.a = *actor
+				return nil
+			})
+		})
+		if err != nil {
+			o.l.Errorf("%s", err.Error())
+		}
+		o.m = ActorRoutes(o.a)
 	}
 	return o
 }
@@ -39,15 +74,42 @@ func WithLogger(l lw.Logger) optionFn {
 	return func(o *oni) { o.l = l }
 }
 
+func LoadActor(it vocab.Item) optionFn {
+	var a vocab.Actor
+	if vocab.IsIRI(it) {
+		a = defaultActor(it.GetLink())
+	}
+	return Actor(a)
+}
+
 func Actor(a vocab.Actor) optionFn {
 	return func(o *oni) {
-		o.m = ActorRoutes(a)
+		o.a = a
 	}
 }
 
 func ListenOn(listen string) optionFn {
 	return func(o *oni) {
 		o.Listen = listen
+	}
+}
+
+func emptyLogFn(_ string, _ ...any) {}
+
+func WithStoragePath(st string) optionFn {
+	conf := storage.Config{Path: st, ErrFn: emptyLogFn}
+
+	return func(o *oni) {
+		if o.l != nil {
+			conf.LogFn = o.l.Debugf
+			conf.ErrFn = o.l.Errorf
+		}
+		st, err := storage.New(conf)
+		if err != nil {
+			conf.ErrFn("%s", err.Error())
+			return
+		}
+		o.s = st
 	}
 }
 
@@ -83,7 +145,7 @@ func (o oni) Run(c context.Context) error {
 		setters = append(setters, w.OnTCP(o.Listen))
 	}
 	logCtx := lw.Ctx{
-		"version":  o.v,
+		"version":  Version,
 		"listenOn": o.Listen,
 		"TLS":      o.Secure,
 	}
@@ -93,11 +155,11 @@ func (o oni) Run(c context.Context) error {
 
 	// Get start/stop functions for the http server
 	srvRun, srvStop := w.HttpServer(setters...)
-	o.l.Infof("Started")
+	o.l.WithContext(logCtx).Infof("Started")
 
 	stopFn := func() {
 		if err := srvStop(ctx); err != nil {
-			o.l.Errorf(err.Error())
+			o.l.WithContext(logCtx).Errorf(err.Error())
 		}
 	}
 
