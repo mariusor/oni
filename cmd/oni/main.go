@@ -21,17 +21,9 @@ func main() {
 	iri := vocab.IRI("https://oni.local")
 	log = log.WithContext(lw.Ctx{"iri": iri})
 
-	actor := vocab.Actor{
-		ID:                iri,
-		Type:              vocab.PersonType,
-		PreferredUsername: oni.DefaultValue("marius"),
-		Inbox:             vocab.Inbox.Of(iri),
-		Outbox:            vocab.Outbox.Of(iri),
-	}
-
 	err := oni.Oni(
 		oni.WithLogger(log),
-		oni.Actor(actor),
+		oni.Actor(oni.LoadActor(iri, version)),
 		oni.ListenOn("127.0.5.1:60123"),
 	).Run(context.Background())
 
