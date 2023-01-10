@@ -34,7 +34,7 @@ func main() {
 	//   * for the path to load from(?). Should we use XDG_DATA
 	iri := vocab.IRI("https://oni.local")
 
-	log := lw.Dev().WithContext(lw.Ctx{"iri": iri})
+	log := lw.Dev()
 
 	err := oni.Oni(
 		oni.WithLogger(log),

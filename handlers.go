@@ -29,36 +29,41 @@ func (o *oni) collectionRoutes(collections ...vocab.CollectionPath) {
 		}
 
 		o.m.Handle(colPath, ServeCollection(*o))
-		o.m.Handle(colPath+"/", ServeObject(*o))
+		o.m.Handle(colPath+"/", ServeItem(*o))
 	}
 }
 
 func (o *oni) setupRoutes() {
 	o.m = http.NewServeMux()
 
-	actor := o.a
-	base, ok := IRIPath(actor.ID)
-	if !ok {
+	if o.a.ID == "" {
 		o.m.Handle("/", http.NotFoundHandler())
 		return
 	}
 
-	o.m.Handle(base, ServeActor(*o))
-	o.collectionRoutes(vocab.ActivityPubCollections...)
+	o.setupActivityPubRoutes()
+	o.setupWebfingerRoutes()
 }
 
-func ServeActor(o oni) processing.ItemHandlerFn {
-	o.a.PublicKey = PublicKey(o.a.ID)
-	return func(request *http.Request) (vocab.Item, error) {
-		return o.a, nil
+func (o *oni) setupWebfingerRoutes() {
+	o.m.HandleFunc("/.well-known/webfinger", HandleWebFinger(*o))
+	o.m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
+}
+
+func (o *oni) setupActivityPubRoutes() {
+	base, ok := IRIPath(o.a.ID)
+	if !ok {
+		return
 	}
+	o.m.Handle(base, ServeItem(*o))
+	o.collectionRoutes(vocab.ActivityPubCollections...)
 }
 
 func irif(r *http.Request) vocab.IRI {
 	return vocab.IRI(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
 }
 
-func ServeObject(o oni) processing.ItemHandlerFn {
+func ServeItem(o oni) processing.ItemHandlerFn {
 	return func(r *http.Request) (vocab.Item, error) {
 		it, err := o.s.Load(irif(r))
 		if err != nil {
@@ -76,6 +81,8 @@ func ServeObject(o oni) processing.ItemHandlerFn {
 				return nil
 			})
 		}
+
+		o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
 		return it, err
 	}
 }
@@ -97,6 +104,8 @@ func ServeCollection(o oni) processing.CollectionHandlerFn {
 				return nil
 			})
 		}
+
+		o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
 		return &res, err
 	}
 }
@@ -104,6 +113,7 @@ func ServeCollection(o oni) processing.CollectionHandlerFn {
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
 func ProcessActivity(o oni) processing.ActivityHandlerFn {
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
+		o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
 		return nil, http.StatusNotAcceptable, nil
 	}
 }
