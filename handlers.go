@@ -81,24 +81,30 @@ func irif(r *http.Request) vocab.IRI {
 
 func ServeItem(o oni) processing.ItemHandlerFn {
 	return func(r *http.Request) (vocab.Item, error) {
-		it, err := o.s.Load(irif(r))
+		iri := irif(r)
+		it, err := o.s.Load(iri)
 		if err != nil {
 			return nil, err
 		}
-		if vocab.IsNil(it) {
-			return nil, errors.NotFoundf("%s not found", r.RequestURI)
-		}
 		if vocab.IsItemCollection(it) {
 			err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-				if col.Count() == 0 {
+				if col.Count() != 1 {
 					it = nil
 					return errors.NotFoundf("%s not found", r.RequestURI)
 				}
-				if col.Count() == 1 {
-					it = col.First()
+				it = col.First()
+				if !it.GetID().Equals(iri, true) {
+					it = nil
+					return errors.NotFoundf("%s not found", r.RequestURI)
 				}
 				return nil
 			})
+			if err != nil {
+				return nil, err
+			}
+		}
+		if vocab.IsNil(it) {
+			return nil, errors.NotFoundf("%s not found", r.RequestURI)
 		}
 		if vocab.ActorTypes.Contains(it.GetType()) {
 			vocab.OnActor(it, func(actor *vocab.Actor) error {
