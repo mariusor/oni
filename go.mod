@@ -11,6 +11,7 @@ require (
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
 	github.com/go-ap/processing v0.0.0-20230111114301-8497900122f0
 	github.com/go-ap/storage-fs v0.0.0-20221219124530-29fb546e76bd
+	github.com/go-fed/httpsig v1.1.0
 	github.com/openshift/osin v1.0.1
 )
 
@@ -19,7 +20,6 @@ require (
 	github.com/go-ap/fedbox v0.0.0-20230106113510-dc43082bf3fa // indirect
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible // indirect
-	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d // indirect
