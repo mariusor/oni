@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
@@ -114,6 +115,13 @@ func ServeItem(o oni) processing.ItemHandlerFn {
 	}
 }
 
+func orderItems(col vocab.ItemCollection) vocab.ItemCollection {
+	sort.SliceStable(col, func(i, j int) bool {
+		return vocab.ItemOrderTimestamp(col[i], col[j])
+	})
+	return col
+}
+
 func ServeCollection(o oni) processing.CollectionHandlerFn {
 	return func(typ vocab.CollectionPath, r *http.Request) (vocab.CollectionInterface, error) {
 		colIRI := irif(r)
@@ -130,6 +138,14 @@ func ServeCollection(o oni) processing.CollectionHandlerFn {
 				res.OrderedItems = *col
 				return nil
 			})
+		}
+		err = vocab.OnCollectionIntf(it, func(items vocab.CollectionInterface) error {
+			res.OrderedItems = orderItems(items.Collection())
+			res.TotalItems = res.OrderedItems.Count()
+			return nil
+		})
+		if err != nil {
+			return nil, err
 		}
 
 		if o.l != nil {
