@@ -136,7 +136,7 @@ func ServeCollection(o oni) processing.CollectionHandlerFn {
 }
 
 func notAcceptable(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
-	return nil, http.StatusNotAcceptable, errors.MethodNotAllowedf("unable to ")
+	return nil, http.StatusNotAcceptable, errors.MethodNotAllowedf("current instance does not federate")
 }
 
 func validContentType(c string) bool {
@@ -196,11 +196,8 @@ func ProcessActivity(o oni) processing.ActivityHandlerFn {
 		return notAcceptable
 	}
 	processor, err := processing.New(
-		processing.WithIRI(o.a.ID),
-		processing.WithClient(c),
-		processing.WithStorage(o.s),
-		processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})),
-		processing.WithIDGenerator(GenerateID),
+		processing.WithIRI(o.a.ID), processing.WithClient(c), processing.WithStorage(o.s),
+		processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})), processing.WithIDGenerator(GenerateID),
 		processing.WithLocalIRIChecker(func(i vocab.IRI) bool {
 			return i.Contains(o.a.ID, true)
 		}),
@@ -214,6 +211,7 @@ func ProcessActivity(o oni) processing.ActivityHandlerFn {
 		var it vocab.Item
 		o.l.Infof("received req %s: %s", r.Method, r.RequestURI)
 
+		r.Header.Set("Host", "fedbox.local")
 		act, err := auth.LoadActorFromAuthHeader(r)
 		if err != nil {
 			o.l.Errorf("unable to load an authorized Actor from request: %+s", err)
@@ -238,11 +236,6 @@ func ProcessActivity(o oni) processing.ActivityHandlerFn {
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
 		processor.SetActor(&act)
-		/*
-			if keyGenerator != nil {
-				processing.WithActorKeyGenerator(keyGenerator)
-			}
-		*/
 
 		vocab.OnActivity(it, func(a *vocab.Activity) error {
 			// TODO(marius): this should be handled in the processing package

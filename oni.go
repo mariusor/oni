@@ -110,7 +110,7 @@ func WithStoragePath(st string) optionFn {
 			conf.ErrFn("%s", err.Error())
 			return
 		}
-		o.s = st
+		o.s = Storage(st)
 	}
 }
 
