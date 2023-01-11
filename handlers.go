@@ -84,6 +84,9 @@ func ServeItem(o oni) processing.ItemHandlerFn {
 		if err != nil {
 			return nil, err
 		}
+		if vocab.IsNil(it) {
+			return nil, errors.NotFoundf("%s not found", r.RequestURI)
+		}
 		if vocab.IsItemCollection(it) {
 			err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
 				if col.Count() == 0 {
