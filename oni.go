@@ -18,11 +18,12 @@ import (
 var Version = "(devel)"
 
 type oni struct {
-	Secure   bool
-	CertPath string
-	KeyPath  string
-	Listen   string
-	TimeOut  time.Duration
+	Secure      bool
+	CertPath    string
+	KeyPath     string
+	Listen      string
+	StoragePath string
+	TimeOut     time.Duration
 
 	a vocab.Actor
 	s processing.Store
@@ -100,6 +101,7 @@ func WithStoragePath(st string) optionFn {
 	conf := storage.Config{Path: st, ErrFn: emptyLogFn, LogFn: emptyLogFn}
 
 	return func(o *oni) {
+		o.StoragePath = st
 		if o.l != nil {
 			conf.LogFn = o.l.Debugf
 			conf.ErrFn = o.l.Errorf
