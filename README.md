@@ -20,5 +20,7 @@ $ go build -trimpath -a -ldflags '-s -w -extldflags "-static"' -o $(go env GOPAT
 ## Run
 
 ```sh
+# -listen can be a tcp socket, a domain socket, or the magic string "systemd"
+# The later should be used if running as a systemd service with socket activation
 $ oni -listen 127.0.4.2:4567 -path ~/.cache/oni https://social.example.com
 ```
