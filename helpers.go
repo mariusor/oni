@@ -5,6 +5,8 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
+	"time"
 
 	vocab "github.com/go-ap/activitypub"
 )
@@ -99,4 +101,36 @@ func generateRSAKeyPair() (pem.Block, pem.Block) {
 		Bytes: prvEnc,
 	}
 	return p, r
+}
+
+func GenerateID(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) {
+	typ := it.GetType()
+
+	uuid := fmt.Sprintf("%d", time.Now().UTC().UnixMilli())
+
+	if vocab.ActivityTypes.Contains(typ) || vocab.IntransitiveActivityTypes.Contains(typ) {
+		err := vocab.OnActivity(it, func(a *vocab.Activity) error {
+			author, err := vocab.ToActor(a.Actor)
+			if err != nil {
+				return err
+			}
+			a.ID = vocab.Outbox.IRI(author).AddPath(uuid)
+			return nil
+		})
+		return it.GetID(), err
+	}
+
+	id := by.GetLink().AddPath("object")
+	if it.IsLink() {
+		return id, vocab.OnLink(it, func(l *vocab.Link) error {
+			l.ID = id
+			return nil
+		})
+	}
+	return id, vocab.OnObject(it, func(o *vocab.Object) error {
+		o.ID = id
+		return nil
+	})
+
+	return id, nil
 }

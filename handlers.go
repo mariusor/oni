@@ -2,10 +2,13 @@ package oni
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/auth"
+	"github.com/go-ap/client"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
 )
@@ -40,7 +43,7 @@ func (o *oni) collectionRoutes(collections ...vocab.CollectionPath) {
 			continue
 		}
 
-		o.m.Handle(colPath, ServeCollection(*o))
+		o.m.HandleFunc(colPath, OnCollectionHandler(*o))
 		o.m.Handle(colPath+"/", ServeItem(*o))
 	}
 }
@@ -132,12 +135,136 @@ func ServeCollection(o oni) processing.CollectionHandlerFn {
 	}
 }
 
+func notAcceptable(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
+	return nil, http.StatusNotAcceptable, errors.MethodNotAllowedf("unable to ")
+}
+
+func validContentType(c string) bool {
+	if c == client.ContentTypeActivityJson || c == client.ContentTypeJsonLD {
+		return true
+	}
+
+	return false
+}
+
+var validActivityCollections = vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}
+
+func validActivityCollection(r *http.Request) bool {
+	return validActivityCollections.Contains(processing.Typer.Type(r))
+}
+
+func ValidateRequest(r *http.Request) (bool, error) {
+	contType := r.Header.Get("Content-Type")
+	if r.Method != http.MethodPost {
+		return false, errors.MethodNotAllowedf("invalid HTTP method")
+	}
+	if !validContentType(contType) {
+		return false, errors.NotValidf("invalid content type")
+	}
+	if !validActivityCollection(r) {
+		return false, errors.NotValidf("invalid collection")
+	}
+
+	return true, nil
+}
+
+func OnCollectionHandler(o oni) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodHead, http.MethodGet:
+			ServeCollection(o).ServeHTTP(w, r)
+		case http.MethodPost:
+			ProcessActivity(o).ServeHTTP(w, r)
+		}
+	}
+}
+
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
 func ProcessActivity(o oni) processing.ActivityHandlerFn {
+	c := client.New(
+		client.WithLogger(o.l.WithContext(lw.Ctx{"log": "client"})),
+		client.SkipTLSValidation(true),
+	)
+
+	auth, err := auth.New(
+		auth.WithStorage(o.s),
+		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "auth"})),
+		auth.WithClient(c),
+	)
+	if err != nil {
+		o.l.Errorf("invalid auth mw: %s", err.Error())
+		return notAcceptable
+	}
+	processor, err := processing.New(
+		processing.WithIRI(o.a.ID),
+		processing.WithClient(c),
+		processing.WithStorage(o.s),
+		processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})),
+		processing.WithIDGenerator(GenerateID),
+		processing.WithLocalIRIChecker(func(i vocab.IRI) bool {
+			return i.Contains(o.a.ID, true)
+		}),
+	)
+	if err != nil {
+		o.l.Errorf("invalid processing mw: %s", err.Error())
+		return notAcceptable
+	}
+
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
+		var it vocab.Item
+		o.l.Infof("received req %s: %s", r.Method, r.RequestURI)
+
+		act, err := auth.LoadActorFromAuthHeader(r)
+		if err != nil {
+			o.l.Errorf("unable to load an authorized Actor from request: %+s", err)
+		}
+
+		if ok, err := ValidateRequest(r); !ok {
+			o.l.Errorf("failed request validation: %+s", err)
+			return it, errors.HttpStatus(err), err
+		}
+		body, err := io.ReadAll(r.Body)
+		if err != nil || len(body) == 0 {
+			o.l.Errorf("failed loading body: %+s", err)
+			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
+		}
+		if it, err = vocab.UnmarshalJSON(body); err != nil {
+			o.l.Errorf("failed unmarshaling jsonld body: %+s", err)
+			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
+		}
+
+		if err != nil {
+			o.l.Errorf("failed initializing the Activity processor: %+s", err)
+			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
+		}
+		processor.SetActor(&act)
+		/*
+			if keyGenerator != nil {
+				processing.WithActorKeyGenerator(keyGenerator)
+			}
+		*/
+
+		vocab.OnActivity(it, func(a *vocab.Activity) error {
+			// TODO(marius): this should be handled in the processing package
+			if a.AttributedTo == nil {
+				a.AttributedTo = act
+			}
+			return nil
+		})
+		if it, err = processor.ProcessActivity(it, receivedIn); err != nil {
+			o.l.Errorf("failed processing activity: %+s", err)
+			return it, errors.HttpStatus(err), errors.Annotatef(err, "Can't save activity %s to %s", it.GetType(), receivedIn)
+		}
+
+		status := http.StatusCreated
+		if it.GetType() == vocab.DeleteType {
+			status = http.StatusGone
+		}
+
+		o.l.Infof("All OK!")
 		if o.l != nil {
 			o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
 		}
-		return nil, http.StatusNotAcceptable, nil
+		return it, status, nil
 	}
 }
