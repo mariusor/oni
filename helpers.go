@@ -80,15 +80,11 @@ func CollectionExists(ob vocab.Item, col vocab.CollectionPath) bool {
 	return has
 }
 
-func generateRSAKeyPair() (pem.Block, pem.Block) {
-	keyPrv, _ := rsa.GenerateKey(rand.Reader, 256)
+var prvKey, _ = rsa.GenerateKey(rand.Reader, 2048)
 
-	keyPub := keyPrv.PublicKey
-	pubEnc, err := x509.MarshalPKIXPublicKey(&keyPub)
-	if err != nil {
-		panic(err)
-	}
-	prvEnc, err := x509.MarshalPKCS8PrivateKey(keyPrv)
+func pemEncodePublicKey(prvKey *rsa.PrivateKey) string {
+	pubKey := prvKey.PublicKey
+	pubEnc, err := x509.MarshalPKIXPublicKey(&pubKey)
 	if err != nil {
 		panic(err)
 	}
@@ -96,11 +92,8 @@ func generateRSAKeyPair() (pem.Block, pem.Block) {
 		Type:  "PUBLIC KEY",
 		Bytes: pubEnc,
 	}
-	r := pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: prvEnc,
-	}
-	return p, r
+
+	return string(pem.EncodeToMemory(&p))
 }
 
 func GenerateID(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) {
