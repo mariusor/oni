@@ -1,6 +1,7 @@
 package oni
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -182,24 +183,35 @@ func OnCollectionHandler(o oni) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func acceptFollows(o oni, f vocab.Follow) error {
+	accept := new(vocab.Activity)
+	accept.Type = vocab.AcceptType
+	accept.CC = append(accept.CC, vocab.PublicNS)
+	accept.Actor = f.Actor.GetLink()
+	accept.InReplyTo = f.GetID()
+	accept.Object = f.GetID()
+	o.c.SignFn(s2sSignFn(o))
+
+	_, _, err := o.c.ToOutbox(context.TODO(), accept)
+	if err != nil {
+		o.l.Errorf("Failed accepting follow: %+s", err)
+	}
+	return err
+}
+
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
 func ProcessActivity(o oni) processing.ActivityHandlerFn {
-	c := client.New(
-		client.WithLogger(o.l.WithContext(lw.Ctx{"log": "client"})),
-		client.SkipTLSValidation(true),
-	)
-
 	auth, err := auth.New(
 		auth.WithStorage(o.s),
 		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "auth"})),
-		auth.WithClient(c),
+		auth.WithClient(o.c),
 	)
 	if err != nil {
 		o.l.Errorf("invalid auth mw: %s", err.Error())
 		return notAcceptable
 	}
 	processor, err := processing.New(
-		processing.WithIRI(o.a.ID), processing.WithClient(c), processing.WithStorage(o.s),
+		processing.WithIRI(o.a.ID), processing.WithClient(o.c), processing.WithStorage(o.s),
 		processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})), processing.WithIDGenerator(GenerateID),
 		processing.WithLocalIRIChecker(func(i vocab.IRI) bool {
 			return i.Contains(o.a.ID, true)
@@ -251,12 +263,20 @@ func ProcessActivity(o oni) processing.ActivityHandlerFn {
 			return it, errors.HttpStatus(err), errors.Annotatef(err, "Can't save activity %s to %s", it.GetType(), receivedIn)
 		}
 
+		if it.GetType() == vocab.FollowType {
+			err := vocab.OnActivity(it, func(a *vocab.Activity) error {
+				return acceptFollows(o, *a)
+			})
+			if err != nil {
+				o.l.Errorf("unable to automatically accept follow: %+s", err)
+			}
+		}
+
 		status := http.StatusCreated
 		if it.GetType() == vocab.DeleteType {
 			status = http.StatusGone
 		}
 
-		o.l.Infof("All OK!")
 		if o.l != nil {
 			o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
 		}

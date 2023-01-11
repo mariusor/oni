@@ -11,6 +11,7 @@ import (
 	"git.sr.ht/~mariusor/lw"
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/client"
 	"github.com/go-ap/processing"
 	storage "github.com/go-ap/storage-fs"
 )
@@ -25,6 +26,7 @@ type oni struct {
 	StoragePath string
 	TimeOut     time.Duration
 
+	c *client.C
 	a vocab.Actor
 	s processing.Store
 	l lw.Logger
@@ -39,6 +41,11 @@ func Oni(initFns ...optionFn) *oni {
 	for _, fn := range initFns {
 		fn(o)
 	}
+
+	o.c = client.New(
+		client.WithLogger(o.l.WithContext(lw.Ctx{"log": "client"})),
+		client.SkipTLSValidation(true),
+	)
 
 	if o.a.ID != "" && o.s != nil {
 		it, err := o.s.Load(o.a.ID)
