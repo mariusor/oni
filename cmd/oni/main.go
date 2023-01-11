@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"oni"
 	"os"
 	"path/filepath"
@@ -40,13 +41,15 @@ func main() {
 	if build, ok := debug.ReadBuildInfo(); ok && build.Main.Version != "" {
 		oni.Version = build.Main.Version
 	}
-
-	// TODO(marius): add command line arguments for:
-	//   * for the path to load from(?). Should we use XDG_DATA
-
 	log := lw.Dev()
 
-	err := oni.Oni(
+	err := mkDirIfNotExists(path)
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		os.Exit(1)
+	}
+
+	err = oni.Oni(
 		oni.WithLogger(log),
 		oni.LoadActor(vocab.IRI(url)),
 		oni.WithStoragePath(path),
@@ -57,4 +60,25 @@ func main() {
 		log.Errorf("%s", err.Error())
 		os.Exit(1)
 	}
+}
+
+func mkDirIfNotExists(p string) (err error) {
+	p, err = filepath.Abs(p)
+	if err != nil {
+		return err
+	}
+	fi, err := os.Stat(p)
+	if err != nil && os.IsNotExist(err) {
+		if err = os.MkdirAll(p, os.ModeDir|os.ModePerm|0700); err != nil {
+			return err
+		}
+		fi, err = os.Stat(p)
+	}
+	if err != nil {
+		return err
+	}
+	if !fi.IsDir() {
+		return fmt.Errorf("path exists, and is not a folder %s", p)
+	}
+	return nil
 }

@@ -19,9 +19,6 @@ import (
 var Version = "(devel)"
 
 type oni struct {
-	Secure      bool
-	CertPath    string
-	KeyPath     string
 	Listen      string
 	StoragePath string
 	TimeOut     time.Duration
@@ -132,14 +129,6 @@ func (o *oni) Run(c context.Context) error {
 	sockType := ""
 	setters := []w.SetFn{w.Handler(o.m)}
 
-	if o.Secure {
-		if len(o.CertPath)+len(o.KeyPath) > 0 {
-			setters = append(setters, w.WithTLSCert(o.CertPath, o.KeyPath))
-		} else {
-			o.Secure = false
-		}
-	}
-
 	if o.Listen == "systemd" {
 		sockType = "Systemd"
 		setters = append(setters, w.OnSystemd())
@@ -157,7 +146,6 @@ func (o *oni) Run(c context.Context) error {
 	logCtx := lw.Ctx{
 		"version": Version,
 		"socket":  o.Listen,
-		"TLS":     o.Secure,
 	}
 	if sockType != "" {
 		logCtx["socket"] = o.Listen + "[" + sockType + "]"
