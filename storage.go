@@ -9,6 +9,7 @@ import (
 
 type localstorage interface {
 	processing.Store
+	processing.CollectionStore
 	osin.Storage
 }
 type store struct {

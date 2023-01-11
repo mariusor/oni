@@ -1,12 +1,9 @@
 package oni
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-	"time"
 
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
@@ -217,7 +214,6 @@ func ProcessActivity(o oni) processing.ActivityHandlerFn {
 		var it vocab.Item
 		o.l.Infof("received req %s: %s", r.Method, r.RequestURI)
 
-		r.Header.Set("Host", "fedbox.local")
 		act, err := auth.LoadActorFromAuthHeader(r)
 		if err != nil {
 			o.l.Errorf("unable to load an authorized Actor from request: %+s", err)
@@ -228,15 +224,6 @@ func ProcessActivity(o oni) processing.ActivityHandlerFn {
 			return it, errors.HttpStatus(err), err
 		}
 		body, err := io.ReadAll(r.Body)
-		defer func() {
-			dir := o.StoragePath
-			fn := fmt.Sprintf("%s/%s.req", dir, time.Now().UTC().Format(time.RFC3339))
-			all := bytes.Buffer{}
-			r.Header.Write(&all)
-			all.Write([]byte{'\n', '\n'})
-			all.Write(body)
-			os.WriteFile(fn, all.Bytes(), 0660)
-		}()
 		if err != nil || len(body) == 0 {
 			o.l.Errorf("failed loading body: %+s", err)
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
