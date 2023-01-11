@@ -1,7 +1,6 @@
 package oni
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -200,15 +199,16 @@ func OnCollectionHandler(o oni) func(w http.ResponseWriter, r *http.Request) {
 }
 
 func acceptFollows(o oni, f vocab.Follow) error {
-	accept := new(vocab.Activity)
+	accept := new(vocab.Accept)
 	accept.Type = vocab.AcceptType
 	accept.CC = append(accept.CC, vocab.PublicNS)
-	accept.Actor = f.Actor.GetLink()
+	accept.Actor = o.a
 	accept.InReplyTo = f.GetID()
 	accept.Object = f.GetID()
+
 	o.c.SignFn(s2sSignFn(o))
 
-	_, _, err := o.c.ToOutbox(context.TODO(), accept)
+	_, _, err := o.c.ToCollection(vocab.Inbox.IRI(f.Actor), accept)
 	if err != nil {
 		o.l.Errorf("Failed accepting follow: %+s", err)
 	}
