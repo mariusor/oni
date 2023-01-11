@@ -20,6 +20,5 @@ $ go build -trimpath -a -ldflags '-s -w -extldflags "-static"' -o $(go env GOPAT
 ## Run
 
 ```sh
-$ mkdir ~/.cache/oni
 $ oni -listen 127.0.4.2:4567 -path ~/.cache/oni https://social.example.com
 ```
