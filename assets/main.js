@@ -31,6 +31,17 @@
         return img
     }
 
+    function fragmentFromContent(html) {
+        let frag = document.createDocumentFragment(),
+            tmp = document.createElement('body'), child;
+
+        tmp.innerHTML = html;
+        while (child = tmp.firstChild) {
+            frag.appendChild(child);
+        }
+        return frag;
+    }
+
     function buildPerson(it) {
         const object = document.createElement('main');
         if (typeof it.type != 'undefined') {
@@ -63,13 +74,13 @@
 
         if (typeof it.summary != 'undefined') {
             const summaryElement = document.createElement('span');
-            summaryElement.textContent = it.summary;
+            summaryElement.append(fragmentFromContent(it.summary));
             object.appendChild(summaryElement);
         }
 
         if (typeof it.content != 'undefined') {
             const contentElement = document.createElement('span');
-            contentElement.textContent = it.content;
+            contentElement.append(fragmentFromContent(it.content));
             object.appendChild(contentElement);
         }
 
