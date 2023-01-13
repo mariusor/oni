@@ -1,0 +1,28 @@
+body {
+}
+.person {
+    background-clip: padding-box;
+    overflow-x: hidden;
+    background-size: cover;
+    padding: 1em;
+    border-color: black;
+    border-width: 2px;
+    border-style: solid;
+}
+.person img {
+    max-width: 140px;
+    border-color: black;
+    border-width: 2px;
+    border-style: solid;
+    float: left;
+    margin: 0 1em 1em 0;
+}
+.person ul {
+    list-style: none;
+    clear: both;
+    padding: 0;
+}
+.person ul li {
+    display: inline-block;
+    margin-right: 1em;
+}

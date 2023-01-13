@@ -2,6 +2,7 @@ package oni
 
 import (
 	"crypto"
+
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/processing"
 	"github.com/openshift/osin"

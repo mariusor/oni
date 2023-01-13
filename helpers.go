@@ -1,11 +1,14 @@
 package oni
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"net/http"
 	"time"
 
 	vocab "github.com/go-ap/activitypub"
@@ -126,4 +129,47 @@ func GenerateID(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) 
 	})
 
 	return id, nil
+}
+
+func getBinData(nlVal vocab.NaturalLanguageValues) (string, []byte, error) {
+	val := nlVal.First().Value
+
+	contentType := "application/octet-stream"
+	colPos := bytes.Index(val, []byte{':'})
+	if colPos < 0 {
+		colPos = 0
+	}
+
+	semicolPos := bytes.Index(val, []byte{';'})
+	if semicolPos > 0 {
+		contentType = string(val[colPos+1 : semicolPos])
+	}
+	comPos := bytes.Index(val, []byte{','})
+	decType := val[semicolPos+1 : comPos]
+
+	var raw []byte
+	switch string(decType) {
+	case "base64":
+		data := val[comPos+1:]
+
+		dec := base64.RawStdEncoding
+		raw = make([]byte, dec.DecodedLen(len(data)))
+		cnt, err := dec.Decode(raw, data)
+		if err != nil {
+			return contentType, raw, err
+		}
+		if cnt != len(data) {
+			// something wrong
+		}
+	}
+
+	return contentType, raw, nil
+}
+
+func isData(nlVal vocab.NaturalLanguageValues) bool {
+	return nlVal != nil && bytes.Equal(nlVal.First().Value[:4], []byte("data"))
+}
+
+func irif(r *http.Request) vocab.IRI {
+	return vocab.IRI(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
 }
