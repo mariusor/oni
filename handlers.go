@@ -5,7 +5,9 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
@@ -117,7 +119,6 @@ func ServeBinData(it vocab.Item) http.HandlerFunc {
 		return errors.HandleError(err).ServeHTTP
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(raw)))
 		w.Write(raw)
@@ -129,8 +130,10 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 	if err != nil {
 		return nil, err
 	}
+	tryInActivity, prop := propNameInIRI(iri)
 	if vocab.IsItemCollection(it) {
 		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+			tryInActivity = tryInActivity && col.Count() == 0
 			if col.Count() != 1 {
 				it = nil
 				return errors.NotFoundf("%s not found", iri)
@@ -142,11 +145,55 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 			}
 			return nil
 		})
-		if err != nil {
-			return nil, err
+	}
+	if !tryInActivity {
+		return it, err
+	}
+	u, _ := iri.URL()
+	u.Path = filepath.Clean(filepath.Join(u.Path, "../"))
+	act, err := s.Load(vocab.IRI(u.String()))
+	if err != nil {
+		return nil, err
+	}
+	if vocab.ActivityTypes.Contains(act.GetType()) {
+		err = vocab.OnActivity(act, func(act *vocab.Activity) error {
+			if prop == "object" {
+				it = act.Object
+			}
+			if prop == "actor" {
+				it = act.Actor
+			}
+			return nil
+		})
+	} else {
+		err = vocab.OnObject(act, func(ob *vocab.Object) error {
+			if prop == "icon" {
+				it = ob.Icon
+			}
+			if prop == "image" {
+				it = ob.Image
+			}
+			return nil
+		})
+	}
+	if vocab.IsIRI(it) {
+		return loadItemFromStorage(s, it.GetLink())
+	}
+
+	return it, err
+}
+
+var propertiesThatMightBeObjects = []string{"object", "actor", "target", "icon", "image"}
+
+func propNameInIRI(iri vocab.IRI) (bool, string) {
+	u, _ := iri.URL()
+	base := filepath.Base(u.Path)
+	for _, prop := range propertiesThatMightBeObjects {
+		if strings.ToLower(prop) == strings.ToLower(base) {
+			return true, prop
 		}
 	}
-	return it, nil
+	return false, ""
 }
 
 func ServeActivityPub(it vocab.Item) http.HandlerFunc {
@@ -188,39 +235,6 @@ func orderItems(col vocab.ItemCollection) vocab.ItemCollection {
 		return vocab.ItemOrderTimestamp(col[i], col[j])
 	})
 	return col
-}
-
-func ServeCollection(o oni) processing.CollectionHandlerFn {
-	return func(typ vocab.CollectionPath, r *http.Request) (vocab.CollectionInterface, error) {
-		colIRI := irif(r)
-		res := vocab.OrderedCollectionPage{
-			ID:   colIRI,
-			Type: vocab.OrderedCollectionPageType,
-		}
-		it, err := o.s.Load(colIRI)
-		if err != nil {
-			return nil, err
-		}
-		if vocab.IsItemCollection(it) {
-			err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-				res.OrderedItems = *col
-				return nil
-			})
-		}
-		err = vocab.OnCollectionIntf(it, func(items vocab.CollectionInterface) error {
-			res.OrderedItems = orderItems(items.Collection())
-			res.TotalItems = res.OrderedItems.Count()
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-
-		if o.l != nil {
-			o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
-		}
-		return &res, err
-	}
 }
 
 func notAcceptable(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
