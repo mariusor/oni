@@ -1,7 +1,45 @@
 'use strict';
 
-(function() {
-    const $html = document.getRootNode().lastChild;
+this.Element && function (a) {
+    a.matchesSelector = a.matchesSelector || a.mozMatchesSelector || a.msMatchesSelector || a.oMatchesSelector || a.webkitMatchesSelector || function (b) {
+        let c = this, e = (c.parentNode || c.document).querySelectorAll(b), f = -1;
+        for (; e[++f] && e[f] != c;) ;
+        return !!e[f]
+    }, a.matches = a.matches || a.matchesSelector
+}(Element.prototype);
+this.Element && function (a) {
+    a.closest = a.closest || function (b) {
+        let c = this;
+        for (; c.matches && !c.matches(b);) c = c.parentNode;
+        return c.matches ? c : null
+    }
+}(Element.prototype);
+let addEvent = function (a, b, c) {
+    a.attachEvent ? a.attachEvent('on' + b, c) : a.addEventListener(b, c)
+};
+let removeEvent = function (a, b, c) {
+    a.detachEvent ? a.detachEvent('on' + b, c) : a.removeEventListener(b, c)
+};
+let OnReady = function (a) {
+    'loading' == document.readyState ? document.addEventListener && document.addEventListener('DOMContentLoaded', a) : a.call()
+};
+let $ = function (a, b) {
+    return (b || document).querySelectorAll(a)
+};
+let $frag = function (html) {
+    let frag = document.createDocumentFragment();
+    let tmp = document.createElement('body');
+    let child;
+
+    tmp.innerHTML = html;
+    while (child = tmp.firstChild) {
+        frag.appendChild(child);
+    }
+    return frag;
+}
+
+OnReady(function() {
+    const $html = $("html")[0];
     const $body = $html.lastChild;
 
     const defaultBackground = $body.style.backgroundColor;
@@ -18,7 +56,7 @@
         } else if (typeof object.errors == 'array') {
             object.errors.forEach(err);
         }
-        document.getElementById('main').appendChild(errors);
+        $body.appendChild(errors);
     }
 
     function rgb(r, g, b) {
@@ -29,17 +67,6 @@
         const img = document.createElement('img');
         img.src = url;
         return img
-    }
-
-    function fragmentFromContent(html) {
-        let frag = document.createDocumentFragment(),
-            tmp = document.createElement('body'), child;
-
-        tmp.innerHTML = html;
-        while (child = tmp.firstChild) {
-            frag.appendChild(child);
-        }
-        return frag;
     }
 
     function buildPerson(it) {
@@ -74,13 +101,13 @@
 
         if (typeof it.summary != 'undefined') {
             const summaryElement = document.createElement('span');
-            summaryElement.append(fragmentFromContent(it.summary));
+            summaryElement.append($frag(it.summary));
             object.appendChild(summaryElement);
         }
 
         if (typeof it.content != 'undefined') {
             const contentElement = document.createElement('span');
-            contentElement.append(fragmentFromContent(it.content));
+            contentElement.append($frag(it.content));
             object.appendChild(contentElement);
         }
 
@@ -170,4 +197,4 @@
             response.json().then(renderActivityPubObject);
         })
         .catch( console.error );
-})();
+});
