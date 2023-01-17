@@ -146,10 +146,10 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 			return nil
 		})
 	}
-	if !tryInActivity {
+	u, _ := iri.URL()
+	if !tryInActivity || u.Path == "/" {
 		return it, err
 	}
-	u, _ := iri.URL()
 	u.Path = filepath.Clean(filepath.Join(u.Path, "../"))
 	actIRI := vocab.IRI(u.String())
 	if iri.Equals(actIRI, true) {
@@ -183,7 +183,7 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 			return nil
 		})
 	}
-	if vocab.IsIRI(it) {
+	if vocab.IsIRI(it) && !it.GetLink().Equals(iri, true) {
 		return loadItemFromStorage(s, it.GetLink())
 	}
 
