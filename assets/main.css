@@ -1,4 +1,5 @@
 body {
+    margin: 0 0 auto 0;
 }
 
 .person {
@@ -28,4 +29,7 @@ body {
 .person ul li {
     display: inline-block;
     margin-right: 1em;
+}
+.person .content {
+    margin: 0 1em;
 }

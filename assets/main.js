@@ -74,6 +74,7 @@ OnReady(function() {
         }
 
         let details = document.createElement('article');
+        details.className = 'details';
         if (typeof it.image != 'undefined') {
             let imageSrc;
             if (typeof it.image == 'object') {
@@ -82,10 +83,12 @@ OnReady(function() {
             if (typeof it.image == 'string') {
                 imageSrc = it.image;
             }
-            details.style.backgroundImage = `linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2)), url(${imageSrc})`;
+            details.style.backgroundImage = `linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 1)), url(${imageSrc})`;
+            const img = document.createElement('img');
+            img.src = imageSrc;
+            console.debug(getAverageImageRGB(img));
         }
 
-        details.className = 'details';
         if (typeof it.icon != 'undefined') {
             let iconSrc;
             if (typeof it.icon == 'object') {
@@ -103,6 +106,8 @@ OnReady(function() {
             const nameElement = document.createElement('h2');
             nameElement.textContent = it.preferredUsername;
             details.appendChild(nameElement);
+
+            $html.querySelector("title").textContent += `: ${it.preferredUsername}`;
         }
 
         if (typeof it.summary != 'undefined') {
@@ -118,7 +123,6 @@ OnReady(function() {
                 let aliases = document.createElement('ul');
                 aliases.style.display = 'inline';
                 it.url.forEach((url) => {
-                    if (url == window.location.href || url + "/" == window.location.href) return;
                     let alias = document.createElement('li');
                     let link = document.createElement('a');
                     link.textContent = url
@@ -138,7 +142,8 @@ OnReady(function() {
         object.appendChild(details);
 
         if (typeof it.content != 'undefined') {
-            const contentElement = document.createElement('span');
+            const contentElement = document.createElement('article');
+            contentElement.className = "content";
             contentElement.append($frag(it.content));
             object.appendChild(contentElement);
         }
