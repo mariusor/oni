@@ -36,7 +36,7 @@ let $frag = function (html) {
         frag.appendChild(child);
     }
     return frag;
-}
+};
 
 OnReady(function() {
     const $html = $("html")[0];
@@ -51,10 +51,10 @@ OnReady(function() {
             error.textContent = `${err.status}: ${err.message}`;
             errors.appendChild(error);
         }
-        if (typeof object.errors == 'object') {
-            err(object.errors);
-        } else if (typeof object.errors == 'array') {
+        if (Array.isArray(object.errors)) {
             object.errors.forEach(err);
+        } else {
+            err(object.errors);
         }
         $body.appendChild(errors);
     }
@@ -103,6 +103,33 @@ OnReady(function() {
             const summaryElement = document.createElement('span');
             summaryElement.append($frag(it.summary));
             object.appendChild(summaryElement);
+        }
+
+        if (typeof it.url != 'undefined') {
+            let aliasBox = document.createElement('div');
+
+            if (Array.isArray(it.url)) {
+                aliasBox.textContent = 'Aliases: ';
+                let aliases = document.createElement('ul');
+                aliases.style.display = 'inline';
+                it.url.forEach((url) => {
+                    if (url == window.location.href || url + "/" == window.location.href) return;
+                    let alias = document.createElement('li');
+                    let link = document.createElement('a');
+                    link.textContent = url
+                    link.href = url;
+                    link.style.display = 'inline';
+                    alias.appendChild(link);
+                    aliases.appendChild(alias);
+                });
+                aliasBox.appendChild(aliases);
+            } else {
+                aliasBox.textContent = 'Alias: ';
+                let alias = document.createElement('a');
+                alias.href = it.url;
+                aliasBox.appendChild(alias);
+            }
+            object.appendChild(aliasBox);
         }
 
         if (typeof it.content != 'undefined') {
