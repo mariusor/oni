@@ -326,6 +326,12 @@ func OnItemHandler(o oni) func(w http.ResponseWriter, r *http.Request) {
 
 		iri := irif(r)
 		it, err := loadItemFromStorage(o.s, iri)
+		if vocab.ActorTypes.Contains(it.GetType()) && it.GetID().Equals(o.a.ID, true) {
+			vocab.OnActor(it, func(act *vocab.Actor) error {
+				act.PublicKey = PublicKey(act.ID)
+				return nil
+			})
+		}
 		if err != nil {
 			errors.HandleError(err).ServeHTTP(w, r)
 			return
