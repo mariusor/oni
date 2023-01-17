@@ -79,19 +79,21 @@ OnReady(function() {
     const $html = $("html")[0];
     const $body = $html.lastChild;
 
-    function showErrors(object) {
-        const errors = document.createElement('div');
-        const err = (err) => {
-            const error = document.createElement('p');
-            error.textContent = `${err.status}: ${err.message}`;
-            errors.appendChild(error);
+    function showErrors(parent) {
+        return (object) => {
+            const errors = document.createElement('div');
+            const err = (err) => {
+                const error = document.createElement('p');
+                error.textContent = `${err.status}: ${err.message}`;
+                errors.appendChild(error);
+            }
+            if (Array.isArray(object.errors)) {
+                object.errors.forEach(err);
+            } else {
+                err(object.errors);
+            }
+            (parent || $body).appendChild(errors);
         }
-        if (Array.isArray(object.errors)) {
-            object.errors.forEach(err);
-        } else {
-            err(object.errors);
-        }
-        $body.appendChild(errors);
     }
 
     function rgb(r, g, b) {
@@ -104,7 +106,7 @@ OnReady(function() {
         return img
     }
 
-    function buildPerson(it) {
+    function buildPerson(it, parent) {
         const object = document.createElement('main');
         if (typeof it.type != 'undefined') {
             object.className = it.type.toLowerCase();
@@ -185,7 +187,7 @@ OnReady(function() {
             object.appendChild(contentElement);
         }
 
-        const collectionsBox = document.createElement('div');
+        const collectionsBox = document.createElement('nav');
         const collectionsElement = document.createElement('ul');
         if (typeof it.inbox != 'undefined') {
             // TODO(marius): this needs to be shown only when authenticated as the Actor
@@ -233,10 +235,10 @@ OnReady(function() {
             collectionsBox.appendChild(collectionsElement);
             details.appendChild(collectionsBox);
         }
-        return object;
+        (parent || $body).appendChild(object);
     }
 
-    function buildCollection(it) {
+    function buildCollection(it, parent) {
         let tag = 'ul';
         let items;
         if (it.type == 'OrderedCollection' || it.type == 'OrderedCollectionPage') {
@@ -247,50 +249,107 @@ OnReady(function() {
         }
         const object = document.createElement(tag);
         items.forEach(function (it, index) {
-            const itLinkElement = document.createElement('a');
-            itLinkElement.href = it.id;
-            itLinkElement.textContent = it.id;
-
+            if (typeof it.type == 'undefined') {
+                console.error(`collection object at index ${index} is not a valid ActivityPub object`, it);
+                return;
+            }
             const el = document.createElement('li');
-            el.appendChild(itLinkElement)
+            buildActivityPubElement(it, el)
 
             object.appendChild(el);
         });
-        return object;
+        (parent || $body).appendChild(object);
     }
 
-    function buildObject(it) {
-        const object = document.createElement('main');
-        object.textContent = it.type;
-        return object;
+    function fetchIRI (iri, parent) {
+        const headers = {'Accept': 'application/activity+json'};
+        fetch(iri, { headers })
+            .then((response) => {
+                if (!response.ok) {
+                    response.json().then(showErrors(parent)).catch(console.error);
+                    return;
+                }
+                response.json().then(renderActivityPubObject(parent));
+            })
+            .catch((e) => {
+                const error = document.createElement('p');
+                error.textContent = `${e}: ${iri}`;
+                (parent || $body).appendChild(error);
+            });
     }
 
-    function buildActivityPubElement(it) {
+    function buildObject(it, parent) {
+        if(typeof it == 'string') {
+            fetchIRI(it, parent)
+            return;
+        }
+        let tagName = 'div';
+        let object;
+        switch (it.type) {
+            case 'Image':
+                object = imgFromUrl(it.id);
+                object.style.width = '100px';
+                break;
+            case 'Video':
+                tagName = 'video';
+                object = document.createElement(tagName);
+                object.style.width = '100px';
+                break;
+            case 'Audio':
+                tagName = 'audio';
+                object = document.createElement(tagName);
+                object.style.width = '100px';
+                break;
+            case 'Article':
+            case 'Note':
+                tagName = 'article'
+                object = document.createElement(tagName);
+                object.className = "content";
+                object.append($frag(it.content));
+        }
+
+        (parent || $body).appendChild(object);
+    }
+
+    const emptyObject = (s, parent) => {
+        const err = document.createElement('span');
+        if (s) {
+            err.textContent = s;
+        }
+        (parent || $body).appendChild(err);
+        return err;
+    }
+
+    function buildCreate(it, parent) {
+        if (typeof it.object == 'undefined') {
+            return emptyObject('invalid object property on activity', parent);
+        }
+        return buildObject(it.object, parent);
+    }
+
+    function buildActivityPubElement(it, parent) {
         console.log(it);
 
         switch (it.type) {
+            case "Create":
+                return buildCreate(it, parent);
             case 'Person':
-                return buildPerson(it)
+                return buildPerson(it, parent)
             case 'OrderedCollection', 'OrderedCollectionPage':
-                return buildCollection(it)
+                return buildCollection(it, parent)
             default:
-                return buildObject(it);
+                return buildObject(it, parent);
         }
     }
 
-    function renderActivityPubObject(object) {
-        $body.appendChild(buildActivityPubElement(object));
+    function renderActivityPubObject(parent) {
+        return (object) => buildActivityPubElement(object, parent);
     }
+    /*
+    const $footer = $frag(
+        `<footer>Fediverse presence brought to you by <a href="https://git.sr.ht/~mariusor/oni">ONI</a></footer>`
+    );
+     */
 
-    const headers = {'Accept': 'application/activity+json'};
-
-    fetch(window.location.href, { headers })
-        .then((response) => {
-            if (!response.ok) {
-                response.json().then(showErrors).catch(console.error);
-                return;
-            }
-            response.json().then(renderActivityPubObject);
-        })
-        .catch( console.error );
+    fetchIRI(window.location.href, $body);
 });

@@ -9,27 +9,28 @@ body {
     background-clip: padding-box;
     overflow-x: hidden;
     background-size: cover;
-    min-height: 10em;
+    min-height: 12em;
+    padding: 1em;
 }
 
 .person img.icon {
     max-width: 8em;
-    margin: 1em;
+    margin-right: 1em;
     border: .3em solid black;
     border-radius: 20%;
     float: left;
     shape-outside: margin-box;
 }
 
-.person ul {
+.person .details ul {
     list-style: none;
     padding: 0;
 }
 
-.person ul li {
+.person .details ul li {
     display: inline-block;
     margin-right: 1em;
 }
 .person .content {
-    margin: 0 1em;
+    margin: -2em 1em;
 }
