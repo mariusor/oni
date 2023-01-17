@@ -38,6 +38,43 @@ let $frag = function (html) {
     return frag;
 };
 
+function getAverageImageRGB(img) {
+    let blockSize = 5, // only visit every 5 pixels
+        i = -4,
+        rgb = {r:0, g:0, b:0},
+        count = 0, data;
+
+    let canvas = document.createElement('canvas');
+    let context = canvas.getContext('2d');
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+    context.drawImage(img, 0, 0 );
+
+    try {
+        data = context.getImageData(0, 0, img.width, img.height);
+        console.log(data);
+    } catch (e) {
+        console.error(`failed: ${e}`);
+        return rgb;
+    }
+
+    const length = data.data.length;
+    while ( (i += blockSize * 4) < length ) {
+        ++count;
+        rgb.r += data.data[i];
+        rgb.g += data.data[i+1];
+        rgb.b += data.data[i+2];
+    }
+
+    // ~~ used to floor values
+    rgb.r = ~~(rgb.r/count);
+    rgb.g = ~~(rgb.g/count);
+    rgb.b = ~~(rgb.b/count);
+
+    return rgb;
+};
+
 OnReady(function() {
     const $html = $("html")[0];
     const $body = $html.lastChild;
