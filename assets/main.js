@@ -77,7 +77,7 @@ function getAverageImageRGB(img) {
 
 OnReady(function() {
     const $html = $("html")[0];
-    const $body = $html.lastChild;
+    const $body = document.body;
 
     function showErrors(parent) {
         return (object) => {
