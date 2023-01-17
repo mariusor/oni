@@ -136,12 +136,12 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 			tryInActivity = tryInActivity && col.Count() == 0
 			if col.Count() != 1 {
 				it = nil
-				return errors.NotFoundf("%s not found", iri)
+				return iriNotFound(iri)
 			}
 			it = col.First()
 			if !it.GetID().Equals(iri, true) {
 				it = nil
-				return errors.NotFoundf("%s not found", iri)
+				return iriNotFound(iri)
 			}
 			return nil
 		})
@@ -151,7 +151,11 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 	}
 	u, _ := iri.URL()
 	u.Path = filepath.Clean(filepath.Join(u.Path, "../"))
-	act, err := s.Load(vocab.IRI(u.String()))
+	actIRI := vocab.IRI(u.String())
+	if iri.Equals(actIRI, true) {
+		return nil, errors.Errorf("bu %s : %s", iri, actIRI)
+	}
+	act, err := s.Load(actIRI)
 	if err != nil {
 		return nil, err
 	}
@@ -159,9 +163,10 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 		err = vocab.OnActivity(act, func(act *vocab.Activity) error {
 			if prop == "object" {
 				it = act.Object
-			}
-			if prop == "actor" {
+			} else if prop == "actor" {
 				it = act.Actor
+			} else {
+				return iriNotFound(actIRI)
 			}
 			return nil
 		})
@@ -169,10 +174,12 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 		err = vocab.OnObject(act, func(ob *vocab.Object) error {
 			if prop == "icon" {
 				it = ob.Icon
-			}
-			if prop == "image" {
+			} else if prop == "image" {
 				it = ob.Image
+			} else {
+				return iriNotFound(actIRI)
 			}
+
 			return nil
 		})
 	}
@@ -287,6 +294,10 @@ func checkAcceptMediaType(accepted ct.MediaType) func(check ...ct.MediaType) boo
 	}
 }
 
+var iriNotFound = func(iri vocab.IRI) error {
+	return errors.NotFoundf("%s not found", iri)
+}
+
 func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct.MediaType) bool {
 	acceptableMediaTypes := []ct.MediaType{jsonLD, activityJson, applicationJson}
 
@@ -316,11 +327,11 @@ func OnItemHandler(o oni) func(w http.ResponseWriter, r *http.Request) {
 		iri := irif(r)
 		it, err := loadItemFromStorage(o.s, iri)
 		if err != nil {
-			errors.HandleError(err)
+			errors.HandleError(err).ServeHTTP(w, r)
 			return
 		}
 		if vocab.IsNil(it) {
-			errors.HandleError(errors.NotFoundf("%s not found", iri))
+			errors.HandleError(iriNotFound(iri)).ServeHTTP(w, r)
 			return
 		}
 
