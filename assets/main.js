@@ -42,8 +42,6 @@ OnReady(function() {
     const $html = $("html")[0];
     const $body = $html.lastChild;
 
-    const defaultBackground = $body.style.backgroundColor;
-
     function showErrors(object) {
         const errors = document.createElement('div');
         const err = (err) => {
@@ -75,41 +73,48 @@ OnReady(function() {
             object.className = it.type.toLowerCase();
         }
 
+        let details = document.createElement('article');
         if (typeof it.image != 'undefined') {
+            let imageSrc;
             if (typeof it.image == 'object') {
-                object.style.backgroundImage = `linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255255, 255, 0.3)), url(${it.image.url})`;
+                imageSrc = it.image.url;
             }
             if (typeof it.image == 'string') {
-                object.style.backgroundImage = `linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255255, 255, 0.3)), url(${it.image})`;
+                imageSrc = it.image;
             }
+            details.style.backgroundImage = `linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.2)), url(${imageSrc})`;
         }
 
+        details.className = 'details';
         if (typeof it.icon != 'undefined') {
+            let iconSrc;
             if (typeof it.icon == 'object') {
-                object.appendChild(imgFromUrl(it.icon.url));
+                iconSrc = it.icon.url;
             }
             if (typeof it.icon == 'string') {
-                object.appendChild(imgFromUrl(it.icon));
+                iconSrc = it.icon;
             }
+            const icon = imgFromUrl(iconSrc);
+            icon.className = "icon";
+            details.appendChild(icon);
         }
 
         if (typeof it.preferredUsername != 'undefined') {
             const nameElement = document.createElement('h2');
             nameElement.textContent = it.preferredUsername;
-            object.appendChild(nameElement);
+            details.appendChild(nameElement);
         }
 
         if (typeof it.summary != 'undefined') {
             const summaryElement = document.createElement('span');
             summaryElement.append($frag(it.summary));
-            object.appendChild(summaryElement);
+            details.appendChild(summaryElement);
         }
 
         if (typeof it.url != 'undefined') {
             let aliasBox = document.createElement('div');
 
             if (Array.isArray(it.url)) {
-                aliasBox.textContent = 'Aliases: ';
                 let aliases = document.createElement('ul');
                 aliases.style.display = 'inline';
                 it.url.forEach((url) => {
@@ -124,13 +129,13 @@ OnReady(function() {
                 });
                 aliasBox.appendChild(aliases);
             } else {
-                aliasBox.textContent = 'Alias: ';
                 let alias = document.createElement('a');
                 alias.href = it.url;
                 aliasBox.appendChild(alias);
             }
-            object.appendChild(aliasBox);
+            details.appendChild(aliasBox);
         }
+        object.appendChild(details);
 
         if (typeof it.content != 'undefined') {
             const contentElement = document.createElement('span');
@@ -138,9 +143,10 @@ OnReady(function() {
             object.appendChild(contentElement);
         }
 
+        const collectionsBox = document.createElement('div');
         const collectionsElement = document.createElement('ul');
-
         if (typeof it.inbox != 'undefined') {
+            // TODO(marius): this needs to be shown only when authenticated as the Actor
             const inboxLinkElement = document.createElement('a');
             inboxLinkElement.href = it.inbox;
             inboxLinkElement.textContent = "Inbox";
@@ -161,8 +167,29 @@ OnReady(function() {
 
             collectionsElement.appendChild(outboxElement);
         }
+        if (typeof it.followers != 'undefined') {
+            const followersLinkElement = document.createElement('a');
+            followersLinkElement.href = it.followers;
+            followersLinkElement.textContent = "Followers";
+
+            const followersElement = document.createElement('li');
+            followersElement.appendChild(followersLinkElement)
+
+            collectionsElement.appendChild(followersElement);
+        }
+        if (typeof it.following != 'undefined') {
+            const followingLinkElement = document.createElement('a');
+            followingLinkElement.href = it.following;
+            followingLinkElement.textContent = "Following";
+
+            const followingElement = document.createElement('li');
+            followingElement.appendChild(followingLinkElement)
+
+            collectionsElement.appendChild(followingElement);
+        }
         if (collectionsElement.hasChildNodes()) {
-            object.appendChild(collectionsElement);
+            collectionsBox.appendChild(collectionsElement);
+            details.appendChild(collectionsBox);
         }
         return object;
     }

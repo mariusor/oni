@@ -1,27 +1,30 @@
 body {
 }
+
 .person {
+}
+
+.person .details {
     background-clip: padding-box;
     overflow-x: hidden;
     background-size: cover;
-    padding: 1em;
-    border-color: black;
-    border-width: 2px;
-    border-style: solid;
+    min-height: 10em;
 }
-.person img {
-    max-width: 140px;
-    border-color: black;
-    border-width: 2px;
-    border-style: solid;
+
+.person img.icon {
+    max-width: 8em;
+    margin: 1em;
+    border: .3em solid black;
+    border-radius: 20%;
     float: left;
-    margin: 0 1em 1em 0;
+    shape-outside: margin-box;
 }
+
 .person ul {
     list-style: none;
-    clear: both;
     padding: 0;
 }
+
 .person ul li {
     display: inline-block;
     margin-right: 1em;
