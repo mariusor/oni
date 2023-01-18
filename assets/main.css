@@ -1,36 +1,93 @@
+@media (min-width: 2201px) {
+    :root {
+        font-size: .92vw;
+    }
+}
+@media (max-width: 2200px) {
+    :root {
+        font-size: .96vw;
+    }
+}
+@media (max-width: 1800px) {
+    :root {
+        font-size: 1.16vw;
+    }
+}
+@media (max-width: 1500px) {
+    :root {
+        font-size: 1.4vw;
+    }
+}
+@media (max-width: 1200px) {
+    :root {
+        font-size: 1.6vw;
+    }
+}
+@media (max-width: 1050px) {
+    :root {
+        font-size: 1.8vw;
+    }
+}
+@media (max-width: 948px) {
+    :root {
+        font-size: 2vw;
+    }
+}
+@media (max-width: 860px) {
+    :root {
+        font-size: 2.2vw;
+    }
+}
+@media (max-width: 768px) {
+    :root {
+        font-size: 2.6vw;
+    }
+}
+@media (max-width: 576px) {
+    :root {
+        font-size: 2.8vw;
+    }
+}
+@media (max-width: 480px) {
+    :root {
+        font-size: 4vw;
+    }
+}
+@media (max-width: 400px) {
+    :root {
+        font-size: 4.8vw;
+    }
+}
 body {
     margin: 0 0 auto 0;
 }
-
 .person {
 }
-
 .person .details {
     background-clip: padding-box;
     overflow-x: hidden;
     background-size: cover;
-    min-height: 12em;
-    padding: 1em;
+    min-height: 20vw;
+    padding: 1vw;
 }
 
 .person img.icon {
-    max-width: 8em;
-    margin-right: 1em;
-    border: .3em solid black;
+    width: 20vw;
+    max-width: 30%;
+    margin-right: 1vw;
+    border: .3vw solid black;
     border-radius: 20%;
     float: left;
     shape-outside: margin-box;
 }
-
 .person .details ul {
     list-style: none;
     padding: 0;
 }
-
 .person .details ul li {
     display: inline-block;
-    margin-right: 1em;
+    margin-right: 1vw;
 }
 .person .content {
-    margin: -2em 1em;
+    margin: -2vw 1vw;
 }

@@ -193,7 +193,7 @@ OnReady(function() {
         }
 
         if (typeof it.summary != 'undefined') {
-            const summaryElement = document.createElement('span');
+            const summaryElement = document.createElement('h5');
             summaryElement.append($frag(it.summary));
             details.appendChild(summaryElement);
         }
