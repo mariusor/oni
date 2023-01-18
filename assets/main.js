@@ -38,7 +38,11 @@ let $frag = function (html) {
     return frag;
 };
 
-function getAverageImageRGB(img) {
+function loadImage(url) {
+    return new Promise(r => { let i = new Image(); i.onload = (() => r(i)); i.src = url; });
+}
+
+async function getAverageImageRGB(url) {
     let blockSize = 5, // only visit every 5 pixels
         i = -4,
         rgb = {r:0, g:0, b:0},
@@ -46,6 +50,7 @@ function getAverageImageRGB(img) {
 
     let canvas = document.createElement('canvas');
     let context = canvas.getContext('2d');
+    let img = await loadImage(url);
 
     canvas.width = img.width;
     canvas.height = img.height;
@@ -53,7 +58,6 @@ function getAverageImageRGB(img) {
 
     try {
         data = context.getImageData(0, 0, img.width, img.height);
-        console.log(data);
     } catch (e) {
         console.error(`failed: ${e}`);
         return rgb;
@@ -96,8 +100,38 @@ OnReady(function() {
         }
     }
 
-    function rgb(r, g, b) {
-        return `rgb(${r}, ${g}, ${b})`;
+    function rgb(rgb) {
+        return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+    }
+
+    function rgba(rgb, a) {
+        return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${a})`;
+    }
+
+    function brightness(rgb) {
+        //return ((rgb.r * 299) + (rgb.g * 587) + (rgb.b * 114)) / 1000;
+        // from https://www.nbdtech.com/Blog/archive/2008/04/27/Calculating-the-Perceived-Brightness-of-a-Color.aspx
+        return 255-Math.sqrt(
+            (rgb.r * rgb.r * .241 +
+            rgb.g * rgb.g * .691 +
+            rgb.b * rgb.b * .068)
+        );
+    }
+
+    function getColorScheme(bri) {
+        let scheme;
+        if (Math.abs(bri - 120) < 75) {
+            if (bri >= 130) {
+                scheme = 'dark';
+            } else {
+                scheme = 'light';
+            }
+        } else if (bri > 120) {
+            scheme = 'dark';
+        } else {
+            scheme = 'light';
+        }
+        return scheme;
     }
 
     function imgFromUrl(url) {
@@ -122,10 +156,16 @@ OnReady(function() {
             if (typeof it.image == 'string') {
                 imageSrc = it.image;
             }
-            details.style.backgroundImage = `linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 1)), url(${imageSrc})`;
-            const img = document.createElement('img');
-            img.src = imageSrc;
-            console.debug(getAverageImageRGB(img));
+            getAverageImageRGB(imageSrc).then(value => {
+                console.debug(`avg rgb: ${rgb(value)}`, value);
+                details.style.backgroundImage = `linear-gradient(${rgba(value, 0)}, ${rgba(value, 1)}), url(${imageSrc})`;
+                $body.style.backgroundColor = rgb(value);
+
+                const bri = brightness(value)
+                //console.debug(bri);
+                $html.style.colorScheme = getColorScheme(bri);
+                $body.style.backgroundColor = rgb(value);
+            })
         }
 
         if (typeof it.icon != 'undefined') {
