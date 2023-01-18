@@ -162,9 +162,11 @@ OnReady(function() {
                 $body.style.backgroundColor = rgb(value);
 
                 const bri = brightness(value)
+                const scheme = getColorScheme(bri);
                 //console.debug(bri);
-                $html.style.colorScheme = getColorScheme(bri);
+                $html.style.colorScheme = scheme;
                 $body.style.backgroundColor = rgb(value);
+                $('h2', details)[0].style.textShadow = `.08em .06em .14em ${scheme == 'light' ? 'black' : 'white'}`;
 
                 localStorage.setItem('colorScheme', $html.style.colorScheme);
                 localStorage.setItem('backgroundColor', $body.style.backgroundColor);
