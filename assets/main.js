@@ -165,6 +165,9 @@ OnReady(function() {
                 //console.debug(bri);
                 $html.style.colorScheme = getColorScheme(bri);
                 $body.style.backgroundColor = rgb(value);
+
+                localStorage.setItem('colorScheme', $html.style.colorScheme);
+                localStorage.setItem('backgroundColor', $body.style.backgroundColor);
             })
         }
 
@@ -391,5 +394,13 @@ OnReady(function() {
     );
      */
 
+    const colorScheme = localStorage.getItem('colorScheme');
+    if (colorScheme) {
+        $html.style.colorScheme = colorScheme;
+    }
+    const backgroundColor = localStorage.getItem('backgroundColor');
+    if (backgroundColor) {
+        $body.style.backgroundColor = backgroundColor;
+    }
     fetchIRI(window.location.href, $body);
 });
