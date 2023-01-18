@@ -82,6 +82,7 @@ async function getAverageImageRGB(url) {
 OnReady(function() {
     const $html = $("html")[0];
     const $body = document.body;
+    const $root = $(":root")[0];
 
     function showErrors(parent) {
         return (object) => {
@@ -157,20 +158,9 @@ OnReady(function() {
                 imageSrc = it.image;
             }
             getAverageImageRGB(imageSrc).then(value => {
-                console.debug(`avg rgb: ${rgb(value)}`, value);
                 details.style.backgroundImage = `linear-gradient(${rgba(value, 0)}, ${rgba(value, 1)}), url(${imageSrc})`;
-                $body.style.backgroundColor = rgb(value);
 
-                const bri = brightness(value)
-                const scheme = getColorScheme(bri);
-                //console.debug(bri);
-                $html.style.colorScheme = scheme;
-                $body.style.backgroundColor = rgb(value);
-                let shadow = {r: bri, g: bri, b: bri};
-                $('h2', details)[0].style.textShadow = `.08em .06em .15em ${rgb(shadow)}`;
-
-                localStorage.setItem('colorScheme', $html.style.colorScheme);
-                localStorage.setItem('backgroundColor', $body.style.backgroundColor);
+                setStyles(value);
             })
         }
 
@@ -353,7 +343,6 @@ OnReady(function() {
                 object.className = "content";
                 object.append($frag(it.content));
         }
-
         (parent || $body).appendChild(object);
     }
 
@@ -397,13 +386,30 @@ OnReady(function() {
     );
      */
 
+    function setStyles(bgColor) {
+        bgColor = (bgColor || {r: 0, g:0, b: 0});
+
+        const bri = brightness(bgColor)
+        const scheme = getColorScheme(bri);
+
+        // Get the root element
+        $root.style.setProperty('--bg-color', rgb(bgColor));
+        $root.style.setProperty('--shadow-color', rgb({r: bri, g: bri, b: bri}));
+        $html.style.colorScheme = scheme;
+
+        localStorage.setItem('colorScheme', scheme);
+        localStorage.setItem('backgroundColor', bgColor);
+    }
+
+    fetchIRI(window.location.href, $body);
+
     const colorScheme = localStorage.getItem('colorScheme');
     if (colorScheme) {
         $html.style.colorScheme = colorScheme;
     }
     const backgroundColor = localStorage.getItem('backgroundColor');
     if (backgroundColor) {
+        $root.style.setProperty('--bg-color', rgb(backgroundColor));
         $body.style.backgroundColor = backgroundColor;
     }
-    fetchIRI(window.location.href, $body);
 });

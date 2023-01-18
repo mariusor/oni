@@ -1,3 +1,11 @@
+:root { height: 100%; }
+:root { --bg-color: Window; --fg-color: WindowText; --link-color: blue; --linkvisited-color: rebeccapurple; --linkactive-color: red; --shadow-color: WindowText;}
+@media (prefers-color-scheme: light) {
+    :root {--bg-color: #EFF0F1; --fg-color: #232627; --link-color: blue; --linkvisited-color: rebeccapurple; --linkactive-color: red; --shadow-color: #232627;}
+}
+@media (prefers-color-scheme: dark) {
+    :root { --bg-color: #232627; --fg-color: #EFF0F1; --link-color: dodgerblue; --linkvisited-color: mediumpurple; --linkactive-color: red; --shadow-color: #EFF0F1;}
+}
 @media (min-width: 2201px) {
     :root {
         font-size: .92vw;
@@ -60,21 +68,20 @@
 }
 body {
     margin: 0 0 auto 0;
+    background-color: var(--bg-color);
 }
-.person {
-}
+svg.icon { height: 1em; width: 1em; fill: currentColor; vertical-align: middle; }
 .person .details {
     background-clip: padding-box;
     overflow-x: hidden;
     background-size: cover;
-    min-height: 20vw;
+    min-height: 12vw;
     padding: 1vw;
 }
 .person img.icon {
-    width: 20vw;
-    max-width: 30%;
+    width: 12vw;
     margin-right: 1vw;
-    border: .3vw solid black;
+    border: .3vw solid var(--shadow-color);
     border-radius: 20%;
     float: left;
     shape-outside: margin-box;
@@ -89,4 +96,7 @@ body {
 }
 .person .content {
     margin: -2vw 1vw;
+}
+.person h2 {
+    text-shadow : .08em .06em .15em var(--shadow-color);
 }
