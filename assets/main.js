@@ -225,6 +225,7 @@ OnReady(function() {
 
         const collectionsBox = document.createElement('nav');
         const collectionsElement = document.createElement('ul');
+        /*
         if (typeof it.inbox != 'undefined') {
             // TODO(marius): this needs to be shown only when authenticated as the Actor
             const inboxLinkElement = document.createElement('a');
@@ -236,6 +237,7 @@ OnReady(function() {
 
             collectionsElement.appendChild(inboxElement);
         }
+        */
 
         if (typeof it.outbox != 'undefined') {
             const outboxLinkElement = document.createElement('a');

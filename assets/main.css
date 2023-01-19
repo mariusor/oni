@@ -79,8 +79,9 @@ svg.icon { height: 1em; width: 1em; fill: currentColor; vertical-align: middle; 
     padding: 1vw;
 }
 .person img.icon {
-    width: 12vw;
-    margin-right: 1vw;
+    width: 12rem;
+    max-width: 24%;
+    margin-right: 1rem;
     border: .3vw solid var(--shadow-color);
     border-radius: 20%;
     float: left;
@@ -96,6 +97,7 @@ svg.icon { height: 1em; width: 1em; fill: currentColor; vertical-align: middle; 
 }
 .person .content {
     margin: -2vw 1vw;
+    background-color: rgba(var(--fg-color), 0.2);
 }
 .person h2 {
     text-shadow : .08em .06em .15em var(--shadow-color);
