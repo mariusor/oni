@@ -462,7 +462,6 @@ func ProcessActivity(o oni) processing.ActivityHandlerFn {
 
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
-		o.l.Infof("received req %s: %s", r.Method, r.RequestURI)
 
 		act, err := auth.LoadActorFromAuthHeader(r)
 		if err != nil {
