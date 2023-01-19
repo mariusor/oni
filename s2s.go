@@ -33,7 +33,7 @@ func (s signer) SignRequest(pKey crypto.PrivateKey, pubKeyId string, r *http.Req
 		if err := v.SignRequest(pKey, pubKeyId, r, body); err == nil {
 			return nil
 		} else {
-			s.logger.Errorf("invalid signer algo %s:%T %+s", a, v, err)
+			s.logger.Debugf("invalid signer algo %s:%T %+s", a, v, err)
 		}
 	}
 	return errors.Newf("no suitable request signer for public key[%T] %s, tried %+v", pKey, pubKeyId, algs)
