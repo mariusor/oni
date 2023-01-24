@@ -141,7 +141,8 @@ OnReady(function() {
         return img
     }
 
-    function buildPerson(it, parent) {
+    function buildPerson(it, collection, parent) {
+        parent = (parent || $body);
         const object = document.createElement('main');
         if (typeof it.type != 'undefined') {
             object.className = it.type.toLowerCase();
@@ -174,7 +175,11 @@ OnReady(function() {
             }
             const icon = imgFromUrl(iconSrc);
             icon.className = "icon";
-            details.appendChild(icon);
+            const topLink = document.createElement('a');
+            topLink.href = it.id;
+            topLink.appendChild(icon);
+
+            details.appendChild(topLink);
         }
 
         if (typeof it.preferredUsername != 'undefined') {
@@ -216,11 +221,13 @@ OnReady(function() {
         }
         object.appendChild(details);
 
-        if (typeof it.content != 'undefined') {
-            const contentElement = document.createElement('article');
-            contentElement.className = "content";
-            contentElement.append($frag(it.content));
-            object.appendChild(contentElement);
+        if (collection == '') {
+            if (typeof it.content != 'undefined') {
+                const contentElement = document.createElement('article');
+                contentElement.className = "content";
+                contentElement.append($frag(it.content));
+                object.appendChild(contentElement);
+            }
         }
 
         const collectionsBox = document.createElement('nav');
@@ -273,7 +280,27 @@ OnReady(function() {
             collectionsBox.appendChild(collectionsElement);
             details.appendChild(collectionsBox);
         }
-        (parent || $body).appendChild(object);
+        parent.appendChild(object);
+
+        if (collection == '') {
+            return;
+        }
+
+        let colElement = document.createElement('article');
+        fetch(`${it.id}/${collection}`, { headers })
+            .then((response) => {
+                if (!response.ok) {
+                    response.json().then(showErrors(colElement)).catch(console.error);
+                    return;
+                }
+                response.json().then(renderActivityPubObject(colElement));
+            })
+            .catch((e) => {
+                const error = document.createElement('p');
+                error.textContent = `${e}: ${collection}`;
+                (parent || $body).appendChild(error);
+            });
+        parent.appendChild(colElement);
     }
 
     function buildCollection(it, parent) {
@@ -292,22 +319,23 @@ OnReady(function() {
                 return;
             }
             const el = document.createElement('li');
-            buildActivityPubElement(it, el)
+            buildActivityPubElement(it, '', el)
 
             object.appendChild(el);
         });
         (parent || $body).appendChild(object);
     }
 
-    function fetchIRI (iri, parent) {
-        const headers = {'Accept': 'application/activity+json'};
+    const headers = {'Accept': 'application/activity+json'};
+
+    function fetchIRI (iri, collection, parent) {
         fetch(iri, { headers })
             .then((response) => {
                 if (!response.ok) {
                     response.json().then(showErrors(parent)).catch(console.error);
                     return;
                 }
-                response.json().then(renderActivityPubObject(parent));
+                response.json().then(renderActivityPubObject(parent, maybeCollection));
             })
             .catch((e) => {
                 const error = document.createElement('p');
@@ -318,7 +346,7 @@ OnReady(function() {
 
     function buildObject(it, parent) {
         if(typeof it == 'string') {
-            fetchIRI(it, parent)
+            fetchIRI(it, '', parent)
             return;
         }
         let tagName = 'div';
@@ -364,14 +392,14 @@ OnReady(function() {
         return buildObject(it.object, parent);
     }
 
-    function buildActivityPubElement(it, parent) {
+    function buildActivityPubElement(it, collection, parent) {
         console.log(it);
 
         switch (it.type) {
             case "Create":
                 return buildCreate(it, parent);
             case 'Person':
-                return buildPerson(it, parent)
+                return buildPerson(it, collection, parent)
             case 'OrderedCollection', 'OrderedCollectionPage':
                 return buildCollection(it, parent)
             default:
@@ -379,8 +407,8 @@ OnReady(function() {
         }
     }
 
-    function renderActivityPubObject(parent) {
-        return (object) => buildActivityPubElement(object, parent);
+    function renderActivityPubObject(parent, collection) {
+        return (object) => buildActivityPubElement(object, collection, parent);
     }
     /*
     const $footer = $frag(
@@ -403,7 +431,19 @@ OnReady(function() {
         localStorage.setItem('backgroundColor', bgColor);
     }
 
-    fetchIRI(window.location.href, $body);
+    const collections = ['inbox', 'outbox', 'followers', 'following', 'liked', 'likes', 'shares', 'replies'];
+
+    let actorIRI = window.location.href;
+
+    const splitIRI = window.location.href.split('/');
+    const maybeCollection = splitIRI[splitIRI.length-1];
+
+    if (collections.indexOf(maybeCollection) > 0) {
+        splitIRI.pop()
+        actorIRI = splitIRI.join('/');
+    }
+
+    fetchIRI(actorIRI, `${actorIRI}/${maybeCollection}`, $body);
 
     const colorScheme = localStorage.getItem('colorScheme');
     if (colorScheme) {
