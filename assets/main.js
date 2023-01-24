@@ -305,14 +305,25 @@ OnReady(function() {
     }
 
     function buildCollection(it, parent) {
-        let tag = 'ul';
-        let items;
+        let items = [];
         if (it.type == 'OrderedCollection' || it.type == 'OrderedCollectionPage') {
-            tag = 'ol';
-            items = it.orderedItems;
+            if (typeof it.orderedItems != 'undefined') {
+                items = it.orderedItems;
+            }
         } else {
-            items = it.items;
+            if (typeof it.items != 'undefined') {
+                items = it.items;
+            }
         }
+
+        if (items.length == 0) {
+            const el = document.createElement('span');
+            el.textContent = 'Nothing to see here, please move along';
+            parent.appendChild(el);
+            return;
+        }
+
+        const tag = it.type.substring(0, 7) == 'Ordered' ? 'ol' : 'ul';
         const object = document.createElement(tag);
         items.forEach(function (it, index) {
             if (typeof it.type == 'undefined') {
@@ -401,7 +412,10 @@ OnReady(function() {
                 return buildCreate(it, parent);
             case 'Person':
                 return buildPerson(it, collection, parent)
-            case 'OrderedCollection', 'OrderedCollectionPage':
+            case 'OrderedCollection':
+            case 'OrderedCollectionPage':
+            case 'Collection':
+            case 'CollectionPage':
                 return buildCollection(it, parent)
             default:
                 return buildObject(it, parent);
