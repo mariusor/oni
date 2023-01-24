@@ -80,13 +80,17 @@ body {
 body:first-child {
 }
 svg.icon { height: 1em; width: 1em; fill: currentColor; vertical-align: middle; }
-.person .details {
+.person > .details {
     background-clip: padding-box;
     overflow-x: hidden;
     background-size: cover;
     min-height: 12vw;
     padding: 1vw;
     /*margin-left: calc( 10px + 18px + 0.25rem + 0.25rem );*/
+}
+.person > .content {
+    margin: -2vw 1vw;
+    background-color: rgba(var(--fg-color), 0.2);
 }
 .person img.icon {
     width: 12rem;
@@ -105,10 +109,11 @@ svg.icon { height: 1em; width: 1em; fill: currentColor; vertical-align: middle; 
     display: inline-block;
     margin-right: 1vw;
 }
-.person .content {
-    margin: -2vw 1vw;
-    background-color: rgba(var(--fg-color), 0.2);
-}
 .person h2 {
     text-shadow : .08em .06em .15em var(--shadow-color);
+}
+.collection li {
+    list-style: none;
+    min-height: 4vw;
+    border: 1px solid var(--shadow-color);
 }

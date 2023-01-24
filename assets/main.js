@@ -381,8 +381,27 @@ OnReady(function () {
                 tagName = 'article'
                 object = document.createElement(tagName);
                 object.className = "content";
-                object.append($frag(it.content));
         }
+
+        const metaEl = document.createElement('div');
+        if (typeof it.published != 'undefined') {
+            metaEl.appendChild(document.createTextNode('Published at: '));
+            const createEl = document.createElement('time');
+            createEl.setAttribute('datetime', it.published);
+
+            const permalink = document.createElement('a')
+            permalink.href = it.id;
+            permalink.textContent = it.published;
+            createEl.appendChild(permalink);
+
+            metaEl.appendChild(createEl);
+        }
+        object.appendChild(metaEl);
+
+        if (typeof it.content != 'undefined') {
+            object.append($frag(it.content));
+        }
+
         (parent || $body).appendChild(object);
     }
 
