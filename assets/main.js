@@ -39,14 +39,16 @@ let $frag = function (html) {
 };
 
 function loadImage(url) {
-    return new Promise(r => { let i = new Image(); i.onload = (() => r(i)); i.src = url; });
+    return new Promise(r => {
+        let i = new Image();
+        i.onload = (() => r(i));
+        i.src = url;
+    });
 }
 
 async function getAverageImageRGB(url) {
     let blockSize = 5, // only visit every 5 pixels
-        i = -4,
-        rgb = {r:0, g:0, b:0},
-        count = 0, data;
+        i = -4, rgb = {r: 0, g: 0, b: 0}, count = 0, data;
 
     let canvas = document.createElement('canvas');
     let context = canvas.getContext('2d');
@@ -54,7 +56,7 @@ async function getAverageImageRGB(url) {
 
     canvas.width = img.width;
     canvas.height = img.height;
-    context.drawImage(img, 0, 0 );
+    context.drawImage(img, 0, 0);
 
     try {
         data = context.getImageData(0, 0, img.width, img.height);
@@ -64,22 +66,22 @@ async function getAverageImageRGB(url) {
     }
 
     const length = data.data.length;
-    while ( (i += blockSize * 4) < length ) {
+    while ((i += blockSize * 4) < length) {
         ++count;
         rgb.r += data.data[i];
-        rgb.g += data.data[i+1];
-        rgb.b += data.data[i+2];
+        rgb.g += data.data[i + 1];
+        rgb.b += data.data[i + 2];
     }
 
     // ~~ used to floor values
-    rgb.r = ~~(rgb.r/count);
-    rgb.g = ~~(rgb.g/count);
-    rgb.b = ~~(rgb.b/count);
+    rgb.r = ~~(rgb.r / count);
+    rgb.g = ~~(rgb.g / count);
+    rgb.b = ~~(rgb.b / count);
 
     return rgb;
 };
 
-OnReady(function() {
+OnReady(function () {
     const $html = $("html")[0];
     const $body = document.body;
     const $root = $(":root")[0];
@@ -112,11 +114,7 @@ OnReady(function() {
     function brightness(rgb) {
         //return ((rgb.r * 299) + (rgb.g * 587) + (rgb.b * 114)) / 1000;
         // from https://www.nbdtech.com/Blog/archive/2008/04/27/Calculating-the-Perceived-Brightness-of-a-Color.aspx
-        return 255-Math.sqrt(
-            (rgb.r * rgb.r * .241 +
-            rgb.g * rgb.g * .691 +
-            rgb.b * rgb.b * .068)
-        );
+        return 255 - Math.sqrt((rgb.r * rgb.r * .241 + rgb.g * rgb.g * .691 + rgb.b * rgb.b * .068));
     }
 
     function getColorScheme(bri) {
@@ -288,7 +286,7 @@ OnReady(function() {
 
         let colElement = document.createElement('article');
         colElement.className = "collection";
-        fetch(`${it.id}/${collection}`, { headers })
+        fetch(`${it.id}/${collection}`, {headers})
             .then((response) => {
                 if (!response.ok) {
                     response.json().then(showErrors(colElement)).catch(console.error);
@@ -340,8 +338,8 @@ OnReady(function() {
 
     const headers = {'Accept': 'application/activity+json'};
 
-    function fetchIRI (iri, collection, parent) {
-        fetch(iri, { headers })
+    function fetchIRI(iri, collection, parent) {
+        fetch(iri, {headers})
             .then((response) => {
                 if (!response.ok) {
                     response.json().then(showErrors(parent)).catch(console.error);
@@ -357,7 +355,7 @@ OnReady(function() {
     }
 
     function buildObject(it, parent) {
-        if(typeof it == 'string') {
+        if (typeof it == 'string') {
             fetchIRI(it, '', parent)
             return;
         }
@@ -425,6 +423,7 @@ OnReady(function() {
     function renderActivityPubObject(parent, collection) {
         return (object) => buildActivityPubElement(object, collection, parent);
     }
+
     /*
     const $footer = $frag(
         `<footer>Fediverse presence brought to you by <a href="https://git.sr.ht/~mariusor/oni">ONI</a></footer>`
@@ -432,7 +431,7 @@ OnReady(function() {
      */
 
     function setStyles(bgColor) {
-        bgColor = (bgColor || {r: 0, g:0, b: 0});
+        bgColor = (bgColor || {r: 0, g: 0, b: 0});
 
         const bri = brightness(bgColor)
         const scheme = getColorScheme(bri);
@@ -451,7 +450,7 @@ OnReady(function() {
     let actorIRI = window.location.href;
 
     const splitIRI = window.location.href.split('/');
-    const maybeCollection = splitIRI[splitIRI.length-1];
+    const maybeCollection = splitIRI[splitIRI.length - 1];
 
     if (collections.indexOf(maybeCollection) > 0) {
         splitIRI.pop()
