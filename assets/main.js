@@ -287,6 +287,7 @@ OnReady(function() {
         }
 
         let colElement = document.createElement('article');
+        colElement.className = "collection";
         fetch(`${it.id}/${collection}`, { headers })
             .then((response) => {
                 if (!response.ok) {
@@ -300,7 +301,7 @@ OnReady(function() {
                 error.textContent = `${e}: ${collection}`;
                 (parent || $body).appendChild(error);
             });
-        parent.appendChild(colElement);
+        object.appendChild(colElement);
     }
 
     function buildCollection(it, parent) {
