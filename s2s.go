@@ -62,22 +62,25 @@ func newSigner(pubKey crypto.PrivateKey, headers []string, l lw.Logger) (signer,
 }
 
 func s2sSignFn(o oni) func(r *http.Request) error {
-	s, err := newSigner(prvKey, append(headersToSign, "Digest"), o.l)
-	if err != nil {
-		return func(r *http.Request) error {
+	return func(r *http.Request) error {
+		headers := headersToSign
+		if r.Method == http.MethodPost {
+			headers = append(headers, "Digest")
+		}
+
+		s, err := newSigner(prvKey, headers, o.l)
+		if err != nil {
 			return errors.Annotatef(err, "unable to initialize HTTP signer")
 		}
-	}
-	// NOTE(marius): this is needed to accommodate for the FedBOX service user which usually resides
-	// at the root of a domain, and it might miss a valid path. This trips the parsing of keys with id
-	// of form https://example.com#main-key
-	u, _ := o.a.ID.URL()
-	if u.Path == "" {
-		u.Path = "/"
-	}
-	u.Fragment = "main-key"
-	keyId := u.String()
-	return func(r *http.Request) error {
+		// NOTE(marius): this is needed to accommodate for the FedBOX service user which usually resides
+		// at the root of a domain, and it might miss a valid path. This trips the parsing of keys with id
+		// of form https://example.com#main-key
+		u, _ := o.a.ID.URL()
+		if u.Path == "" {
+			u.Path = "/"
+		}
+		u.Fragment = "main-key"
+		keyId := u.String()
 		bodyBuf := bytes.Buffer{}
 		if r.Body != nil {
 			if _, err := io.Copy(&bodyBuf, r.Body); err == nil {
