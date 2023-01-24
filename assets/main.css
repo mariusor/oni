@@ -86,6 +86,7 @@ svg.icon { height: 1em; width: 1em; fill: currentColor; vertical-align: middle; 
     background-size: cover;
     min-height: 12vw;
     padding: 1vw;
+    /*margin-left: calc( 10px + 18px + 0.25rem + 0.25rem );*/
 }
 .person img.icon {
     width: 12rem;
@@ -95,9 +96,6 @@ svg.icon { height: 1em; width: 1em; fill: currentColor; vertical-align: middle; 
     border-radius: 20%;
     float: left;
     shape-outside: margin-box;
-}
-.person .details {
-    margin-left: calc( 10px + 18px + 0.25rem + 0.25rem );
 }
 .person .details ul {
     list-style: none;
