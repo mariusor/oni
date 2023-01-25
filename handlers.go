@@ -1,10 +1,12 @@
 package oni
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -498,6 +500,14 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
+		defer func() {
+			fn := fmt.Sprintf("%s/%s.req", o.StoragePath, time.Now().UTC().Format(time.RFC3339))
+			all := bytes.Buffer{}
+			r.Header.Write(&all)
+			all.Write([]byte{'\n', '\n'})
+			all.Write(body)
+			os.WriteFile(fn, all.Bytes(), 0660)
+		}()
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
 			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed unmarshalling jsonld body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
