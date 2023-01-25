@@ -21,20 +21,15 @@ import (
 )
 
 // NotFound is a generic method to return an 404 error HTTP handler that
-func NotFound(l lw.Logger) errors.ErrorHandlerFn {
-	return func(w http.ResponseWriter, r *http.Request) error {
-		st := http.StatusNotFound
-		defer l.Infof("%s %s %d %s", r.Method, irif(r), st, http.StatusText(st))
-		return errors.NotFoundf("%s not found", r.URL.Path)
+func (o *oni) NotFound() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		o.Error(errors.NotFoundf("%s not found", r.URL.Path)).ServeHTTP(w, r)
 	}
 }
 
-func Error(l lw.Logger, err error) http.HandlerFunc {
+func (o *oni) Error(err error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if l != nil {
-			st := errors.HttpStatus(err)
-			defer l.Infof("%s %s %d %s", r.Method, irif(r), st, http.StatusText(st))
-		}
+		defer o.logRequest(r, errors.HttpStatus(err), time.Now().UTC())
 		errors.HandleError(err).ServeHTTP(w, r)
 	}
 }
@@ -45,21 +40,21 @@ func (o *oni) collectionRoutes(collections ...vocab.CollectionPath) {
 	for _, collection := range collections {
 		path := base + string(collection)
 		if !ok {
-			o.m.Handle(path, NotFound(o.l))
+			o.m.Handle(path, o.NotFound())
 			continue
 		}
 		if !CollectionExists(actor, collection) {
-			o.m.Handle(path, NotFound(o.l))
+			o.m.Handle(path, o.NotFound())
 			continue
 		}
 		colPath, ok := IRIPath(collection.Of(actor.GetLink()).GetLink())
 		if !ok {
-			o.m.Handle(path, NotFound(o.l))
+			o.m.Handle(path, o.NotFound())
 			continue
 		}
 
-		o.m.HandleFunc(colPath, OnCollectionHandler(*o))
-		o.m.HandleFunc(colPath+"/", OnItemHandler(*o))
+		o.m.HandleFunc(colPath, o.OnCollectionHandler)
+		o.m.HandleFunc(colPath+"/", o.OnItemHandler)
 	}
 }
 
@@ -67,7 +62,7 @@ func (o *oni) setupRoutes() {
 	o.m = http.NewServeMux()
 
 	if o.a.ID == "" {
-		o.m.Handle("/", NotFound(o.l))
+		o.m.Handle("/", o.NotFound())
 		return
 	}
 
@@ -85,23 +80,27 @@ func (o *oni) setupActivityPubRoutes() {
 	if !ok {
 		return
 	}
-	o.m.HandleFunc(base, OnItemHandler(*o))
+	o.m.HandleFunc(base, o.OnItemHandler)
 	o.collectionRoutes(vocab.ActivityPubCollections...)
 
-	var fsServe http.Handler
+	var fsServe http.HandlerFunc
 	if assetFilesFS, err := fs.Sub(AssetsFS, "assets"); err == nil {
-		fsServe = http.FileServer(http.FS(assetFilesFS))
+		fsServe = func(w http.ResponseWriter, r *http.Request) {
+			st := time.Now().UTC()
+			http.FileServer(http.FS(assetFilesFS)).ServeHTTP(w, r)
+			o.logRequest(r, http.StatusOK, st)
+		}
 	} else {
-		fsServe = Error(o.l, err)
+		fsServe = o.Error(err).ServeHTTP
 	}
 	o.m.Handle("/main.js", fsServe)
 	o.m.Handle("/main.css", fsServe)
-	o.m.Handle("/favicon.ico", NotFound(o.l))
+	o.m.HandleFunc("/favicon.ico", o.NotFound())
 }
 
-func ServeBinData(it vocab.Item) http.HandlerFunc {
+func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 	if vocab.IsNil(it) {
-		return errors.HandleError(errors.NotFoundf("not found")).ServeHTTP
+		return o.Error(errors.NotFoundf("not found"))
 	}
 	var contentType string
 	var raw []byte
@@ -116,7 +115,7 @@ func ServeBinData(it vocab.Item) http.HandlerFunc {
 		return nil
 	})
 	if err != nil {
-		return errors.HandleError(err).ServeHTTP
+		return o.Error(err)
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", contentType)
@@ -203,10 +202,10 @@ func propNameInIRI(iri vocab.IRI) (bool, string) {
 	return false, ""
 }
 
-func ServeActivityPub(it vocab.Item) http.HandlerFunc {
+func (o *oni) ServeActivityPub(it vocab.Item) http.HandlerFunc {
 	dat, err := json.WithContext(json.IRI(vocab.ActivityBaseURI), json.IRI(vocab.SecurityContextURI)).Marshal(it)
 	if err != nil {
-		return errors.HandleError(err).ServeHTTP
+		return o.Error(err)
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -244,8 +243,10 @@ func orderItems(col vocab.ItemCollection) vocab.ItemCollection {
 	return col
 }
 
-func notAcceptable(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
-	return nil, http.StatusNotAcceptable, errors.MethodNotAllowedf("current instance does not federate")
+func notAcceptable(err error) func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
+	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
+		return nil, http.StatusNotAcceptable, errors.NewMethodNotAllowed(err, "current instance does not federate")
+	}
 }
 
 func validContentType(c string) bool {
@@ -318,106 +319,125 @@ func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct
 	return checkAcceptMediaType(accepted)
 }
 
-func OnItemHandler(o oni) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if o.l != nil {
-			defer o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
-		}
+func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
+	now := time.Now().UTC()
 
-		iri := irif(r)
-		it, err := loadItemFromStorage(o.s, iri)
-		if err != nil {
-			errors.HandleError(err).ServeHTTP(w, r)
-			return
-		}
-		if vocab.IsNil(it) {
-			errors.HandleError(iriNotFound(iri)).ServeHTTP(w, r)
-			return
-		}
-		if vocab.ActorTypes.Contains(it.GetType()) && it.GetID().Equals(o.a.ID, true) {
-			vocab.OnActor(it, func(act *vocab.Actor) error {
-				act.PublicKey = PublicKey(act.ID)
-				return nil
-			})
-		}
-
-		accepts := getItemAcceptedContentType(it, r)
-		switch {
-		case accepts(jsonLD, activityJson, applicationJson):
-			ServeActivityPub(it).ServeHTTP(w, r)
-		case accepts(imageAny):
-			ServeBinData(it).ServeHTTP(w, r)
-		case accepts(textHTML):
-			fallthrough
-		default:
-			f, err := TemplateFS.Open("templates/main.html")
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, "%+s", err)
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-			io.Copy(w, f)
-		}
+	iri := irif(r)
+	it, err := loadItemFromStorage(o.s, iri)
+	if err != nil {
+		o.Error(err).ServeHTTP(w, r)
+		return
 	}
-}
-
-func OnCollectionHandler(o oni) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if o.l != nil {
-			defer o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
-		}
-		if r.Method == http.MethodPost {
-			ProcessActivity(o).ServeHTTP(w, r)
-			return
-		}
-
-		colIRI := irif(r)
-		res := vocab.OrderedCollectionPage{
-			ID:   colIRI,
-			Type: vocab.OrderedCollectionPageType,
-		}
-		it, err := o.s.Load(colIRI)
-		if err != nil {
-			errors.HandleError(err)
-			return
-		}
-		if vocab.IsItemCollection(it) {
-			err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-				res.OrderedItems = *col
-				return nil
-			})
-		}
-		err = vocab.OnCollectionIntf(it, func(items vocab.CollectionInterface) error {
-			res.OrderedItems = orderItems(items.Collection())
-			res.TotalItems = res.OrderedItems.Count()
+	if vocab.IsNil(it) {
+		o.Error(iriNotFound(iri)).ServeHTTP(w, r)
+		return
+	}
+	if vocab.ActorTypes.Contains(it.GetType()) && it.GetID().Equals(o.a.ID, true) {
+		vocab.OnActor(it, func(act *vocab.Actor) error {
+			act.PublicKey = PublicKey(act.ID)
 			return nil
 		})
+	}
+
+	accepts := getItemAcceptedContentType(it, r)
+	switch {
+	case accepts(jsonLD, activityJson, applicationJson):
+		o.ServeActivityPub(it).ServeHTTP(w, r)
+	case accepts(imageAny):
+		o.ServeBinData(it).ServeHTTP(w, r)
+	case accepts(textHTML):
+		fallthrough
+	default:
+		f, err := TemplateFS.Open("templates/main.html")
 		if err != nil {
-			errors.HandleError(err)
+			o.Error(err)
 			return
 		}
-
-		it = res
-		accepts := getItemAcceptedContentType(it, r)
-		switch {
-		case accepts(jsonLD, activityJson, applicationJson):
-			ServeActivityPub(it).ServeHTTP(w, r)
-		case accepts(imageAny):
-			ServeBinData(it).ServeHTTP(w, r)
-		case accepts(textHTML):
-			fallthrough
-		default:
-			f, err := TemplateFS.Open("templates/main.html")
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				fmt.Fprintf(w, "%+s", err)
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-			io.Copy(w, f)
-		}
+		w.WriteHeader(http.StatusOK)
+		io.Copy(w, f)
 	}
+	o.logRequest(r, http.StatusOK, now)
+}
+
+func (o *oni) logRequest(r *http.Request, st int, rt time.Time) {
+	if o.l == nil {
+		return
+	}
+
+	ctx := lw.Ctx{
+		"method": r.Method,
+		"iri":    irif(r),
+		"status": st,
+	}
+	if !rt.IsZero() {
+		ctx["duration"] = fmt.Sprintf("%0.3fms", float64(time.Now().UTC().Sub(rt).Microseconds())/1000)
+	}
+	if ua := r.Header.Get("User-Agent"); r.Method == http.MethodPost && ua != "" {
+		ctx["ua"] = ua
+	}
+
+	var logFn func(string, ...any)
+	if st == http.StatusOK {
+		logFn = o.l.WithContext(ctx).Debugf
+	} else {
+		logFn = o.l.WithContext(ctx).Infof
+	}
+	logFn(http.StatusText(st))
+}
+
+func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
+	now := time.Now().UTC()
+	if r.Method == http.MethodPost {
+		o.ProcessActivity().ServeHTTP(w, r)
+		return
+	}
+
+	colIRI := irif(r)
+	res := vocab.OrderedCollectionPage{
+		ID:   colIRI,
+		Type: vocab.OrderedCollectionPageType,
+	}
+	it, err := o.s.Load(colIRI)
+	if err != nil {
+		o.Error(err)
+		return
+	}
+	if vocab.IsItemCollection(it) {
+		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+			res.OrderedItems = *col
+			return nil
+		})
+	}
+	err = vocab.OnCollectionIntf(it, func(items vocab.CollectionInterface) error {
+		res.OrderedItems = orderItems(items.Collection())
+		res.TotalItems = res.OrderedItems.Count()
+		return nil
+	})
+	if err != nil {
+		o.Error(err)
+		return
+	}
+
+	it = res
+	accepts := getItemAcceptedContentType(it, r)
+	switch {
+	case accepts(jsonLD, activityJson, applicationJson):
+		o.ServeActivityPub(it).ServeHTTP(w, r)
+	case accepts(imageAny):
+		o.ServeBinData(it).ServeHTTP(w, r)
+	case accepts(textHTML):
+		fallthrough
+	default:
+		f, err := TemplateFS.Open("templates/main.html")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Fprintf(w, "%+s", err)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		io.Copy(w, f)
+	}
+	o.logRequest(r, http.StatusOK, now)
 }
 
 func acceptFollows(o oni, f vocab.Follow) error {
@@ -438,15 +458,15 @@ func acceptFollows(o oni, f vocab.Follow) error {
 }
 
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
-func ProcessActivity(o oni) processing.ActivityHandlerFn {
+func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	auth, err := auth.New(
 		auth.WithStorage(o.s),
 		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "auth"})),
 		auth.WithClient(o.c),
 	)
 	if err != nil {
-		o.l.Errorf("invalid auth mw: %s", err.Error())
-		return notAcceptable
+		o.l.WithContext(lw.Ctx{"err": err}).Errorf("invalid authorization mw")
+		return notAcceptable(err)
 	}
 	processor, err := processing.New(
 		processing.WithIRI(o.a.ID), processing.WithClient(o.c), processing.WithStorage(o.s),
@@ -456,34 +476,35 @@ func ProcessActivity(o oni) processing.ActivityHandlerFn {
 		}),
 	)
 	if err != nil {
-		o.l.Errorf("invalid processing mw: %s", err.Error())
-		return notAcceptable
+		o.l.WithContext(lw.Ctx{"err": err}).Errorf("invalid processing mw")
+		return notAcceptable(err)
 	}
 
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
+		now := time.Now().UTC()
 
 		act, err := auth.LoadActorFromAuthHeader(r)
 		if err != nil {
-			o.l.Errorf("unable to load an authorized Actor from request: %+s", err)
+			o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to load an authorized Actor from request")
 		}
 
 		if ok, err := ValidateRequest(r); !ok {
-			o.l.Errorf("failed request validation: %+s", err)
+			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed request validation")
 			return it, errors.HttpStatus(err), err
 		}
 		body, err := io.ReadAll(r.Body)
 		if err != nil || len(body) == 0 {
-			o.l.Errorf("failed loading body: %+s", err)
+			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
-			o.l.Errorf("failed unmarshaling jsonld body: %+s", err)
+			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed unmarshalling jsonld body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
 		}
 
 		if err != nil {
-			o.l.Errorf("failed initializing the Activity processor: %+s", err)
+			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed initializing the Activity processor")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
 		processor.SetActor(&act)
@@ -496,16 +517,16 @@ func ProcessActivity(o oni) processing.ActivityHandlerFn {
 			return nil
 		})
 		if it, err = processor.ProcessActivity(it, receivedIn); err != nil {
-			o.l.Errorf("failed processing activity: %+s", err)
+			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed processing activity")
 			return it, errors.HttpStatus(err), errors.Annotatef(err, "Can't save activity %s to %s", it.GetType(), receivedIn)
 		}
 
 		if it.GetType() == vocab.FollowType {
 			err := vocab.OnActivity(it, func(a *vocab.Activity) error {
-				return acceptFollows(o, *a)
+				return acceptFollows(*o, *a)
 			})
 			if err != nil {
-				o.l.Errorf("unable to automatically accept follow: %+s", err)
+				o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to automatically accept follow")
 			}
 		}
 
@@ -514,9 +535,7 @@ func ProcessActivity(o oni) processing.ActivityHandlerFn {
 			status = http.StatusGone
 		}
 
-		if o.l != nil {
-			o.l.Debugf("%s %s %d %s", r.Method, irif(r), http.StatusOK, http.StatusText(http.StatusOK))
-		}
+		o.logRequest(r, http.StatusOK, now)
 		return it, status, nil
 	}
 }
