@@ -452,12 +452,17 @@ func acceptFollows(o oni, f vocab.Follow) error {
 
 	o.c.SignFn(s2sSignFn(o))
 
-	iri, it, err := o.c.ToCollection(vocab.Inbox.IRI(f.Actor), accept)
+	processing.SetID(accept, vocab.Outbox.IRI(o.a), nil)
+	if _, err := o.s.Save(accept); err != nil {
+		o.l.Errorf("Failed saving activity %T[%s]: %+s", accept, accept.Type, err)
+	}
+
+	iri, _, err := o.c.ToCollection(vocab.Inbox.IRI(f.Actor), accept)
 	if err != nil {
-		o.l.Errorf("Failed accepting follow: %+s", err)
+		o.l.Errorf("Failed federating %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
 		return err
 	}
-	o.l.Infof("Accepted Follow: %T: %s", it, iri)
+	o.l.Infof("Accepted Follow: %s", iri)
 	return nil
 }
 
