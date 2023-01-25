@@ -534,12 +534,16 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 		if it.GetType() == vocab.FollowType {
 			defer func() {
-				err := vocab.OnActivity(it, func(a *vocab.Activity) error {
-					return acceptFollows(*o, *a)
-				})
-				if err != nil {
-					o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to automatically accept follow")
-				}
+				go func() {
+					time.Sleep(300 * time.Millisecond)
+
+					err := vocab.OnActivity(it, func(a *vocab.Activity) error {
+						return acceptFollows(*o, *a)
+					})
+					if err != nil {
+						o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to automatically accept follow")
+					}
+				}()
 			}()
 		}
 
