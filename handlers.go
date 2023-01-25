@@ -452,11 +452,13 @@ func acceptFollows(o oni, f vocab.Follow) error {
 
 	o.c.SignFn(s2sSignFn(o))
 
-	_, _, err := o.c.ToCollection(vocab.Inbox.IRI(f.Actor), accept)
+	iri, it, err := o.c.ToCollection(vocab.Inbox.IRI(f.Actor), accept)
 	if err != nil {
 		o.l.Errorf("Failed accepting follow: %+s", err)
+		return err
 	}
-	return err
+	o.l.Infof("Accepted Follow: %T: %s", it, iri)
+	return nil
 }
 
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
