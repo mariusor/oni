@@ -7,11 +7,11 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20230104101555-9bfc303f6588
 	github.com/elnormous/contenttype v1.0.3
 	github.com/go-ap/activitypub v0.0.0-20221209114049-1ceafda50f9f
-	github.com/go-ap/auth v0.0.0-20230119114423-60dd7a31567a
-	github.com/go-ap/client v0.0.0-20221211133508-e3087682099e
+	github.com/go-ap/auth v0.0.0-20230125142556-d3b78dc678a4
+	github.com/go-ap/client v0.0.0-20230125140507-b30e32f7fa90
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20230125114750-7bb9328505d6
+	github.com/go-ap/processing v0.0.0-20230125144028-8b0073a8ef4a
 	github.com/go-ap/storage-fs v0.0.0-20221219124530-29fb546e76bd
 	github.com/go-fed/httpsig v1.1.0
 	github.com/openshift/osin v1.0.1
