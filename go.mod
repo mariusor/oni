@@ -7,7 +7,7 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20230104101555-9bfc303f6588
 	github.com/elnormous/contenttype v1.0.3
 	github.com/go-ap/activitypub v0.0.0-20221209114049-1ceafda50f9f
-	github.com/go-ap/auth v0.0.0-20230125142556-d3b78dc678a4
+	github.com/go-ap/auth v0.0.0-20230125185441-74b72bedd581
 	github.com/go-ap/client v0.0.0-20230125140507-b30e32f7fa90
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
