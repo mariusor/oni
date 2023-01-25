@@ -522,12 +522,14 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		}
 
 		if it.GetType() == vocab.FollowType {
-			err := vocab.OnActivity(it, func(a *vocab.Activity) error {
-				return acceptFollows(*o, *a)
-			})
-			if err != nil {
-				o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to automatically accept follow")
-			}
+			defer func() {
+				err := vocab.OnActivity(it, func(a *vocab.Activity) error {
+					return acceptFollows(*o, *a)
+				})
+				if err != nil {
+					o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to automatically accept follow")
+				}
+			}()
 		}
 
 		status := http.StatusCreated
@@ -535,7 +537,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			status = http.StatusGone
 		}
 
-		o.logRequest(r, http.StatusOK, now)
+		o.logRequest(r, status, now)
 		return it, status, nil
 	}
 }
