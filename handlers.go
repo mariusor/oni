@@ -66,23 +66,12 @@ func (o *oni) setupRoutes() {
 		return
 	}
 
-	o.setupActivityPubRoutes()
+	o.setupActorRoutes()
 	o.setupWebfingerRoutes()
+	o.setupStaticRoutes()
 }
 
-func (o *oni) setupWebfingerRoutes() {
-	o.m.HandleFunc("/.well-known/webfinger", HandleWebFinger(*o))
-	o.m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
-}
-
-func (o *oni) setupActivityPubRoutes() {
-	base, ok := IRIPath(o.a.ID)
-	if !ok {
-		return
-	}
-	o.m.HandleFunc(base, o.OnItemHandler)
-	o.collectionRoutes(vocab.ActivityPubCollections...)
-
+func (o *oni) setupStaticRoutes() {
 	var fsServe http.HandlerFunc
 	if assetFilesFS, err := fs.Sub(AssetsFS, "assets"); err == nil {
 		fsServe = func(w http.ResponseWriter, r *http.Request) {
@@ -96,6 +85,20 @@ func (o *oni) setupActivityPubRoutes() {
 	o.m.Handle("/main.js", fsServe)
 	o.m.Handle("/main.css", fsServe)
 	o.m.HandleFunc("/favicon.ico", o.NotFound)
+}
+
+func (o *oni) setupWebfingerRoutes() {
+	o.m.HandleFunc("/.well-known/webfinger", HandleWebFinger(*o))
+	o.m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
+}
+
+func (o *oni) setupActorRoutes() {
+	base, ok := IRIPath(o.a.ID)
+	if !ok {
+		return
+	}
+	o.m.HandleFunc(base, o.OnItemHandler)
+	o.collectionRoutes(vocab.ActivityPubCollections...)
 }
 
 func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
