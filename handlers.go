@@ -23,10 +23,8 @@ import (
 )
 
 // NotFound is a generic method to return an 404 error HTTP handler that
-func (o *oni) NotFound() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		o.Error(errors.NotFoundf("%s not found", r.URL.Path)).ServeHTTP(w, r)
-	}
+func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
+	o.Error(errors.NotFoundf("%s not found", r.URL.Path)).ServeHTTP(w, r)
 }
 
 func (o *oni) Error(err error) http.HandlerFunc {
@@ -42,16 +40,16 @@ func (o *oni) collectionRoutes(collections ...vocab.CollectionPath) {
 	for _, collection := range collections {
 		path := base + string(collection)
 		if !ok {
-			o.m.Handle(path, o.NotFound())
+			o.m.HandleFunc(path, o.NotFound)
 			continue
 		}
 		if !CollectionExists(actor, collection) {
-			o.m.Handle(path, o.NotFound())
+			o.m.HandleFunc(path, o.NotFound)
 			continue
 		}
 		colPath, ok := IRIPath(collection.Of(actor.GetLink()).GetLink())
 		if !ok {
-			o.m.Handle(path, o.NotFound())
+			o.m.HandleFunc(path, o.NotFound)
 			continue
 		}
 
@@ -64,7 +62,7 @@ func (o *oni) setupRoutes() {
 	o.m = http.NewServeMux()
 
 	if o.a.ID == "" {
-		o.m.Handle("/", o.NotFound())
+		o.m.HandleFunc("/", o.NotFound)
 		return
 	}
 
@@ -97,7 +95,7 @@ func (o *oni) setupActivityPubRoutes() {
 	}
 	o.m.Handle("/main.js", fsServe)
 	o.m.Handle("/main.css", fsServe)
-	o.m.HandleFunc("/favicon.ico", o.NotFound())
+	o.m.HandleFunc("/favicon.ico", o.NotFound)
 }
 
 func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
