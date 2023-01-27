@@ -205,7 +205,7 @@ func propNameInIRI(iri vocab.IRI) (bool, string) {
 	return false, ""
 }
 
-func (o *oni) ServeActivityPub(it vocab.Item) http.HandlerFunc {
+func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 	dat, err := json.WithContext(json.IRI(vocab.ActivityBaseURI), json.IRI(vocab.SecurityContextURI)).Marshal(it)
 	if err != nil {
 		return o.Error(err)
@@ -346,7 +346,7 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 	accepts := getItemAcceptedContentType(it, r)
 	switch {
 	case accepts(jsonLD, activityJson, applicationJson):
-		o.ServeActivityPub(it).ServeHTTP(w, r)
+		o.ServeActivityPubItem(it).ServeHTTP(w, r)
 	case accepts(imageAny):
 		o.ServeBinData(it).ServeHTTP(w, r)
 	case accepts(textHTML):
@@ -426,7 +426,7 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	accepts := getItemAcceptedContentType(it, r)
 	switch {
 	case accepts(jsonLD, activityJson, applicationJson):
-		o.ServeActivityPub(it).ServeHTTP(w, r)
+		o.ServeActivityPubItem(it).ServeHTTP(w, r)
 	case accepts(imageAny):
 		o.ServeBinData(it).ServeHTTP(w, r)
 	case accepts(textHTML):
