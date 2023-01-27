@@ -303,7 +303,7 @@ var iriNotFound = func(iri vocab.IRI) error {
 }
 
 func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct.MediaType) bool {
-	acceptableMediaTypes := []ct.MediaType{jsonLD, activityJson, applicationJson}
+	acceptableMediaTypes := make([]ct.MediaType, 0)
 
 	vocab.OnObject(it, func(ob *vocab.Object) error {
 		if ob.MediaType != "" {
@@ -314,6 +314,7 @@ func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct
 		}
 		return nil
 	})
+	acceptableMediaTypes = append(acceptableMediaTypes, jsonLD, activityJson, applicationJson)
 
 	accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
 	if accepted.Type == "" {
