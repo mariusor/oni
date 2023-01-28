@@ -1,0 +1,14 @@
+<oni-person
+        iri="{{ .ID }}"
+        icon="{{ .Icon }}"
+        image="{{ .Image }}"
+        preferredUsername="{{ .PreferredUsername | HTML }}"
+>
+    {{ if .URL -}}
+    <ul slot="url">
+    {{ range $u := .URL }} <li><a href="{{$u}}">{{$u}}</a></li>{{ end }}
+    </ul>
+    {{- end }}
+    {{ if .Summary -}} <div slot="summary">{{ .Summary | HTML }}</div> {{- end }}
+    {{ if .Content -}} <div slot="content">{{ .Content | HTML }}</div> {{- end }}
+</oni-person>

@@ -14,6 +14,7 @@ $ cd oni
 
 ```sh
 $ go mod tidy
+$ go generate frontend.go
 $ go build -trimpath -a -ldflags '-s -w -extldflags "-static"' -o $(go env GOPATH)/bin/oni ./cmd/oni/main.go
 ```
 

@@ -73,7 +73,7 @@ func (o *oni) setupRoutes() {
 
 func (o *oni) setupStaticRoutes() {
 	var fsServe http.HandlerFunc
-	if assetFilesFS, err := fs.Sub(AssetsFS, "assets"); err == nil {
+	if assetFilesFS, err := fs.Sub(AssetsFS, "static"); err == nil {
 		fsServe = func(w http.ResponseWriter, r *http.Request) {
 			st := time.Now().UTC()
 			http.FileServer(http.FS(assetFilesFS)).ServeHTTP(w, r)
@@ -83,6 +83,7 @@ func (o *oni) setupStaticRoutes() {
 		fsServe = o.Error(err).ServeHTTP
 	}
 	o.m.Handle("/main.js", fsServe)
+	//o.m.Handle("/main.js.map", fsServe)
 	o.m.Handle("/main.css", fsServe)
 	o.m.HandleFunc("/favicon.ico", o.NotFound)
 }
@@ -352,13 +353,12 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 	case accepts(textHTML):
 		fallthrough
 	default:
-		f, err := TemplateFS.Open("templates/main.html")
-		if err != nil {
-			o.Error(err)
+		wrt := bytes.Buffer{}
+		if err := ren.HTML(&wrt, http.StatusOK, "components/person", it); err != nil {
+			o.Error(err).ServeHTTP(w, r)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
-		io.Copy(w, f)
+		io.Copy(w, &wrt)
 	}
 	o.logRequest(r, http.StatusOK, now)
 }
@@ -403,7 +403,7 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	it, err := o.s.Load(colIRI)
 	if err != nil {
-		o.Error(err)
+		o.Error(err).ServeHTTP(w, r)
 		return
 	}
 	if vocab.IsItemCollection(it) {
@@ -418,7 +418,7 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		o.Error(err)
+		o.Error(err).ServeHTTP(w, r)
 		return
 	}
 
@@ -432,14 +432,12 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	case accepts(textHTML):
 		fallthrough
 	default:
-		f, err := TemplateFS.Open("templates/main.html")
+		err := ren.HTML(w, http.StatusOK, "components/collection", nil)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "%+s", err)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
-		io.Copy(w, f)
 	}
 	o.logRequest(r, http.StatusOK, now)
 }

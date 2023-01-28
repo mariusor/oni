@@ -6,6 +6,7 @@ require (
 	git.sr.ht/~mariusor/lw v0.0.0-20221202111053-2dd31f3348e7
 	git.sr.ht/~mariusor/wrapper v0.0.0-20230104101555-9bfc303f6588
 	github.com/elnormous/contenttype v1.0.3
+	github.com/evanw/esbuild v0.17.5
 	github.com/go-ap/activitypub v0.0.0-20221209114049-1ceafda50f9f
 	github.com/go-ap/auth v0.0.0-20230125185441-74b72bedd581
 	github.com/go-ap/client v0.0.0-20230125140507-b30e32f7fa90
@@ -14,6 +15,7 @@ require (
 	github.com/go-ap/processing v0.0.0-20230125160601-4798c034ac40
 	github.com/go-ap/storage-fs v0.0.0-20221219124530-29fb546e76bd
 	github.com/go-fed/httpsig v1.1.0
+	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/openshift/osin v1.0.1
 )
 
