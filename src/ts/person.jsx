@@ -1,17 +1,16 @@
-import {css, html, LitElement} from "lit";
+import {css, html} from "lit";
+import {ActivitypubObject} from "./activitypub-object";
 
-export class ActivityPubPerson {
-};
-
-export class Person extends LitElement {
+export class Person extends ActivitypubObject {
     static styles = css`
         :host {
+            display: block;
             background-size: cover;
             color: var(--fg-color); 
         }
         :host img.icon {
-            width: 12rem;
-            max-width: 24%;
+            width: 10rem;
+            max-width: 20%;
             margin-right: 1rem;
             border: .3vw solid var(--shadow-color);
             border-radius: 20%;
@@ -19,61 +18,48 @@ export class Person extends LitElement {
             shape-outside: margin-box;
         }
         :host .details {
-            background-clip: padding-box;
+            background-clip: padding-border;
             overflow-x: hidden;
             background-size: cover;
             min-height: 12vw;
             padding: 1vw;
         }
-        :host .content {
-            margin: -2vw 1vw;
-            background-color: rgba(var(--fg-color), 0.2);
+        :host h2 {
+            text-shadow : .08em .06em .15em var(--shadow-color);
         }
-        ul {
-            list-style: none;
-            padding: 0;
+        ::slotted(.content) {
+            border-top: solid .3vw var(--fg-color);
+            margin: 1vw;
         }
-        ul li {
-            display: inline-block;
+        ::slotted(a) {
             margin-right: 1vw;
         }
         :host h2 {
             text-shadow : .08em .06em .15em var(--shadow-color);
         }
     `;
-    static properties = {
-        it: {type: ActivityPubPerson},
-        iri: {type: String},
-        icon: {type: String},
-        image: {type: String},
-        preferredUsername: {type: String},
-        summary: {type: String},
-        content: {type: HTMLElement},
-    };
+    static properties = { it: {type: Object} };
 
     constructor() {
         super();
-        this.preferredUsername = 'Anonymous';
     }
 
     render() {
-        let summary;
-        if (this.summary) {
-            summary = html`<span>${this.summary}</span>`;
-        }
+        const it = this.it;
         return html`
             <style>
                 :host {
-                    background-image: linear-gradient(rgba(1, 1, 1, 1), rgba(1, 1, 1, 0.6)), url("${this.image}");
+                    background-image: linear-gradient(rgba(1, 1, 1, 1), rgba(1, 1, 1, 0.6)), url("${it.image}");
                     background-size: cover;
                     color: var(--fg-color); 
                 }
             </style>
             <main class="person">
                 <article class="details">
-                    <h2><a href="${this.iri}"><img class="icon" src="${this.icon}"/> ${this.preferredUsername}</a></h2>
+                    <h2><a href="${this.iri()}"><img class="icon" src="${it.icon}"/> ${it.preferredUsername}</a></h2>
                     <slot name="summary"></slot>
                     <slot name="url"></slot>
+                    <slot name="collections"></slot>
                     <slot name="content"></slot>
                 </article>
             </main>`;

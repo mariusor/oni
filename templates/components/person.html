@@ -1,14 +1,13 @@
-<oni-person
-        iri="{{ .ID }}"
-        icon="{{ .Icon }}"
-        image="{{ .Image }}"
-        preferredUsername="{{ .PreferredUsername | HTML }}"
->
+<oni-person it="{{ . | JSON }}">
     {{ if .URL -}}
-    <ul slot="url">
-    {{ range $u := .URL }} <li><a href="{{$u}}">{{$u}}</a></li>{{ end }}
-    </ul>
+    {{ range $u := .URL }} <a slot="url" href="{{$u}}">{{$u}}</a>{{ end }}
     {{- end }}
-    {{ if .Summary -}} <div slot="summary">{{ .Summary | HTML }}</div> {{- end }}
-    {{ if .Content -}} <div slot="content">{{ .Content | HTML }}</div> {{- end }}
+    <div slot="collections">
+    {{ if .Inbox -}} <oni-collection-link iri="{{ .Inbox.GetLink }}"></oni-collection-link> {{- end }}
+    {{ if .Outbox -}} <oni-collection-link iri="{{ .Outbox.GetLink }}"></oni-collection-link> {{- end }}
+    {{ if .Followers -}} <oni-collection-link iri="{{ .Followers.GetLink }}"></oni-collection-link> {{- end }}
+    {{ if .Following -}} <oni-collection-link iri="{{ .Following.GetLink }}"></oni-collection-link> {{- end }}
+    </div>
+    {{ if .Summary -}} <div slot="summary" class="summary">{{ .Summary | HTML }}</div> {{- end }}
+    {{ if .Content -}} <div slot="content" class="content">{{ .Content | HTML }}</div> {{- end }}
 </oni-person>
