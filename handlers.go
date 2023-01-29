@@ -432,7 +432,7 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	case accepts(textHTML):
 		fallthrough
 	default:
-		err := ren.HTML(w, http.StatusOK, "components/collection", nil)
+		err := ren.HTML(w, http.StatusOK, "components/collection", it)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "%+s", err)
