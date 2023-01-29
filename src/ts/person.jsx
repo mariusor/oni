@@ -8,6 +8,15 @@ export class Person extends ActivitypubObject {
             background-size: cover;
             color: var(--fg-color); 
         }
+        a {
+            color: var(--link-color); 
+        }
+        a:visited {
+            color: var(--linkvisited-color); 
+        }
+        a:active {
+            color: var(--linkactive-color); 
+        }
         :host img.icon {
             width: 10rem;
             max-width: 20%;
@@ -28,7 +37,6 @@ export class Person extends ActivitypubObject {
             text-shadow : .08em .06em .15em var(--shadow-color);
         }
         ::slotted(.content) {
-            border-top: solid .3vw var(--fg-color);
             margin: 1vw;
         }
         ::slotted(a) {
@@ -56,10 +64,11 @@ export class Person extends ActivitypubObject {
             </style>
             <main class="person">
                 <article class="details">
-                    <h2><a href="${this.iri()}"><img class="icon" src="${it.icon}"/> ${it.preferredUsername}</a></h2>
+                    <h2><a href="${this.iri()}"><img class="icon" src="${it.icon}"/>${it.preferredUsername}</a></h2>
                     <slot name="summary"></slot>
                     <slot name="url"></slot>
                     <slot name="collections"></slot>
+                    <hr/>
                     <slot name="content"></slot>
                 </article>
             </main>`;

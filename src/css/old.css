@@ -86,3 +86,12 @@ body {
     display: inline-block;
     margin-right: 1vw;
 }
+a {
+    color: var(--link-color);
+}
+a:visited {
+    color: var(--linkvisited-color);
+}
+a:active {
+    color: var(--linkactive-color);
+}

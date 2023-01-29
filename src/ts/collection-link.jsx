@@ -2,7 +2,15 @@ import {css, html, LitElement} from "lit";
 
 export class CollectionLink extends LitElement {
     static styles = css`
-        :host {}
+        a {
+            color: var(--link-color); 
+        }
+        a:visited {
+            color: var(--linkvisited-color); 
+        }
+        a:active {
+            color: var(--linkactive-color); 
+        }
     `;
     static properties = {
         iri: {type: String},
