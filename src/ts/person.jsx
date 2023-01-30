@@ -7,6 +7,11 @@ export class Person extends ActivitypubObject {
             display: block;
             background-size: cover;
             color: var(--fg-color); 
+            background-clip: padding-border;
+            overflow-x: hidden;
+            background-size: cover;
+            min-height: 12vw;
+            padding: 1vw;
         }
         a {
             color: var(--link-color); 
@@ -26,24 +31,11 @@ export class Person extends ActivitypubObject {
             float: left;
             shape-outside: margin-box;
         }
-        :host .details {
-            background-clip: padding-border;
-            overflow-x: hidden;
-            background-size: cover;
-            min-height: 12vw;
-            padding: 1vw;
-        }
-        :host h2 {
-            text-shadow : .08em .06em .15em var(--shadow-color);
-        }
         ::slotted(.content) {
             margin: 1vw;
         }
         ::slotted(a) {
             margin-right: 1vw;
-        }
-        :host h2 {
-            text-shadow : .08em .06em .15em var(--shadow-color);
         }
     `;
     static properties = { it: {type: Object} };
@@ -69,20 +61,14 @@ export class Person extends ActivitypubObject {
                     color: var(--fg-color); 
                 }
             </style>
-            <main class="person">
-                <article class="details">
-                    <h2>
-                        <a href=${this.iri()}>
-                            <img class="icon" src=${it.icon}/>
-                            <slot name="preferredUsername"></slot>
-                        </a>
-                    </h2>
-                    <aside><slot name="summary"></slot></aside>
-                    <slot name="url"></slot>
-                    <slot name="collections"></slot>
-                    <hr/>
-                    <slot name="content"></slot>
-                </article>
-            </main>`;
+            <img class="icon" src=${it.icon}/>
+            <slot name="preferredUsername"></slot> </a>
+            </h2>
+            <aside><slot name="summary"></slot></aside>
+            <slot name="url"></slot>
+            <slot name="collections"></slot>
+            <hr/>
+            <slot name="content"></slot>
+        `;
     }
 }

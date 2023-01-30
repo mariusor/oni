@@ -1,5 +1,5 @@
 <oni-person it="{{ . | JSON }}">
-    <oni-natural-language-value slot="preferredUsername">{{ .PreferredUsername | HTML }}</oni-natural-language-value>
+    <oni-natural-language-value slot="preferredUsername"> <h2><a href="{{ .ID }}"> {{ .PreferredUsername | HTML }}</a></h2></oni-natural-language-value>
     {{ if .URL -}}
     {{ range $u := .URL }} <a slot="url" href="{{$u}}">{{$u}}</a>{{ end }}
     {{- end }}
