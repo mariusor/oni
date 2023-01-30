@@ -1,4 +1,5 @@
 <oni-person it="{{ . | JSON }}">
+    <oni-natural-language-value slot="preferredUsername">{{ .PreferredUsername | HTML }}</oni-natural-language-value>
     {{ if .URL -}}
     {{ range $u := .URL }} <a slot="url" href="{{$u}}">{{$u}}</a>{{ end }}
     {{- end }}
@@ -8,6 +9,6 @@
     {{ if .Followers -}} <oni-collection-link iri="{{ .Followers.GetLink }}"></oni-collection-link> {{- end }}
     {{ if .Following -}} <oni-collection-link iri="{{ .Following.GetLink }}"></oni-collection-link> {{- end }}
     </div>
-    {{ if .Summary -}} <div slot="summary" class="summary">{{ .Summary | HTML }}</div> {{- end }}
-    {{ if .Content -}} <div slot="content" class="content">{{ .Content | HTML }}</div> {{- end }}
+    {{ if .Summary -}} <oni-natural-language-value slot="summary" class="summary">{{ .Summary | HTML }}</oni-natural-language-value> {{- end }}
+    {{ if .Content -}} <oni-natural-language-value slot="content" class="content">{{ .Content | HTML }}</oni-natural-language-value> {{- end }}
 </oni-person>

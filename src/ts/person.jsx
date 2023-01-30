@@ -52,6 +52,13 @@ export class Person extends ActivitypubObject {
         super();
     }
 
+    preferredUsername() {
+        if (typeof this.it.preferredUsername == "string") {
+            return [this.it.preferredUsername];
+        }
+        return this.it.preferredUsername == null ? [] : this.it.preferredUsername;
+    }
+
     render() {
         const it = this.it;
         return html`
@@ -64,8 +71,13 @@ export class Person extends ActivitypubObject {
             </style>
             <main class="person">
                 <article class="details">
-                    <h2><a href="${this.iri()}"><img class="icon" src="${it.icon}"/>${it.preferredUsername}</a></h2>
-                    <slot name="summary"></slot>
+                    <h2>
+                        <a href=${this.iri()}>
+                            <img class="icon" src=${it.icon}/>
+                            <slot name="preferredUsername"></slot>
+                        </a>
+                    </h2>
+                    <aside><slot name="summary"></slot></aside>
                     <slot name="url"></slot>
                     <slot name="collections"></slot>
                     <hr/>
