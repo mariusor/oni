@@ -83,12 +83,13 @@ func (o *oni) setupStaticRoutes() {
 		fsServe = o.Error(err).ServeHTTP
 	}
 	o.m.Handle("/main.js", fsServe)
-	//o.m.Handle("/main.js.map", fsServe)
+	o.m.Handle("/main.js.map", fsServe)
 	o.m.Handle("/main.css", fsServe)
 	o.m.HandleFunc("/favicon.ico", o.NotFound)
 }
 
 func (o *oni) setupWebfingerRoutes() {
+    // TODO(marius): we need the nodeinfo handlers also
 	o.m.HandleFunc("/.well-known/webfinger", HandleWebFinger(*o))
 	o.m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
 }
