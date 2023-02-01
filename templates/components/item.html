@@ -1,11 +1,2 @@
 {{ $it := . }}
-<oni-{{$it.Type}}
-  iri="{{ $it.ID }}"
-  {{ if .Icon }}icon="{{ .Icon }}"{{ end }}
-  {{ if .Image }}image="{{ .Image }}"{{ end }}
-  actor="{{ $it.Actor.GetLink }}"
-  object="{{ $it.Object.GetLink }}"
-  {{ if not .Published.IsZero }}published="{{ .Published }}"{{ end }}
-  {{ if not .Updated.IsZero }}updated="{{ .Updated }}"{{ end }}
->
-</oni-{{$it.Type}}>
+<oni-{{$it.Type}} it="{{ . | JSON }}"></oni-{{$it.Type}}>
