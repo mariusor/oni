@@ -95,3 +95,28 @@ a:visited {
 a:active {
     color: var(--linkactive-color);
 }
+oni-person h2 {
+    text-shadow : .08em .06em .15em var(--shadow-color);
+    color: var(--fg-color) !important;
+}
+oni-person h2 a {
+    color: var(--fg-color);
+    text-decoration: none;
+    margin-right: 1vw;
+}
+oni-person h2 a:visited {
+    color: var(--fg-color);
+}
+oni-person ul {
+    margin: .2em;
+    padding: 0;
+    display: block;
+    list-style: none;
+}
+oni-person ul li {
+    list-style: none;
+    display: inline-block;
+}
+oni-person .content {
+    margin: 1vw;
+}

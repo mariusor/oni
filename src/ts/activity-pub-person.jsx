@@ -1,26 +1,18 @@
 import {css, html} from "lit";
-import {ActivitypubObject} from "./activitypub-object";
+import {ActivityPubObject} from "./activity-pub-object";
+import {getAverageImageRGB, rgba, setStyles} from "./utils";
+import {until} from "lit-html/directives/until.js";
 
-export class Person extends ActivitypubObject {
+export class ActivityPubPerson extends ActivityPubObject {
     static styles = css`
         :host {
-            display: block;
-            background-size: cover;
-            color: var(--fg-color); 
             background-clip: padding-border;
-            overflow-x: hidden;
             background-size: cover;
+            display: block;
+            color: var(--fg-color); 
+            overflow-x: hidden;
             min-height: 12vw;
-            padding: 1vw;
-        }
-        a {
-            color: var(--link-color); 
-        }
-        a:visited {
-            color: var(--linkvisited-color); 
-        }
-        a:active {
-            color: var(--linkactive-color); 
+            padding: 1rem;
         }
         :host img.icon {
             width: 10rem;
@@ -31,12 +23,7 @@ export class Person extends ActivitypubObject {
             float: left;
             shape-outside: margin-box;
         }
-        ::slotted(.content) {
-            margin: 1vw;
-        }
-        ::slotted(a) {
-            margin-right: 1vw;
-        }
+        
     `;
     static properties = { it: {type: Object} };
 
@@ -51,19 +38,26 @@ export class Person extends ActivitypubObject {
         return this.it.preferredUsername == null ? [] : this.it.preferredUsername;
     }
 
+    async averageImageRGB() {
+        const avgRGB = await getAverageImageRGB(this.it.image);
+        const rgbLow = rgba(avgRGB, 0);
+        const rgbHigh = rgba(avgRGB, 1);
+        setStyles(avgRGB)
+        return `linear-gradient(${rgbLow}, ${rgbHigh}), url("${this.it.image}")`;
+    }
+
     render() {
         const it = this.it;
+        const avgImg = this.averageImageRGB();
         return html`
             <style>
-                :host {
-                    background-image: linear-gradient(rgba(1, 1, 1, 1), rgba(1, 1, 1, 0.6)), url("${it.image}");
-                    background-size: cover;
-                    color: var(--fg-color); 
-                }
+                :host { background-image: ${until(avgImg)}; }
             </style>
+            <link rel="stylesheet" href="/main.css" />
+            <a href=${this.iri()}>
             <img class="icon" src=${it.icon}/>
-            <slot name="preferredUsername"></slot> </a>
-            </h2>
+            </a>
+            <h2> <a href=${this.iri()}> <slot name="preferredUsername"></slot> </a></h2>
             <aside><slot name="summary"></slot></aside>
             <slot name="url"></slot>
             <slot name="collections"></slot>

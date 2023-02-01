@@ -1,8 +1,18 @@
-function rgb(rgb) {
+export function rgb(rgb) {
     return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 };
 
-function rgba(rgb, a) {
+export function setStyles(bgColor) {
+    bgColor = (bgColor || {r: 0, g: 0, b: 0});
+
+    const bri = brightness(bgColor)
+    const scheme = getColorScheme(bri);
+
+    localStorage.setItem('colorScheme', scheme);
+    localStorage.setItem('backgroundColor', rgb(bgColor));
+};
+
+export function rgba(rgb, a) {
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${a})`;
 };
 
@@ -28,7 +38,7 @@ function getColorScheme(bri) {
     return scheme;
 };
 
-async function getAverageImageRGB(url) {
+export async function getAverageImageRGB(url) {
     let blockSize = 5, // only visit every 5 pixels
         i = -4, rgb = {r: 0, g: 0, b: 0}, count = 0, data;
 
@@ -63,7 +73,7 @@ async function getAverageImageRGB(url) {
     return rgb;
 };
 
-function loadImage(url) {
+export function loadImage(url) {
     return new Promise(r => {
         let i = new Image();
         i.onload = (() => r(i));
@@ -71,14 +81,13 @@ function loadImage(url) {
     });
 };
 
-function $frag (html) {
-    let frag = document.createDocumentFragment();
-    let tmp = document.createElement('body');
-    let child;
+export function OnReady(a) {
+    'loading' == document.readyState ? document.addEventListener && document.addEventListener('DOMContentLoaded', a) : a.call()
+};
 
-    tmp.innerHTML = html;
-    while (child = tmp.firstChild) {
-        frag.appendChild(child);
-    }
-    return frag;
+export async function fetchActivityPubIRI(iri) {
+    const response = await fetch(iri, {headers: {Accept: 'application/activity+json'}})
+        .catch(console.error);
+    const it = await response.json();
+    return it;
 };
