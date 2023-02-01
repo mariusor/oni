@@ -16,7 +16,6 @@ OnReady(function () {
         const backgroundColor = localStorage.getItem('backgroundColor');
         if (backgroundColor) {
             root.style.setProperty('--bg-color', backgroundColor);
-            root.style.backgroundColor = backgroundColor;
         }
     });
 });
