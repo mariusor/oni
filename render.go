@@ -18,6 +18,34 @@ var ren = render.New(render.Options{
 		"HTML": func(n vocab.NaturalLanguageValues) template.HTML {
 			return template.HTML(n.First().Value)
 		},
+		"oniType": func(i any) template.HTML {
+			switch it := i.(type) {
+			case vocab.Item:
+				t := it.GetType()
+				switch {
+				case vocab.ActorTypes.Contains(t):
+					return "actor"
+				case vocab.ActivityTypes.Contains(t), vocab.IntransitiveActivityTypes.Contains(t):
+					return "activity"
+				case vocab.CollectionTypes.Contains(t):
+					return "collection"
+				default:
+					return "object"
+				}
+			case vocab.IRI:
+				return "iri"
+			case vocab.NaturalLanguageValues:
+				return "natural-language-values"
+			case vocab.LangRefValue:
+				return "natural-language-value"
+			case vocab.LangRef:
+				return "value"
+			case error:
+			default:
+				return "error"
+			}
+			return "error"
+		},
 		"JSON": func(it any) template.HTMLAttr {
 			var res []byte
 			switch o := it.(type) {

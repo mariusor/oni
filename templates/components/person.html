@@ -1,4 +1,5 @@
-<oni-person it="{{ . | JSON }}">
+{{ $type := . | oniType }}
+<oni-{{ $type }} it="{{ . | JSON }}">
     <oni-natural-language-value slot="preferredUsername"> {{ .PreferredUsername | HTML }}</oni-natural-language-value>
     {{ if .URL -}}
     <ul slot="url"> {{ range $u := .URL }} <li><a href="{{$u}}">{{$u}}</a></li>{{ end }} </ul>
@@ -11,4 +12,4 @@
     </ul>
     {{ if .Summary -}} <oni-natural-language-value slot="summary" class="summary">{{ .Summary | HTML }}</oni-natural-language-value> {{- end }}
     {{ if .Content -}} <oni-natural-language-value slot="content" class="content">{{ .Content | HTML }}</oni-natural-language-value> {{- end }}
-</oni-person>
+</oni-{{ $type }}>

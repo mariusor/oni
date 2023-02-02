@@ -3,7 +3,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {getAverageImageRGB, rgba, setStyles} from "./utils";
 import {until} from "lit-html/directives/until.js";
 
-export class ActivityPubPerson extends ActivityPubObject {
+export class ActivityPubActor extends ActivityPubObject {
     static styles = css`
         :host {
             background-clip: padding-border;
@@ -25,7 +25,9 @@ export class ActivityPubPerson extends ActivityPubObject {
         }
         
     `;
-    static properties = { it: {type: Object} };
+    static properties = {
+        it: {type: Object},
+    };
 
     constructor() {
         super();

@@ -1,2 +1,3 @@
 {{ $it := . }}
-<oni-{{$it.Type}} it="{{ . | JSON }}"></oni-{{$it.Type}}>
+{{ $type := . | oniType }}
+<oni-{{$type}} it="{{ . | JSON }}"></oni-{{$type}}>

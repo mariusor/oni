@@ -3,7 +3,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
-export class ActivityPubCreate extends ActivityPubObject {
+export class ActivityPubActivity extends ActivityPubObject {
     static styles = css`
     :host { color: var(--fg-color); }
     `;

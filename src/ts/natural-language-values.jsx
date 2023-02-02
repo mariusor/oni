@@ -1,6 +1,6 @@
 import {html, LitElement} from "lit";
 
-export class NaturalLanguageValue extends LitElement {
+export class NaturalLanguageValues extends LitElement {
     static properties = {}
 
     constructor() {

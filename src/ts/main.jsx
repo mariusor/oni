@@ -1,13 +1,15 @@
-import {ActivityPubPerson} from "./activity-pub-person";
+import {ActivityPubActor} from "./activity-pub-actor";
 import {CollectionLink} from "./collection-link";
-import {NaturalLanguageValue} from "./natural-language-value";
-import {ActivityPubCreate} from "./activity-pub-create";
-import {OnReady, rgb} from "./utils";
+import {NaturalLanguageValues} from "./natural-language-values";
+import {ActivityPubActivity} from "./activity-pub-activity";
+import {ActivityPubCollection} from "./activity-pub-collection";
+import {OnReady} from "./utils";
 
-customElements.define('oni-natural-language-value', NaturalLanguageValue);
-customElements.define('oni-person', ActivityPubPerson);
+customElements.define('oni-natural-language-values', NaturalLanguageValues);
+customElements.define('oni-actor', ActivityPubActor);
+customElements.define('oni-collection', ActivityPubCollection);
 customElements.define('oni-collection-link', CollectionLink);
-customElements.define('oni-create', ActivityPubCreate);
+customElements.define('oni-activity', ActivityPubActivity);
 
 OnReady(function () {
     document.querySelectorAll(":root").forEach((root) => {

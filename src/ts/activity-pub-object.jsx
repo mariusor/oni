@@ -33,7 +33,6 @@ export class ActivityPubObject extends LitElement {
     }
 
     render() {
-        console.debug(`rendering plain object ${this.it}`);
         return html`<div id=${this.iri()}></div>`
     }
 }

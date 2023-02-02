@@ -1,9 +1,6 @@
-<oni-collection
-        iri="{{ .ID }}"
-        totalItems="{{ .TotalItems }}"
-        {{ if not .Published.IsZero }}publishedTime="{{ .Published }}"{{ end }}
->
+{{ $type := . | oniType }}
+<oni-{{$type}} it="{{ . | JSON }}">
 {{ range $it := .Collection }}
     {{ template "components/item" $it }}
 {{ end }}
-</oni-collectiona>
+</oni-{{ $type }}>
