@@ -37,7 +37,9 @@ export class ActivityPubCollection extends ActivityPubObject {
     }
 
     render() {
-        const t = html`${when(
+        const t = html`
+            <link rel="stylesheet" href="/main.css" />
+        ${when(
             this.type().toLowerCase().includes('ordered'),
             () => { return html`<ol id=${this.iri()}><slot></slot></ol>`},
             () => { return html`<ul id=${this.iri()}><slot></slot></ul>`},

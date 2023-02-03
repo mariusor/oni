@@ -120,3 +120,7 @@ oni-actor ul li {
 oni-actor .content {
     margin: 1vw;
 }
+oni-collection * {
+    margin: 1vw;
+    max-width: 900px;
+}
