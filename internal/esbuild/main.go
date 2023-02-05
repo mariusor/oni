@@ -14,7 +14,7 @@ func main() {
 func buildJS() {
 	// JS
 	result := api.Build(api.BuildOptions{
-		EntryPoints:       []string{"src/ts/main.jsx"},
+		EntryPoints:       []string{"src/js/main.jsx"},
 		Bundle:            true,
 		MinifyWhitespace:  true,
 		MinifyIdentifiers: true,
