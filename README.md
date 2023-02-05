@@ -13,6 +13,9 @@ $ cd oni
 ## Compiling
 
 ```sh
+# We need to download the JavaScript dependencies, using yarn or npm
+# yarn install
+# npm install 
 $ go mod tidy
 $ go generate frontend.go
 $ go build -trimpath -a -ldflags '-s -w -extldflags "-static"' -o $(go env GOPATH)/bin/oni ./cmd/oni/main.go
