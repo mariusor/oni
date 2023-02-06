@@ -1,12 +1,14 @@
-import {css, html, LitElement} from "lit";
+import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI} from "./utils";
+import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubObject extends LitElement {
     static styles = css``;
     static properties = {it: {type: Object}};
 
-    constructor() {
+    constructor(it) {
         super();
+        this.it = it;
     }
 
     async load(prop) {
@@ -32,7 +34,21 @@ export class ActivityPubObject extends LitElement {
         return this.it.hasOwnProperty('published') ? this.it.published : 'unknown';
     }
 
+    renderByType() {
+        switch (this.it.type) {
+            case 'Image':
+                return html`<img src=${this.it.id ?? nothing}/>`;
+            case 'Note':
+                return html`<obi-natural-language-value>${unsafeHTML(this.it.content)}</obi-natural-language-value>`;
+        }
+    }
+
     render() {
-        return html`<div id=${this.iri()}></div>`
+        return html`
+            <link rel="stylesheet" href="/main.css" />
+            <div id=${this.iri()} class=${this.type()}>
+                ${this.renderByType()}
+            </div>
+        `
     }
 }
