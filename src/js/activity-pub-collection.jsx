@@ -4,7 +4,12 @@ import {when} from "lit-html/directives/when.js";
 import {ifDefined} from "lit-html/directives/if-defined.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
-    static styles = css``;
+    static styles = css`
+    div {
+        max-width: 80%;
+        overflow: hidden;
+    }
+    `;
 
     static properties = {
         it: {type: Object},
