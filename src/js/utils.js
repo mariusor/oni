@@ -86,7 +86,10 @@ export function OnReady(a) {
 };
 
 export async function fetchActivityPubIRI(iri) {
-    const response = await fetch(iri, {headers: {Accept: 'application/activity+json'}});
+    const response = await fetch(iri, {headers: {Accept: 'application/activity+json'}}).catch(console.error);
+    if (typeof response == 'undefined') {
+        return null;
+    }
     if (response.status != 200) {
         response.json().then(value => console.error(value.errors));
         return null;

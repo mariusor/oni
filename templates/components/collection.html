@@ -1,6 +1,0 @@
-{{ $type := . | oniType }}
-<oni-{{$type}} it="{{ . | JSON }}">
-{{ range $it := .Collection }}
-    {{ template "components/item" $it }}
-{{ end }}
-</oni-{{ $type }}>

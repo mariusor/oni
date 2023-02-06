@@ -89,7 +89,7 @@ func (o *oni) setupStaticRoutes() {
 }
 
 func (o *oni) setupWebfingerRoutes() {
-    // TODO(marius): we need the nodeinfo handlers also
+	// TODO(marius): we need the nodeinfo handlers also
 	o.m.HandleFunc("/.well-known/webfinger", HandleWebFinger(*o))
 	o.m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
 }
@@ -433,7 +433,7 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	case accepts(textHTML):
 		fallthrough
 	default:
-		err := ren.HTML(w, http.StatusOK, "components/collection", it)
+		err := ren.HTML(w, http.StatusOK, "components/item", it)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprintf(w, "%+s", err)

@@ -22,36 +22,47 @@ export class ActivityPubObject extends LitElement {
         return it;
     }
 
-    iri () {
-        if (this.it == null) {return nothing;}
+    iri() {
+        if (this.it == null) {
+            return nothing;
+        }
         return this.it.hasOwnProperty('id') ? this.it.id : "/";
     }
 
     type() {
-        if (this.it == null) {return nothing;}
+        if (this.it == null) {
+            return nothing;
+        }
         return this.it.hasOwnProperty('type') ? this.it.type : 'tag';
     }
 
     published() {
-        if (this.it == null) {return nothing;}
+        if (this.it == null) {
+            return nothing;
+        }
         return this.it.hasOwnProperty('published') ? this.it.published : nothing;
     }
 
     renderByType() {
-        if (this.it == null) {return nothing;}
+        if (this.it == null) {
+            return nothing;
+        }
         switch (this.it.type) {
             case 'Image':
                 return html`<img src=${this.it.id ?? nothing}/>`;
             case 'Note':
-                return html`<obi-natural-language-value>${unsafeHTML(this.it.content)}</obi-natural-language-value>`;
+                return html`
+                    <obi-natural-language-value>${unsafeHTML(this.it.content)}</obi-natural-language-value>`;
         }
     }
 
     render() {
-        if (this.it == null) {return nothing;}
+        if (this.it == null) {
+            return nothing;
+        }
         return html`
-            <link rel="stylesheet" href="/main.css" />
-            <div id=${this.iri()} class=${this.type()}> ${this.renderByType() ?? nothing} </div>
+            <link rel="stylesheet" href="/main.css"/>
+            <div id=${this.iri()} class=${this.type()}> ${this.renderByType() ?? nothing}</div>
         `
     }
 }
