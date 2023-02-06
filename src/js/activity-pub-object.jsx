@@ -13,7 +13,7 @@ export class ActivityPubObject extends LitElement {
 
     async load(prop) {
         if (!this.it.hasOwnProperty(prop)) {
-            return;
+            return null;
         }
         let it = this.it[prop];
         if (typeof it === 'string') {
@@ -23,18 +23,22 @@ export class ActivityPubObject extends LitElement {
     }
 
     iri () {
-        return typeof this.it.id != 'undefined' ? this.it.id : "/";
+        if (this.it == null) {return nothing;}
+        return this.it.hasOwnProperty('id') ? this.it.id : "/";
     }
 
     type() {
+        if (this.it == null) {return nothing;}
         return this.it.hasOwnProperty('type') ? this.it.type : 'tag';
     }
 
     published() {
-        return this.it.hasOwnProperty('published') ? this.it.published : 'unknown';
+        if (this.it == null) {return nothing;}
+        return this.it.hasOwnProperty('published') ? this.it.published : nothing;
     }
 
     renderByType() {
+        if (this.it == null) {return nothing;}
         switch (this.it.type) {
             case 'Image':
                 return html`<img src=${this.it.id ?? nothing}/>`;
@@ -44,11 +48,10 @@ export class ActivityPubObject extends LitElement {
     }
 
     render() {
+        if (this.it == null) {return nothing;}
         return html`
             <link rel="stylesheet" href="/main.css" />
-            <div id=${this.iri()} class=${this.type()}>
-                ${this.renderByType()}
-            </div>
+            <div id=${this.iri()} class=${this.type()}> ${this.renderByType() ?? nothing} </div>
         `
     }
 }
