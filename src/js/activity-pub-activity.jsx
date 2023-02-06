@@ -2,6 +2,7 @@ import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
+import {hostFromIRI} from "./utils";
 
 export class ActivityPubActivity extends ActivityPubObject {
     static styles = css`
@@ -14,7 +15,12 @@ export class ActivityPubActivity extends ActivityPubObject {
 
     async renderActor() {
         const act = await this.load('actor');
-        return html`<oni-natural-language-value>${act.preferredUsername}</oni-natural-language-value>`
+        let username = act.preferredUsername;
+        if (act.id.indexOf(new URL(window.location).hostname) < 0) {
+            // NOTE(marius): if the actor's ID doesn't exist on the current domain, we add it to the display
+            username = `${username}@${new URL(act.id).hostname}`
+        }
+        return html`<a href=${act.id}><oni-natural-language-value>${username}</oni-natural-language-value></a>`
     }
 
     async renderObject() {

@@ -91,3 +91,11 @@ export async function fetchActivityPubIRI(iri) {
     const it = await response.json();
     return it;
 };
+
+export function hostFromIRI(iri) {
+    try {
+        return (new URL(iri)).host;
+    } catch (err) {
+        return '';
+    }
+};
