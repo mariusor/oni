@@ -1,6 +1,5 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {when} from "lit-html/directives/when.js";
 import {ifDefined} from "lit-html/directives/if-defined.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
@@ -52,21 +51,23 @@ export class ActivityPubCollection extends ActivityPubObject {
     }
 
     renderItems() {
-        let items;
-
         return html`${this.items().map(value => {
             return html`<oni-activity it=${JSON.stringify(value)}></oni-activity>`
         })}`
     }
 
     render() {
-        const t = html`
+        if (this.items().length == 0) {
+            return html`<div>Nothing to see here, please move along.</div>`;
+        }
+        const list = this.type().toLowerCase().includes('ordered')
+            ? html`<ol>${this.renderItems()}</ol>`
+            : html`<ul>${this.renderItems()}</ul>`;
+
+        return html`<div>
             <link rel="stylesheet" href="/main.css" />
-        ${when(
-            this.type().toLowerCase().includes('ordered'),
-            () => { return html`<ol id=${this.iri()}>${this.renderItems()}</ol>`},
-            () => { return html`<ul id=${this.iri()}>${this.renderItems()}</ul>`},
-        )}`;
-        return html`<div>${t}${this.renderPrevNext()}</div>`;
+            ${list}
+            ${this.renderPrevNext()}
+        </div>`;
     }
 }

@@ -62,7 +62,7 @@ export class ActivityPubObject extends LitElement {
         }
         return html`
             <link rel="stylesheet" href="/main.css"/>
-            <div id=${this.iri() || nothing} class=${this.type() || nothing }> ${this.renderByType() ?? nothing}</div>
+            <div id=${this.iri() || nothing} class=${this.type() || nothing}> ${this.renderByType() ?? nothing}</div>
         `
     }
 }
