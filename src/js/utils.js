@@ -119,6 +119,8 @@ export function hostFromIRI(iri) {
 
 export function pastensify(verb) {
     if (typeof verb !== 'string') return verb;
+    if (verb == 'Undo') { return 'Reverted'; }
+    if (verb == 'Create') { return 'Published'; }
     if (verb[verb.length-1] === 'e') return `${verb}d`;
     return `${verb}ed`;
 };
