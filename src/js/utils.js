@@ -91,7 +91,13 @@ export async function fetchActivityPubIRI(iri) {
         return null;
     }
     if (response.status != 200) {
-        response.json().then(value => console.error(value.errors));
+        response.json().then(value => {
+            if (value.hasOwnProperty('errors')) {
+                console.error(value.errors)
+            } else {
+                console.error(value);
+            }
+        });
         return null;
     }
     const it = await response.json();
@@ -99,6 +105,7 @@ export async function fetchActivityPubIRI(iri) {
 };
 
 export function isLocalIRI(iri) {
+    if (typeof iri !== 'string') { return false; }
     return iri.indexOf(new URL(window.location).hostname) < 0
 };
 
@@ -108,4 +115,10 @@ export function hostFromIRI(iri) {
     } catch (err) {
         return '';
     }
+};
+
+export function pastensify(verb) {
+    if (typeof verb !== 'string') return verb;
+    if (verb[verb.length-1] === 'e') return `${verb}d`;
+    return `${verb}ed`;
 };

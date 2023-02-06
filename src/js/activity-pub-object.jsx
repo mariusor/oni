@@ -24,23 +24,23 @@ export class ActivityPubObject extends LitElement {
 
     iri() {
         if (this.it == null) {
-            return nothing;
+            return null;
         }
-        return this.it.hasOwnProperty('id') ? this.it.id : "/";
+        return this.it.hasOwnProperty('id') ? this.it.id : null;
     }
 
     type() {
         if (this.it == null) {
-            return nothing;
+            return null;
         }
-        return this.it.hasOwnProperty('type') ? this.it.type : 'tag';
+        return this.it.hasOwnProperty('type') ? this.it.type : null;
     }
 
     published() {
         if (this.it == null) {
-            return nothing;
+            return null;
         }
-        return this.it.hasOwnProperty('published') ? this.it.published : nothing;
+        return this.it.hasOwnProperty('published') ? this.it.published : null;
     }
 
     renderByType() {
@@ -52,7 +52,7 @@ export class ActivityPubObject extends LitElement {
                 return html`<img src=${this.it.id ?? nothing}/>`;
             case 'Note':
                 return html`
-                    <obi-natural-language-value>${unsafeHTML(this.it.content)}</obi-natural-language-value>`;
+                    <obi-natural-language-value>${unsafeHTML(this.it.content) ?? nothing}</obi-natural-language-value>`;
         }
     }
 
@@ -62,7 +62,7 @@ export class ActivityPubObject extends LitElement {
         }
         return html`
             <link rel="stylesheet" href="/main.css"/>
-            <div id=${this.iri()} class=${this.type()}> ${this.renderByType() ?? nothing}</div>
+            <div id=${this.iri() || nothing} class=${this.type() || nothing }> ${this.renderByType() ?? nothing}</div>
         `
     }
 }

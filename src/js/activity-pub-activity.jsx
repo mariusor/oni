@@ -1,7 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
-import {isLocalIRI} from "./utils";
+import {isLocalIRI, pastensify} from "./utils";
 
 export class ActivityPubActivity extends ActivityPubObject {
     static styles = css`
@@ -32,18 +32,10 @@ export class ActivityPubActivity extends ActivityPubObject {
     }
 
     renderMetadata() {
-        let action;
-        switch (this.type()) {
-            case 'Create':
-                action = 'Published';
-                break;
-            case 'Delete':
-                if (!isLocalIRI(this.iri())) {
-                    return nothing;
-                }
-            default:
-                action = `${this.type()}ed`;
+        if (this.type() === 'Delete' && !isLocalIRI(this.iri())) {
+            return nothing;
         }
+
         const act = until(this.renderActor());
         if (act === nothing) {
             return nothing;
@@ -53,7 +45,7 @@ export class ActivityPubActivity extends ActivityPubObject {
             html`at <time datetime=${this.published()}>${this.published()}</time> ` :
             nothing;
 
-        return html`${action} ${published}${act}<br/>`
+        return html`${pastensify(this.type())} ${published}${act}<br/>`
     }
     render() {
         return html`<div class=${this.type()}>
