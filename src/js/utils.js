@@ -98,6 +98,10 @@ export async function fetchActivityPubIRI(iri) {
     return it;
 };
 
+export function isLocalIRI(iri) {
+    return iri.indexOf(new URL(window.location).hostname) < 0
+};
+
 export function hostFromIRI(iri) {
     try {
         return (new URL(iri)).host;
