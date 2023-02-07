@@ -49,7 +49,6 @@ export class ActivityPubActivity extends ActivityPubObject {
     }
     render() {
         return html`<div class=${this.type()}>
-            <link rel="stylesheet" href="/main.css" />
             ${until(this.renderObject())}
             ${this.renderMetadata()}
         </div>`

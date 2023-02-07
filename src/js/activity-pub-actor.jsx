@@ -14,7 +14,7 @@ export class ActivityPubActor extends ActivityPubObject {
             min-height: 12vw;
             padding: 1rem;
         }
-        :host img.icon {
+        :host img {
             width: 10rem;
             max-width: 20%;
             margin-right: 1rem;
@@ -23,14 +23,14 @@ export class ActivityPubActor extends ActivityPubObject {
             float: left;
             shape-outside: margin-box;
         }
-        
     `;
     static properties = {
         it: {type: Object},
     };
 
-    constructor() {
-        super();
+    constructor(it) {
+        super(it);
+        console.debug('received it', it)
     }
 
     preferredUsername() {
@@ -52,13 +52,8 @@ export class ActivityPubActor extends ActivityPubObject {
         const it = this.it;
         const avgImg = this.averageImageRGB();
         return html`
-            <style>
-                :host { background-image: ${until(avgImg)}; }
-            </style>
-            <link rel="stylesheet" href="/main.css" />
-            <a href=${this.iri()}>
-            <img class="icon" src=${it.icon}/>
-            </a>
+            <style> :host { background-image: ${until(avgImg)}; } </style>
+            <a href=${this.iri()}> <img src=${it.icon}/> </a>
             <h2> <a href=${this.iri()}> <slot name="preferredUsername"></slot> </a></h2>
             <aside><slot name="summary"></slot></aside>
             <slot name="url"></slot>

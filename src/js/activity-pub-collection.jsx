@@ -1,13 +1,12 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ifDefined} from "lit-html/directives/if-defined.js";
+import {fetchActivityPubIRI, splitCollectionIRI} from "./utils";
+import {ActivityPubActor} from "./activity-pub-actor";
+import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = css`
-    div {
-        max-width: 80%;
-        overflow: hidden;
-    }
     `;
 
     static properties = {
@@ -60,12 +59,12 @@ export class ActivityPubCollection extends ActivityPubObject {
         if (this.items().length == 0) {
             return html`<div>Nothing to see here, please move along.</div>`;
         }
+
         const list = this.type().toLowerCase().includes('ordered')
             ? html`<ol>${this.renderItems()}</ol>`
             : html`<ul>${this.renderItems()}</ul>`;
 
         return html`<div>
-            <link rel="stylesheet" href="/main.css" />
             ${list}
             ${this.renderPrevNext()}
         </div>`;

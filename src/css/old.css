@@ -67,16 +67,21 @@
         font-size: 4.8vw;
     }
 }
-body {
+:root {
     margin: 0 0 auto 0;
     background-color: var(--bg-color);
-    /*display: flex;*/
-    /*justify-content: center;*/
+    display: flex;
+    justify-content: center;
     width: 100%;
     height: 100%;
     min-height: 100vh;
     min-width: 80%;
 }
+oni-actor ul li {
+    list-style: none;
+    display: inline-block;
+}
+/*
 .collection li {
     list-style: none;
     min-height: 4vw;
@@ -113,10 +118,10 @@ oni-actor ul {
     display: block;
     list-style: none;
 }
-oni-actor ul li {
-    list-style: none;
-    display: inline-block;
-}
 oni-actor .content {
     margin: 1vw;
 }
+oni-activity img {
+    max-width: 100%;
+}
+*/

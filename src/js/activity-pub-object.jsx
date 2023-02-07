@@ -49,10 +49,11 @@ export class ActivityPubObject extends LitElement {
         }
         switch (this.it.type) {
             case 'Image':
-                return html`<img src=${this.it.id ?? nothing}/>`;
+                return html`<img src=${this.iri() ?? nothing} style="max-width: 100%"/>`;
             case 'Note':
                 return html`
-                    <obi-natural-language-value>${unsafeHTML(this.it.content) ?? nothing}</obi-natural-language-value>`;
+                    <obi-natural-language-value>${unsafeHTML(this.it.content) ?? nothing}</obi-natural-language-value>
+                `;
         }
     }
 
@@ -61,7 +62,6 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
         return html`
-            <link rel="stylesheet" href="/main.css"/>
             <div id=${this.iri() || nothing} class=${this.type() || nothing}> ${this.renderByType() ?? nothing}</div>
         `
     }
