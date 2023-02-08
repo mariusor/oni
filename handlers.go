@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -283,17 +284,29 @@ func ValidateRequest(r *http.Request) (bool, error) {
 	return true, nil
 }
 
-var jsonLD, _ = ct.ParseMediaType(client.ContentTypeJsonLD)
-var activityJson, _ = ct.ParseMediaType(client.ContentTypeActivityJson)
-var applicationJson, _ = ct.ParseMediaType("application/json")
-var textHTML, _ = ct.ParseMediaType("text/html")
-var imageAny, _ = ct.ParseMediaType("image/*")
+var jsonLD, _ = ct.ParseMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTypeJsonLD))
+var activityJson, _ = ct.ParseMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTypeActivityJson))
+var applicationJson, _ = ct.ParseMediaType("application/json;q=0.8")
+var textHTML, _ = ct.ParseMediaType("text/html;q=1.0")
+var imageAny, _ = ct.ParseMediaType("image/*;q=1.0")
+
+func getWeight(m ct.MediaType) int {
+	q, ok := m.Parameters["q"]
+	if !ok {
+		return 0
+	}
+	w, err := strconv.ParseFloat(q, 32)
+	if err != nil {
+		return 0
+	}
+	return int(w * 1000)
+}
 
 func checkAcceptMediaType(accepted ct.MediaType) func(check ...ct.MediaType) bool {
 	return func(check ...ct.MediaType) bool {
 		for _, c := range check {
 			if accepted.Type == c.Type && (c.Subtype == "*" || accepted.Subtype == c.Subtype) {
-				return true
+				return getWeight(c) >= getWeight(accepted)
 			}
 		}
 		return false
@@ -309,8 +322,10 @@ func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct
 
 	vocab.OnObject(it, func(ob *vocab.Object) error {
 		if ob.MediaType != "" {
-			mt, _ := ct.ParseMediaType(string(ob.MediaType))
-			acceptableMediaTypes = append([]ct.MediaType{mt}, acceptableMediaTypes...)
+			if mt, err := ct.ParseMediaType(string(ob.MediaType)); err == nil {
+				mt.Parameters["q"] = "1.0"
+				acceptableMediaTypes = append([]ct.MediaType{mt}, acceptableMediaTypes...)
+			}
 		} else {
 			acceptableMediaTypes = append(acceptableMediaTypes, textHTML)
 		}
