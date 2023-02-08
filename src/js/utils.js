@@ -1,3 +1,5 @@
+import {html} from "lit";
+
 export function rgb(rgb) {
     return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 };
@@ -123,4 +125,19 @@ export function pastensify(verb) {
     if (verb == 'Create') { return 'Published'; }
     if (verb[verb.length-1] === 'e') return `${verb}d`;
     return `${verb}ed`;
+};
+
+function splitCollectionIRI(iri) {
+    const u = new URL(iri);
+    const pieces = u.pathname.split('/');
+    const col = pieces[pieces.length-1];
+    u.pathname = u.pathname.replace(col, '');
+    return [u.toString(), col];
+}
+
+export async function renderCollectionsActor(iri, slot) {
+    const [actorIRI, collection] = splitCollectionIRI(iri);
+    const act = await fetchActivityPubIRI(actorIRI);
+    console.debug(act);
+    return html`<oni-actor it=${JSON.stringify(act)}>${slot}</oni-actor>`;
 };

@@ -1,15 +1,7 @@
 {{ $type := . | oniType }}
 <oni-{{ $type }} it="{{ . | JSON }}">
-    <oni-natural-language-value slot="preferredUsername"> {{ .PreferredUsername | HTML }}</oni-natural-language-value>
-    {{ if .URL -}}
-    <ul slot="url"> {{ range $u := .URL }} <li><a href="{{$u}}">{{$u}}</a></li>{{ end }} </ul>
-    {{- end }}
-    <ul slot="collections">
-    {{/* if .Inbox -}} <li><oni-collection-link iri="{{ .Inbox.GetLink }}"></oni-collection-link></li> {{- end */}}
-    {{ if .Outbox -}} <li><oni-collection-link iri="{{ .Outbox.GetLink }}"></oni-collection-link></li> {{- end }}
-    {{ if .Followers -}} <li><oni-collection-link iri="{{ .Followers.GetLink }}"></oni-collection-link></li> {{- end }}
-    {{ if .Following -}} <li><oni-collection-link iri="{{ .Following.GetLink }}"></oni-collection-link></li> {{- end }}
-    </ul>
-    {{ if .Summary -}} <oni-natural-language-value slot="summary" class="summary">{{ .Summary | HTML }}</oni-natural-language-value> {{- end }}
-    {{ if .Content -}} <oni-natural-language-value slot="content" class="content">{{ .Content | HTML }}</oni-natural-language-value> {{- end }}
+<div class="content">
+    <hr/>
+    {{ if .Content -}} <oni-natural-language-value >{{ .Content | HTML }}</oni-natural-language-value> {{- end }}
+</div>
 </oni-{{ $type }}>

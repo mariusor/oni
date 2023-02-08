@@ -1,4 +1,4 @@
-import {css, html} from "lit";
+import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {getAverageImageRGB, rgba, setStyles} from "./utils";
 import {until} from "lit-html/directives/until.js";
@@ -23,6 +23,14 @@ export class ActivityPubActor extends ActivityPubObject {
             float: left;
             shape-outside: margin-box;
         }
+        :host ul {
+            padding: auto .5rem;
+        }
+        :host ul li {
+            list-style: none;
+            display: inline-block;
+            margin-right: .8rem;
+        }
     `;
     static properties = {
         it: {type: Object},
@@ -30,7 +38,6 @@ export class ActivityPubActor extends ActivityPubObject {
 
     constructor(it) {
         super(it);
-        console.debug('received it', it)
     }
 
     preferredUsername() {
@@ -48,18 +55,55 @@ export class ActivityPubActor extends ActivityPubObject {
         return `linear-gradient(${rgbLow}, ${rgbHigh}), url("${this.it.image}")`;
     }
 
+    collections() {
+        let collections = super.collections();
+        if (false && this.it.hasOwnProperty('inbox')) {
+            collections.push(this.it.inbox);
+        }
+        if (this.it.hasOwnProperty('outbox')) {
+            collections.push(this.it.outbox);
+        }
+        if (this.it.hasOwnProperty('liked')) {
+            collections.push(this.it.liked);
+        }
+        if (this.it.hasOwnProperty('followers')) {
+            collections.push(this.it.followers);
+        }
+        if (this.it.hasOwnProperty('followed')) {
+            collections.push(this.it.followed);
+        }
+        console.debug('actor has following collections', collections);
+        return collections;
+    }
+
     render() {
         const it = this.it;
         const avgImg = this.averageImageRGB();
+
+        const urlTpl = html`<ul>
+            ${it.url.map((u) => 
+                html`<li><a href=${u}>${u}</a></li>`
+            )}
+        </ul>`
+
+        const collections = this.collections();
+        const collectionsTpl = () => {
+            if (collections.length > 0) {
+                return html`<ul>${collections.map(value => 
+                        html`<li><oni-collection-link it=${value}></oni-collection-link></li>`
+                )}</ul>`;
+            }
+            return nothing;
+        };
+
         return html`
             <style> :host { background-image: ${until(avgImg)}; } </style>
             <a href=${this.iri()}> <img src=${it.icon}/> </a>
-            <h2> <a href=${this.iri()}> <slot name="preferredUsername"></slot> </a></h2>
-            <aside><slot name="summary"></slot></aside>
-            <slot name="url"></slot>
-            <slot name="collections"></slot>
-            <hr/>
-            <slot name="content"></slot>
+            <h2> <a href=${this.iri()}> <oni-natural-language-values>${it.preferredUsername}</oni-natural-language-values> </a></h2>
+            <aside><oni-natural-language-values>${it.summary}</oni-natural-language-values></aside>
+            ${urlTpl}
+            ${collectionsTpl()}
+            <slot></slot>
         `;
     }
 }
