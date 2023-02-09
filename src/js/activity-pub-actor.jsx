@@ -7,11 +7,13 @@ export class ActivityPubActor extends ActivityPubObject {
     static styles = css`
         :host {
             background-clip: padding-border;
-            background-size: cover;
             display: block;
             color: var(--fg-color); 
             overflow-x: hidden;
+        }
+        :host div {
             min-height: 12vw;
+            background-size: cover;
             padding: 1rem;
         }
         :host img {
@@ -97,11 +99,13 @@ export class ActivityPubActor extends ActivityPubObject {
         };
 
         return html`
-            <style> :host { background-image: ${until(avgImg)}; } </style>
+            <style> :host div { background-image: ${until(avgImg)}; } </style>
+            <div>
             <a href=${this.iri()}> <img src=${it.icon}/> </a>
             <h2> <a href=${this.iri()}> <oni-natural-language-values>${it.preferredUsername}</oni-natural-language-values> </a></h2>
             <aside><oni-natural-language-values>${it.summary}</oni-natural-language-values></aside>
             ${urlTpl}
+            </div>
             ${collectionsTpl()}
             <slot></slot>
         `;
