@@ -130,6 +130,7 @@ export function pastensify(verb) {
 function splitCollectionIRI(iri) {
     const u = new URL(iri);
     const pieces = u.pathname.split('/');
+    u.search = '';
     const col = pieces[pieces.length-1];
     u.pathname = u.pathname.replace(col, '');
     return [u.toString(), col];

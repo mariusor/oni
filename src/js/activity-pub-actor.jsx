@@ -82,7 +82,7 @@ export class ActivityPubActor extends ActivityPubObject {
         const it = this.it;
         const avgImg = this.averageImageRGB();
 
-        const urlTpl = html`<ul>
+        const urlTpl = () => html`<ul>
             ${it.url.map((u) => 
                 html`<li><a href=${u}>${u}</a></li>`
             )}
@@ -104,7 +104,7 @@ export class ActivityPubActor extends ActivityPubObject {
             <a href=${this.iri()}> <img src=${it.icon}/> </a>
             <h2> <a href=${this.iri()}> <oni-natural-language-values>${it.preferredUsername}</oni-natural-language-values> </a></h2>
             <aside><oni-natural-language-values>${it.summary}</oni-natural-language-values></aside>
-            ${urlTpl}
+            ${urlTpl()}
             </div>
             ${collectionsTpl()}
             <slot></slot>
