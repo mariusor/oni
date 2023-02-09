@@ -67,7 +67,7 @@
         font-size: 4.8vw;
     }
 }
-:root {
+body {
     margin: 0 0 auto 0;
     background-color: var(--bg-color);
     /*display: flex;*/
