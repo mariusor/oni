@@ -6,6 +6,7 @@ import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = css`
+        oni-actor > div { margin: 0 1rem; }
     `;
 
     static properties = {
@@ -57,14 +58,14 @@ export class ActivityPubCollection extends ActivityPubObject {
     render() {
         const collection = () => {
             if (this.items().length == 0) {
-                return html`<div><hr/>Nothing to see here, please move along.</div>`;
+                return html`<div class="content"><hr/>Nothing to see here, please move along.</div>`;
             }
 
             const list = this.type().toLowerCase().includes('ordered')
                 ? html`<ol>${this.renderItems()}</ol>`
                 : html`<ul>${this.renderItems()}</ul>`;
 
-            return html`<div>
+            return html`<div class="content">
                 <hr/>
                 ${list}
                 ${this.renderPrevNext()}
