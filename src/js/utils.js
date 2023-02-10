@@ -87,8 +87,9 @@ export function OnReady(a) {
     'loading' == document.readyState ? document.addEventListener && document.addEventListener('DOMContentLoaded', a) : a.call()
 };
 
+const fetchHeaders = {Accept: 'application/activity+json', 'Cache-Control': 'no-store'};
 export async function fetchActivityPubIRI(iri) {
-    const response = await fetch(iri, {headers: {Accept: 'application/activity+json'}}).catch(console.error);
+    const response = await fetch(iri, {headers: fetchHeaders}).catch(console.error);
     if (typeof response == 'undefined') {
         return null;
     }
