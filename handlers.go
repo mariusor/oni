@@ -388,6 +388,7 @@ func (o *oni) logRequest(r *http.Request, st int, rt time.Time) {
 		"method": r.Method,
 		"iri":    irif(r),
 		"status": st,
+		"accept": r.Header.Get("Accept"),
 	}
 	if !rt.IsZero() {
 		ctx["duration"] = fmt.Sprintf("%0.3fms", float64(time.Now().UTC().Sub(rt).Microseconds())/1000)
@@ -448,12 +449,12 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	case accepts(textHTML):
 		fallthrough
 	default:
-		err := ren.HTML(w, http.StatusOK, "components/item", it)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprintf(w, "%+s", err)
+		wrt := bytes.Buffer{}
+		if err := ren.HTML(w, http.StatusOK, "components/item", it); err != nil {
+			o.Error(err).ServeHTTP(w, r)
 			return
 		}
+		io.Copy(w, &wrt)
 	}
 	o.logRequest(r, http.StatusOK, now)
 }
