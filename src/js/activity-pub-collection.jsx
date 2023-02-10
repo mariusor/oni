@@ -1,7 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ifDefined} from "lit-html/directives/if-defined.js";
-import {renderCollectionsActor, splitCollectionIRI} from "./utils";
+import {renderCollectionsActor} from "./utils";
 import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
