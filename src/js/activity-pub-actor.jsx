@@ -49,7 +49,7 @@ export class ActivityPubActor extends ActivityPubObject {
         return this.it.preferredUsername == null ? [] : this.it.preferredUsername;
     }
 
-    async averageImageRGB() {
+    async loadAverageImageRGB() {
         const avgRGB = await getAverageImageRGB(this.it.image);
         const rgbLow = rgba(avgRGB, 0);
         const rgbHigh = rgba(avgRGB, 1);
@@ -78,35 +78,67 @@ export class ActivityPubActor extends ActivityPubObject {
         return collections;
     }
 
+    renderCollections() {
+        if (this.collections().length > 0) {
+            return html`
+                <ul>${this.collections().map(value => html`
+                    <li>
+                        <oni-collection-link it=${value}></oni-collection-link>
+                    </li>`)}
+                </ul>`;
+        }
+        return nothing;
+    };
+
+    renderIcon() {
+        if (this.it.hasOwnProperty("icon")) {
+            return html`<a href=${this.iri()}> <img src=${this.it.icon}/> </a>`;
+        }
+        return nothing;
+    }
+
+
+    renderUrl() {
+        if (this.it.hasOwnProperty("url")) {
+            return html`
+                <ul>
+                    ${this.it.url.map((u) => html`
+                        <li><a href=${u}>${u}</a></li>`)}
+                </ul>`;
+        }
+        return nothing;
+    }
+
+    renderPreferredUsername() {
+        if (this.it.hasOwnProperty("preferredUsername")) {
+            return html`
+                <h2><a href=${this.iri()}>
+                    <oni-natural-language-values>${this.it.preferredUsername}</oni-natural-language-values>
+                </a></h2>`;
+        }
+        return nothing;
+    }
+
+    renderSummary() {
+        if (this.it.hasOwnProperty('summary')) {
+            return html`
+                <aside>
+                    <oni-natural-language-values>${this.it.summary}</oni-natural-language-values>
+                </aside>`;
+        }
+        return nothing;
+    }
+
     render() {
-        const it = this.it;
-        const avgImg = this.averageImageRGB();
-
-        const urlTpl = () => html`<ul>
-            ${it.url.map((u) => 
-                html`<li><a href=${u}>${u}</a></li>`
-            )}
-        </ul>`
-
-        const collections = this.collections();
-        const collectionsTpl = () => {
-            if (collections.length > 0) {
-                return html`<ul>${collections.map(value => 
-                        html`<li><oni-collection-link it=${value}></oni-collection-link></li>`
-                )}</ul>`;
-            }
-            return nothing;
-        };
-
         return html`
-            <style> :host div { background-image: ${until(avgImg)}; } </style>
+            <style> :host div {background-image: ${until(this.loadAverageImageRGB())};} </style>
             <div>
-            <a href=${this.iri()}> <img src=${it.icon}/> </a>
-            <h2> <a href=${this.iri()}> <oni-natural-language-values>${it.preferredUsername}</oni-natural-language-values> </a></h2>
-            <aside><oni-natural-language-values>${it.summary}</oni-natural-language-values></aside>
-            ${urlTpl()}
+                ${this.renderIcon()}
+                ${this.renderPreferredUsername()}
+                ${this.renderSummary()}
+                ${this.renderUrl()}
             </div>
-            ${collectionsTpl()}
+            ${this.renderCollections()}
             <slot></slot>
         `;
     }
