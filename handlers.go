@@ -67,6 +67,7 @@ func (o *oni) setupRoutes() {
 		return
 	}
 
+	o.m.HandleFunc("/login", o.HandleLogin)
 	o.setupActorRoutes()
 	o.setupWebfingerRoutes()
 	o.setupStaticRoutes()
@@ -579,4 +580,14 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		o.logRequest(r, status, now)
 		return it, status, nil
 	}
+}
+
+// HandleLogin handles POST /login requests
+func (o *oni) HandleLogin(w http.ResponseWriter, r *http.Request) {
+	r.FormValue("_pw")
+	tok, _ := json.Marshal("correct battery horse staple")
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(tok)
 }
