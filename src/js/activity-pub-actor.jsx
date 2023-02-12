@@ -50,12 +50,12 @@ export class ActivityPubActor extends ActivityPubObject {
         return this.it.preferredUsername == null ? [] : this.it.preferredUsername;
     }
 
-    async loadAverageImageRGB() {
-        const avgRGB = await getAverageImageRGB(this.it.image);
+    async loadAverageImageRGB(imageURL) {
+        const avgRGB = await getAverageImageRGB(imageURL);
         const rgbLow = rgba(avgRGB, 0);
         const rgbHigh = rgba(avgRGB, 1);
         setStyles(avgRGB)
-        return `linear-gradient(${rgbLow}, ${rgbHigh}), url("${this.it.image}")`;
+        return `linear-gradient(${rgbLow}, ${rgbHigh}), url("${imageURLthis.it.image}")`;
     }
 
     collections() {
@@ -131,8 +131,11 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     render() {
-        return html`
-            <style> :host div {background-image: ${until(this.loadAverageImageRGB())};} </style>
+        let bg = nothing;
+        if (this.it.hasOwnProperty('image')) {
+            bg = html`<style> :host div {background-image: ${until(this.loadAverageImageRGB(this.it.image))};} </style>`;
+        }
+        return html`${bg}
             <div>
                 ${this.renderIcon()}
                 ${this.renderPreferredUsername()}
