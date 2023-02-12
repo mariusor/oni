@@ -6,6 +6,7 @@ import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = css`
+        :host { width: 100%; }
         oni-actor > div { margin: 0 1rem; }
     `;
 
