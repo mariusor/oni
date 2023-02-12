@@ -55,7 +55,7 @@ export class ActivityPubActor extends ActivityPubObject {
         const rgbLow = rgba(avgRGB, 0);
         const rgbHigh = rgba(avgRGB, 1);
         setStyles(avgRGB)
-        return `linear-gradient(${rgbLow}, ${rgbHigh}), url("${imageURLthis.it.image}")`;
+        return `linear-gradient(${rgbLow}, ${rgbHigh}), url("${imageURL}")`;
     }
 
     collections() {
