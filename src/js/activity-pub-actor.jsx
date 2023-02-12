@@ -10,6 +10,7 @@ export class ActivityPubActor extends ActivityPubObject {
             display: block;
             color: var(--fg-color); 
             overflow-x: hidden;
+            width: 100vh;
         }
         :host div {
             min-height: 12vw;
