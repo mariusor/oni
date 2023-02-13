@@ -19,10 +19,9 @@ export class LoginDialog extends LitElement {
         e.preventDefault();
 
         const form = e.target;
-        const pwEl = form.querySelectorAll('input[name=_pw]').item(0);
-        const targetURI = form.attributes["action"].value
-        const pw = pwEl.value;
-        pwEl.value = "";
+        const pw = form._pw.value
+        form._pw.value = "";
+        const targetURI = form.action;
 
         const l = new URLSearchParams({_pw: pw});
         console.debug(l.toString());
@@ -39,6 +38,7 @@ export class LoginDialog extends LitElement {
 
                     console.debug(`received token: ${value}`)
                     localStorage.setItem('token', value);
+
                 }).catch(console.error);
             })
             .catch(console.error);
@@ -104,18 +104,13 @@ export class LoginLink extends LitElement {
             <div>
                 <button @click="${this.showDialog}">Sign in</button>
                 <oni-login-dialog
-                        ?opened="${this.dialogVisible}"
-                        @dialog.login="${this.closeDialog}"></oni-login-dialog>
+                        ?opened="${this.dialogVisible}"></oni-login-dialog>
             </div>`;
     }
 
     showDialog(e) {
         this.dialogVisible = true;
-        //window.addEventListener('blur', this.closeDialog);
-    }
-
-    closeDialog(e) {
-        this.dialogVisible = false
+        //window.addEventListener('leave', () => this.dialogVisible = false);
     }
 }
 
