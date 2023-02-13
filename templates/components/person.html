@@ -1,7 +1,7 @@
 {{ $type := . | oniType }}
 <oni-{{ $type }} it="{{ . | JSON }}">
-<div class="content">
+<div>
     <hr/>
-    {{ if .Content -}} <oni-natural-language-values name="content">{{ .Content | HTML }}</oni-natural-language-values> {{- end }}
+    {{ if .Content -}} <oni-natural-language-values name="content" it="{{.Content | HTMLAttr }}"></oni-natural-language-values> {{- end }}
 </div>
 </oni-{{ $type }}>

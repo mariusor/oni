@@ -1,6 +1,6 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {getAverageImageRGB, rgba, setStyles} from "./utils";
+import {editableContent, getAverageImageRGB, rgba, setStyles} from "./utils";
 import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubActor extends ActivityPubObject {
@@ -41,6 +41,8 @@ export class ActivityPubActor extends ActivityPubObject {
 
     constructor(it) {
         super(it);
+
+        this.addEventListener('content.change', this.updateActivityPubItem)
     }
 
     preferredUsername() {
@@ -131,25 +133,11 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     updateActivityPubItem(e) {
-        console.debug(e);
-
-        let root = e.target;
-        if (root.innerHTML.length == 0) {
-            // Nothing slotted, load content from the shadow DOM.
-            root = e.target.shadowRoot.querySelector('div[contenteditable]');
-            root.childNodes.forEach(node => {
-                if (node.nodeName.toLowerCase() === 'slot') {
-                    // the slot should be removed if empty, otherwise it overwrites the value
-                    root.removeChild(node);
-                }
-                if (node.nodeType === 8) {
-                    // Lit introduced comments
-                    root.removeChild(node);
-                }
-            });
-        }
-        const content = root.innerHTML.trim();
-        console.debug(e.detail.name, content);
+        const it = this.it;
+        const prop = e.detail.name;
+        const val =  e.detail.content;
+        it[prop] = val;
+        console.debug('will update', it);
     }
 
     render() {
@@ -158,7 +146,7 @@ export class ActivityPubActor extends ActivityPubObject {
             bg = html`<style> :host div {background-image: ${until(this.loadAverageImageRGB(this.it.image))};} </style>`;
         }
         return html`${bg}
-            <div @content.changed="${this.updateActivityPubItem}">
+            <div>
                 ${this.renderIcon()}
                 ${this.renderPreferredUsername()}
                 ${this.renderSummary()}

@@ -147,3 +147,22 @@ export async function renderCollectionsActor(iri, slot) {
 export function isAuthenticated() {
     return (localStorage.getItem('token') || '').length > 0;
 }
+
+export function editableContent(root) {
+    if (root.innerHTML.length === 0) {
+        // Nothing slotted, load content from the shadow DOM.
+        root = root.renderRoot.querySelector('div[contenteditable]');
+    }
+    root.childNodes.forEach(node => {
+        if (node.nodeName.toLowerCase() === 'slot') {
+            // the slot should be removed if empty, otherwise it overwrites the value
+            root.removeChild(node);
+        }
+        if (node.nodeType === 8) {
+            // Lit introduced comments
+            root.removeChild(node);
+        }
+    });
+
+    return root.innerHTML.trim();
+}

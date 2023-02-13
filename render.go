@@ -15,6 +15,9 @@ var ren = render.New(render.Options{
 	IsDevelopment:             false,
 	DisableHTTPErrorRendering: true,
 	Funcs: []template.FuncMap{{
+		"HTMLAttr": func(n vocab.NaturalLanguageValues) template.HTMLAttr {
+			return template.HTMLAttr(n.First().Value)
+		},
 		"HTML": func(n vocab.NaturalLanguageValues) template.HTML {
 			return template.HTML(n.First().Value)
 		},
