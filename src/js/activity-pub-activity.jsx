@@ -22,7 +22,7 @@ export class ActivityPubActivity extends ActivityPubObject {
         if (isLocalIRI(act.id)) {
             username = `${username}@${new URL(act.id).hostname}`
         }
-        return html`by <a href=${act.id}><oni-natural-language-value>${username}</oni-natural-language-value></a>`
+        return html`by <a href=${act.id}><oni-natural-language-value it=${username}></oni-natural-language-value></a>`
     }
 
     async renderObject() {

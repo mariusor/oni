@@ -114,7 +114,7 @@ export class ActivityPubActor extends ActivityPubObject {
         if (this.it.hasOwnProperty("preferredUsername")) {
             return html`
                 <h2><a href=${this.iri()}>
-                    <oni-natural-language-values>${this.it.preferredUsername}</oni-natural-language-values>
+                    <oni-natural-language-values name="preferredUsername" it=${this.it.preferredUsername}></oni-natural-language-values>
                 </a></h2>`;
         }
         return nothing;
@@ -124,10 +124,32 @@ export class ActivityPubActor extends ActivityPubObject {
         if (this.it.hasOwnProperty('summary')) {
             return html`
                 <aside>
-                    <oni-natural-language-values>${this.it.summary}</oni-natural-language-values>
+                    <oni-natural-language-values name="summary" it=${this.it.summary}></oni-natural-language-values>
                 </aside>`;
         }
         return nothing;
+    }
+
+    updateActivityPubItem(e) {
+        console.debug(e);
+
+        let root = e.target;
+        if (root.innerHTML.length == 0) {
+            // Nothing slotted, load content from the shadow DOM.
+            root = e.target.shadowRoot.querySelector('div[contenteditable]');
+            root.childNodes.forEach(node => {
+                if (node.nodeName.toLowerCase() === 'slot') {
+                    // the slot should be removed if empty, otherwise it overwrites the value
+                    root.removeChild(node);
+                }
+                if (node.nodeType === 8) {
+                    // Lit introduced comments
+                    root.removeChild(node);
+                }
+            });
+        }
+        const content = root.innerHTML.trim();
+        console.debug(e.detail.name, content);
     }
 
     render() {
@@ -136,7 +158,7 @@ export class ActivityPubActor extends ActivityPubObject {
             bg = html`<style> :host div {background-image: ${until(this.loadAverageImageRGB(this.it.image))};} </style>`;
         }
         return html`${bg}
-            <div>
+            <div @content.changed="${this.updateActivityPubItem}">
                 ${this.renderIcon()}
                 ${this.renderPreferredUsername()}
                 ${this.renderSummary()}

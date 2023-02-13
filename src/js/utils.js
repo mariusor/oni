@@ -143,3 +143,7 @@ export async function renderCollectionsActor(iri, slot) {
     console.debug(act);
     return html`<oni-actor it=${JSON.stringify(act)}>${slot}</oni-actor>`;
 };
+
+export function isAuthenticated() {
+    return (localStorage.getItem('token') || '').length > 0;
+}

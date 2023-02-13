@@ -81,7 +81,7 @@ export class ActivityPubObject extends LitElement {
                 return html`<img src=${this.iri() ?? nothing} style="max-width: 100%"/>`;
             case 'Note':
                 return html`
-                    <obi-natural-language-value>${unsafeHTML(this.it.content) ?? nothing}</obi-natural-language-value>
+                    <obi-natural-language-value it=${unsafeHTML(this.it.content) ?? nothing}></obi-natural-language-value>
                 `;
         }
     }
