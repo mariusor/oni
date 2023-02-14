@@ -413,6 +413,7 @@ func colIRI(r *http.Request) vocab.IRI {
 	q := url.Values{}
 	q.Set("object.iri", "!")
 	q.Set("actor.iri", "!")
+	q.Set("type", string(vocab.CreateType))
 	colURL.RawQuery = q.Encode()
 	return vocab.IRI(colURL.String())
 }
