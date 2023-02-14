@@ -1,11 +1,8 @@
 import {css, html, LitElement} from "lit";
 
 export class CollectionLink extends LitElement {
-    static styles = css`
-    :host {
-        text-transform: capitalize;
-    }
-    `;
+    static styles = css` :host { text-transform: capitalize; } `;
+
     static properties = {
         it: {type: String},
     }

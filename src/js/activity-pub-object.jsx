@@ -1,6 +1,30 @@
 import {css, html, LitElement, nothing} from "lit";
-import {fetchActivityPubIRI} from "./utils";
+import {fetchActivityPubIRI, isLocalIRI, pastensify} from "./utils";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
+import {until} from "lit-html/directives/until.js";
+
+export class ActivityPubItem {
+    id = '';
+    url = '';
+    actor = '';
+    object = '';
+
+    constructor(it) {
+        if (it.hasOwnProperty('id')) {
+            this.id = it.id;
+        }
+        if (it.hasOwnProperty('url')) {
+            this.url = it.url;
+        }
+        if (it.hasOwnProperty('actor')) {
+            this.actor = it.actor;
+        }
+        if (it.hasOwnProperty('object')) {
+            this.object = it.object;
+        }
+        return this;
+    }
+}
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -86,12 +110,37 @@ export class ActivityPubObject extends LitElement {
         }
     }
 
+    async renderAttributedTo() {
+        const act = await this.load('attributedTos');
+        if (!act) {
+            return nothing;
+        }
+
+        let username = act.preferredUsername;
+        if (isLocalIRI(act.id)) {
+            username = `${username}@${new URL(act.id).hostname}`
+        }
+        return html`by <a href=${act.id}><oni-natural-language-values it=${username}></oni-natural-language-values></a>`
+    }
+
+    renderMetadata() {
+        const auth = until(this.renderAttributedTo());
+        const published = this.it.hasOwnProperty('published') ?
+            html`at <time datetime=${this.published()}>${this.published()}</time> ` :
+            nothing;
+
+        return html`${until(auth, `Published ${published}${auth}<br/>`)}`
+    }
+
     render() {
         if (this.it == null) {
             return nothing;
         }
         return html`
-            <div id=${this.iri() || nothing} class=${this.type() || nothing}>${this.renderByType() ?? nothing}</div>
+            <div id=${this.iri() || nothing} class=${this.type() || nothing}>
+                ${this.renderByType() ?? nothing}
+                ${this.renderMetadata()}
+            </div>
         `
     }
 }

@@ -1,6 +1,6 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {editableContent, getAverageImageRGB, rgba, setStyles} from "./utils";
+import {getAverageImageRGB, rgba, setStyles} from "./utils";
 import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubActor extends ActivityPubObject {
@@ -82,15 +82,10 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     renderCollections() {
-        if (this.collections().length > 0) {
-            return html`
-                <ul>${this.collections().map(value => html`
-                    <li>
-                        <oni-collection-link it=${value}></oni-collection-link>
-                    </li>`)}
-                </ul>`;
+        if (this.collections().length == 0) {
+            return nothing;
         }
-        return nothing;
+        return html`<oni-collection-links it=${JSON.stringify(this.collections())}></oni-collection-links>`;
     };
 
     renderIcon() {
@@ -135,7 +130,7 @@ export class ActivityPubActor extends ActivityPubObject {
     updateActivityPubItem(e) {
         const it = this.it;
         const prop = e.detail.name;
-        const val =  e.detail.content;
+        const val = e.detail.content;
         it[prop] = val;
         console.debug('will update', it);
     }
