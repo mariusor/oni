@@ -100,7 +100,11 @@ export class ActivityPubObject extends LitElement {
         if (this.it == null) {
             return nothing;
         }
-        switch (this.it.type) {
+        switch (this.type()) {
+            case 'Video':
+                return html`<video src=${this.iri() ?? nothing} style="max-width: 100%"></video>`;
+            case 'Audio':
+                return html`<audio src=${this.iri() ?? nothing} style="max-width: 100%"></audio>`;
             case 'Image':
                 return html`<img src=${this.iri() ?? nothing} style="max-width: 100%"/>`;
             case 'Note':
@@ -111,7 +115,7 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderAttributedTo() {
-        const act = await this.load('attributedTos');
+        const act = await this.load('attributedTo');
         if (!act) {
             return nothing;
         }
@@ -124,12 +128,12 @@ export class ActivityPubObject extends LitElement {
     }
 
     renderMetadata() {
-        const auth = until(this.renderAttributedTo());
+        const auth = this.renderAttributedTo();
         const published = this.it.hasOwnProperty('published') ?
             html`at <time datetime=${this.published()}>${this.published()}</time> ` :
             nothing;
 
-        return html`${until(auth, `Published ${published}${auth}<br/>`)}`
+        return html`<aside>Published ${published}${until(auth, "unknown")}</aside>`
     }
 
     render() {

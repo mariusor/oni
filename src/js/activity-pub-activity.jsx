@@ -4,9 +4,7 @@ import {until} from "lit-html/directives/until.js";
 import {isLocalIRI} from "./utils";
 
 export class ActivityPubActivity extends ActivityPubObject {
-    static styles = css`
-    :host { color: var(--fg-color); }
-    `;
+    static styles = css` :host { color: var(--fg-color); }`;
 
     constructor() {
         super();
@@ -35,8 +33,8 @@ export class ActivityPubActivity extends ActivityPubObject {
         return (new ActivityPubObject(raw)).render();
     }
 
-
     render() {
+        if (this.type() !== 'Create') { return nothing; }
         return html` ${until(this.renderObject())} `;
     }
 }
