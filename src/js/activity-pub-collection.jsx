@@ -7,7 +7,15 @@ import {until} from "lit-html/directives/until.js";
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = css`
         :host { width: 100%; }
-        oni-actor > div { margin: 0 1rem; }
+        :host ul, :host ol { width: 100%; padding: 0; margin: 0; list-style: none;}
+        :host div {
+            margin: 0 1rem; 
+        }
+        :host li { 
+            margin: 1rem 0;
+            overflow: hidden;
+            border-bottom: 1px solid var(--fg-color);
+        }
     `;
 
     static properties = {
@@ -52,7 +60,7 @@ export class ActivityPubCollection extends ActivityPubObject {
 
     renderItems() {
         return html`${this.items().map(value => {
-            return html`<oni-activity it=${JSON.stringify(value)}></oni-activity>`
+            return html`<li><oni-activity it=${JSON.stringify(value)}></oni-activity></li>`
         })}`
     }
 
