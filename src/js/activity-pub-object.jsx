@@ -81,7 +81,7 @@ export class ActivityPubObject extends LitElement {
                 return html`<img src=${this.iri() ?? nothing} style="max-width: 100%"/>`;
             case 'Note':
                 return html`
-                    <obi-natural-language-value it=${unsafeHTML(this.it.content) ?? nothing}></obi-natural-language-value>
+                    <oni-natural-language-values it=${this.it.content ?? nothing}></oni-natural-language-values>
                 `;
         }
     }
@@ -91,7 +91,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
         return html`
-            <div id=${this.iri() || nothing} class=${this.type() || nothing}> ${this.renderByType() ?? nothing}</div>
+            <div id=${this.iri() || nothing} class=${this.type() || nothing}>${this.renderByType() ?? nothing}</div>
         `
     }
 }

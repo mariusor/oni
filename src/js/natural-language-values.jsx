@@ -3,7 +3,9 @@ import {editableContent, isAuthenticated} from "./utils";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class NaturalLanguageValues extends LitElement {
-    static styles = css``;
+    static styles = css`
+        :host { display: inline-block; }
+    `;
 
     static properties = {
         it: {type: String},
