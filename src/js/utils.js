@@ -140,7 +140,6 @@ function splitCollectionIRI(iri) {
 export async function renderCollectionsActor(iri, slot) {
     const [actorIRI, collection] = splitCollectionIRI(iri);
     const act = await fetchActivityPubIRI(actorIRI);
-    console.debug(act);
     return html`<oni-actor it=${JSON.stringify(act)}>${slot}</oni-actor>`;
 };
 

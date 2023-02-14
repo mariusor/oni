@@ -136,6 +136,8 @@ ActivityPubObject.renderByType = function (it) {
         case 'Note':
         case 'Article':
             return html`<oni-note it=${JSON.stringify(it)}></oni-note>`;
+        case 'Tombstone':
+            return nothing;
     }
     return html`<oni-object it=${JSON.stringify(it)}></oni-object>`
 }
