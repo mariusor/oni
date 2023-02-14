@@ -1,7 +1,10 @@
 import {css, html, nothing} from "lit";
-import {ActivityPubObject} from "./activity-pub-object";
+import {ActivityPubObject, ObjectTypes} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
 import {isLocalIRI} from "./utils";
+import {ActorTypes} from "./activity-pub-actor";
+
+export const ActivityTypes = [ 'Create', 'Update', 'Delete', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore' ];
 
 export class ActivityPubActivity extends ActivityPubObject {
     static styles = css` :host { color: var(--fg-color); }`;
@@ -30,7 +33,16 @@ export class ActivityPubActivity extends ActivityPubObject {
         if (raw === null) {
             return nothing;
         }
-        return (new ActivityPubObject(raw)).render();
+        if (!raw.hasOwnProperty('attributedTo')) {
+            raw.attributedTo = this.it.actor;
+        }
+        if (ActorTypes.find(t => t === raw.type)) {
+            return html`<oni-actor it=${JSON.stringify(raw)}></oni-actor>`
+        }
+        if (ObjectTypes.find(t => t === raw.type)) {
+            return html`<oni-object it=${JSON.stringify(raw)}></oni-object>`
+        }
+        return html`<!-- Unknown activity object ${raw.type} -->`;
     }
 
     render() {

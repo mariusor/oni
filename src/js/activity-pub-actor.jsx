@@ -3,6 +3,8 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {getAverageImageRGB, rgba, setStyles} from "./utils";
 import {until} from "lit-html/directives/until.js";
 
+export const ActorTypes = [ 'Person', 'Group', 'Application', 'Service' ];
+
 export class ActivityPubActor extends ActivityPubObject {
     static styles = css`
         :host {

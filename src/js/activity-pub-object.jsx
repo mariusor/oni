@@ -1,30 +1,8 @@
 import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI, isLocalIRI, pastensify} from "./utils";
-import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {until} from "lit-html/directives/until.js";
 
-export class ActivityPubItem {
-    id = '';
-    url = '';
-    actor = '';
-    object = '';
-
-    constructor(it) {
-        if (it.hasOwnProperty('id')) {
-            this.id = it.id;
-        }
-        if (it.hasOwnProperty('url')) {
-            this.url = it.url;
-        }
-        if (it.hasOwnProperty('actor')) {
-            this.actor = it.actor;
-        }
-        if (it.hasOwnProperty('object')) {
-            this.object = it.object;
-        }
-        return this;
-    }
-}
+export const ObjectTypes = [ 'Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document' ];
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -133,7 +111,7 @@ export class ActivityPubObject extends LitElement {
             html`at <time datetime=${this.published()}>${this.published()}</time> ` :
             nothing;
 
-        return html`<aside>Published ${published}${until(auth, "unknown")}</aside>`
+        return html`<aside>Published ${published}${until(auth, "by unknown")}</aside>`
     }
 
     render() {
