@@ -6,8 +6,9 @@ export const ObjectTypes = [ 'Image', 'Audio', 'Video', 'Note', 'Article', 'Page
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
-    :host img {
-        max-width: 100% !important;
+    :host aside {
+        opacity: 0.8;
+        font-size: 0.8rem;
     }
     `;
     static properties = {it: {type: Object}};
@@ -79,25 +80,6 @@ export class ActivityPubObject extends LitElement {
         return [this.it.content || null];
     }
 
-
-    recipients() {
-        let recipients = [];
-        if (this.it == null) {
-            return nothing;
-        }
-        switch (this.type()) {
-            case 'Video':
-                return html`<video src=${this.iri() ?? nothing} style="max-width: 100%"></video>`;
-            case 'Audio':
-                return html`<audio src=${this.iri() ?? nothing} style="max-width: 100%"></audio>`;
-            case 'Image':
-                return html`<img src=${this.iri() ?? nothing} style="max-width: 100%"/>`;
-            case 'Note':
-                return html`
-                    <oni-natural-language-values it=${this.it.content ?? nothing}></oni-natural-language-values>
-                `;
-        }
-
     renderByType() {
     }
 
@@ -129,9 +111,25 @@ export class ActivityPubObject extends LitElement {
         }
         return html`
             <div id=${this.iri() || nothing} class=${this.type() || nothing}>
-                ${this.renderByType() ?? nothing}
                 ${this.renderMetadata()}
-            </div>
-        `
+            </div>`
     }
+}
+
+ActivityPubObject.renderByType = function (it) {
+    if (it == null) {
+        return nothing;
+    }
+    switch (it.type) {
+        case 'Video':
+            return html`<oni-video it=${JSON.stringify(it)}></oni-video>`;
+        case 'Audio':
+            return html`<oni-audio it=${JSON.stringify(it)}></oni-audio>`;
+        case 'Image':
+            return html`<oni-image it=${JSON.stringify(it)}></oni-image>`;
+        case 'Note':
+        case 'Article':
+            return html`<oni-note it=${JSON.stringify(it)}></oni-note>`;
+    }
+    return html`<oni-object it=${JSON.stringify(it)}></oni-object>`
 }

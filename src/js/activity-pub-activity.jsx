@@ -15,18 +15,6 @@ export class ActivityPubActivity extends ActivityPubObject {
     }
 
     async renderActor() {
-        const act = await this.load('actor');
-        if (act === null) {
-            return nothing;
-        }
-        let username = act.preferredUsername;
-
-        if (isLocalIRI(act.id)) {
-            username = `${username}@${new URL(act.id).hostname}`
-        }
-        return html`by <a href=${act.id}>
-            <oni-natural-language-values it=${username}></oni-natural-language-values>
-        </a>`
     }
 
     async renderObject() {
@@ -41,13 +29,13 @@ export class ActivityPubActivity extends ActivityPubObject {
             return html`<oni-actor it=${JSON.stringify(raw)}></oni-actor>`
         }
         if (ObjectTypes.indexOf(raw.type) >= 0) {
-            return html`<oni-object it=${JSON.stringify(raw)}></oni-object>`
+            return ActivityPubObject.renderByType(raw);
         }
         return unsafeHTML(`<!-- Unknown activity object ${raw.type} -->`);
     }
 
     render() {
         if (this.type() !== 'Create') { return nothing; }
-        return html` ${until(this.renderObject())} `;
+        return html`${until(this.renderObject())} ${unsafeHTML(`<!-- Actor ${until(this.renderActor())}-->`)}`;
     }
 }

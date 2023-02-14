@@ -6,9 +6,17 @@ import {NaturalLanguageValues} from "./natural-language-values";
 import {ActivityPubActivity} from "./activity-pub-activity";
 import {ActivityPubCollection} from "./activity-pub-collection";
 import {ActivityPubObject} from "./activity-pub-object";
+import {ActivityPubImage} from "./activity-pub-image";
+import {ActivityPubNote} from "./activity-pub-note";
+import {ActivityPubAudio} from "./activity-pub-audio";
+import {ActivityPubVideo} from "./activity-pub-video";
 
 customElements.define('oni-natural-language-values', NaturalLanguageValues);
 customElements.define('oni-object', ActivityPubObject);
+customElements.define('oni-note', ActivityPubNote);
+customElements.define('oni-image', ActivityPubImage);
+customElements.define('oni-audio', ActivityPubAudio);
+customElements.define('oni-video', ActivityPubVideo);
 customElements.define('oni-actor', ActivityPubActor);
 customElements.define('oni-collection', ActivityPubCollection);
 customElements.define('oni-collection-link', CollectionLink);
