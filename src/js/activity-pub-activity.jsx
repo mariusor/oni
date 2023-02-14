@@ -3,6 +3,7 @@ import {ActivityPubObject, ObjectTypes} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
 import {isLocalIRI} from "./utils";
 import {ActorTypes} from "./activity-pub-actor";
+import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export const ActivityTypes = [ 'Create', 'Update', 'Delete', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore' ];
 
@@ -36,13 +37,13 @@ export class ActivityPubActivity extends ActivityPubObject {
         if (!raw.hasOwnProperty('attributedTo')) {
             raw.attributedTo = this.it.actor;
         }
-        if (ActorTypes.find(t => t === raw.type)) {
+        if (ActorTypes.indexOf(raw.type) >= 0) {
             return html`<oni-actor it=${JSON.stringify(raw)}></oni-actor>`
         }
-        if (ObjectTypes.find(t => t === raw.type)) {
+        if (ObjectTypes.indexOf(raw.type) >= 0) {
             return html`<oni-object it=${JSON.stringify(raw)}></oni-object>`
         }
-        return html`<!-- Unknown activity object ${raw.type} -->`;
+        return unsafeHTML(`<!-- Unknown activity object ${raw.type} -->`);
     }
 
     render() {
