@@ -167,3 +167,8 @@ export function editableContent(root) {
     return root.innerHTML.trim();
 };
 
+export function relativeDate(d) {
+    const now = Date.now();
+    const options = {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'};
+    return d.toLocaleDateString(navigator.language, options)
+}

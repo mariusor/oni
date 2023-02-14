@@ -1,5 +1,5 @@
 import {css, html, LitElement, nothing} from "lit";
-import {fetchActivityPubIRI, isLocalIRI, pastensify} from "./utils";
+import {fetchActivityPubIRI, isLocalIRI, relativeDate} from "./utils";
 import {until} from "lit-html/directives/until.js";
 
 export const ObjectTypes = [ 'Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document' ];
@@ -62,10 +62,12 @@ export class ActivityPubObject extends LitElement {
     }
 
     published() {
-        if (this.it == null) {
+        if (!this.it || !this.it.hasOwnProperty('published')) {
             return null;
         }
-        return [this.it.published || null];
+        const d = new Date();
+        d.setTime(Date.parse(this.it.published));
+        return d || null;
     }
 
     name() {
@@ -95,14 +97,18 @@ export class ActivityPubObject extends LitElement {
         }
         return html`by <a href=${act.id}><oni-natural-language-values it=${JSON.stringify(username)}></oni-natural-language-values></a>`
     }
+    
+    renderPublished() {
+        const published = this.published()
+        if (!published) {
+            return nothing;
+        }
+        return html` on <time datetime=${published.toUTCString()}>${relativeDate(published)}</time>`;
+    }
 
     renderMetadata() {
         const auth = this.renderAttributedTo();
-        const published = this.it.hasOwnProperty('published') ?
-            html`at <time datetime=${this.published()}>${this.published()}</time> ` :
-            nothing;
-
-        return html`<aside>Published ${published}${until(auth, "by unknown")}</aside>`
+        return html`<aside>Published ${until(auth)}${this.renderPublished()}</aside>`
     }
 
     render() {
