@@ -165,4 +165,5 @@ export function editableContent(root) {
     });
 
     return root.innerHTML.trim();
-}
+};
+

@@ -8,7 +8,7 @@ export class NaturalLanguageValues extends LitElement {
     `;
 
     static properties = {
-        it: {type: String},
+        it: {type: Object},
         name: {type: String},
         editable: {type: Boolean}
     };
@@ -38,11 +38,28 @@ export class NaturalLanguageValues extends LitElement {
         }));
     }
 
+    value() {
+        let value;
+        if (typeof this.it == 'string') {
+            return this.it;
+        }
+        if (typeof this.it == 'object') {
+            value = this.it.toString();
+            if (this.it.hasOwnProperty(this.lang)) {
+                value = this.it.getProperty(this.lang);
+            }
+        }
+        return value;
+    }
+
     render() {
+        if (!this.it) { return nothing; }
+
         this.editable = isAuthenticated();
+
         return html`
             <div ?contenteditable=${this.editable} @blur="${this.checkChanged}">
-                ${unsafeHTML(this.it) ?? nothing}
+                ${unsafeHTML(this.value()) ?? nothing}
                 <slot></slot>
             </div>`;
     }

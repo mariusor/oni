@@ -2,6 +2,6 @@
 <oni-{{ $type }} it="{{ . | JSON }}">
 <div>
     <hr/>
-    {{ if .Content -}} <oni-natural-language-values name="content" it="{{.Content | HTMLAttr }}"></oni-natural-language-values> {{- end }}
+    {{ if .Content -}} <oni-natural-language-values name="content" it="{{.Content | JSON }}"></oni-natural-language-values> {{- end }}
 </div>
 </oni-{{ $type }}>

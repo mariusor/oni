@@ -64,17 +64,24 @@ export class ActivityPubObject extends LitElement {
         if (this.it == null) {
             return null;
         }
-        return this.it.hasOwnProperty('published') ? this.it.published : null;
+        return [this.it.published || null];
+    }
+
+    name() {
+        return [this.it.name || null];
     }
 
     summary() {
-        if (typeof this.it.summary == "string") {
-            return [this.it.summary];
-        }
-        return this.it.summary == null ? [] : this.it.summary;
+        return [this.it.summary || null];
     }
 
-    renderByType() {
+    content() {
+        return [this.it.content || null];
+    }
+
+
+    recipients() {
+        let recipients = [];
         if (this.it == null) {
             return nothing;
         }
@@ -90,6 +97,8 @@ export class ActivityPubObject extends LitElement {
                     <oni-natural-language-values it=${this.it.content ?? nothing}></oni-natural-language-values>
                 `;
         }
+
+    renderByType() {
     }
 
     async renderAttributedTo() {
@@ -102,7 +111,7 @@ export class ActivityPubObject extends LitElement {
         if (isLocalIRI(act.id)) {
             username = `${username}@${new URL(act.id).hostname}`
         }
-        return html`by <a href=${act.id}><oni-natural-language-values it=${username}></oni-natural-language-values></a>`
+        return html`by <a href=${act.id}><oni-natural-language-values it=${JSON.stringify(username)}></oni-natural-language-values></a>`
     }
 
     renderMetadata() {

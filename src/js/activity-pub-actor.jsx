@@ -48,10 +48,7 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     preferredUsername() {
-        if (typeof this.it.preferredUsername == "string") {
-            return [this.it.preferredUsername];
-        }
-        return this.it.preferredUsername == null ? [] : this.it.preferredUsername;
+        return [this.it.preferredUsername || []];
     }
 
     async loadAverageImageRGB(imageURL) {
@@ -79,15 +76,16 @@ export class ActivityPubActor extends ActivityPubObject {
         if (this.it.hasOwnProperty('followed')) {
             collections.push(this.it.followed);
         }
-        console.debug('actor has following collections', collections);
         return collections;
     }
 
     renderCollections() {
-        if (this.collections().length == 0) {
+        const c = this.collections();
+        if (c.length == 0) {
             return nothing;
         }
-        return html`<oni-collection-links it=${JSON.stringify(this.collections())}></oni-collection-links>`;
+        console.debug('actor has following collections', c);
+        return html`<oni-collection-links it=${JSON.stringify(c)}></oni-collection-links>`;
     };
 
     renderIcon() {
@@ -110,10 +108,10 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     renderPreferredUsername() {
-        if (this.it.hasOwnProperty("preferredUsername")) {
+        if (this.preferredUsername().length > 0) {
             return html`
                 <h2><a href=${this.iri()}>
-                    <oni-natural-language-values name="preferredUsername" it=${this.it.preferredUsername}></oni-natural-language-values>
+                    <oni-natural-language-values name="preferredUsername" it=${JSON.stringify(this.preferredUsername())}></oni-natural-language-values>
                 </a></h2>`;
         }
         return nothing;
@@ -123,7 +121,7 @@ export class ActivityPubActor extends ActivityPubObject {
         if (this.it.hasOwnProperty('summary')) {
             return html`
                 <aside>
-                    <oni-natural-language-values name="summary" it=${this.it.summary}></oni-natural-language-values>
+                    <oni-natural-language-values name="summary" it=${JSON.stringify(this.summary())}></oni-natural-language-values>
                 </aside>`;
         }
         return nothing;
