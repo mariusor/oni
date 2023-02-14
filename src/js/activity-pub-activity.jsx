@@ -1,7 +1,6 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject, ObjectTypes} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
-import {isLocalIRI} from "./utils";
 import {ActorTypes} from "./activity-pub-actor";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
@@ -35,7 +34,11 @@ export class ActivityPubActivity extends ActivityPubObject {
     }
 
     render() {
-        if (this.type() !== 'Create') { return nothing; }
+        if (!ActivityPubActivity.validForRender(this.it)) { return nothing; }
         return html`${until(this.renderObject())} ${unsafeHTML(`<!-- Actor ${until(this.renderActor())}-->`)}`;
     }
+}
+
+ActivityPubActivity.validForRender = function (it) {
+    return it.hasOwnProperty('type') && it.type === 'Create';
 }

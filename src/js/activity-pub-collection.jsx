@@ -3,6 +3,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {ifDefined} from "lit-html/directives/if-defined.js";
 import {renderCollectionsActor} from "./utils";
 import {until} from "lit-html/directives/until.js";
+import {ActivityPubActivity, ActivityTypes} from "./activity-pub-activity";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = css`
@@ -60,6 +61,9 @@ export class ActivityPubCollection extends ActivityPubObject {
 
     renderItems() {
         return html`${this.items().map(value => {
+            if (!ActivityPubActivity.validForRender(value)) {
+                return nothing;
+            }
             return html`<li><oni-activity it=${JSON.stringify(value)}></oni-activity></li>`
         })}`
     }
