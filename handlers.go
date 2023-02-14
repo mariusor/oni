@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -407,6 +408,15 @@ func (o *oni) logRequest(r *http.Request, st int, rt time.Time) {
 	logFn(http.StatusText(st))
 }
 
+func colIRI(r *http.Request) vocab.IRI {
+	colURL := url.URL{Scheme: "https", Host: r.Host, Path: r.RequestURI}
+	q := url.Values{}
+	q.Set("object.iri", "!")
+	q.Set("actor.iri", "!")
+	colURL.RawQuery = q.Encode()
+	return vocab.IRI(colURL.String())
+}
+
 func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	if r.Method == http.MethodPost {
@@ -414,12 +424,12 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	colIRI := irif(r)
+	// NOTE(marius): the IRI of the Collection is w/o the filters to load the Actor and Object
 	res := vocab.OrderedCollectionPage{
-		ID:   colIRI,
+		ID:   irif(r),
 		Type: vocab.OrderedCollectionPageType,
 	}
-	it, err := o.s.Load(colIRI)
+	it, err := o.s.Load(colIRI(r))
 	if err != nil {
 		o.Error(err).ServeHTTP(w, r)
 		return
