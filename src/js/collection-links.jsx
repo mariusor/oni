@@ -16,9 +16,10 @@ export class CollectionLinks extends LitElement {
         :host li {
             min-width: 8vw;
             text-align: center;
-            line-height: 3rem;
+            /*line-height: 2.4rem;*/
             list-style: none;
             display: inline-block;
+            padding: .4rem .8rem;
         }
         :host li.active {
             border: 1px solid var(--fg-color);
