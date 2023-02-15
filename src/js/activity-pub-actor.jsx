@@ -101,7 +101,7 @@ export class ActivityPubActor extends ActivityPubObject {
             return html`
                 <ul>
                     ${this.it.url.map((u) => html`
-                        <li><a rel="me" href=${u}>${u}</a></li>`)}
+                        <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}><oni-icon name="external-href"></oni-icon> ${u}</a></li>`)}
                 </ul>`;
         }
         return nothing;

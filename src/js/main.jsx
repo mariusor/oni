@@ -10,6 +10,7 @@ import {ActivityPubImage} from "./activity-pub-image";
 import {ActivityPubNote} from "./activity-pub-note";
 import {ActivityPubAudio} from "./activity-pub-audio";
 import {ActivityPubVideo} from "./activity-pub-video";
+import {Icon} from "./icon";
 
 customElements.define('oni-natural-language-values', NaturalLanguageValues);
 customElements.define('oni-object', ActivityPubObject);
@@ -23,6 +24,7 @@ customElements.define('oni-collection-link', CollectionLink);
 customElements.define('oni-collection-links', CollectionLinks);
 customElements.define('oni-activity', ActivityPubActivity);
 
+customElements.define('oni-icon', Icon);
 OnReady(function () {
     document.querySelectorAll(":root").forEach((root) => {
         const colorScheme = localStorage.getItem('colorScheme');

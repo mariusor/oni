@@ -102,7 +102,7 @@ export class LoginLink extends LitElement {
         console.log('Dialog visible:', this.dialogVisible)
         return html`
             <div>
-                <button @click="${this.showDialog}">Sign in</button>
+                <button @click="${this.showDialog}"><oni-icon name="lock"></oni-icon>Sign in</button>
                 <oni-login-dialog
                         ?opened="${this.dialogVisible}"></oni-login-dialog>
             </div>`;

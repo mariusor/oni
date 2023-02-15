@@ -88,6 +88,7 @@ func (o *oni) setupStaticRoutes() {
 	o.m.Handle("/main.js", fsServe)
 	o.m.Handle("/main.js.map", fsServe)
 	o.m.Handle("/main.css", fsServe)
+	o.m.HandleFunc("/icons.svg", fsServe)
 	o.m.HandleFunc("/favicon.ico", o.NotFound)
 }
 

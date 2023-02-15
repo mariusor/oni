@@ -103,7 +103,9 @@ export class ActivityPubObject extends LitElement {
         if (!published) {
             return nothing;
         }
-        return html` on <time datetime=${published.toUTCString()}>${relativeDate(published)}</time>`;
+        return html` on <time datetime=${published.toUTCString()} title=${published.toUTCString()}>
+            <oni-icon name="clock"></oni-icon> ${relativeDate(published)}
+        </time>`;
     }
 
     renderMetadata() {
