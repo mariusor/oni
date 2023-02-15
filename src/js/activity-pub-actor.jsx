@@ -1,6 +1,6 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {getAverageImageRGB, rgba, setStyles} from "./utils";
+import {getAverageImageRGB, isAuthenticated, rgba, setStyles} from "./utils";
 import {until} from "lit-html/directives/until.js";
 
 export const ActorTypes = [ 'Person', 'Group', 'Application', 'Service' ];
@@ -62,7 +62,7 @@ export class ActivityPubActor extends ActivityPubObject {
 
     collections() {
         let collections = super.collections();
-        if (false && this.it.hasOwnProperty('inbox')) {
+        if (this.it.hasOwnProperty('inbox') && isAuthenticated()) {
             collections.push(this.it.inbox);
         }
         if (this.it.hasOwnProperty('outbox')) {
