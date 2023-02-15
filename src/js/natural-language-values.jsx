@@ -57,7 +57,7 @@ export class NaturalLanguageValues extends LitElement {
     render() {
         if (!this.it) { return nothing; }
 
-        this.editable = isAuthenticated();
+        this.editable = isAuthenticated() && this.name.length > 0;
 
         return html`
             <div ?contenteditable=${this.editable} @blur="${this.checkChanged}">
