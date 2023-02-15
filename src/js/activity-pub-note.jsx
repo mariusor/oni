@@ -14,6 +14,7 @@ export class ActivityPubNote extends ActivityPubObject {
 
     render() {
         return html`${this.renderMetadata()}
-        <oni-natural-language-values it=${JSON.stringify(this.content())}></oni-natural-language-values>`
+        <oni-natural-language-values it=${JSON.stringify(this.content())}></oni-natural-language-values>
+        ${this.renderAttachment()}`
     }
 }

@@ -54,6 +54,13 @@ export class ActivityPubObject extends LitElement {
         return this.it.hasOwnProperty('id') ? this.it.id : null;
     }
 
+    url() {
+        if (this.it == null) {
+            return null;
+        }
+        return this.it.hasOwnProperty('url') ? this.it.url : null;
+    }
+
     type() {
         if (this.it == null) {
             return null;
@@ -97,7 +104,28 @@ export class ActivityPubObject extends LitElement {
         }
         return html`by <a href=${act.id}><oni-natural-language-values it=${JSON.stringify(username)}></oni-natural-language-values></a>`
     }
-    
+
+    attachment() {
+        if (!this.it || !this.it.hasOwnProperty('attachment')) {
+            return null;
+        }
+        return this.it.attachment;
+    }
+
+    renderAttachment() {
+        const attachment = this.attachment()
+        if (!attachment) {
+            return nothing;
+        }
+        console.debug(attachment);
+        if (Array.isArray(attachment)) {
+            return html`<div class="attachment">${attachment.map(
+                value => ActivityPubObject.renderByType(value)
+            )}</div>`;
+        }
+        return html`<div class="attachment">${ActivityPubObject.renderByType(attachment)}</div>`
+    }
+
     renderPublished() {
         const published = this.published()
         if (!published) {
@@ -109,8 +137,11 @@ export class ActivityPubObject extends LitElement {
     }
 
     renderMetadata() {
+        if (!this.it.hasOwnProperty("attributedTo")){
+            return nothing;
+        }
         const auth = this.renderAttributedTo();
-        return html`<aside>Published ${until(auth)}${this.renderPublished()}</aside>`
+        return html`<aside>Published ${until(auth)}${this.renderPublished()}</aside>`;
     }
 
     render() {
@@ -124,11 +155,26 @@ export class ActivityPubObject extends LitElement {
     }
 }
 
+ActivityPubObject.renderByMediaType = function (it) {
+    if (it == null || !it.hasOwnProperty('mediaType')) {
+        return nothing;
+    }
+    switch (it.mediaType) {
+        case 'image/png':
+        case 'image/jpeg':
+            return html`<oni-image it=${JSON.stringify(it)}></oni-image>`;
+        default:
+            return html`<a href=${it.url}>${it.name}</a>`;
+    }
+}
+
 ActivityPubObject.renderByType = function (it) {
-    if (it == null) {
+    if (it == null || !it.hasOwnProperty('type')) {
         return nothing;
     }
     switch (it.type) {
+        case 'Document':
+            return ActivityPubObject.renderByMediaType(it);
         case 'Video':
             return html`<oni-video it=${JSON.stringify(it)}></oni-video>`;
         case 'Audio':

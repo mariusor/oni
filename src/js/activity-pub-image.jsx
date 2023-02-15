@@ -17,7 +17,11 @@ export class ActivityPubImage extends ActivityPubObject {
     }
 
     render() {
+        let src = this.iri();
+        if (!src) {
+            src = this.url();
+        }
         return html`${this.renderMetadata()}
-        <img src=${this.iri() ?? nothing} title="${this.name()}"/>`;
+        <img src=${src ?? nothing} title="${this.name()}"/>`;
     }
 }
