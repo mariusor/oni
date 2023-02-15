@@ -1,71 +1,107 @@
-:root { --bg-color: Window; --fg-color: WindowText; --link-color: blue; --linkvisited-color: rebeccapurple; --linkactive-color: red; --shadow-color: WindowText;}
+:root {
+    --bg-color: Window;
+    --fg-color: WindowText;
+    --link-color: blue;
+    --linkvisited-color: rebeccapurple;
+    --linkactive-color: red;
+    --shadow-color: WindowText;
+}
+
 @media (prefers-color-scheme: light) {
-    :root {--bg-color: #EFF0F1; --fg-color: #232627; --link-color: blue; --linkvisited-color: rebeccapurple; --linkactive-color: red; --shadow-color: #232627;}
+    :root {
+        --bg-color: #EFF0F1;
+        --fg-color: #232627;
+        --link-color: blue;
+        --linkvisited-color: rebeccapurple;
+        --linkactive-color: red;
+        --shadow-color: #232627;
+    }
 }
+
 @media (prefers-color-scheme: dark) {
-    :root { --bg-color: #232627; --fg-color: #EFF0F1; --link-color: dodgerblue; --linkvisited-color: mediumpurple; --linkactive-color: red; --shadow-color: #EFF0F1;}
+    :root {
+        --bg-color: #232627;
+        --fg-color: #EFF0F1;
+        --link-color: dodgerblue;
+        --linkvisited-color: mediumpurple;
+        --linkactive-color: red;
+        --shadow-color: #EFF0F1;
+    }
 }
+
 @media (min-width: 2201px) {
     :root {
         font-size: .92vw;
     }
 }
+
 @media (max-width: 2200px) {
     :root {
         font-size: .96vw;
     }
 }
+
 @media (max-width: 1800px) {
     :root {
         font-size: 1.16vw;
     }
 }
+
 @media (max-width: 1500px) {
     :root {
         font-size: 1.4vw;
     }
 }
+
 @media (max-width: 1200px) {
     :root {
         /*max-width: unset;*/
         font-size: 1.6vw;
     }
 }
+
 @media (max-width: 1050px) {
     :root {
         font-size: 1.8vw;
     }
 }
+
 @media (max-width: 948px) {
     :root {
         font-size: 2vw;
     }
 }
+
 @media (max-width: 860px) {
     :root {
         font-size: 2.2vw;
     }
 }
+
 @media (max-width: 768px) {
     :root {
         font-size: 2.6vw;
     }
 }
+
 @media (max-width: 576px) {
     :root {
         font-size: 2.8vw;
     }
 }
+
 @media (max-width: 480px) {
     :root {
         font-size: 4vw;
     }
 }
+
 @media (max-width: 400px) {
     :root {
         font-size: 4.8vw;
     }
 }
+
 body {
     margin: 0 0 auto 0;
     background-color: var(--bg-color);
@@ -77,6 +113,7 @@ body {
     display: flex;
     justify-content: center;
 }
+
 oni-actor > div {
     margin: 0 1rem;
 }

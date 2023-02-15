@@ -36,6 +36,7 @@ export class ActivityPubActor extends ActivityPubObject {
             display: inline-block;
             margin-right: .8rem;
         }
+        a[target=external] {}
     `;
     static properties = {
         it: {type: Object},
