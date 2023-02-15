@@ -409,13 +409,32 @@ func (o *oni) logRequest(r *http.Request, st int, rt time.Time) {
 	logFn(http.StatusText(st))
 }
 
+func col(r *http.Request) vocab.CollectionPath {
+	if r.URL == nil || len(r.URL.Path) == 0 {
+		return vocab.Unknown
+	}
+	col := vocab.Unknown
+	pathElements := strings.Split(r.URL.Path[1:], "/") // Skip first /
+	for i := len(pathElements) - 1; i >= 0; i-- {
+		col = vocab.CollectionPath(pathElements[i])
+		if vocab.ValidObjectCollection(col) || vocab.ValidActivityCollection(col) {
+			return col
+		}
+	}
+
+	return col
+}
+
 func colIRI(r *http.Request) vocab.IRI {
 	colURL := url.URL{Scheme: "https", Host: r.Host, Path: r.RequestURI}
-	q := url.Values{}
-	q.Set("object.iri", "!")
-	q.Set("actor.iri", "!")
-	q.Set("type", string(vocab.CreateType))
-	colURL.RawQuery = q.Encode()
+	c := col(r)
+	if vocab.ValidActivityCollection(c) {
+		q := url.Values{}
+		q.Set("object.iri", "!")
+		q.Set("actor.iri", "!")
+		q.Set("type", string(vocab.CreateType))
+		colURL.RawQuery = q.Encode()
+	}
 	return vocab.IRI(colURL.String())
 }
 
