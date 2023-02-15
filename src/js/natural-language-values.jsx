@@ -26,8 +26,10 @@ export class NaturalLanguageValues extends LitElement {
             return;
         }
 
+        const old = this.value();
         const content = editableContent(e.target);
-        if (content === this.it.trim()) {
+
+        if (content === old.trim()) {
             console.debug(`no change for ${this.name}`)
             return;
         }
