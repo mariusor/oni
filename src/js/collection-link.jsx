@@ -17,6 +17,6 @@ export class CollectionLink extends LitElement {
     }
 
     render() {
-        return html`<oni-icon name=${this.label()}></oni-icon><a href="${this.it}">${this.label()}</a>`;
+        return html`<oni-icon name=${this.label()}></oni-icon> <a href="${this.it}">${this.label()}</a>`;
     }
 }

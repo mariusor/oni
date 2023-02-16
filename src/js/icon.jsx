@@ -2,7 +2,13 @@ import {css, html, LitElement, nothing} from "lit";
 import {unsafeSVG} from "lit-html/directives/unsafe-svg.js";
 
 export class Icon extends LitElement {
-    static styles = css`svg { max-width: 1em; max-height: 1.2em; fill: currentColor; vertical-align: text-bottom; }`;
+    static styles = css`svg { 
+        max-width: 1em;
+        max-height: 1.2em;
+        fill: currentColor;
+        vertical-align: text-bottom;
+        margin: 0 .2rem;
+    }`;
     static properties = {name: {type: String}};
 
     constructor() {
@@ -11,6 +17,6 @@ export class Icon extends LitElement {
 
     render() {
         if (!this.name) return nothing;
-        return html`${unsafeSVG(`<svg aria-hidden="true" name="icon-${this.name}"><use xlink:href="/icons.svg#icon-${this.name}"><title>${this.name}</title></use></svg><slot></slot>`)}`
+        return html`${unsafeSVG(`<svg aria-hidden="true" name="icon-${this.name}"><use xlink:href="/icons.svg#icon-${this.name}"><title>${this.name}</title></use></svg>`)}`
     }
 }
