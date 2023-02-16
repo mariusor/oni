@@ -82,10 +82,7 @@ export class ActivityPubCollection extends ActivityPubObject {
         const collection = () => {
             if (this.items().length == 0) {
                 return html`
-                    <div class="content">
-                        <hr/>
-                        Nothing to see here, please move along.
-                    </div>`;
+                    <div class="content"> Nothing to see here, please move along. </div>`;
             }
 
             const list = this.type().toLowerCase().includes('ordered')
@@ -96,7 +93,6 @@ export class ActivityPubCollection extends ActivityPubObject {
 
             return html`
                 <div class="content">
-                    <hr/>
                     ${list}
                     ${this.renderPrevNext()}
                 </div>`;

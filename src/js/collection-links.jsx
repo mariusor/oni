@@ -7,11 +7,13 @@ export class CollectionLinks extends LitElement {
             display: flex;
             width: 100%;
             justify-content: flex-end;
+            border-bottom: 3px inset var(--fg-color);
+            margin-right: 1rem;
+            margin-bottom: 0;
         }
         :host ul {
-            margin: 0;
+            margin: 0 .8rem 0;
             padding: 0;
-            margin-right: 1rem;
         }
         :host li {
             min-width: 8vw;
@@ -19,10 +21,11 @@ export class CollectionLinks extends LitElement {
             /*line-height: 2.4rem;*/
             list-style: none;
             display: inline-block;
-            padding: .4rem .8rem;
+            padding: .4rem .8rem .4rem 0;
         }
         :host li.active {
             border: 1px solid var(--fg-color);
+            border-bottom: 0;
         }
     `
     static properties = {
