@@ -88,6 +88,7 @@ export function OnReady(a) {
 };
 
 const fetchHeaders = {Accept: 'application/activity+json', 'Cache-Control': 'no-store'};
+
 export async function fetchActivityPubIRI(iri) {
     const response = await fetch(iri, {headers: fetchHeaders}).catch(console.error);
     if (typeof response == 'undefined') {
@@ -108,7 +109,9 @@ export async function fetchActivityPubIRI(iri) {
 };
 
 export function isLocalIRI(iri) {
-    if (typeof iri !== 'string') { return false; }
+    if (typeof iri !== 'string') {
+        return false;
+    }
     return iri.indexOf(new URL(window.location).hostname) < 0
 };
 
@@ -122,9 +125,13 @@ export function hostFromIRI(iri) {
 
 export function pastensify(verb) {
     if (typeof verb !== 'string') return verb;
-    if (verb == 'Undo') { return 'Reverted'; }
-    if (verb == 'Create') { return 'Published'; }
-    if (verb[verb.length-1] === 'e') return `${verb}d`;
+    if (verb == 'Undo') {
+        return 'Reverted';
+    }
+    if (verb == 'Create') {
+        return 'Published';
+    }
+    if (verb[verb.length - 1] === 'e') return `${verb}d`;
     return `${verb}ed`;
 };
 
@@ -132,7 +139,7 @@ function splitCollectionIRI(iri) {
     const u = new URL(iri);
     const pieces = u.pathname.split('/');
     u.search = '';
-    const col = pieces[pieces.length-1];
+    const col = pieces[pieces.length - 1];
     u.pathname = u.pathname.replace(col, '');
     return [u.toString(), col];
 }
@@ -140,7 +147,8 @@ function splitCollectionIRI(iri) {
 export async function renderCollectionsActor(iri, slot) {
     const [actorIRI, collection] = splitCollectionIRI(iri);
     const act = await fetchActivityPubIRI(actorIRI);
-    return html`<oni-actor it=${JSON.stringify(act)}>${slot}</oni-actor>`;
+    return html`
+        <oni-actor it=${JSON.stringify(act)}>${slot}</oni-actor>`;
 };
 
 export function isAuthenticated() {
@@ -166,8 +174,72 @@ export function editableContent(root) {
     return root.innerHTML.trim();
 };
 
-export function relativeDate(d) {
-    const now = Date.now();
-    const options = {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'};
-    return d.toLocaleDateString(navigator.language, options)
+export function relativeDate(old) {
+    const seconds = (Date.now() - Date.parse(old)) / 1000;
+    const minutes = Math.abs(seconds / 60);
+    const hours = Math.abs(minutes / 60);
+
+    let val = 0.0;
+    let unit = "";
+    let when = "ago";
+
+    if (seconds < 0) {
+        // we're in the future
+        when = "in the future";
+    }
+    if (seconds < 30) {
+        return "now";
+    }
+    if (hours < 1) {
+        if (minutes < 1) {
+            val = seconds / 60;
+            unit = "second";
+        } else {
+            val = minutes / 60;
+            unit = "minute";
+        }
+    } else if (hours < 24) {
+        val = hours;
+        unit = "hour";
+    } else if (hours < 168) {
+        val = hours / 24;
+        unit = "day";
+    } else if (hours < 672) {
+        val = hours / 168;
+        unit = "week";
+    } else if (hours < 8760) {
+        val = hours / 730;
+        unit = "month";
+    } else if (hours < 87600) {
+        val = hours / 8760;
+        unit = "year";
+    } else if (hours < 876000) {
+        val = hours / 87600;
+        unit = "decade";
+    } else {
+        val = hours / 876000;
+        unit = "century";
+    }
+    return `${Math.round(val)} ${pluralize(val, unit)} ${when}`;
+}
+
+function pluralize(d, unit) {
+    let l = unit.length;
+    if (Math.round(d) == 1) {
+        return unit;
+    }
+    if (l > 2 && unit[l - 1] == 'y' && isCons(unit[l - 2])) {
+        unit = `${unit.substring(0, l - 1)}ie`;
+    }
+    return `${unit}s`;
+}
+
+function isCons(c) {
+    const cons = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'y', 'z'];
+    for (const i in cons) {
+        if (c == cons[i]) {
+            return true;
+        }
+    }
+    return false;
 }
