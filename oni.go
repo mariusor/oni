@@ -22,6 +22,7 @@ type oni struct {
 	Listen      string
 	StoragePath string
 	TimeOut     time.Duration
+	PwHash      []byte
 
 	c *client.C
 	a vocab.Actor

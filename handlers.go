@@ -22,6 +22,7 @@ import (
 	"github.com/go-ap/errors"
 	json "github.com/go-ap/jsonld"
 	"github.com/go-ap/processing"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // NotFound is a generic method to return an 404 error HTTP handler that
@@ -615,10 +616,16 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 // HandleLogin handles POST /login requests
 func (o *oni) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	r.FormValue("_pw")
-	tok, _ := json.Marshal("correct battery horse staple")
+	pw := r.FormValue("_pw")
+
+	status := http.StatusOK
+	body, _ := json.Marshal("correct battery horse staple")
+	if err := bcrypt.CompareHashAndPassword(o.PwHash, []byte(pw)); err != nil {
+		body, _ = json.Marshal(err.Error())
+		status = http.StatusForbidden
+	}
 
 	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(tok)
+	w.WriteHeader(status)
+	w.Write(body)
 }
