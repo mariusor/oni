@@ -617,6 +617,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 // HandleLogin handles POST /login requests
 func (o *oni) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	pw := r.FormValue("_pw")
+	now := time.Now()
 
 	status := http.StatusOK
 	body, _ := json.Marshal("correct battery horse staple")
@@ -628,4 +629,6 @@ func (o *oni) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write(body)
+
+	o.logRequest(r, status, now)
 }

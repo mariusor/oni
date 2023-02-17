@@ -28,17 +28,15 @@ export class LoginDialog extends LitElement {
         fetch(targetURI, {method: 'POST', body: l.toString(), headers: {"Content-Type": "multipart/form-data"}})
             .then(response => {
                 response.json().then(value => {
-                    if (response.status != 200) {
-                        if (value.hasOwnProperty('errors')) {
-                            console.error(value.errors)
-                        } else {
-                            console.error(value);
-                        }
+                    if (response.status == 200) {
+                        console.debug(`received token: ${value}`)
+                        localStorage.setItem('token', value);
                     }
-
-                    console.debug(`received token: ${value}`)
-                    localStorage.setItem('token', value);
-
+                    if (value.hasOwnProperty('errors')) {
+                        console.error(value.errors)
+                    } else {
+                        console.error(value);
+                    }
                 }).catch(console.error);
             })
             .catch(console.error);
@@ -110,7 +108,6 @@ export class LoginLink extends LitElement {
 
     showDialog(e) {
         this.dialogVisible = true;
-        //window.addEventListener('leave', () => this.dialogVisible = false);
     }
 }
 
