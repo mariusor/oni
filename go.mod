@@ -7,13 +7,13 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20230104101555-9bfc303f6588
 	github.com/elnormous/contenttype v1.0.3
 	github.com/evanw/esbuild v0.17.5
-	github.com/go-ap/activitypub v0.0.0-20221209114049-1ceafda50f9f
-	github.com/go-ap/auth v0.0.0-20230125185441-74b72bedd581
-	github.com/go-ap/client v0.0.0-20230125140507-b30e32f7fa90
+	github.com/go-ap/activitypub v0.0.0-20230218112952-bfb607b04799
+	github.com/go-ap/auth v0.0.0-20230218121359-b0cd747db8a8
+	github.com/go-ap/client v0.0.0-20230218115938-0fe3ee2edd31
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20230125160601-4798c034ac40
-	github.com/go-ap/storage-fs v0.0.0-20221219124530-29fb546e76bd
+	github.com/go-ap/processing v0.0.0-20230218121505-6acea3a48008
+	github.com/go-ap/storage-fs v0.0.0-20230218120027-00b8b9bd08e8
 	github.com/go-fed/httpsig v1.1.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/openshift/osin v1.0.1
@@ -30,12 +30,12 @@ require (
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/rs/xid v1.4.0 // indirect
-	github.com/rs/zerolog v1.28.0 // indirect
+	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
-	golang.org/x/crypto v0.5.0 // indirect
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/oauth2 v0.4.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/crypto v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
+	golang.org/x/oauth2 v0.5.0 // indirect
+	golang.org/x/sys v0.5.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 )
