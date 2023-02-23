@@ -144,6 +144,35 @@ export class ActivityPubObject extends LitElement {
         return html`<aside>Published ${until(auth)}${this.renderPublished()}</aside>`;
     }
 
+    renderName() {
+        if (!this.it.hasOwnProperty("name")){
+            return nothing;
+        }
+        return html`<div>
+            <a href=${this.iri()}><oni-natural-language-values name="name" it=${JSON.stringify(this.name())}></oni-natural-language-values></a>
+        </div>`;
+    }
+
+    renderContent() {
+        if (!this.it.hasOwnProperty('content')) {
+            return nothing;
+        }
+        return html`
+            <div>
+                <oni-natural-language-values name="content" it=${JSON.stringify(this.content())}></oni-natural-language-values>
+            </div>`;
+    }
+
+    renderSummary() {
+        if (this.it.hasOwnProperty('summary')) {
+            return html`
+                <aside>
+                    <oni-natural-language-values name="summary" it=${JSON.stringify(this.summary())}></oni-natural-language-values>
+                </aside>`;
+        }
+        return nothing;
+    }
+
     render() {
         if (this.it == null) {
             return nothing;
@@ -151,6 +180,9 @@ export class ActivityPubObject extends LitElement {
         return html`
             <div id=${this.iri() || nothing} class=${this.type() || nothing}>
                 ${this.renderMetadata()}
+                ${this.renderName()}
+                ${this.renderSummary()}
+                ${this.renderContent()}
             </div>`
     }
 }

@@ -122,16 +122,6 @@ export class ActivityPubActor extends ActivityPubObject {
         return nothing;
     }
 
-    renderSummary() {
-        if (this.it.hasOwnProperty('summary')) {
-            return html`
-                <aside>
-                    <oni-natural-language-values name="summary" it=${JSON.stringify(this.summary())}></oni-natural-language-values>
-                </aside>`;
-        }
-        return nothing;
-    }
-
     updateActivityPubItem(e) {
         const it = this.it;
         const prop = e.detail.name;
