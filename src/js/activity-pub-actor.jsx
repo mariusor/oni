@@ -98,14 +98,18 @@ export class ActivityPubActor extends ActivityPubObject {
 
 
     renderUrl() {
-        if (this.it.hasOwnProperty("url")) {
-            return html`
-                <ul>
-                    ${this.it.url.map((u) => html`
-                        <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}><oni-icon name="external-href"></oni-icon> ${u}</a></li>`)}
-                </ul>`;
+        let url = this.url();
+        if (!url) {
+            return nothing;
         }
-        return nothing;
+        if (!Array.isArray(url)) {
+            url = [url];
+        }
+        return html`
+            <ul>
+                ${url.map((u) => html`
+                    <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}><oni-icon name="external-href"></oni-icon> ${u}</a></li>`)}
+            </ul>`;
     }
 
     renderPreferredUsername() {
