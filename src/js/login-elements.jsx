@@ -24,8 +24,8 @@ export class LoginDialog extends LitElement {
         const targetURI = form.action;
 
         const l = new URLSearchParams({_pw: pw});
-        console.debug(l.toString());
-        fetch(targetURI, {method: 'POST', body: l.toString(), headers: {"Content-Type": "multipart/form-data"}})
+
+        fetch(targetURI, {method: 'POST', body: l.toString(), headers: {"Content-Type": "application/x-www-form-urlencoded"}})
             .then(response => {
                 response.json().then(value => {
                     if (response.status == 200) {
@@ -51,7 +51,6 @@ export class LoginDialog extends LitElement {
                     display: flex;
                     margin: auto;
                 }
-
                 dialog {
                     display: none;
                     position: fixed;
@@ -60,7 +59,6 @@ export class LoginDialog extends LitElement {
                     padding: 1em;
                     margin: 1em;
                 }
-
                 form {
                     display: flex;
                     flex-direction: row;
@@ -101,8 +99,7 @@ export class LoginLink extends LitElement {
         return html`
             <div>
                 <button @click="${this.showDialog}"><oni-icon name="lock"></oni-icon>Sign in</button>
-                <oni-login-dialog
-                        ?opened="${this.dialogVisible}"></oni-login-dialog>
+                <oni-login-dialog ?opened="${this.dialogVisible}"></oni-login-dialog>
             </div>`;
     }
 
