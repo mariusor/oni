@@ -99,7 +99,7 @@ export class ActivityPubObject extends LitElement {
         }
 
         let username = act.preferredUsername;
-        if (isLocalIRI(act.id)) {
+        if (!isLocalIRI(act.id)) {
             username = `${username}@${new URL(act.id).hostname}`
         }
         return html`by <a href=${act.id}><oni-natural-language-values it=${JSON.stringify(username)}></oni-natural-language-values></a>`

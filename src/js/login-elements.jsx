@@ -25,17 +25,23 @@ export class LoginDialog extends LitElement {
 
         const l = new URLSearchParams({_pw: pw});
 
-        fetch(targetURI, {method: 'POST', body: l.toString(), headers: {"Content-Type": "application/x-www-form-urlencoded"}})
+        const req = {
+            method: 'POST',
+            body: l.toString(),
+            headers: {"Content-Type": "application/x-www-form-urlencoded"}
+        };
+        fetch(targetURI, req)
             .then(response => {
                 response.json().then(value => {
                     if (response.status == 200) {
                         console.debug(`received token: ${value}`)
-                        localStorage.setItem('token', value);
-                    }
-                    if (value.hasOwnProperty('errors')) {
-                        console.error(value.errors)
+                        localStorage.setItem('token', value.code);
                     } else {
-                        console.error(value);
+                        if (value.hasOwnProperty('errors')) {
+                            console.error(value.errors)
+                        } else {
+                            console.error(value);
+                        }
                     }
                 }).catch(console.error);
             })
@@ -51,6 +57,7 @@ export class LoginDialog extends LitElement {
                     display: flex;
                     margin: auto;
                 }
+
                 dialog {
                     display: none;
                     position: fixed;
@@ -59,6 +66,7 @@ export class LoginDialog extends LitElement {
                     padding: 1em;
                     margin: 1em;
                 }
+
                 form {
                     display: flex;
                     flex-direction: row;
@@ -98,7 +106,10 @@ export class LoginLink extends LitElement {
         console.log('Dialog visible:', this.dialogVisible)
         return html`
             <div>
-                <button @click="${this.showDialog}"><oni-icon name="lock"></oni-icon>Sign in</button>
+                <button @click="${this.showDialog}">
+                    <oni-icon name="lock"></oni-icon>
+                    Sign in
+                </button>
                 <oni-login-dialog ?opened="${this.dialogVisible}"></oni-login-dialog>
             </div>`;
     }

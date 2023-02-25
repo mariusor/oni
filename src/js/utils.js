@@ -90,7 +90,16 @@ export function OnReady(a) {
 const fetchHeaders = {Accept: 'application/activity+json', 'Cache-Control': 'no-store'};
 
 export async function fetchActivityPubIRI(iri) {
-    const response = await fetch(iri, {headers: fetchHeaders}).catch(console.error);
+    let headers= fetchHeaders;
+    if (isLocalIRI(iri)) {
+        const token = localStorage.getItem('token');
+        if (token) {
+            headers.Authorization = 'Bearer ' + token;
+        }
+    } else {
+        // generate HTTP-signature for the actor
+    }
+    const response = await fetch(iri, {headers: headers}).catch(console.error);
     if (typeof response == 'undefined') {
         return null;
     }
@@ -112,7 +121,7 @@ export function isLocalIRI(iri) {
     if (typeof iri !== 'string') {
         return false;
     }
-    return iri.indexOf(new URL(window.location).hostname) < 0
+    return iri.indexOf(window.location.hostname) > 0;
 };
 
 export function hostFromIRI(iri) {

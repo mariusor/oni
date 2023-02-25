@@ -11,6 +11,7 @@ import {ActivityPubNote} from "./activity-pub-note";
 import {ActivityPubAudio} from "./activity-pub-audio";
 import {ActivityPubVideo} from "./activity-pub-video";
 import {Icon} from "./icon";
+import {LoginDialog, LoginLink} from "./login-elements";
 
 customElements.define('oni-natural-language-values', NaturalLanguageValues);
 customElements.define('oni-object', ActivityPubObject);
@@ -24,6 +25,9 @@ customElements.define('oni-collection-link', CollectionLink);
 customElements.define('oni-collection-links', CollectionLinks);
 customElements.define('oni-activity', ActivityPubActivity);
 
+customElements.define('oni-login-link', LoginLink)
+customElements.define('oni-login-dialog', LoginDialog)
+
 customElements.define('oni-icon', Icon);
 OnReady(function () {
     document.querySelectorAll(":root").forEach((root) => {
@@ -34,6 +38,10 @@ OnReady(function () {
         const backgroundColor = localStorage.getItem('backgroundColor');
         if (backgroundColor) {
             root.style.setProperty('--bg-color', backgroundColor);
+        }
+
+        if (!localStorage.getItem('token')) {
+            root.appendChild(new LoginLink())
         }
     });
 });
