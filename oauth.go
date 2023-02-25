@@ -46,6 +46,7 @@ type PasswordChanger interface {
 
 type authService struct {
 	baseIRI vocab.IRI
+	self    vocab.Actor
 	storage FullStorage
 	auth    auth.Server
 	logger  lw.Logger
@@ -281,34 +282,13 @@ func (i *authService) loadAccountByID(id string) (*vocab.Actor, error) {
 	return actor, nil
 }
 
-func (i *authService) loadAccountFromPost(r *http.Request) (*account, error) {
-	pw := r.PostFormValue("pw")
-	handle := r.PostFormValue("handle")
+func (i *authService) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
+	pw := r.PostFormValue("_pw")
 
-	i.logger.WithContext(lw.Ctx{
-		"handle": handle,
-		"pass":   pw,
-	}).Infof("received")
+	i.logger.WithContext(lw.Ctx{"pass": pw}).Infof("received")
 
-	a := activitypub.Self(i.baseIRI)
-
-	f := activitypub.FiltersNew()
-	f.Name = activitypub.CompStrs{activitypub.CompStr{Str: handle}}
-	f.IRI = activitypub.ActorsType.IRI(a)
-	f.Type = activitypub.CompStrs{activitypub.StringEquals(string(vocab.PersonType))}
-	actors, err := i.storage.Load(f.GetLink())
-	if err != nil {
-		return nil, errUnauthorized
-	}
-
-	var act *account
-	if act, err = checkPw(actors, []byte(pw), i.storage); err != nil {
-		return nil, err
-	}
-	return act, nil
+	return i.storage.PasswordCheck(actor, []byte(pw))
 }
-
-var ()
 
 func (i *authService) renderTemplate(r *http.Request, w http.ResponseWriter, name string, m authModel) {
 	if err := ren.HTML(w, http.StatusOK, name, m); err != nil {
@@ -353,15 +333,12 @@ func (i *authService) Authorize(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
-			acc, err := i.loadAccountFromPost(r)
-			if err != nil {
+			if err := i.loadAccountFromPost(*actor, r); err != nil {
 				errors.HandleError(err).ServeHTTP(w, r)
 				return
 			}
-			if acc != nil {
-				ar.Authorized = true
-				ar.UserData = acc.actor.GetLink()
-			}
+			ar.Authorized = true
+			ar.UserData = actor.GetLink()
 		}
 		s.FinishAuthorizeRequest(resp, r, ar)
 	}
@@ -371,36 +348,12 @@ func (i *authService) Authorize(w http.ResponseWriter, r *http.Request) {
 	redirectOrOutput(resp, w, r)
 }
 
-func checkPw(it vocab.Item, pw []byte, pwLoader PasswordChanger) (*account, error) {
-	acc := new(account)
-	found := false
-	err := vocab.OnActor(it, func(p *vocab.Actor) error {
-		if found {
-			return nil
-		}
-		if err := pwLoader.PasswordCheck(p, pw); err == nil {
-			acc.FromActor(p)
-			found = true
-		}
-		return nil
-	})
-	if !found {
-		return nil, errUnauthorized
-	}
-	return acc, err
-}
-
-var AnonymousAcct = account{
-	username: "anonymous",
-	actor:    &auth.AnonymousActor,
-}
-
 func (i *authService) Token(w http.ResponseWriter, r *http.Request) {
 	s := i.auth
 	resp := s.NewResponse()
 	defer resp.Close()
 
-	acc := &AnonymousAcct
+	actor := &auth.AnonymousActor
 	if ar := s.HandleAccessRequest(resp, r); ar != nil {
 		actorFilters := activitypub.FiltersNew()
 		switch ar.Type {
@@ -417,44 +370,61 @@ func (i *authService) Token(w http.ResponseWriter, r *http.Request) {
 				actorFilters.IRI = vocab.IRI(iri)
 			}
 		}
-		actor, err := i.storage.Load(actorFilters.GetLink())
+		it, err := i.storage.Load(actorFilters.GetLink())
 		if err != nil {
 			i.logger.Errorf("%s", errUnauthorized)
 			errors.HandleError(errUnauthorized).ServeHTTP(w, r)
 			return
 		}
+
+		err = vocab.OnActor(it, func(act *vocab.Actor) error {
+			actor = act
+			return nil
+		})
+		if err != nil {
+			i.logger.Errorf("%s", errUnauthorized)
+			errors.HandleError(errUnauthorized).ServeHTTP(w, r)
+			return
+		}
+
+		isLogged := !actor.GetID().Equals(auth.AnonymousActor.ID, true)
 		if ar.Type == osin.PASSWORD {
 			if actor.IsCollection() {
 				err = vocab.OnCollectionIntf(actor, func(col vocab.CollectionInterface) error {
 					// NOTE(marius): This is a stupid way of doing pw authentication, as it will produce collisions
 					//  for users with the same handle/pw and it will login the first in the collection.
-					for _, actor := range col.Collection() {
-						acc, err = checkPw(actor, []byte(ar.Password), i.storage)
-						if err == nil {
+					for _, it := range col.Collection() {
+						err := vocab.OnActor(it, func(act *vocab.Actor) error {
+							if err := i.storage.PasswordCheck(act, []byte(ar.Password)); err != nil {
+								return err
+							}
+							actor = act
 							return nil
+						})
+						if err != nil {
+							i.logger.WithContext(lw.Ctx{"actor": it.GetID(), "err": err}).
+								Errorf("password check failed")
 						}
 					}
 					return errors.Newf("No actor matched the password")
 				})
 			} else {
-				acc, err = checkPw(actor, []byte(ar.Password), i.storage)
+				err = i.storage.PasswordCheck(actor, []byte(ar.Password))
 			}
-			if err != nil || acc == nil {
+			if err != nil {
 				if err != nil {
 					i.logger.Errorf("%s", err)
 				}
 				errors.HandleError(errUnauthorized).ServeHTTP(w, r)
 				return
 			}
-			ar.Authorized = acc.IsLogged()
-			ar.UserData = acc.actor.GetLink()
+			ar.Authorized = isLogged
+			ar.UserData = actor.GetLink()
 		}
 		if ar.Type == osin.AUTHORIZATION_CODE {
 			vocab.OnActor(actor, func(p *vocab.Actor) error {
-				acc = new(account)
-				acc.FromActor(p)
-				ar.Authorized = acc.IsLogged()
-				ar.UserData = acc.actor.GetLink()
+				ar.Authorized = isLogged
+				ar.UserData = actor.GetLink()
 				return nil
 			})
 		}

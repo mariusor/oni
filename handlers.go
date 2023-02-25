@@ -22,7 +22,7 @@ import (
 	"github.com/go-ap/errors"
 	json "github.com/go-ap/jsonld"
 	"github.com/go-ap/processing"
-	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
 )
 
 // NotFound is a generic method to return an 404 error HTTP handler that
@@ -77,10 +77,12 @@ func (o *oni) setupOauthRoutes() {
 
 	h := authService{
 		baseIRI: vocab.IRI(base),
+		self:    o.a,
 		storage: o.s,
 		auth:    *as,
 		logger:  o.l.WithContext(lw.Ctx{"log": "oauth"}),
 	}
+	o.m.HandleFunc("/login", h.HandleLogin)
 	o.m.HandleFunc("/oauth/authorize", h.Authorize)
 	o.m.HandleFunc("/oauth/token", h.Token)
 
@@ -98,7 +100,6 @@ func (o *oni) setupRoutes() {
 		return
 	}
 
-	o.m.HandleFunc("/login", o.HandleLogin)
 	o.setupActorRoutes()
 	o.setupWebfingerRoutes()
 	o.setupOauthRoutes()
@@ -645,20 +646,33 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 }
 
 // HandleLogin handles POST /login requests
-func (o *oni) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	pw := r.FormValue("_pw")
-	now := time.Now()
-
-	status := http.StatusOK
-	body, _ := json.Marshal("correct battery horse staple")
-	if err := bcrypt.CompareHashAndPassword(o.PwHash, []byte(pw)); err != nil {
-		body, _ = json.Marshal(err.Error())
-		status = http.StatusForbidden
+func (i *authService) HandleLogin(w http.ResponseWriter, r *http.Request) {
+	state := r.PostFormValue("state")
+	if err := i.loadAccountFromPost(i.self, r); err != nil {
+		errors.HandleError(err).ServeHTTP(w, r)
+		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(status)
-	w.Write(body)
-
-	o.logRequest(r, status, now)
+	endpoints := vocab.Endpoints{
+		OauthAuthorizationEndpoint: vocab.IRI(fmt.Sprintf("%s/oauth/authorize", i.self.ID)),
+		OauthTokenEndpoint:         vocab.IRI(fmt.Sprintf("%s/oauth/token", i.self.ID)),
+	}
+	actor := i.self
+	if !vocab.IsNil(actor) && actor.Endpoints != nil {
+		if actor.Endpoints.OauthTokenEndpoint != nil {
+			endpoints.OauthTokenEndpoint = actor.Endpoints.OauthTokenEndpoint
+		}
+		if actor.Endpoints.OauthAuthorizationEndpoint != nil {
+			endpoints.OauthAuthorizationEndpoint = actor.Endpoints.OauthAuthorizationEndpoint
+		}
+	}
+	config := oauth2.Config{
+		ClientID: "self",
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  endpoints.OauthAuthorizationEndpoint.GetLink().String(),
+			TokenURL: endpoints.OauthTokenEndpoint.GetLink().String(),
+		},
+	}
+	//i.logRequest(r, status, now)
+	http.Redirect(w, r, config.AuthCodeURL(state, oauth2.AccessTypeOnline), http.StatusPermanentRedirect)
 }
