@@ -44,6 +44,10 @@ func Oni(initFns ...optionFn) *oni {
 		client.SkipTLSValidation(true),
 	)
 
+	if err := saveOauth2Client(o.s, o.a.ID.String()); err != nil {
+		o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to save OAuth2 client")
+	}
+
 	if o.a.ID != "" && o.s != nil {
 		it, err := o.s.Load(o.a.ID)
 		if err != nil {

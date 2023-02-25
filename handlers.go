@@ -667,7 +667,7 @@ func (i *authService) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	config := oauth2.Config{
-		ClientID: "self",
+		ClientID: defaultOAuth2ClientName,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  endpoints.OauthAuthorizationEndpoint.GetLink().String(),
 			TokenURL: endpoints.OauthTokenEndpoint.GetLink().String(),

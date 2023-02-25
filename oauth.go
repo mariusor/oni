@@ -31,12 +31,14 @@ type ClientLister interface {
 	ListClients() ([]osin.Client, error)
 	GetClient(id string) (osin.Client, error)
 }
+
 type FullStorage interface {
 	ClientSaver
 	ClientLister
+	PasswordChanger
 	osin.Storage
 	processing.Store
-	PasswordChanger
+	processing.KeyLoader
 }
 
 type PasswordChanger interface {
@@ -297,54 +299,18 @@ func (i *authService) renderTemplate(r *http.Request, w http.ResponseWriter, nam
 		errRenderer.HTML(w, http.StatusInternalServerError, "error", new)
 	}
 }
+
 func (i *authService) Authorize(w http.ResponseWriter, r *http.Request) {
 	s := i.auth
 	resp := s.NewResponse()
 	defer resp.Close()
 
-	var err error
-	actor := &auth.AnonymousActor
-	if i.IsValidRequest(r) {
-		if actor, err = i.ValidateClient(r); err != nil {
-			resp.SetError(osin.E_INVALID_REQUEST, err.Error())
-			redirectOrOutput(resp, w, r)
-			return
-		}
-	}
-
-	var overrideRedir = false
-
 	if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
-		if r.Method == http.MethodGet {
-			if ar.Scope == scopeAnonymousUserCreate {
-				// FIXME(marius): this seems like a way to backdoor our selves, we need a better way
-				ar.Authorized = true
-				overrideRedir = true
-				iri := ar.HttpRequest.URL.Query().Get("actor")
-				ar.UserData = iri
-			} else {
-				// this is basically the login page, with client being set
-				m := login{title: "Login"}
-				m.account = *actor
-				m.client = ar.Client.GetId()
-				m.state = ar.State
-
-				i.renderTemplate(r, w, "login", m)
-				return
-			}
-		} else {
-			if err := i.loadAccountFromPost(*actor, r); err != nil {
-				errors.HandleError(err).ServeHTTP(w, r)
-				return
-			}
-			ar.Authorized = true
-			ar.UserData = actor.GetLink()
-		}
+		ar.Authorized = true
+		ar.UserData = i.self.GetID()
 		s.FinishAuthorizeRequest(resp, r, ar)
 	}
-	if overrideRedir {
-		resp.Type = osin.DATA
-	}
+	resp.Type = osin.DATA
 	redirectOrOutput(resp, w, r)
 }
 
@@ -479,10 +445,26 @@ func redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http.Request)
 		}
 		w.WriteHeader(rs.StatusCode)
 
-		encoder := json.NewEncoder(w)
-		if err := encoder.Encode(rs.Output); err != nil {
+		if err := json.NewEncoder(w).Encode(rs.Output); err != nil {
 			errors.HandleError(err).ServeHTTP(w, r)
 			return
 		}
 	}
+}
+
+const defaultOAuth2ClientName = "self"
+const defaultOAuth2ClientPw = "NotSoSecretPassword"
+
+func saveOauth2Client(s FullStorage, u string) error {
+	c, err := s.GetClient(defaultOAuth2ClientName)
+	if err == nil {
+		return nil
+	}
+	c = &osin.DefaultClient{
+		Id:          defaultOAuth2ClientName,
+		Secret:      defaultOAuth2ClientPw,
+		RedirectUri: u,
+		UserData:    vocab.IRI(u),
+	}
+	return s.CreateClient(c)
 }
