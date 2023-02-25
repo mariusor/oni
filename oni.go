@@ -12,7 +12,6 @@ import (
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/client"
-	"github.com/go-ap/processing"
 	storage "github.com/go-ap/storage-fs"
 )
 
@@ -26,7 +25,7 @@ type oni struct {
 
 	c *client.C
 	a vocab.Actor
-	s processing.Store
+	s FullStorage
 	l lw.Logger
 	m *http.ServeMux
 }
@@ -117,7 +116,7 @@ func WithStoragePath(st string) optionFn {
 			conf.ErrFn("%s", err.Error())
 			return
 		}
-		o.s = Storage(st)
+		o.s = st
 	}
 }
 

@@ -61,6 +61,35 @@ func (o *oni) collectionRoutes(collections ...vocab.CollectionPath) {
 	}
 }
 
+func (o *oni) setupOauthRoutes() {
+	base, _ := IRIPath(o.a.ID)
+
+	as, err := auth.New(
+		auth.WithURL(base),
+		auth.WithStorage(o.s),
+		auth.WithClient(o.c),
+		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
+	)
+	if err != nil {
+		o.l.Errorf("unable to initialize OAuth2 server")
+		return
+	}
+
+	h := authService{
+		baseIRI: vocab.IRI(base),
+		storage: o.s,
+		auth:    *as,
+		logger:  o.l.WithContext(lw.Ctx{"log": "oauth"}),
+	}
+	o.m.HandleFunc("/oauth/authorize", h.Authorize)
+	o.m.HandleFunc("/oauth/token", h.Token)
+
+	//o.m.HandleFunc("/login", h.ShowLogin)
+	//o.m.HandleFunc("/login", h.HandleLogin)
+	//o.m.HandleFunc("/pw", h.ShowChangePw)
+	//o.m.HandleFunc("/pw", h.HandleChangePw)
+}
+
 func (o *oni) setupRoutes() {
 	o.m = http.NewServeMux()
 
@@ -72,6 +101,7 @@ func (o *oni) setupRoutes() {
 	o.m.HandleFunc("/login", o.HandleLogin)
 	o.setupActorRoutes()
 	o.setupWebfingerRoutes()
+	o.setupOauthRoutes()
 	o.setupStaticRoutes()
 }
 
