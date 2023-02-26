@@ -12,18 +12,20 @@ require (
 	github.com/go-ap/client v0.0.0-20230218115938-0fe3ee2edd31
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
 	github.com/go-ap/fedbox v0.0.0-20230111150432-bab3b45bf9a2
+	github.com/go-ap/filters v0.0.0-20230226125721-3015894d636a
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-ap/processing v0.0.0-20230225124541-9edf4a0a08ee
 	github.com/go-ap/storage-fs v0.0.0-20230225141543-fe714b2469d8
 	github.com/go-fed/httpsig v1.1.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/openshift/osin v1.0.1
+	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/oauth2 v0.5.0
 )
 
 require (
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
-	github.com/go-ap/filters v0.0.0-20230226125721-3015894d636a // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -33,6 +35,7 @@ require (
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
+	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
 	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
