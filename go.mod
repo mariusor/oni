@@ -13,8 +13,8 @@ require (
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
 	github.com/go-ap/fedbox v0.0.0-20230111150432-bab3b45bf9a2
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20230218121505-6acea3a48008
-	github.com/go-ap/storage-fs v0.0.0-20230218120027-00b8b9bd08e8
+	github.com/go-ap/processing v0.0.0-20230225124541-9edf4a0a08ee
+	github.com/go-ap/storage-fs v0.0.0-20230225141543-fe714b2469d8
 	github.com/go-fed/httpsig v1.1.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/openshift/osin v1.0.1
@@ -23,6 +23,7 @@ require (
 
 require (
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
+	github.com/go-ap/filters v0.0.0-20230226125721-3015894d636a // indirect
 	github.com/go-chi/chi v4.1.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect

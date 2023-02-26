@@ -452,19 +452,19 @@ func redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http.Request)
 	}
 }
 
-const defaultOAuth2ClientName = "self"
 const defaultOAuth2ClientPw = "NotSoSecretPassword"
 
-func saveOauth2Client(s FullStorage, u string) error {
-	c, err := s.GetClient(defaultOAuth2ClientName)
+func saveOauth2Client(s FullStorage, i vocab.IRI) error {
+	u, _ := i.URL()
+	c, err := s.GetClient(u.Host)
 	if err == nil {
 		return nil
 	}
 	c = &osin.DefaultClient{
-		Id:          defaultOAuth2ClientName,
+		Id:          u.Host,
 		Secret:      defaultOAuth2ClientPw,
-		RedirectUri: u,
-		UserData:    vocab.IRI(u),
+		RedirectUri: u.String(),
+		UserData:    i,
 	}
 	return s.CreateClient(c)
 }
