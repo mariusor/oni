@@ -132,6 +132,16 @@ export function hostFromIRI(iri) {
     }
 };
 
+export function baseIRI(iri) {
+    try {
+        const u = new URL(iri);
+        u.pathname = '/';
+        return u.toString();
+    } catch (err) {
+        return '';
+    }
+};
+
 export function pastensify(verb) {
     if (typeof verb !== 'string') return verb;
     if (verb == 'Undo') {

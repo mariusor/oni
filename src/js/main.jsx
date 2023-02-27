@@ -24,11 +24,11 @@ customElements.define('oni-collection', ActivityPubCollection);
 customElements.define('oni-collection-link', CollectionLink);
 customElements.define('oni-collection-links', CollectionLinks);
 customElements.define('oni-activity', ActivityPubActivity);
-
-customElements.define('oni-login-link', LoginLink)
-customElements.define('oni-login-dialog', LoginDialog)
-
 customElements.define('oni-icon', Icon);
+
+customElements.define('oni-login-link', LoginLink);
+customElements.define('oni-login-dialog', LoginDialog);
+
 OnReady(function () {
     document.querySelectorAll(":root").forEach((root) => {
         const colorScheme = localStorage.getItem('colorScheme');
