@@ -6,6 +6,7 @@ import (
 	"oni"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime/debug"
 	"time"
 
@@ -14,13 +15,16 @@ import (
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
 	"github.com/go-ap/processing"
+	storage "github.com/go-ap/storage-fs"
 	"github.com/openshift/osin"
 	"github.com/urfave/cli/v2"
 )
 
 type Control struct {
-	Service vocab.Actor
-	Storage oni.FullStorage
+	Service     vocab.Actor
+	Storage     oni.FullStorage
+	StoragePath string
+	Logger      lw.Logger
 }
 
 var token = &cli.Command{
@@ -31,17 +35,39 @@ var token = &cli.Command{
 
 var tokenAdd = &cli.Command{
 	Name:    "add",
-	Aliases: []string{"new", "get"},
+	Aliases: []string{"new"},
 	Usage:   "Adds an OAuth2 token",
-	Action:  tokenAct(&ctl),
+	Flags: []cli.Flag{&cli.StringFlag{
+		Name:     "client",
+		Required: true,
+	}},
+	Action: tokenAct(&ctl),
 }
 
 var OAuth2Cmd = &cli.Command{
 	Name:  "oauth",
 	Usage: "OAuth2 client and access token helper",
+	Flags: []cli.Flag{
+		&cli.PathFlag{
+			Name:  "path",
+			Value: dataPath(),
+		},
+	},
 	Subcommands: []*cli.Command{
 		token,
 	},
+}
+
+func dataPath() string {
+	dh := os.Getenv("XDG_DATA_HOME")
+	if dh == "" {
+		if userPath := os.Getenv("HOME"); userPath == "" {
+			dh = "/usr/share"
+		} else {
+			dh = filepath.Join(userPath, ".local/share")
+		}
+	}
+	return filepath.Join(dh, "oni")
 }
 
 func tokenAct(ctl *Control) cli.ActionFunc {
@@ -50,10 +76,15 @@ func tokenAct(ctl *Control) cli.ActionFunc {
 		if clientID == "" {
 			return errors.Newf("Need to provide the client id")
 		}
-		actor := c.String("actor")
-		if clientID == "" {
-			return errors.Newf("Need to provide the actor identifier (ID)")
+		conf := storage.Config{Path: c.Path("path"), ErrFn: ctl.Logger.Errorf, LogFn: ctl.Logger.Debugf}
+		st, err := storage.New(conf)
+		if err != nil {
+			ctl.Logger.Errorf("%s", err.Error())
+			return err
 		}
+		ctl.Storage = st
+
+		actor := clientID
 		tok, err := ctl.GenAuthToken(clientID, actor, nil)
 		if err == nil {
 			fmt.Printf("Authorization: Bearer %s\n", tok)
@@ -159,14 +190,7 @@ var ctl Control
 
 func Before(c *cli.Context) error {
 	fields := lw.Ctx{}
-	if c.Command != nil {
-		fields["cli"] = c.Command.Name
-	}
-
-	ctl = Control{
-		Service: vocab.Actor{},
-		Storage: nil,
-	}
+	ctl = Control{Logger: lw.Dev().WithContext(fields)}
 
 	return nil
 }
