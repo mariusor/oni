@@ -1,13 +1,8 @@
 package oni
 
 import (
+	"bytes"
 	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/url"
-	"path"
-	"time"
-
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
@@ -15,6 +10,11 @@ import (
 	"github.com/go-ap/fedbox/activitypub"
 	"github.com/go-ap/processing"
 	"github.com/openshift/osin"
+	"golang.org/x/oauth2"
+	"html/template"
+	"io"
+	"net/http"
+	"net/url"
 )
 
 type ClientSaver interface {
@@ -67,7 +67,6 @@ type login struct {
 	title   string
 	account vocab.Actor
 	state   string
-	client  string
 }
 
 func (l login) Title() string {
@@ -78,12 +77,28 @@ func (l login) Account() vocab.Actor {
 	return l.account
 }
 
+func (l login) AuthorizeURL() template.HTMLAttr {
+	actor := l.account
+	u, _ := actor.ID.URL()
+	config := oauth2.Config{ClientID: u.Host}
+	if !vocab.IsNil(actor) && actor.Endpoints != nil {
+		if actor.Endpoints.OauthTokenEndpoint != nil {
+			config.Endpoint.TokenURL = actor.Endpoints.OauthTokenEndpoint.GetLink().String()
+		}
+		if actor.Endpoints.OauthAuthorizationEndpoint != nil {
+			config.Endpoint.AuthURL = actor.Endpoints.OauthAuthorizationEndpoint.GetLink().String()
+		}
+	}
+	return template.HTMLAttr(config.AuthCodeURL("", oauth2.AccessTypeOnline))
+}
+
 func (l login) State() string {
 	return l.state
 }
 
 func (l login) Client() string {
-	return l.client
+	u, _ := l.account.GetLink().URL()
+	return u.Host
 }
 
 func (l login) Handle() string {
@@ -93,150 +108,6 @@ func (l login) Handle() string {
 	return l.account.PreferredUsername.First().String()
 }
 
-type model interface {
-	Title() string
-}
-
-type authModel interface {
-	model
-	Account() vocab.Actor
-}
-
-func (i authService) IsValidRequest(r *http.Request) bool {
-	clientID, err := url.QueryUnescape(r.FormValue(clientIdKey))
-	if err != nil {
-		return false
-	}
-	clURL, err := url.ParseRequestURI(clientID)
-	if err != nil || clURL.Host == "" || clURL.Scheme == "" {
-		return false
-	}
-	return true
-}
-
-func filters(r *http.Request, baseURL vocab.IRI) *activitypub.Filters {
-	f := activitypub.FromRequest(r, baseURL.String())
-	f.IRI = f.IRI[:0]
-	f.Collection = activitypub.ActorsType
-	return f
-}
-
-func IndieAuthClientActor(author vocab.Item, url *url.URL) *vocab.Actor {
-	now := time.Now().UTC()
-	preferredUsername := url.Host
-	p := vocab.Person{
-		Type:         vocab.ApplicationType,
-		AttributedTo: author.GetLink(),
-		Audience:     vocab.ItemCollection{vocab.PublicNS},
-		Generator:    author.GetLink(),
-		Published:    now,
-		Summary: vocab.NaturalLanguageValues{
-			{vocab.NilLangRef, vocab.Content("IndieAuth generated actor")},
-		},
-		Updated: now,
-		PreferredUsername: vocab.NaturalLanguageValues{
-			{vocab.NilLangRef, vocab.Content(preferredUsername)},
-		},
-		URL: vocab.IRI(url.String()),
-	}
-
-	return &p
-}
-
-func applicationID(base vocab.IRI) func(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) {
-	return func(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) {
-		return by.GetID().AddPath("object"), nil
-	}
-}
-func (i authService) ValidateClient(r *http.Request) (*vocab.Actor, error) {
-	r.ParseForm()
-	clientID, err := url.QueryUnescape(r.FormValue(clientIdKey))
-	if err != nil {
-		return nil, err
-	}
-	if clientID == "" {
-		return nil, nil
-	}
-	clientURL, err := url.Parse(clientID)
-	if err != nil {
-		return nil, nil
-	}
-
-	unescapedUri, err := url.QueryUnescape(r.FormValue(redirectUriKey))
-	if err != nil {
-		return nil, err
-	}
-	// load the 'me' value of the actor that wants to authenticate
-	me, err := url.QueryUnescape(r.FormValue(meKey))
-	if err != nil {
-		return nil, err
-	}
-
-	// check for existing user actor
-	var actor vocab.Item
-	if me != "" {
-		f := filters(r, i.baseIRI)
-		f.Type = activitypub.CompStrs{activitypub.StringEquals(string(vocab.PersonType))}
-		f.URL = activitypub.CompStrs{activitypub.StringEquals(me)}
-		actor, err = i.storage.Load(f.GetLink())
-		if err != nil {
-			return nil, err
-		}
-		if actor == nil {
-			return nil, errors.NotFoundf("unknown actor")
-		}
-	}
-
-	// check for existing application actor
-	f := filters(r, i.baseIRI)
-	f.Type = activitypub.CompStrs{activitypub.StringEquals(string(vocab.ApplicationType))}
-	f.URL = activitypub.CompStrs{activitypub.StringEquals(clientID)}
-	clientActor, err := i.storage.Load(f.GetLink())
-	if err != nil {
-		return nil, err
-	}
-	if clientActor == nil {
-		newClient := IndieAuthClientActor(actor, clientURL)
-		if err != nil {
-			return nil, err
-		}
-		if newId, err := applicationID(i.baseIRI)(newClient, vocab.Outbox.IRI(actor), nil); err == nil {
-			newClient.ID = newId
-		}
-		clientActor, err = i.storage.Save(newClient)
-		if err != nil {
-			return nil, err
-		}
-	}
-	id := path.Base(clientActor.GetID().String())
-	// must have a valid client
-	if _, err = i.storage.GetClient(id); err != nil {
-		if errors.IsNotFound(err) {
-			// create client
-			newClient := osin.DefaultClient{
-				Id:          id,
-				Secret:      "",
-				RedirectUri: unescapedUri,
-				//UserData:    userData,
-			}
-			if err = i.storage.CreateClient(&newClient); err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, err
-		}
-		r.Form.Set(clientIdKey, id)
-		if osin.AuthorizeRequestType(r.FormValue(responseTypeKey)) == ID {
-			r.Form.Set(responseTypeKey, "code")
-		}
-		if act, ok := actor.(*vocab.Actor); ok {
-			return act, nil
-		}
-
-	}
-	return nil, nil
-}
-
 var (
 	scopeAnonymousUserCreate = "anonUserCreate"
 
@@ -244,78 +115,47 @@ var (
 	errNotFound     = activitypub.ErrNotFound("actor not found")
 )
 
-type account struct {
-	username string
-	pw       string
-	actor    *vocab.Actor
-}
-
-func (a account) IsLogged() bool {
-	return a.actor != nil && a.actor.PreferredUsername.First().Value.String() == a.username
-}
-
-func (a *account) FromActor(p *vocab.Actor) {
-	a.username = p.PreferredUsername.First().String()
-	a.actor = p
-}
-
-func (i *authService) loadAccountByID(id string) (*vocab.Actor, error) {
-	f := activitypub.FiltersNew()
-
-	a := activitypub.Self(i.baseIRI)
-
-	f.IRI = activitypub.ActorsType.IRI(a).AddPath(id)
-	actors, err := i.storage.Load(f.GetLink())
-	if err != nil {
-		return nil, err
-	}
-	if actors == nil {
-		return nil, errNotFound
-	}
-
-	var actor *vocab.Actor
-	err = vocab.OnActor(actors, func(act *vocab.Actor) error {
-		actor = act
-		return nil
-	})
-	if err != nil || actor == nil {
-		return nil, errNotFound
-	}
-	return actor, nil
-}
-
-func (i *authService) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
+func (o *oni) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
 	pw := r.PostFormValue("_pw")
 
-	i.logger.WithContext(lw.Ctx{"pass": pw}).Infof("received")
+	o.l.WithContext(lw.Ctx{"pass": pw}).Infof("received")
 
-	return i.storage.PasswordCheck(actor, []byte(pw))
+	return o.s.PasswordCheck(actor, []byte(pw))
 }
 
-func (i *authService) renderTemplate(r *http.Request, w http.ResponseWriter, name string, m authModel) {
-	if err := ren.HTML(w, http.StatusOK, name, m); err != nil {
-		new := errors.Annotatef(err, "failed to render template")
-		i.logger.WithContext(lw.Ctx{"template": name, "model": fmt.Sprintf("%T", m)}).Errorf(new.Error())
-		errRenderer.HTML(w, http.StatusInternalServerError, "error", new)
+func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		m := login{title: "Login"}
+		m.account = o.a
+
+		wrt := bytes.Buffer{}
+		if err := ren.HTML(&wrt, http.StatusOK, "components/login", m); err != nil {
+			o.Error(err).ServeHTTP(w, r)
+			return
+		}
+		io.Copy(w, &wrt)
+		return
 	}
-}
 
-func (i *authService) Authorize(w http.ResponseWriter, r *http.Request) {
-	s := i.auth
+	s := o.o
 	resp := s.NewResponse()
 	defer resp.Close()
 
 	if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
+		if err := o.loadAccountFromPost(o.a, r); err != nil {
+			errors.HandleError(err).ServeHTTP(w, r)
+			return
+		}
 		ar.Authorized = true
-		ar.UserData = i.self.GetID()
+		ar.UserData = o.a.ID
 		s.FinishAuthorizeRequest(resp, r, ar)
 	}
 	resp.Type = osin.DATA
 	redirectOrOutput(resp, w, r)
 }
 
-func (i *authService) Token(w http.ResponseWriter, r *http.Request) {
-	s := i.auth
+func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
+	s := o.o
 	resp := s.NewResponse()
 	defer resp.Close()
 
@@ -328,7 +168,6 @@ func (i *authService) Token(w http.ResponseWriter, r *http.Request) {
 				// NOTE(marius): here we send the full actor IRI as a username to avoid handler collisions
 				actorFilters.IRI = vocab.IRI(ar.Username)
 			} else {
-				actorFilters.IRI = activitypub.ActorsType.IRI(i.baseIRI)
 				actorFilters.Name = activitypub.CompStrs{activitypub.StringEquals(ar.Username)}
 			}
 		case osin.AUTHORIZATION_CODE:
@@ -336,9 +175,9 @@ func (i *authService) Token(w http.ResponseWriter, r *http.Request) {
 				actorFilters.IRI = vocab.IRI(iri)
 			}
 		}
-		it, err := i.storage.Load(actorFilters.GetLink())
+		it, err := o.s.Load(actorFilters.GetLink())
 		if err != nil {
-			i.logger.Errorf("%s", errUnauthorized)
+			o.l.Errorf("%s", errUnauthorized)
 			errors.HandleError(errUnauthorized).ServeHTTP(w, r)
 			return
 		}
@@ -348,7 +187,7 @@ func (i *authService) Token(w http.ResponseWriter, r *http.Request) {
 			return nil
 		})
 		if err != nil {
-			i.logger.Errorf("%s", errUnauthorized)
+			o.l.Errorf("%s", errUnauthorized)
 			errors.HandleError(errUnauthorized).ServeHTTP(w, r)
 			return
 		}
@@ -361,25 +200,25 @@ func (i *authService) Token(w http.ResponseWriter, r *http.Request) {
 					//  for users with the same handle/pw and it will login the first in the collection.
 					for _, it := range col.Collection() {
 						err := vocab.OnActor(it, func(act *vocab.Actor) error {
-							if err := i.storage.PasswordCheck(act, []byte(ar.Password)); err != nil {
+							if err := o.s.PasswordCheck(act, []byte(ar.Password)); err != nil {
 								return err
 							}
 							actor = act
 							return nil
 						})
 						if err != nil {
-							i.logger.WithContext(lw.Ctx{"actor": it.GetID(), "err": err}).
+							o.l.WithContext(lw.Ctx{"actor": it.GetID(), "err": err}).
 								Errorf("password check failed")
 						}
 					}
 					return errors.Newf("No actor matched the password")
 				})
 			} else {
-				err = i.storage.PasswordCheck(actor, []byte(ar.Password))
+				err = o.s.PasswordCheck(actor, []byte(ar.Password))
 			}
 			if err != nil {
 				if err != nil {
-					i.logger.Errorf("%s", err)
+					o.l.Errorf("%s", err)
 				}
 				errors.HandleError(errUnauthorized).ServeHTTP(w, r)
 				return

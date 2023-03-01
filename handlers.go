@@ -74,17 +74,11 @@ func (o *oni) setupOauthRoutes() {
 		o.l.Errorf("unable to initialize OAuth2 server")
 		return
 	}
+	o.o = as
 
-	h := authService{
-		baseIRI: vocab.IRI(base),
-		self:    o.a,
-		storage: o.s,
-		auth:    *as,
-		logger:  o.l.WithContext(lw.Ctx{"log": "oauth"}),
-	}
-	o.m.HandleFunc("/login", h.HandleLogin)
-	o.m.HandleFunc("/oauth/authorize", h.Authorize)
-	o.m.HandleFunc("/oauth/token", h.Token)
+	//o.m.HandleFunc("/login", h.HandleLogin)
+	o.m.HandleFunc("/oauth/authorize", o.Authorize)
+	o.m.HandleFunc("/oauth/token", o.Token)
 
 	//o.m.HandleFunc("/login", h.ShowLogin)
 	//o.m.HandleFunc("/login", h.HandleLogin)
@@ -481,9 +475,10 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	id := irif(r)
 	// NOTE(marius): the IRI of the Collection is w/o the filters to load the Actor and Object
 	res := vocab.OrderedCollectionPage{
-		ID:   irif(r),
+		ID:   id,
 		Type: vocab.OrderedCollectionPageType,
 	}
 	it, err := o.s.Load(colIRI(r))
@@ -650,18 +645,18 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 }
 
 // HandleLogin handles POST /login requests
-func (i *authService) HandleLogin(w http.ResponseWriter, r *http.Request) {
+func (o *oni) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	state := r.PostFormValue("state")
-	if err := i.loadAccountFromPost(i.self, r); err != nil {
+	if err := o.loadAccountFromPost(o.a, r); err != nil {
 		errors.HandleError(err).ServeHTTP(w, r)
 		return
 	}
 
 	endpoints := vocab.Endpoints{
-		OauthAuthorizationEndpoint: vocab.IRI(fmt.Sprintf("%s/oauth/authorize", i.self.ID)),
-		OauthTokenEndpoint:         vocab.IRI(fmt.Sprintf("%s/oauth/token", i.self.ID)),
+		OauthAuthorizationEndpoint: vocab.IRI(fmt.Sprintf("%s/oauth/authorize", o.a.ID)),
+		OauthTokenEndpoint:         vocab.IRI(fmt.Sprintf("%s/oauth/token", o.a.ID)),
 	}
-	actor := i.self
+	actor := o.a
 	if !vocab.IsNil(actor) && actor.Endpoints != nil {
 		if actor.Endpoints.OauthTokenEndpoint != nil {
 			endpoints.OauthTokenEndpoint = actor.Endpoints.OauthTokenEndpoint
@@ -670,7 +665,7 @@ func (i *authService) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			endpoints.OauthAuthorizationEndpoint = actor.Endpoints.OauthAuthorizationEndpoint
 		}
 	}
-	u, _ := i.self.ID.URL()
+	u, _ := o.a.ID.URL()
 	config := oauth2.Config{
 		ClientID: u.Host,
 		Endpoint: oauth2.Endpoint{
@@ -678,6 +673,5 @@ func (i *authService) HandleLogin(w http.ResponseWriter, r *http.Request) {
 			TokenURL: endpoints.OauthTokenEndpoint.GetLink().String(),
 		},
 	}
-	//i.logRequest(r, status, now)
 	http.Redirect(w, r, config.AuthCodeURL(state, oauth2.AccessTypeOnline), http.StatusPermanentRedirect)
 }

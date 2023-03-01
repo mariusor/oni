@@ -11,6 +11,7 @@ import (
 	"git.sr.ht/~mariusor/lw"
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/auth"
 	"github.com/go-ap/client"
 	storage "github.com/go-ap/storage-fs"
 )
@@ -28,6 +29,7 @@ type oni struct {
 	s FullStorage
 	l lw.Logger
 	m *http.ServeMux
+	o *auth.Server
 }
 
 type optionFn func(o *oni)
