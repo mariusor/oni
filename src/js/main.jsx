@@ -39,9 +39,5 @@ OnReady(function () {
         if (backgroundColor) {
             root.style.setProperty('--bg-color', backgroundColor);
         }
-
-        if (!localStorage.getItem('token')) {
-            root.appendChild(new LoginLink())
-        }
     });
 });

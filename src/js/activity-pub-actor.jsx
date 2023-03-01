@@ -2,6 +2,7 @@ import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {getAverageImageRGB, isAuthenticated, rgba, setStyles} from "./utils";
 import {until} from "lit-html/directives/until.js";
+import {LoginLink} from "./login-elements";
 
 export const ActorTypes = [ 'Person', 'Group', 'Application', 'Service' ];
 
@@ -130,6 +131,23 @@ export class ActivityPubActor extends ActivityPubObject {
         console.debug('will update', it);
     }
 
+    renderOAuth() {
+        let authURL = `${window.location.href}/oauth/authorize`;
+        let tokenURL = `${window.location.href}/oauth/token`;
+
+        if (this.it.hasOwnProperty('endpoints')) {
+            const endPoints = this.it.endpoints;
+            if (endPoints.hasOwnProperty('oauthAuthorizationEndpoint')) {
+                authURL = endPoints.oauthAuthorizationEndpoint;
+            }
+            if (endPoints.hasOwnProperty('oauthTokenEndpoint')) {
+                tokenURL = endPoints.oauthTokenEndpoint;
+            }
+        }
+
+        return html`<oni-login-link authorizeURL=${authURL} tokenURL=${tokenURL}></oni-login-link>`;
+    }
+
     render() {
         let bg = nothing;
         if (this.it.hasOwnProperty('image')) {
@@ -141,6 +159,7 @@ export class ActivityPubActor extends ActivityPubObject {
                 ${this.renderPreferredUsername()}
                 ${this.renderSummary()}
                 ${this.renderUrl()}
+                ${this.renderOAuth()}
             </div>
             ${this.renderCollections()}
             <slot></slot>

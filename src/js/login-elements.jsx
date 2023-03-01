@@ -84,12 +84,18 @@ export class LoginDialog extends LitElement {
 
 export class LoginLink extends LitElement {
     static styles = css`
-:host {
-    position: fixed;
-    top: 1rem;
-    right: 1rem;
-}
+        :host {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+        }
     `;
+
+    static properties = {
+        authorizeURL: {type: String},
+        tokenURL: {type: String},
+        dialogVisible: {type: Boolean},
+    }
 
     constructor() {
         super()
@@ -102,20 +108,19 @@ export class LoginLink extends LitElement {
         }
     }
 
-    render() {
-        console.log('Dialog visible:', this.dialogVisible)
-        return html`
-            <div>
-                <button @click="${this.showDialog}">
-                    <oni-icon name="lock"></oni-icon>
-                    Sign in
-                </button>
-                <oni-login-dialog ?opened="${this.dialogVisible}"></oni-login-dialog>
-            </div>`;
-    }
-
     showDialog(e) {
         this.dialogVisible = true;
+    }
+
+    render() {
+        return html`<nav>
+            <button @click="${this.showDialog}"> <oni-icon name="lock"></oni-icon> Sign in </button>
+            <oni-login-dialog 
+                    ?opened="${this.dialogVisible}" 
+                    authorizeURL=${this.authorizeURL} 
+                    tokenURL=${this.tokenURL}
+            ></oni-login-dialog>
+        </nav>`;
     }
 }
 
