@@ -13,6 +13,7 @@ type localstorage interface {
 	processing.CollectionStore
 	osin.Storage
 }
+
 type store struct {
 	localstorage
 }
@@ -21,6 +22,11 @@ func Storage(base localstorage) store {
 	return store{base}
 }
 
-func (s store) LoadKey(vocab.IRI) (crypto.PrivateKey, error) {
+func (s store) LoadKey(i vocab.IRI) (crypto.PrivateKey, error) {
+	if ks, ok := s.localstorage.(processing.KeyLoader); ok {
+		if k, _ := ks.LoadKey(i); k != nil {
+			return k, nil
+		}
+	}
 	return prvKey, nil
 }

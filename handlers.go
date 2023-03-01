@@ -390,7 +390,11 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if vocab.ActorTypes.Contains(it.GetType()) && it.GetID().Equals(o.a.ID, true) {
 		vocab.OnActor(it, func(act *vocab.Actor) error {
-			act.PublicKey = PublicKey(act.ID)
+			// NOTE(marius): if the public key is set in the persisted actor, we expect the storage can also
+			// return its private key when calling processing.KeyLoader.LoadKey(actor.ID)
+			if act.PublicKey.ID == "" {
+				act.PublicKey = PublicKey(act.ID)
+			}
 			return nil
 		})
 	}
