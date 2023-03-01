@@ -7,14 +7,14 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20230104101555-9bfc303f6588
 	github.com/elnormous/contenttype v1.0.3
 	github.com/evanw/esbuild v0.17.5
-	github.com/go-ap/activitypub v0.0.0-20230218112952-bfb607b04799
-	github.com/go-ap/auth v0.0.0-20230218121359-b0cd747db8a8
-	github.com/go-ap/client v0.0.0-20230218115938-0fe3ee2edd31
+	github.com/go-ap/activitypub v0.0.0-20230301123505-7471bcd90729
+	github.com/go-ap/auth v0.0.0-20230301123658-6f60c7b7f224
+	github.com/go-ap/client v0.0.0-20230301123545-b7132ac50856
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
 	github.com/go-ap/fedbox v0.0.0-20230111150432-bab3b45bf9a2
-	github.com/go-ap/filters v0.0.0-20230226125721-3015894d636a
+	github.com/go-ap/filters v0.0.0-20230301123836-a52deb17e105
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20230225124541-9edf4a0a08ee
+	github.com/go-ap/processing v0.0.0-20230301123739-32448e889e60
 	github.com/go-ap/storage-fs v0.0.0-20230225141543-fe714b2469d8
 	github.com/go-fed/httpsig v1.1.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
