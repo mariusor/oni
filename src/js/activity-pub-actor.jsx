@@ -36,6 +36,9 @@ export class ActivityPubActor extends ActivityPubObject {
             display: inline-block;
             margin-right: .8rem;
         }
+        :host oni-natural-language-values[name=preferredUsername]::before {
+            content: "~";
+        }
         a[target=external] {}
     `;
     static properties = {
