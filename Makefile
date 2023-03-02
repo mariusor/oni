@@ -14,7 +14,8 @@ TS_SOURCES := $(wildcard src/js/*)
 CSS_SOURCES := $(wildcard src/css/*)
 SVG_SOURCES := $(wildcard src/*.svg)
 
-GO := go
+GO ?= go
+YARN ?= yarn
 
 export CGO_ENABLED=0
 export VERSION=(unknown)
@@ -39,7 +40,7 @@ bin/oni: cmd/oni/main.go $(APPSOURCES) go.mod static/main.css static/main.js
 	$(BUILD) -tags "$(TAGS)" -o $@ cmd/oni/main.go
 
 fdeps:
-	yarn install
+	$(YARN) install
 
 assets: static/main.css static/main.js static/icons.svg
 
