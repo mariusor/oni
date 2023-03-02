@@ -76,12 +76,12 @@ func (o *oni) setupOauthRoutes() {
 	}
 	o.o = as
 
-	//o.m.HandleFunc("/login", h.HandleLogin)
-	o.m.HandleFunc("/oauth/authorize", o.Authorize)
-	o.m.HandleFunc("/oauth/token", o.Token)
+	//o.m.HandleFunc("/authModel", h.HandleLogin)
+	o.m.Handle("/oauth/authorize", http.HandlerFunc(o.Authorize))
+	o.m.Handle("/oauth/token", http.HandlerFunc(o.Token))
 
-	//o.m.HandleFunc("/login", h.ShowLogin)
-	//o.m.HandleFunc("/login", h.HandleLogin)
+	//o.m.HandleFunc("/authModel", h.ShowLogin)
+	//o.m.HandleFunc("/authModel", h.HandleLogin)
 	//o.m.HandleFunc("/pw", h.ShowChangePw)
 	//o.m.HandleFunc("/pw", h.HandleChangePw)
 }

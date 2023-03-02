@@ -1,8 +1,12 @@
 package oni
 
 import (
-	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"math/rand"
+	"net/http"
+	"net/url"
+
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
@@ -11,10 +15,6 @@ import (
 	"github.com/go-ap/processing"
 	"github.com/openshift/osin"
 	"golang.org/x/oauth2"
-	"html/template"
-	"io"
-	"net/http"
-	"net/url"
 )
 
 type ClientSaver interface {
@@ -46,39 +46,12 @@ type PasswordChanger interface {
 	PasswordCheck(vocab.Item, []byte) error
 }
 
-type authService struct {
-	baseIRI vocab.IRI
-	self    vocab.Actor
-	storage FullStorage
-	auth    auth.Server
-	logger  lw.Logger
+type authModel struct {
+	AuthorizeURL string `json:"authorizeURL"`
+	State        string `json:"state"`
 }
 
-const (
-	meKey           = "me"
-	redirectUriKey  = "redirect_uri"
-	clientIdKey     = "client_id"
-	responseTypeKey = "response_type"
-
-	ID osin.AuthorizeRequestType = "id"
-)
-
-type login struct {
-	title   string
-	account vocab.Actor
-	state   string
-}
-
-func (l login) Title() string {
-	return l.title
-}
-
-func (l login) Account() vocab.Actor {
-	return l.account
-}
-
-func (l login) AuthorizeURL() template.HTMLAttr {
-	actor := l.account
+func AuthorizeURL(actor vocab.Actor, state string) string {
 	u, _ := actor.ID.URL()
 	config := oauth2.Config{ClientID: u.Host}
 	if !vocab.IsNil(actor) && actor.Endpoints != nil {
@@ -89,31 +62,8 @@ func (l login) AuthorizeURL() template.HTMLAttr {
 			config.Endpoint.AuthURL = actor.Endpoints.OauthAuthorizationEndpoint.GetLink().String()
 		}
 	}
-	return template.HTMLAttr(config.AuthCodeURL("", oauth2.AccessTypeOnline))
+	return config.AuthCodeURL(state, oauth2.AccessTypeOnline)
 }
-
-func (l login) State() string {
-	return l.state
-}
-
-func (l login) Client() string {
-	u, _ := l.account.GetLink().URL()
-	return u.Host
-}
-
-func (l login) Handle() string {
-	if len(l.account.PreferredUsername) == 0 {
-		return ""
-	}
-	return l.account.PreferredUsername.First().String()
-}
-
-var (
-	scopeAnonymousUserCreate = "anonUserCreate"
-
-	errUnauthorized = errors.Unauthorizedf("Invalid username or password")
-	errNotFound     = activitypub.ErrNotFound("actor not found")
-)
 
 func (o *oni) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
 	pw := r.PostFormValue("_pw")
@@ -125,15 +75,13 @@ func (o *oni) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
 
 func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		m := login{title: "Login"}
-		m.account = o.a
-
-		wrt := bytes.Buffer{}
-		if err := ren.HTML(&wrt, http.StatusOK, "components/login", m); err != nil {
-			o.Error(err).ServeHTTP(w, r)
-			return
+		state := base64.URLEncoding.EncodeToString(authKey())
+		m := authModel{
+			AuthorizeURL: AuthorizeURL(o.a, state),
+			State:        state,
 		}
-		io.Copy(w, &wrt)
+
+		json.NewEncoder(w).Encode(m)
 		return
 	}
 
@@ -153,6 +101,11 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 	resp.Type = osin.DATA
 	redirectOrOutput(resp, w, r)
 }
+
+var (
+	errUnauthorized = errors.Unauthorizedf("Invalid username or password")
+	errNotFound     = activitypub.ErrNotFound("actor not found")
+)
 
 func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 	s := o.o
@@ -306,4 +259,28 @@ func saveOauth2Client(s FullStorage, i vocab.IRI) error {
 		UserData:    i,
 	}
 	return s.CreateClient(c)
+}
+
+var authKey = func() []byte {
+	v1 := rand.Int()
+	v2 := rand.Int()
+	b := [16]byte{
+		byte(0xff & v1),
+		byte(0xff & v2),
+		byte(0xff & (v1 >> 8)),
+		byte(0xff & (v2 >> 8)),
+		byte(0xff & (v1 >> 16)),
+		byte(0xff & (v2 >> 16)),
+		byte(0xff & (v1 >> 24)),
+		byte(0xff & (v2 >> 24)),
+		byte(0xff & (v1 >> 32)),
+		byte(0xff & (v2 >> 32)),
+		byte(0xff & (v1 >> 40)),
+		byte(0xff & (v2 >> 40)),
+		byte(0xff & (v1 >> 48)),
+		byte(0xff & (v2 >> 48)),
+		byte(0xff & (v1 >> 56)),
+		byte(0xff & (v2 >> 56)),
+	}
+	return b[:]
 }
