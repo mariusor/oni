@@ -1,0 +1,19 @@
+image: archlinux
+packages:
+  - go
+  - yarn
+sources:
+  - https://git.sr.ht/~mariusor/oni
+tasks:
+  - setup: |
+      cd oni && make download && go mod vendor
+  - build: |
+      cd oni
+      make clean oni
+  - tests: |
+      cd oni
+      make test
+  - coverage: |
+      set -a +x
+      cd oni
+      make coverage
