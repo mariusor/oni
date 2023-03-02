@@ -12,6 +12,7 @@ TEST_FLAGS ?= -count=1 -v
 APPSOURCES := $(wildcard ./*.go)
 TS_SOURCES := $(wildcard src/js/*)
 CSS_SOURCES := $(wildcard src/css/*)
+SVG_SOURCES := $(wildcard src/*.svg)
 
 GO := go
 
@@ -40,12 +41,15 @@ bin/oni: cmd/oni/main.go $(APPSOURCES) go.mod static/main.css static/main.js
 fdeps:
 	yarn install
 
-assets: static/main.css static/main.js
+assets: static/main.css static/main.js static/icons.svg
 
 static/main.js: fdeps $(TS_SOURCES)
 	go generate frontend.go
 
 static/main.css: $(CSS_SOURCES)
+	go generate frontend.go
+
+static/icons.svg: $(SVG_SOURCES)
 	go generate frontend.go
 
 test: TEST_TARGET := ./...
@@ -57,4 +61,4 @@ coverage: TEST_FLAGS += -covermode=count -coverprofile $(PROJECT_NAME).coverprof
 coverage: test
 
 clean:
-	rm static/*.js static/*.css static/*.map
+	rm -f static/*.js static/*.css static/*.map static/*.svg
