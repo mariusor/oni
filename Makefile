@@ -37,9 +37,12 @@ oni: go.mod bin/oni
 bin/oni: cmd/oni/main.go $(APPSOURCES) go.mod static/main.css static/main.js
 	$(BUILD) -tags "$(TAGS)" -o $@ cmd/oni/main.go
 
+fdeps:
+	yarn install
+
 assets: static/main.css static/main.js
 
-static/main.js: $(TS_SOURCES)
+static/main.js: fdeps $(TS_SOURCES)
 	go generate frontend.go
 
 static/main.css: $(CSS_SOURCES)
