@@ -468,6 +468,170 @@ func colIRI(r *http.Request) vocab.IRI {
 	return vocab.IRI(colURL.String())
 }
 
+const MaxItems = 20
+
+func paginateItems(col vocab.ItemCollection, count int) (vocab.ItemCollection, string, string, error) {
+	var prev, next string
+	if vocab.IsNil(col) {
+		return nil, prev, next, nil
+	}
+	if count == 0 {
+		count = MaxItems
+	}
+
+	if len(col) <= count {
+		return col, prev, next, nil
+	}
+	start := 0
+	cnt := len(col)
+	prev = filepath.Base(col[start].GetLink().String())
+	next = filepath.Base(col[cnt-1].GetLink().String())
+	return col, prev, next, nil
+}
+
+func getURL(i vocab.IRI, f url.Values) vocab.IRI {
+	if f == nil {
+		return i
+	}
+	if u, err := i.URL(); err == nil {
+		u.RawQuery = f.Encode()
+		i = vocab.IRI(u.String())
+	}
+	return i
+}
+
+// PaginateCollection is a function that populates the received collection
+func PaginateCollection(col vocab.CollectionInterface) (vocab.CollectionInterface, error) {
+	if col == nil {
+		return col, errors.Newf("unable to paginate nil collection")
+	}
+
+	u, _ := col.GetLink().URL()
+	u.User = nil
+	u.RawQuery = ""
+	baseURL := vocab.IRI(u.String())
+	curURL := getURL(baseURL, nil)
+
+	var haveItems bool
+	var prev, next string // uuids
+
+	mi, _ := strconv.ParseInt(u.Query().Get("maxItems"), 10, 32)
+	maxItems := int(mi)
+	haveItems = col.Count() > 0
+
+	ordered := vocab.ActivityVocabularyTypes{
+		vocab.OrderedCollectionPageType,
+		vocab.OrderedCollectionType,
+	}
+	unOrdered := vocab.ActivityVocabularyTypes{
+		vocab.CollectionPageType,
+		vocab.CollectionType,
+	}
+
+	// TODO(marius): refactor this with OnCollection functions
+	if haveItems {
+		var firstURL vocab.IRI
+
+		fp := u.Query()
+		fp.Add("maxItems", fmt.Sprintf("%d", maxItems))
+		fp.Add("curPage", fmt.Sprintf("%d", 1))
+		firstURL = getURL(baseURL, fp)
+		if col.GetType() == vocab.CollectionOfItems {
+			err := vocab.OnItemCollection(col, func(items *vocab.ItemCollection) error {
+				*items, _, _, _ = paginateItems(items.Collection(), maxItems)
+				return nil
+			})
+			return col, err
+		}
+		if ordered.Contains(col.GetType()) {
+			vocab.OnOrderedCollection(col, func(oc *vocab.OrderedCollection) error {
+				if len(firstURL) > 0 {
+					oc.First = firstURL
+				}
+				oc.OrderedItems, prev, next, _ = paginateItems(oc.OrderedItems, maxItems)
+				return nil
+			})
+		}
+		if unOrdered.Contains(col.GetType()) {
+			vocab.OnCollection(col, func(c *vocab.Collection) error {
+				c.First = firstURL
+				c.Items, prev, next, _ = paginateItems(c.Items, maxItems)
+				return nil
+			})
+		}
+		var nextURL, prevURL vocab.IRI
+		if len(next) > 0 {
+			np := u.Query()
+			np.Add("maxItems", fmt.Sprintf("%d", maxItems))
+			np.Add("next", next)
+			nextURL = getURL(baseURL, np)
+		}
+		if len(prev) > 0 {
+			pp := u.Query()
+			pp.Add("maxItems", fmt.Sprintf("%d", maxItems))
+			pp.Add("prev", prev)
+			prevURL = getURL(baseURL, pp)
+		}
+
+		if col.GetType() == vocab.OrderedCollectionType {
+			oc, err := vocab.ToOrderedCollection(col)
+			if err == nil {
+				page := vocab.OrderedCollectionPageNew(oc)
+				page.ID = curURL
+				page.PartOf = baseURL
+				if firstURL != curURL {
+					page.First = oc.First
+				}
+				if len(nextURL) > 0 {
+					page.Next = nextURL
+				}
+				if len(prevURL) > 0 {
+					page.Prev = prevURL
+				}
+				page.OrderedItems, _, _, _ = paginateItems(oc.OrderedItems, maxItems)
+				page.TotalItems = col.Count()
+				col = page
+			}
+			if col.GetType() == vocab.CollectionType {
+				c, err := vocab.ToCollection(col)
+				if err == nil {
+					page := vocab.CollectionPageNew(c)
+					page.ID = curURL
+					page.PartOf = baseURL
+					page.First = c.First
+					if len(nextURL) > 0 {
+						page.Next = nextURL
+					}
+					if len(prevURL) > 0 {
+						page.Prev = prevURL
+					}
+					page.TotalItems = col.Count()
+					page.Items, _, _, _ = paginateItems(c.Items, maxItems)
+					col = page
+				}
+			}
+		}
+	}
+	updatedAt := time.Time{}
+	for _, it := range col.Collection() {
+		vocab.OnObject(it, func(o *vocab.Object) error {
+			if o.Published.Sub(updatedAt) > 0 {
+				updatedAt = o.Published
+			}
+			if o.Updated.Sub(updatedAt) > 0 {
+				updatedAt = o.Updated
+			}
+			return nil
+		})
+	}
+	vocab.OnObject(col, func(o *vocab.Object) error {
+		o.Updated = updatedAt
+		return nil
+	})
+
+	return col, nil
+}
+
 func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	if r.Method == http.MethodPost {
@@ -501,8 +665,13 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
+	if col, err := PaginateCollection(&res); err != nil {
+		o.Error(err).ServeHTTP(w, r)
+		return
+	} else {
+		it = col
+	}
 
-	it = res
 	accepts := getItemAcceptedContentType(it, r)
 	switch {
 	case accepts(jsonLD, activityJson, applicationJson):
