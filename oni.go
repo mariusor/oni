@@ -174,11 +174,6 @@ func (o *oni) Run(c context.Context) error {
 			if o.l != nil {
 				o.l.Infof("SIGHUP received, reloading configuration")
 			}
-			/*
-				if err := f.reload(); err != nil {
-					logger.Errorf("Failed: %+s", err.Error())
-				}
-			*/
 		},
 		syscall.SIGINT: func(exit chan int) {
 			if o.l != nil {

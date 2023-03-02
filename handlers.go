@@ -22,7 +22,6 @@ import (
 	"github.com/go-ap/errors"
 	json "github.com/go-ap/jsonld"
 	"github.com/go-ap/processing"
-	"golang.org/x/oauth2"
 )
 
 // NotFound is a generic method to return an 404 error HTTP handler that
@@ -811,36 +810,4 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		o.logRequest(r, status, now)
 		return it, status, nil
 	}
-}
-
-// HandleLogin handles POST /login requests
-func (o *oni) HandleLogin(w http.ResponseWriter, r *http.Request) {
-	state := r.PostFormValue("state")
-	if err := o.loadAccountFromPost(o.a, r); err != nil {
-		errors.HandleError(err).ServeHTTP(w, r)
-		return
-	}
-
-	endpoints := vocab.Endpoints{
-		OauthAuthorizationEndpoint: vocab.IRI(fmt.Sprintf("%s/oauth/authorize", o.a.ID)),
-		OauthTokenEndpoint:         vocab.IRI(fmt.Sprintf("%s/oauth/token", o.a.ID)),
-	}
-	actor := o.a
-	if !vocab.IsNil(actor) && actor.Endpoints != nil {
-		if actor.Endpoints.OauthTokenEndpoint != nil {
-			endpoints.OauthTokenEndpoint = actor.Endpoints.OauthTokenEndpoint
-		}
-		if actor.Endpoints.OauthAuthorizationEndpoint != nil {
-			endpoints.OauthAuthorizationEndpoint = actor.Endpoints.OauthAuthorizationEndpoint
-		}
-	}
-	u, _ := o.a.ID.URL()
-	config := oauth2.Config{
-		ClientID: u.Host,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  endpoints.OauthAuthorizationEndpoint.GetLink().String(),
-			TokenURL: endpoints.OauthTokenEndpoint.GetLink().String(),
-		},
-	}
-	http.Redirect(w, r, config.AuthCodeURL(state, oauth2.AccessTypeOnline), http.StatusPermanentRedirect)
 }
