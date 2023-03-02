@@ -12,10 +12,10 @@ require (
 	github.com/go-ap/client v0.0.0-20230302104023-08cd159ca918
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
 	github.com/go-ap/fedbox v0.0.0-20230111150432-bab3b45bf9a2
-	github.com/go-ap/filters v0.0.0-20230301123836-a52deb17e105
+	github.com/go-ap/filters v0.0.0-20230302122150-af8f54eb973c
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-ap/processing v0.0.0-20230302121732-ed89ba62d187
-	github.com/go-ap/storage-fs v0.0.0-20230225141543-fe714b2469d8
+	github.com/go-ap/storage-fs v0.0.0-20230302162015-9781bd7ddba3
 	github.com/go-fed/httpsig v1.1.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/openshift/osin v1.0.1
