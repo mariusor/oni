@@ -76,7 +76,7 @@ func tokenAct(ctl *Control) cli.ActionFunc {
 		if clientID == "" {
 			return errors.Newf("Need to provide the client id")
 		}
-		conf := storage.Config{Path: c.Path("path"), ErrFn: ctl.Logger.Errorf, LogFn: ctl.Logger.Debugf}
+		conf := storage.Config{CacheEnable: true, Path: c.Path("path"), ErrFn: ctl.Logger.Errorf, LogFn: ctl.Logger.Debugf}
 		st, err := storage.New(conf)
 		if err != nil {
 			ctl.Logger.Errorf("%s", err.Error())
