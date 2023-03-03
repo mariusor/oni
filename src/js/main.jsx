@@ -1,7 +1,6 @@
 import {OnReady} from "./utils";
 import {ActivityPubActor} from "./activity-pub-actor";
-import {CollectionLink} from "./collection-link";
-import {CollectionLinks} from "./collection-links";
+import {CollectionLink, CollectionLinks} from "./collection-links";
 import {NaturalLanguageValues} from "./natural-language-values";
 import {ActivityPubActivity} from "./activity-pub-activity";
 import {ActivityPubCollection} from "./activity-pub-collection";
