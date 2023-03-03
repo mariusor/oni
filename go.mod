@@ -15,7 +15,7 @@ require (
 	github.com/go-ap/filters v0.0.0-20230302122150-af8f54eb973c
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-ap/processing v0.0.0-20230302121732-ed89ba62d187
-	github.com/go-ap/storage-fs v0.0.0-20230302162015-9781bd7ddba3
+	github.com/go-ap/storage-fs v0.0.0-20230303154034-2ef861e1d5dd
 	github.com/go-fed/httpsig v1.1.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/openshift/osin v1.0.1
