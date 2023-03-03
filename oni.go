@@ -113,7 +113,7 @@ func WithStoragePath(st string) optionFn {
 	return func(o *oni) {
 		o.StoragePath = st
 		if o.l != nil {
-			conf.LogFn = o.l.Debugf
+			conf.LogFn = o.l.Infof
 			conf.ErrFn = o.l.Errorf
 		}
 		conf.LogFn("Using storage: %s", st)
