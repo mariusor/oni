@@ -182,6 +182,7 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		host := r.Host
 		typ, handle := splitResourceString(res)
 		if typ == "" || handle == "" {
 			handleErr(o.l)(r, errors.BadRequestf("invalid resource %s", res)).ServeHTTP(w, r)
@@ -189,7 +190,7 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 		}
 		if typ == "acct" {
 			if strings.Contains(handle, "@") {
-				handle, _ = func(s string) (string, string) {
+				handle, host = func(s string) (string, string) {
 					split := "@"
 					ar := strings.Split(s, split)
 					if len(ar) != 2 {
@@ -205,7 +206,7 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 
 		var result vocab.Item
 		if typ == "acct" {
-			maybeUrl := fmt.Sprintf("https://%s", handle)
+			maybeUrl := fmt.Sprintf("https://%s", host)
 			a, err := loadActorFromStorage(o, CheckActorName(handle), CheckActorURL(maybeUrl), CheckActorID(maybeUrl))
 			if err != nil {
 				handleErr(o.l)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
