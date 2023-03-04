@@ -2,6 +2,8 @@ package oni
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -49,7 +51,7 @@ func Oni(initFns ...optionFn) *oni {
 	for i, act := range o.a {
 		it, err := o.s.Load(act.GetLink())
 		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to find actor")
+			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to find Actor")
 			continue
 		}
 		var actor *vocab.Actor
@@ -58,17 +60,33 @@ func Oni(initFns ...optionFn) *oni {
 			return err
 		})
 		if err != nil || actor == nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to load actor")
+			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to load Actor")
 			continue
 		}
+
 		if err := saveOauth2Client(o.s, actor.ID); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save OAuth2 client")
+			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save OAuth2 Client")
 		}
-		actor.PublicKey = vocab.PublicKey{}
-		if _, err := o.s.Save(actor); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save back actor")
+
+		// NOTE(marius): this generates a new key pair for every run of the service
+		prvKey, err := rsa.GenerateKey(rand.Reader, 2048)
+		if err != nil {
+			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save Private Key")
 			continue
 		}
+
+		it, err = o.s.SaveKey(actor.GetLink(), prvKey)
+		if err != nil {
+			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save Private Key")
+			continue
+		}
+
+		actor, err = vocab.ToActor(it)
+		if err != nil {
+			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to convert saved Item to Actor")
+			continue
+		}
+
 		o.a[i] = *actor
 	}
 

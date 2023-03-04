@@ -370,22 +370,6 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if vocab.ActorTypes.Contains(it.GetType()) {
-		for _, act := range o.a {
-			if !it.GetID().Equals(act.ID, true) {
-				continue
-			}
-			vocab.OnActor(it, func(act *vocab.Actor) error {
-				// NOTE(marius): if the public key is set in the persisted actor, we expect the storage can also
-				// return its private key when calling processing.KeyLoader.LoadKey(actor.ID)
-				if act.PublicKey.ID == "" {
-					act.PublicKey = PublicKey(act.ID)
-				}
-				return nil
-			})
-		}
-	}
-
 	accepts := getItemAcceptedContentType(it, r)
 	switch {
 	case accepts(jsonLD, activityJson, applicationJson):

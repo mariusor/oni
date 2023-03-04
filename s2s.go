@@ -63,13 +63,19 @@ func newSigner(pubKey crypto.PrivateKey, headers []string, l lw.Logger) (signer,
 }
 
 func s2sSignFn(a vocab.Actor, o oni) func(r *http.Request) error {
+	key, err := o.s.LoadKey(a.ID)
+	if err != nil {
+		return func(r *http.Request) error {
+			return err
+		}
+	}
 	return func(r *http.Request) error {
 		headers := headersToSign
 		if r.Method == http.MethodPost {
 			headers = append(headers, "Digest")
 		}
 
-		s, err := newSigner(prvKey, headers, o.l)
+		s, err := newSigner(key, headers, o.l)
 		if err != nil {
 			return errors.Annotatef(err, "unable to initialize HTTP signer")
 		}
@@ -88,6 +94,6 @@ func s2sSignFn(a vocab.Actor, o oni) func(r *http.Request) error {
 				r.Body = io.NopCloser(&bodyBuf)
 			}
 		}
-		return s.SignRequest(prvKey, keyId, r, bodyBuf.Bytes())
+		return s.SignRequest(key, keyId, r, bodyBuf.Bytes())
 	}
 }

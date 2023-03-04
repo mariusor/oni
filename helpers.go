@@ -2,7 +2,6 @@ package oni
 
 import (
 	"bytes"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
@@ -82,8 +81,6 @@ func CollectionExists(ob vocab.Item, col vocab.CollectionPath) bool {
 	}
 	return has
 }
-
-var prvKey, _ = rsa.GenerateKey(rand.Reader, 2048)
 
 func pemEncodePublicKey(prvKey *rsa.PrivateKey) string {
 	pubKey := prvKey.PublicKey
