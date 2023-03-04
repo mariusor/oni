@@ -124,11 +124,7 @@ func LoadIRI(db processing.ReadStore, what vocab.IRI, checkFns ...func(actor voc
 func loadActorFromStorage(o oni, checkFns ...func(actor vocab.Actor) bool) (vocab.Item, error) {
 	for _, act := range o.a {
 		var found *vocab.Actor
-		res, err := o.s.Load(act.GetLink())
-		if err != nil {
-			return nil, errors.NewNotFound(err, "no matching actor found")
-		}
-		err = vocab.OnActor(res, func(a *vocab.Actor) error {
+		err := vocab.OnActor(act, func(a *vocab.Actor) error {
 			for _, fn := range checkFns {
 				if fn(*a) {
 					found = a
@@ -136,7 +132,9 @@ func loadActorFromStorage(o oni, checkFns ...func(actor vocab.Actor) bool) (voca
 			}
 			return nil
 		})
-		return found, err
+		if !vocab.IsNil(found) {
+			return found, err
+		}
 	}
 	return nil, errors.NotFoundf("no matching actor found")
 }
@@ -207,12 +205,13 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 
 		var result vocab.Item
 		if typ == "acct" {
-			a, err := loadActorFromStorage(o, CheckActorName(handle), CheckActorURL(handle), CheckActorID(handle))
+			maybeUrl := fmt.Sprintf("https://%s", handle)
+			a, err := loadActorFromStorage(o, CheckActorName(handle), CheckActorURL(maybeUrl), CheckActorID(maybeUrl))
 			if err != nil {
 				handleErr(o.l)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
 				return
 			}
-			if a == nil {
+			if vocab.IsNil(a) {
 				handleErr(o.l)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
 				return
 			}
@@ -224,7 +223,7 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 				handleErr(o.l)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
 				return
 			}
-			if ob == nil {
+			if vocab.IsNil(ob) {
 				handleErr(o.l)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
 				return
 			}
