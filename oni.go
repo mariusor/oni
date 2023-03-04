@@ -130,6 +130,14 @@ func WithStoragePath(st string) optionFn {
 	}
 }
 
+func iris(list ...vocab.Actor) vocab.IRIs {
+	urls := vocab.IRIs{}
+	for _, a := range list {
+		urls = append(urls, a.GetLink())
+	}
+	return urls
+}
+
 // Run is the wrapper for starting the web-server and handling signals
 func (o *oni) Run(c context.Context) error {
 	// Create a deadline to wait for.
@@ -156,6 +164,7 @@ func (o *oni) Run(c context.Context) error {
 	logCtx := lw.Ctx{
 		"version": Version,
 		"socket":  o.Listen,
+		"hosts":   iris(o.a...),
 	}
 	if sockType != "" {
 		logCtx["socket"] = o.Listen + "[" + sockType + "]"
