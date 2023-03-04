@@ -25,10 +25,10 @@ type oni struct {
 	PwHash      []byte
 
 	c *client.C
-	a vocab.Actor
+	a []vocab.Actor
 	s FullStorage
 	l lw.Logger
-	m *http.ServeMux
+	m http.Handler
 	o *auth.Server
 }
 
@@ -46,37 +46,39 @@ func Oni(initFns ...optionFn) *oni {
 		client.SkipTLSValidation(true),
 	)
 
-	if err := saveOauth2Client(o.s, o.a.ID); err != nil {
-		o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to save OAuth2 client")
-	}
-
-	if o.a.ID != "" && o.s != nil {
-		it, err := o.s.Load(o.a.ID)
-		if err != nil {
-			o.l.Errorf("%s", err.Error())
+	for _, actor := range o.a {
+		if err := saveOauth2Client(o.s, actor.ID); err != nil {
+			o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to save OAuth2 client")
 		}
-		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-			if col.Count() == 0 {
-				o.a.PublicKey = vocab.PublicKey{}
-				it, err := o.s.Save(o.a)
-				if err != nil {
-					return err
+
+		if actor.ID != "" && o.s != nil {
+			it, err := o.s.Load(actor.ID)
+			if err != nil {
+				o.l.Errorf("%s", err.Error())
+			}
+			err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+				if col.Count() == 0 {
+					actor.PublicKey = vocab.PublicKey{}
+					it, err := o.s.Save(actor)
+					if err != nil {
+						return err
+					}
+					return vocab.OnActor(it, func(act *vocab.Actor) error {
+						o.l.Infof("Persisted default actor")
+						actor = *act
+						return nil
+					})
 				}
-				return vocab.OnActor(it, func(actor *vocab.Actor) error {
-					o.l.Infof("Persisted default actor")
-					o.a = *actor
+				return vocab.OnActor(col.First(), func(act *vocab.Actor) error {
+					actor = *act
 					return nil
 				})
-			}
-			return vocab.OnActor(col.First(), func(actor *vocab.Actor) error {
-				o.a = *actor
-				return nil
 			})
-		})
-		if err != nil {
-			o.l.Errorf("%s", err.Error())
+			if err != nil {
+				o.l.Errorf("%s", err.Error())
+			}
+			o.setupRoutes(o.a)
 		}
-		o.setupRoutes()
 	}
 	return o
 }
@@ -85,15 +87,17 @@ func WithLogger(l lw.Logger) optionFn {
 	return func(o *oni) { o.l = l }
 }
 
-func LoadActor(it vocab.Item) optionFn {
-	var a vocab.Actor
-	if vocab.IsIRI(it) {
-		a = defaultActor(it.GetLink())
+func LoadActor(items ...vocab.Item) optionFn {
+	a := make([]vocab.Actor, 0)
+	for _, it := range items {
+		if vocab.IsIRI(it) {
+			a = append(a, defaultActor(it.GetLink()))
+		}
 	}
-	return Actor(a)
+	return Actor(a...)
 }
 
-func Actor(a vocab.Actor) optionFn {
+func Actor(a ...vocab.Actor) optionFn {
 	return func(o *oni) {
 		o.a = a
 	}

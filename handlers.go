@@ -36,32 +36,20 @@ func (o *oni) Error(err error) http.HandlerFunc {
 	}
 }
 
-func (o *oni) collectionRoutes(collections ...vocab.CollectionPath) {
-	actor := o.a
-	base, ok := IRIPath(actor.ID)
-	for _, collection := range collections {
-		path := base + string(collection)
-		if !ok {
-			o.m.HandleFunc(path, o.NotFound)
-			continue
-		}
-		if !CollectionExists(actor, collection) {
-			o.m.HandleFunc(path, o.NotFound)
-			continue
-		}
-		colPath, ok := IRIPath(collection.Of(actor.GetLink()).GetLink())
-		if !ok {
-			o.m.HandleFunc(path, o.NotFound)
-			continue
-		}
+func muxPattern(i vocab.IRI) string {
+	return strings.Replace(i.String(), "https://", "", 1)
+}
 
-		o.m.HandleFunc(colPath, o.OnCollectionHandler)
-		o.m.HandleFunc(colPath+"/", o.OnItemHandler)
+func (o *oni) collectionRoutes(m *http.ServeMux, actor vocab.Actor, collections ...vocab.CollectionPath) {
+	for _, collectionPath := range collections {
+		colIRI := collectionPath.Of(actor.GetLink()).GetLink()
+		m.HandleFunc(muxPattern(colIRI), o.OnCollectionHandler)
+		m.HandleFunc(muxPattern(colIRI.AddPath("/")), o.OnItemHandler)
 	}
 }
 
-func (o *oni) setupOauthRoutes() {
-	base, _ := IRIPath(o.a.ID)
+func (o *oni) setupOauthRoutes(m *http.ServeMux, a vocab.Actor) {
+	base, _ := IRIPath(a.ID)
 
 	as, err := auth.New(
 		auth.WithURL(base),
@@ -75,9 +63,9 @@ func (o *oni) setupOauthRoutes() {
 	}
 	o.o = as
 
-	//o.m.HandleFunc("/authModel", h.HandleLogin)
-	o.m.Handle("/oauth/authorize", http.HandlerFunc(o.Authorize))
-	o.m.Handle("/oauth/token", http.HandlerFunc(o.Token))
+	//o.m.HandleFunc("/login", h.HandleLogin)
+	m.HandleFunc(muxPattern(a.ID.AddPath("oauth", "authorize")), o.Authorize(a))
+	m.HandleFunc(muxPattern(a.ID.AddPath("oauth", "token")), o.Token)
 
 	//o.m.HandleFunc("/authModel", h.ShowLogin)
 	//o.m.HandleFunc("/authModel", h.HandleLogin)
@@ -85,21 +73,25 @@ func (o *oni) setupOauthRoutes() {
 	//o.m.HandleFunc("/pw", h.HandleChangePw)
 }
 
-func (o *oni) setupRoutes() {
-	o.m = http.NewServeMux()
+func (o *oni) setupRoutes(actors []vocab.Actor) {
+	m := http.NewServeMux()
 
-	if o.a.ID == "" {
-		o.m.HandleFunc("/", o.NotFound)
+	if len(actors) == 0 {
+		m.HandleFunc("/", o.NotFound)
 		return
 	}
 
-	o.setupActorRoutes()
-	o.setupWebfingerRoutes()
-	o.setupOauthRoutes()
-	o.setupStaticRoutes()
+	for _, actor := range actors {
+		o.setupActorRoutes(m, actor)
+		o.setupOauthRoutes(m, actor)
+		o.setupStaticRoutes(m, actor)
+	}
+
+	o.setupWebfingerRoutes(m)
+	o.m = m
 }
 
-func (o *oni) setupStaticRoutes() {
+func (o *oni) setupStaticRoutes(m *http.ServeMux, actor vocab.Actor) {
 	var fsServe http.HandlerFunc
 	if assetFilesFS, err := fs.Sub(AssetsFS, "static"); err == nil {
 		fsServe = func(w http.ResponseWriter, r *http.Request) {
@@ -110,26 +102,22 @@ func (o *oni) setupStaticRoutes() {
 	} else {
 		fsServe = o.Error(err).ServeHTTP
 	}
-	o.m.Handle("/main.js", fsServe)
-	o.m.Handle("/main.js.map", fsServe)
-	o.m.Handle("/main.css", fsServe)
-	o.m.HandleFunc("/icons.svg", fsServe)
-	o.m.HandleFunc("/favicon.ico", o.NotFound)
+	m.Handle(muxPattern(actor.ID.AddPath("main.js")), fsServe)
+	m.Handle(muxPattern(actor.ID.AddPath("main.js.map")), fsServe)
+	m.Handle(muxPattern(actor.ID.AddPath("main.css")), fsServe)
+	m.HandleFunc(muxPattern(actor.ID.AddPath("icons.svg")), fsServe)
+	m.HandleFunc(muxPattern(actor.ID.AddPath("/favicon.ico")), o.NotFound)
 }
 
-func (o *oni) setupWebfingerRoutes() {
+func (o *oni) setupWebfingerRoutes(m *http.ServeMux) {
 	// TODO(marius): we need the nodeinfo handlers also
-	o.m.HandleFunc("/.well-known/webfinger", HandleWebFinger(*o))
-	o.m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
+	m.HandleFunc("/.well-known/webfinger", HandleWebFinger(*o))
+	m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
 }
 
-func (o *oni) setupActorRoutes() {
-	base, ok := IRIPath(o.a.ID)
-	if !ok {
-		return
-	}
-	o.m.HandleFunc(base, o.OnItemHandler)
-	o.collectionRoutes(vocab.ActivityPubCollections...)
+func (o *oni) setupActorRoutes(m *http.ServeMux, actor vocab.Actor) {
+	m.HandleFunc(muxPattern(actor.ID.AddPath("/")), o.OnItemHandler)
+	o.collectionRoutes(m, actor, vocab.ActivityPubCollections...)
 }
 
 func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
@@ -381,15 +369,21 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 		o.Error(iriNotFound(iri)).ServeHTTP(w, r)
 		return
 	}
-	if vocab.ActorTypes.Contains(it.GetType()) && it.GetID().Equals(o.a.ID, true) {
-		vocab.OnActor(it, func(act *vocab.Actor) error {
-			// NOTE(marius): if the public key is set in the persisted actor, we expect the storage can also
-			// return its private key when calling processing.KeyLoader.LoadKey(actor.ID)
-			if act.PublicKey.ID == "" {
-				act.PublicKey = PublicKey(act.ID)
+
+	if vocab.ActorTypes.Contains(it.GetType()) {
+		for _, act := range o.a {
+			if !it.GetID().Equals(act.ID, true) {
+				continue
 			}
-			return nil
-		})
+			vocab.OnActor(it, func(act *vocab.Actor) error {
+				// NOTE(marius): if the public key is set in the persisted actor, we expect the storage can also
+				// return its private key when calling processing.KeyLoader.LoadKey(actor.ID)
+				if act.PublicKey.ID == "" {
+					act.PublicKey = PublicKey(act.ID)
+				}
+				return nil
+			})
+		}
 	}
 
 	accepts := getItemAcceptedContentType(it, r)
@@ -694,17 +688,21 @@ func acceptFollows(o oni, f vocab.Follow) error {
 	accept := new(vocab.Accept)
 	accept.Type = vocab.AcceptType
 	accept.CC = append(accept.CC, vocab.PublicNS)
-	accept.Actor = o.a
 	accept.InReplyTo = f.GetID()
 	accept.Object = f.GetID()
 
-	o.c.SignFn(s2sSignFn(o))
-
-	processing.SetID(accept, vocab.Outbox.IRI(o.a), nil)
-	if _, err := o.s.Save(accept); err != nil {
-		o.l.Errorf("Failed saving activity %T[%s]: %+s", accept, accept.Type, err)
+	for _, act := range o.a {
+		if act.ID.Equals(f.Object.GetID(), true) {
+			accept.Actor = act
+			o.c.SignFn(s2sSignFn(act, o))
+		}
 	}
 
+	processing.SetID(accept, vocab.Outbox.IRI(accept.Actor), nil)
+	if _, err := o.s.Save(accept); err != nil {
+		o.l.Errorf("Failed saving activity %T[%s]: %+s", accept, accept.Type, err)
+		return err
+	}
 	iri, _, err := o.c.ToCollection(vocab.Inbox.IRI(f.Actor), accept)
 	if err != nil {
 		o.l.Errorf("Failed federating %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
@@ -712,6 +710,12 @@ func acceptFollows(o oni, f vocab.Follow) error {
 	}
 	o.l.Infof("Accepted Follow: %s", iri)
 	return nil
+}
+
+func IRIsContain(iris vocab.IRIs) func(i vocab.IRI) bool {
+	return func(i vocab.IRI) bool {
+		return iris.Contains(i)
+	}
 }
 
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
@@ -725,12 +729,15 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		o.l.WithContext(lw.Ctx{"err": err}).Errorf("invalid authorization mw")
 		return notAcceptable(err)
 	}
+
+	baseIRIs := make(vocab.IRIs, 0)
+	for _, act := range o.a {
+		baseIRIs.Append(act.GetID())
+	}
 	processor, err := processing.New(
-		processing.WithIRI(o.a.ID), processing.WithClient(o.c), processing.WithStorage(o.s),
+		processing.WithIRI(baseIRIs...), processing.WithClient(o.c), processing.WithStorage(o.s),
 		processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})), processing.WithIDGenerator(GenerateID),
-		processing.WithLocalIRIChecker(func(i vocab.IRI) bool {
-			return i.Contains(o.a.ID, true)
-		}),
+		processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
 	)
 	if err != nil {
 		o.l.WithContext(lw.Ctx{"err": err}).Errorf("invalid processing mw")

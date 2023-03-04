@@ -122,27 +122,13 @@ func LoadIRI(db processing.ReadStore, what vocab.IRI, checkFns ...func(actor voc
 }
 
 func loadActorFromStorage(o oni, checkFns ...func(actor vocab.Actor) bool) (vocab.Item, error) {
-	actors, err := o.s.Load(o.a.GetLink())
-	if err != nil {
-		return nil, errors.NewNotFound(err, "no matching actor found")
-	}
-	var found vocab.Item
-	if vocab.IsItemCollection(actors) {
-		err = vocab.OnItemCollection(actors, func(col *vocab.ItemCollection) error {
-			for _, act := range *col {
-				vocab.OnActor(act, func(a *vocab.Actor) error {
-					for _, fn := range checkFns {
-						if fn(*a) {
-							found = a
-						}
-					}
-					return nil
-				})
-			}
-			return nil
-		})
-	} else {
-		err = vocab.OnActor(actors, func(a *vocab.Actor) error {
+	for _, act := range o.a {
+		var found *vocab.Actor
+		res, err := o.s.Load(act.GetLink())
+		if err != nil {
+			return nil, errors.NewNotFound(err, "no matching actor found")
+		}
+		err = vocab.OnActor(res, func(a *vocab.Actor) error {
 			for _, fn := range checkFns {
 				if fn(*a) {
 					found = a
@@ -150,8 +136,9 @@ func loadActorFromStorage(o oni, checkFns ...func(actor vocab.Actor) bool) (voca
 			}
 			return nil
 		})
+		return found, err
 	}
-	return found, err
+	return nil, errors.NotFoundf("no matching actor found")
 }
 
 func handleErr(l lw.Logger) func(r *http.Request, e error) errors.ErrorHandlerFn {

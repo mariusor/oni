@@ -73,33 +73,35 @@ func (o *oni) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
 	return o.s.PasswordCheck(actor, []byte(pw))
 }
 
-func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		state := base64.URLEncoding.EncodeToString(authKey())
-		m := authModel{
-			AuthorizeURL: AuthorizeURL(o.a, state),
-			State:        state,
-		}
+func (o *oni) Authorize(a vocab.Actor) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			state := base64.URLEncoding.EncodeToString(authKey())
+			m := authModel{
+				AuthorizeURL: AuthorizeURL(a, state),
+				State:        state,
+			}
 
-		json.NewEncoder(w).Encode(m)
-		return
-	}
-
-	s := o.o
-	resp := s.NewResponse()
-	defer resp.Close()
-
-	if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
-		if err := o.loadAccountFromPost(o.a, r); err != nil {
-			errors.HandleError(err).ServeHTTP(w, r)
+			json.NewEncoder(w).Encode(m)
 			return
 		}
-		ar.Authorized = true
-		ar.UserData = o.a.ID
-		s.FinishAuthorizeRequest(resp, r, ar)
+
+		s := o.o
+		resp := s.NewResponse()
+		defer resp.Close()
+
+		if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
+			if err := o.loadAccountFromPost(a, r); err != nil {
+				errors.HandleError(err).ServeHTTP(w, r)
+				return
+			}
+			ar.Authorized = true
+			ar.UserData = a.ID
+			s.FinishAuthorizeRequest(resp, r, ar)
+		}
+		resp.Type = osin.DATA
+		redirectOrOutput(resp, w, r)
 	}
-	resp.Type = osin.DATA
-	redirectOrOutput(resp, w, r)
 }
 
 var (

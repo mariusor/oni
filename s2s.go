@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
+	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
 	"github.com/go-fed/httpsig"
 )
@@ -61,7 +62,7 @@ func newSigner(pubKey crypto.PrivateKey, headers []string, l lw.Logger) (signer,
 	return s, nil
 }
 
-func s2sSignFn(o oni) func(r *http.Request) error {
+func s2sSignFn(a vocab.Actor, o oni) func(r *http.Request) error {
 	return func(r *http.Request) error {
 		headers := headersToSign
 		if r.Method == http.MethodPost {
@@ -75,7 +76,7 @@ func s2sSignFn(o oni) func(r *http.Request) error {
 		// NOTE(marius): this is needed to accommodate for the FedBOX service user which usually resides
 		// at the root of a domain, and it might miss a valid path. This trips the parsing of keys with id
 		// of form https://example.com#main-key
-		u, _ := o.a.ID.URL()
+		u, _ := a.ID.URL()
 		if u.Path == "" {
 			u.Path = "/"
 		}

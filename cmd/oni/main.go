@@ -33,9 +33,13 @@ func main() {
 	flag.StringVar(&path, "path", dataPath, "Path for ActivityPub storage")
 	flag.Parse()
 
-	url := "https://oni.local"
-	if flag.NArg() == 1 {
-		url = flag.Arg(0)
+	urls := make(vocab.ItemCollection, 0)
+	if flag.NArg() == 0 {
+		urls = append(urls, vocab.IRI("https://oni.local"))
+	} else {
+		for _, arg := range flag.Args() {
+			urls = append(urls, vocab.IRI(arg))
+		}
 	}
 
 	if build, ok := debug.ReadBuildInfo(); ok && build.Main.Version != "" {
@@ -51,7 +55,7 @@ func main() {
 
 	err = oni.Oni(
 		oni.WithLogger(log),
-		oni.LoadActor(vocab.IRI(url)),
+		oni.LoadActor(urls...),
 		oni.WithStoragePath(path),
 		oni.ListenOn(listen),
 	).Run(context.Background())
