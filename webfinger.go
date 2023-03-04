@@ -228,14 +228,12 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 		subject := res
 
 		var result vocab.Item
-		var filterFn func(vocab.Actor) bool
+		maybeUrl := fmt.Sprintf("https://%s", host)
+		filterFn := AnyTrue(CheckActorURL(maybeUrl), CheckActorID(maybeUrl))
+		if host != handle {
+			filterFn = AllTrue(CheckActorName(handle), filterFn)
+		}
 		if typ == "acct" {
-			maybeUrl := fmt.Sprintf("https://%s", host)
-			if host != handle {
-				filterFn = AllTrue(CheckActorName(handle), AnyTrue(CheckActorURL(maybeUrl), CheckActorID(maybeUrl)))
-			} else {
-				filterFn = AnyTrue(CheckActorURL(maybeUrl), CheckActorID(maybeUrl))
-			}
 			a, err := loadActorFromStorage(o, filterFn)
 			if err != nil {
 				handleErr(o.l)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
