@@ -85,9 +85,9 @@ func (o *oni) setupRoutes(actors []vocab.Actor) {
 		o.setupActorRoutes(m, actor)
 		o.setupOauthRoutes(m, actor)
 		o.setupStaticRoutes(m, actor)
+		o.setupWebfingerRoutes(m, actor)
 	}
 
-	o.setupWebfingerRoutes(m)
 	o.m = m
 }
 
@@ -109,10 +109,10 @@ func (o *oni) setupStaticRoutes(m *http.ServeMux, actor vocab.Actor) {
 	m.HandleFunc(muxPattern(actor.ID.AddPath("/favicon.ico")), o.NotFound)
 }
 
-func (o *oni) setupWebfingerRoutes(m *http.ServeMux) {
+func (o *oni) setupWebfingerRoutes(m *http.ServeMux, actor vocab.Actor) {
 	// TODO(marius): we need the nodeinfo handlers also
-	m.HandleFunc("/.well-known/webfinger", HandleWebFinger(*o))
-	m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
+	m.HandleFunc(muxPattern(actor.ID.AddPath(".well-known", "webfinger")), HandleWebFinger(*o))
+	m.HandleFunc(muxPattern(actor.ID.AddPath(".well-known", "host-meta")), HandleHostMeta(*o))
 }
 
 func (o *oni) setupActorRoutes(m *http.ServeMux, actor vocab.Actor) {
