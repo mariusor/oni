@@ -46,40 +46,33 @@ func Oni(initFns ...optionFn) *oni {
 		client.SkipTLSValidation(true),
 	)
 
-	for _, actor := range o.a {
+	for i, act := range o.a {
+		it, err := o.s.Load(act.GetLink())
+		if err != nil {
+			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to find actor")
+			continue
+		}
+		var actor *vocab.Actor
+		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+			actor, err = vocab.ToActor(col.First())
+			return err
+		})
+		if err != nil || actor == nil {
+			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to load actor")
+			continue
+		}
 		if err := saveOauth2Client(o.s, actor.ID); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to save OAuth2 client")
+			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save OAuth2 client")
 		}
-
-		if actor.ID != "" && o.s != nil {
-			it, err := o.s.Load(actor.ID)
-			if err != nil {
-				o.l.Errorf("%s", err.Error())
-			}
-			err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-				if col.Count() == 0 {
-					actor.PublicKey = vocab.PublicKey{}
-					it, err := o.s.Save(actor)
-					if err != nil {
-						return err
-					}
-					return vocab.OnActor(it, func(act *vocab.Actor) error {
-						o.l.Infof("Persisted default actor")
-						actor = *act
-						return nil
-					})
-				}
-				return vocab.OnActor(col.First(), func(act *vocab.Actor) error {
-					actor = *act
-					return nil
-				})
-			})
-			if err != nil {
-				o.l.Errorf("%s", err.Error())
-			}
-			o.setupRoutes(o.a)
+		actor.PublicKey = vocab.PublicKey{}
+		if _, err := o.s.Save(actor); err != nil {
+			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save back actor")
+			continue
 		}
+		o.a[i] = *actor
 	}
+
+	o.setupRoutes(o.a)
 	return o
 }
 

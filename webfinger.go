@@ -65,6 +65,28 @@ func And(checkFns ...func(actor vocab.Actor) bool) func(actor vocab.Actor) bool 
 	}
 }
 
+func AnyTrue(fns ...func(vocab.Actor) bool) func(actor vocab.Actor) bool {
+	return func(actor vocab.Actor) bool {
+		for _, fn := range fns {
+			if fn(actor) {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func AllTrue(fns ...func(vocab.Actor) bool) func(actor vocab.Actor) bool {
+	return func(actor vocab.Actor) bool {
+		for _, fn := range fns {
+			if !fn(actor) {
+				return false
+			}
+		}
+		return true
+	}
+}
+
 func CheckActorName(name string) func(actor vocab.Actor) bool {
 	return func(a vocab.Actor) bool {
 		return ValueMatchesLangRefs(vocab.Content(name), a.PreferredUsername, a.Name)
@@ -82,6 +104,7 @@ func CheckActorURL(url string) func(actor vocab.Actor) bool {
 		return iriMatchesItem(vocab.IRI(url), a.URL)
 	}
 }
+
 func CheckActorHost(host string) func(actor vocab.Actor) bool {
 	return func(a vocab.Actor) bool {
 		u, err := a.ID.URL()
@@ -205,9 +228,15 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 		subject := res
 
 		var result vocab.Item
+		var filterFn func(vocab.Actor) bool
 		if typ == "acct" {
 			maybeUrl := fmt.Sprintf("https://%s", host)
-			a, err := loadActorFromStorage(o, CheckActorName(handle), CheckActorURL(maybeUrl), CheckActorID(maybeUrl))
+			if host != handle {
+				filterFn = AllTrue(CheckActorName(handle), AnyTrue(CheckActorURL(maybeUrl), CheckActorID(maybeUrl)))
+			} else {
+				filterFn = AnyTrue(CheckActorURL(maybeUrl), CheckActorID(maybeUrl))
+			}
+			a, err := loadActorFromStorage(o, filterFn)
 			if err != nil {
 				handleErr(o.l)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
 				return
