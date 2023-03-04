@@ -92,7 +92,8 @@ func (o *oni) Authorize(a vocab.Actor) http.HandlerFunc {
 
 		if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
 			if err := o.loadAccountFromPost(a, r); err != nil {
-				errors.HandleError(err).ServeHTTP(w, r)
+				o.l.WithContext(lw.Ctx{"err": err}).Errorf("wrong password")
+				errors.HandleError(errors.Unauthorizedf("Wrong password")).ServeHTTP(w, r)
 				return
 			}
 			ar.Authorized = true
