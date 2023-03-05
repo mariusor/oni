@@ -75,6 +75,7 @@ func Oni(initFns ...optionFn) *oni {
 			continue
 		}
 
+		// NOTE(marius): even though we generate the keys, we don't save them if storage reports they exist
 		it, err = o.s.SaveKey(actor.GetLink(), prvKey)
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save Private Key")
