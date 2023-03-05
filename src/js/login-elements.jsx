@@ -25,11 +25,21 @@ export class LoginDialog extends LitElement {
     }
 
     open() {
-        this.open = true;
+        this.opened = true;
     }
+    loginSuccessful() {
+        this.close();
 
+        this.dispatchEvent(new CustomEvent('login.successful', {
+            bubbles: true,
+        }));
+    }
     close() {
         this.opened = false;
+
+        this.dispatchEvent(new CustomEvent('dialog.closed', {
+            bubbles: true,
+        }));
     }
 
     login(e) {
@@ -55,7 +65,7 @@ export class LoginDialog extends LitElement {
                     if (response.status == 200) {
                         localStorage.setItem('token', value.code);
                         localStorage.setItem('state', value.state);
-                        this.opened = false;
+                        this.loginSuccessful();
                     } else {
                         if (value.hasOwnProperty('errors')) {
                             console.error(value.errors);
@@ -71,9 +81,7 @@ export class LoginDialog extends LitElement {
                         }
                     }
                 }).catch(console.error);
-            })
-            .catch(console.error);
-
+            }).catch(console.error);
     }
 
     async getAuthURL() {
@@ -123,27 +131,28 @@ export class LoginDialog extends LitElement {
                     font-size: .7em;
                 }
                 .overlay {
-                    opacity: 0.4;
                     background-color: var(--bg-color);
+                    opacity: .8;
+                    display: none;
                     position: fixed;
                     top: 0;
                     bottom: 0;
                     left: 0;
                     right: 0;
-                    display: none;
                 }
-                .open {
-                    display: block
+                .opened {
+                    display: block;
                 }
             </style>
-            <div class=${classMap({overlay: true, open: this.opened})} @click=${this.close}></div>
+            <div class=${classMap({overlay: true, opened: this.opened})} @click=${this.close}></div>
             <dialog ?opened="${this.opened}">
                 <div class=${classMap({error: (this.error.length > 0)})}>${this.error}</div>
                 <form method="post" action=${this.authorizeURL} @submit="${this.login}">
                     <input type="password" name="_pw" placeholder="Password"/><br/>
                     <button type="submit">Sign in</button>
                 </form>
-            </dialog>`
+            </dialog>
+        `
     }
 }
 
@@ -160,21 +169,26 @@ export class LoginLink extends LitElement {
         authorizeURL: {type: String},
         tokenURL: {type: String},
         dialogVisible: {type: Boolean},
+        loginVisible: {type: Boolean},
     }
 
     constructor() {
         super()
-        this.dialogVisible = false
-    }
-
-    static get properties() {
-        return {
-            dialogVisible: {type: Boolean}
-        }
+        this.dialogVisible = false;
+        this.loginVisible = true;
     }
 
     showDialog(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
         this.dialogVisible = true;
+    }
+
+    hideDialog(e) {
+        console.debug(e);
+
+        this.dialogVisible = false;
     }
 
     haveToken() {
@@ -185,13 +199,15 @@ export class LoginLink extends LitElement {
     logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('state');
+
+        this.loginVisible = true;
     }
 
     render() {
         return html`
             <nav>
             ${when(
-                !this.haveToken(),
+                this.loginVisible || !this.haveToken(),
                 () => html`
                             <button @click="${this.showDialog}">
                                 <oni-icon name="lock"></oni-icon>
@@ -201,6 +217,8 @@ export class LoginLink extends LitElement {
                                     ?opened="${this.dialogVisible}"
                                     authorizeURL=${this.authorizeURL}
                                     tokenURL=${this.tokenURL}
+                                    @dialog.closed=${this.hideDialog}
+                                    @login.successful=${() => {this.loginVisible = false}}
                             ></oni-login-dialog>
                         `,
                     () => html`
