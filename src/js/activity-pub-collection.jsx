@@ -8,9 +8,11 @@ import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = css`
         :host { width: 100%; }
-        :host ul, :host ol { width: 100%; padding: 0; margin: 0; list-style: none;}
-        :host div {
-            margin: 0 1rem; 
+        :host ul, :host ol { 
+            width: 100%; 
+            padding: 0; 
+            margin: 0; 
+            list-style: none;
         }
         :host li { 
             margin: 1rem 0;
