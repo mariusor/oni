@@ -1,5 +1,3 @@
-import {html} from "lit";
-
 export function rgb(rgb) {
     return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 };
@@ -162,13 +160,6 @@ function splitCollectionIRI(iri) {
     u.pathname = u.pathname.replace(col, '');
     return [u.toString(), col];
 }
-
-export async function renderCollectionsActor(iri, slot) {
-    const [actorIRI, collection] = splitCollectionIRI(iri);
-    const act = await fetchActivityPubIRI(actorIRI);
-    return html`
-        <oni-actor it=${JSON.stringify(act)}>${slot}</oni-actor>`;
-};
 
 export function isAuthenticated() {
     return (localStorage.getItem('token') || '').length > 0;

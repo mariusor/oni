@@ -1,4 +1,5 @@
 import {OnReady} from "./utils";
+import {OniMainActor} from "./oni-main-actor";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {CollectionLink, CollectionLinks} from "./collection-links";
 import {NaturalLanguageValues} from "./natural-language-values";
@@ -12,6 +13,7 @@ import {ActivityPubVideo} from "./activity-pub-video";
 import {Icon} from "./icon";
 import {LoginDialog, LoginLink} from "./login-elements";
 
+customElements.define('oni-main', OniMainActor);
 customElements.define('oni-natural-language-values', NaturalLanguageValues);
 customElements.define('oni-object', ActivityPubObject);
 customElements.define('oni-note', ActivityPubNote);

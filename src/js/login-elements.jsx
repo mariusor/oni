@@ -27,13 +27,7 @@ export class LoginDialog extends LitElement {
     open() {
         this.opened = true;
     }
-    loginSuccessful() {
-        this.close();
 
-        this.dispatchEvent(new CustomEvent('login.successful', {
-            bubbles: true,
-        }));
-    }
     close() {
         this.opened = false;
 
@@ -82,6 +76,14 @@ export class LoginDialog extends LitElement {
                     }
                 }).catch(console.error);
             }).catch(console.error);
+    }
+
+    loginSuccessful() {
+        this.close();
+
+        this.dispatchEvent(new CustomEvent('login.successful', {
+            bubbles: true,
+        }));
     }
 
     async getAuthURL() {
@@ -175,7 +177,7 @@ export class LoginLink extends LitElement {
     constructor() {
         super()
         this.dialogVisible = false;
-        this.loginVisible = true;
+        this.loginVisible = !this.haveToken();
     }
 
     showDialog(e) {
@@ -189,6 +191,7 @@ export class LoginLink extends LitElement {
         console.debug(e);
 
         this.dialogVisible = false;
+        this.loginVisible = true;
     }
 
     haveToken() {
@@ -207,7 +210,7 @@ export class LoginLink extends LitElement {
         return html`
             <nav>
             ${when(
-                this.loginVisible || !this.haveToken(),
+                this.loginVisible,
                 () => html`
                             <button @click="${this.showDialog}">
                                 <oni-icon name="lock"></oni-icon>

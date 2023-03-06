@@ -1,10 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject, ObjectTypes} from "./activity-pub-object";
 import {ifDefined} from "lit-html/directives/if-defined.js";
-import {renderCollectionsActor} from "./utils";
-import {until} from "lit-html/directives/until.js";
-import {ActivityPubActivity, ActivityTypes} from "./activity-pub-activity";
-import {when} from "lit-html/directives/when.js";
+import {ActivityTypes} from "./activity-pub-activity";
 import {ActorTypes} from "./activity-pub-actor";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
@@ -107,8 +104,7 @@ export class ActivityPubCollection extends ActivityPubObject {
                     ${this.renderPrevNext()}
                 </div>`;
         }
-        let act = renderCollectionsActor(this.iri(), collection());
-        return html`${until(act)}`;
+        return html`${collection()}`;
     }
 }
 
