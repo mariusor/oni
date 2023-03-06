@@ -3,6 +3,7 @@ package oni
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"io"
 	"io/fs"
 	"net/http"
@@ -22,6 +23,7 @@ import (
 	"github.com/go-ap/errors"
 	json "github.com/go-ap/jsonld"
 	"github.com/go-ap/processing"
+	"github.com/mariusor/render"
 )
 
 // NotFound is a generic method to return an 404 error HTTP handler that
@@ -658,8 +660,18 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	case accepts(textHTML):
 		fallthrough
 	default:
+		oniFn := template.FuncMap{
+			"ONI": func() vocab.Actor {
+				for _, a := range o.a {
+					if it.GetLink().Contains(a.ID, true) {
+						return a
+					}
+				}
+				return auth.AnonymousActor
+			},
+		}
 		wrt := bytes.Buffer{}
-		if err := ren.HTML(w, http.StatusOK, "components/item", it); err != nil {
+		if err := ren.HTML(w, http.StatusOK, "components/item", it, render.HTMLOptions{Funcs: oniFn}); err != nil {
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}

@@ -8,6 +8,10 @@
     <script defer type="module" src="/main.js"></script>
 </head>
 <body>
+<oni-main it="{{ ONI | JSON }}">
+    <div>
 {{ yield -}}
+    </div>
+</oni-main>
 </body>
 </html>
