@@ -40,12 +40,6 @@ export class ActivityPubActivity extends ActivityPubObject {
 }
 
 ActivityPubActivity.validForRender = function (it) {
-    let validType = (it.hasOwnProperty('type') && it.type === 'Create');
-    if (it.hasOwnProperty('object')) {
-        if (it.object.hasOwnProperty('type') && it.object.type == 'Tombstone') {
-            return false;
-        }
-    }
-    return validType;
+    return (it.hasOwnProperty('type') && it.type === 'Create') && it.hasOwnProperty('object');
 
 }

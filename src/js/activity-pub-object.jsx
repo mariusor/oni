@@ -24,7 +24,7 @@ export class ActivityPubItem {
         return this;
     }
 }
-export const ObjectTypes = [ 'Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document' ];
+export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone'];
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -267,7 +267,7 @@ ActivityPubObject.renderByType = function (it) {
         case 'Article':
             return html`<oni-note it=${JSON.stringify(it)}></oni-note>`;
         case 'Tombstone':
-            return nothing;
+            return html`<oni-tombstone it=${JSON.stringify(it)}></oni-tombstone>`;
     }
     return html`<oni-object it=${JSON.stringify(it)}></oni-object>`
 }

@@ -12,9 +12,9 @@ import {ActivityPubAudio} from "./activity-pub-audio";
 import {ActivityPubVideo} from "./activity-pub-video";
 import {Icon} from "./icon";
 import {LoginDialog, LoginLink} from "./login-elements";
+import {ActivityPubTombstone} from "./activity-pub-tombstone";
 
 customElements.define('oni-main', OniMainActor);
-customElements.define('oni-natural-language-values', NaturalLanguageValues);
 customElements.define('oni-object', ActivityPubObject);
 customElements.define('oni-note', ActivityPubNote);
 customElements.define('oni-image', ActivityPubImage);
@@ -22,9 +22,13 @@ customElements.define('oni-audio', ActivityPubAudio);
 customElements.define('oni-video', ActivityPubVideo);
 customElements.define('oni-actor', ActivityPubActor);
 customElements.define('oni-collection', ActivityPubCollection);
+customElements.define('oni-tombstone', ActivityPubTombstone);
+customElements.define('oni-activity', ActivityPubActivity);
+
+customElements.define('oni-natural-language-values', NaturalLanguageValues);
 customElements.define('oni-collection-link', CollectionLink);
 customElements.define('oni-collection-links', CollectionLinks);
-customElements.define('oni-activity', ActivityPubActivity);
+
 customElements.define('oni-icon', Icon);
 
 customElements.define('oni-login-link', LoginLink);
