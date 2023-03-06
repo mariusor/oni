@@ -105,6 +105,7 @@ func (c *Control) GenAuthToken(clientID, actorIdentifier string, dat interface{}
 	now := time.Now().UTC()
 	var f processing.Filterable
 	if u, err := url.Parse(actorIdentifier); err == nil {
+		u.Scheme = "https"
 		f = vocab.IRI(u.String())
 	} else {
 		f = filters.FiltersNew(filters.Name(actorIdentifier), filters.Type(vocab.ActorTypes...))

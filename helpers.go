@@ -103,12 +103,10 @@ func GenerateID(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) 
 
 	if vocab.ActivityTypes.Contains(typ) || vocab.IntransitiveActivityTypes.Contains(typ) {
 		err := vocab.OnActivity(it, func(a *vocab.Activity) error {
-			author, err := vocab.ToActor(a.Actor)
-			if err != nil {
-				return err
-			}
-			a.ID = vocab.Outbox.IRI(author).AddPath(uuid)
-			return nil
+			return vocab.OnActor(a.Actor, func(author *vocab.Actor) error {
+				a.ID = vocab.Outbox.IRI(author).AddPath(uuid)
+				return nil
+			})
 		})
 		return it.GetID(), err
 	}
