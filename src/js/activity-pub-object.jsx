@@ -2,6 +2,28 @@ import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI, isLocalIRI, relativeDate} from "./utils";
 import {until} from "lit-html/directives/until.js";
 
+export class ActivityPubItem {
+    id = '';
+    url = '';
+    actor = '';
+    object = '';
+
+    constructor(it) {
+        if (it.hasOwnProperty('id')) {
+            this.id = it.id;
+        }
+        if (it.hasOwnProperty('url')) {
+            this.url = it.url;
+        }
+        if (it.hasOwnProperty('actor')) {
+            this.actor = it.actor;
+        }
+        if (it.hasOwnProperty('object')) {
+            this.object = it.object;
+        }
+        return this;
+    }
+}
 export const ObjectTypes = [ 'Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document' ];
 
 export class ActivityPubObject extends LitElement {
@@ -89,7 +111,35 @@ export class ActivityPubObject extends LitElement {
         return [this.it.content || null];
     }
 
-    renderByType() {
+    icon() {
+        if (this.it == null) {
+            return null;
+        }
+        return this.it.hasOwnProperty('icon') ? this.it.icon : null;
+    }
+
+    recipients() {
+        let recipients = [];
+        if (this.it == null) {
+            return recipients;
+        }
+        if (this.it.hasOwnProperty('to')) {
+            recipients.concat(this.it.to);
+        }
+        if (this.it.hasOwnProperty('cc')) {
+            recipients.concat(this.it.cc);
+        }
+        if (this.it.hasOwnProperty('bto')) {
+            recipients.concat(this.it.bto);
+        }
+        if (this.it.hasOwnProperty('bcc')) {
+            recipients.concat(this.it.bcc);
+        }
+        if (this.it.hasOwnProperty('audience')) {
+            recipients.concat(this.it.audience);
+        }
+        return recipients.flat()
+            .filter((value, index, array) => array.indexOf(value) === index);
     }
 
     async renderAttributedTo() {

@@ -3,7 +3,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {getAverageImageRGB, isAuthenticated, rgba, setStyles} from "./utils";
 import {until} from "lit-html/directives/until.js";
 
-export const ActorTypes = [ 'Person', 'Group', 'Application', 'Service' ];
+export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
 
 export class ActivityPubActor extends ActivityPubObject {
     static styles = css`
@@ -43,6 +43,7 @@ export class ActivityPubActor extends ActivityPubObject {
     `;
     static properties = {
         it: {type: Object},
+        simplified: {type: Boolean},
     };
 
     constructor(it) {
@@ -93,12 +94,29 @@ export class ActivityPubActor extends ActivityPubObject {
     };
 
     renderIcon() {
-        if (this.it.hasOwnProperty("icon")) {
-            return html`<a href=${this.iri()}> <img src=${this.it.icon}/> </a>`;
+        const icon = this.icon();
+        if (!icon) {
+            return nothing;
         }
-        return nothing;
+        if (typeof icon == 'string') {
+            return html`<img src=${icon}/>`;
+        } else {
+            return ActivityPubObject.renderByMediaType(icon);
+        }
     }
 
+    renderIconName() {
+        if (this.simplified) {
+            return html`
+                <a href=${this.iri()}> ${this.renderIcon()} ${this.renderPreferredUsername()}</a>
+            `;
+        } else {
+            return html`
+                <a href=${this.iri()}> ${this.renderIcon()}</a>
+                <a href=${this.iri()}> <h2>${this.renderPreferredUsername()}</h2></a>
+            `;
+        }
+    }
 
     renderUrl() {
         let url = this.url();
@@ -111,16 +129,25 @@ export class ActivityPubActor extends ActivityPubObject {
         return html`
             <ul>
                 ${url.map((u) => html`
-                    <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}><oni-icon name="external-href"></oni-icon> ${u}</a></li>`)}
+                    <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}>
+                        <oni-icon name="external-href"></oni-icon>
+                        ${u}</a></li>`)}
             </ul>`;
     }
 
     renderPreferredUsername() {
         if (this.preferredUsername().length > 0) {
-            return html`
-                <h2><a href=${this.iri()}>
-                    <oni-natural-language-values name="preferredUsername" it=${JSON.stringify(this.preferredUsername())}></oni-natural-language-values>
-                </a></h2>`;
+            if (this.simplified) {
+                return html`
+                    <oni-natural-language-values it=${JSON.stringify(this.preferredUsername())}></oni-natural-language-values>`;
+            } else {
+                return html`
+                    <oni-natural-language-values
+                        name="preferredUsername" 
+                        it=${JSON.stringify(this.preferredUsername())}
+                    ></oni-natural-language-values>
+                `;
+            }
         }
         return nothing;
     }
@@ -147,24 +174,32 @@ export class ActivityPubActor extends ActivityPubObject {
         const authURL = endPoints.oauthAuthorizationEndpoint;
         const tokenURL = endPoints.oauthTokenEndpoint;
 
-        return html`<oni-login-link authorizeURL=${authURL} tokenURL=${tokenURL}></oni-login-link>`;
+        return html`
+            <oni-login-link authorizeURL=${authURL} tokenURL=${tokenURL}></oni-login-link>`;
     }
 
     render() {
-        let bg = nothing;
-        if (this.it.hasOwnProperty('image')) {
-            bg = html`<style> :host div {background-image: ${until(this.loadAverageImageRGB(this.it.image))};} </style>`;
-        }
-        return html`${bg}
+        if (!this.simplified) {
+            let bg = nothing;
+            if (this.it.hasOwnProperty('image')) {
+                bg = html`
+                    <style> :host div {
+                        background-image: ${until(this.loadAverageImageRGB(this.it.image))};
+                    } </style>`;
+            }
+            return html`${bg}
             <div>
-                ${this.renderIcon()}
-                ${this.renderPreferredUsername()}
+                ${this.renderIconName()}
                 ${this.renderSummary()}
                 ${this.renderUrl()}
                 ${this.renderOAuth()}
             </div>
             ${this.renderCollections()}
             <slot></slot>
-        `;
+            `;
+        } else {
+            return html`<div> ${this.renderIconName()}</div>
+            `;
+        }
     }
 }

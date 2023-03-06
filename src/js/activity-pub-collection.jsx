@@ -1,9 +1,12 @@
 import {css, html, nothing} from "lit";
-import {ActivityPubObject} from "./activity-pub-object";
+import {ActivityPubObject, ObjectTypes} from "./activity-pub-object";
 import {ifDefined} from "lit-html/directives/if-defined.js";
 import {renderCollectionsActor} from "./utils";
 import {until} from "lit-html/directives/until.js";
-import {ActivityPubActivity} from "./activity-pub-activity";
+import {ActivityPubActivity, ActivityTypes} from "./activity-pub-activity";
+import {when} from "lit-html/directives/when.js";
+import {ActorTypes} from "./activity-pub-actor";
+import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = css`
@@ -67,14 +70,21 @@ export class ActivityPubCollection extends ActivityPubObject {
     }
 
     renderItems() {
-        return html`${this.items().map(value => {
-            if (!ActivityPubActivity.validForRender(value)) {
-                return nothing;
+        return html`${this.items().map(it => {
+            const type = it.hasOwnProperty('type')? it.type : 'unknown';
+            console.debug(it);
+            let renderedItem = unsafeHTML(`<!-- Unknown activity object ${type} -->`);
+            if (ActivityTypes.indexOf(type) >= 0) {
+                renderedItem = html`<oni-activity it=${JSON.stringify(it)}></oni-activity>`;
             }
-            return html`
-                <li>
-                    <oni-activity it=${JSON.stringify(value)}></oni-activity>
-                </li>`
+            if (ActorTypes.indexOf(type) >= 0) {
+                renderedItem = html`<oni-actor it=${JSON.stringify(it)} simplified=true></oni-actor>`
+            }
+            if (ObjectTypes.indexOf(type) >= 0) {
+                renderedItem = ActivityPubObject.renderByType(it);
+            }
+
+            return html` <li>${renderedItem}</li>`
         })}`
     }
 
@@ -82,7 +92,7 @@ export class ActivityPubCollection extends ActivityPubObject {
         const collection = () => {
             if (this.items().length == 0) {
                 return html`
-                    <div class="content"> Nothing to see here, please move along. </div>`;
+                    <div class="content">Nothing to see here, please move along.</div>`;
             }
 
             const list = this.type().toLowerCase().includes('ordered')
