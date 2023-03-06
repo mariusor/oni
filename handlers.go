@@ -682,7 +682,13 @@ func acceptFollows(o oni, f vocab.Follow, p *processing.P) error {
 		}
 	}
 
-	_, err := p.ProcessActivity(accept, vocab.Outbox.IRI(accept.Actor))
+	oniOutbox := vocab.Outbox.IRI(accept.Actor)
+	processing.SetID(accept, oniOutbox, nil)
+	if _, err := o.s.Save(accept); err != nil {
+		o.l.Errorf("Failed saving activity %T[%s]: %+s", accept, accept.Type, err)
+		return err
+	}
+	_, err := processing.AcceptActivity(*p, accept, oniOutbox)
 	if err != nil {
 		o.l.Errorf("Failed processing %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
 		return err
