@@ -1,6 +1,6 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {getAverageImageRGB, isAuthenticated, rgba, setStyles} from "./utils";
+import {getAverageImageRGB, isAuthenticated, isLocalIRI, rgba, setStyles} from "./utils";
 import {until} from "lit-html/directives/until.js";
 
 export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
@@ -107,8 +107,12 @@ export class ActivityPubActor extends ActivityPubObject {
 
     renderIconName() {
         if (this.simplified) {
+            let username = this.preferredUsername();
+            if (!isLocalIRI(this.iri())) {
+                username = `${username}@${new URL(this.iri()).hostname}`
+            }
             return html`
-                <a href=${this.iri()}> ${this.renderIcon()} ${this.renderPreferredUsername()}</a>
+                <a href=${this.iri()}> ${this.renderIcon()} ${username}</a>
             `;
         } else {
             return html`
