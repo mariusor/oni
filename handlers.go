@@ -668,7 +668,7 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	o.logRequest(r, http.StatusOK, now)
 }
 
-func acceptFollows(o oni, f vocab.Follow) error {
+func acceptFollows(o oni, f vocab.Follow, p *processing.P) error {
 	accept := new(vocab.Accept)
 	accept.Type = vocab.AcceptType
 	accept.CC = append(accept.CC, vocab.PublicNS)
@@ -682,17 +682,12 @@ func acceptFollows(o oni, f vocab.Follow) error {
 		}
 	}
 
-	processing.SetID(accept, vocab.Outbox.IRI(accept.Actor), nil)
-	if _, err := o.s.Save(accept); err != nil {
-		o.l.Errorf("Failed saving activity %T[%s]: %+s", accept, accept.Type, err)
-		return err
-	}
-	iri, _, err := o.c.ToCollection(vocab.Inbox.IRI(f.Actor), accept)
+	_, err := p.ProcessActivity(accept, vocab.Outbox.IRI(accept.Actor))
 	if err != nil {
-		o.l.Errorf("Failed federating %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
+		o.l.Errorf("Failed processing %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
 		return err
 	}
-	o.l.Infof("Accepted Follow: %s", iri)
+	o.l.Infof("Accepted Follow: %s", f.ID)
 	return nil
 }
 
@@ -784,7 +779,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 					time.Sleep(300 * time.Millisecond)
 
 					err := vocab.OnActivity(it, func(a *vocab.Activity) error {
-						return acceptFollows(*o, *a)
+						return acceptFollows(*o, *a, processor)
 					})
 					if err != nil {
 						o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to automatically accept follow")
