@@ -39,6 +39,10 @@ oni: go.mod bin/oni
 bin/oni: cmd/oni/main.go $(APPSOURCES) go.mod static/main.css static/main.js
 	$(BUILD) -tags "$(TAGS)" -o $@ cmd/oni/main.go
 
+ctl: go.mod bin/ctl
+bin/ctl: cmd/ctl/main.go $(APPSOURCES) go.mod
+	$(BUILD) -tags "$(TAGS)" -o $@ cmd/ctl/main.go
+
 fdeps:
 	$(YARN) install
 
