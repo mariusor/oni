@@ -14,7 +14,7 @@ require (
 	github.com/go-ap/fedbox v0.0.0-20230111150432-bab3b45bf9a2
 	github.com/go-ap/filters v0.0.0-20230302122150-af8f54eb973c
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20230304191316-94dd94ef1b4c
+	github.com/go-ap/processing v0.0.0-20230306175456-41f01b726f2a
 	github.com/go-ap/storage-fs v0.0.0-20230304191458-9c51db23e06f
 	github.com/go-fed/httpsig v1.1.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
