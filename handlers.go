@@ -381,8 +381,10 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 	case accepts(textHTML):
 		fallthrough
 	default:
+		oniActor := o.oniActor(r)
 		oniFn := template.FuncMap{
-			"ONI": oniActor(*o, it),
+			"ONI":   func() vocab.Actor { return oniActor },
+			"Title": titleFromActor(oniActor),
 		}
 		wrt := bytes.Buffer{}
 		if err := ren.HTML(&wrt, http.StatusOK, "components/person", it, render.HTMLOptions{Funcs: oniFn}); err != nil {
@@ -393,14 +395,20 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	o.logRequest(r, http.StatusOK, now)
 }
-func oniActor(o oni, it vocab.Item) func() vocab.Actor {
-	return func() vocab.Actor {
-		for _, a := range o.a {
-			if it.GetLink().Contains(a.ID, true) {
-				return a
-			}
+
+func (o *oni) oniActor(r *http.Request) vocab.Actor {
+	reqIRI := irif(r)
+	for _, a := range o.a {
+		if reqIRI.Contains(a.ID, false) {
+			return a
 		}
-		return auth.AnonymousActor
+	}
+	return auth.AnonymousActor
+}
+
+func titleFromActor(o vocab.Actor) func() template.HTML {
+	return func() template.HTML {
+		return template.HTML(o.PreferredUsername.First().String())
 	}
 }
 
@@ -673,8 +681,10 @@ func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
 	case accepts(textHTML):
 		fallthrough
 	default:
+		oniActor := o.oniActor(r)
 		oniFn := template.FuncMap{
-			"ONI": oniActor(*o, it),
+			"ONI":   func() vocab.Actor { return oniActor },
+			"Title": titleFromActor(oniActor),
 		}
 		wrt := bytes.Buffer{}
 		if err := ren.HTML(w, http.StatusOK, "components/item", it, render.HTMLOptions{Funcs: oniFn}); err != nil {
