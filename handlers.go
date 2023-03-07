@@ -763,16 +763,16 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 		act, err := auth.LoadActorFromAuthHeader(r)
 		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to load an authorized Actor from request")
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")
 		}
 
 		if ok, err := ValidateRequest(r); !ok {
-			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed request validation")
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed request validation")
 			return it, errors.HttpStatus(err), err
 		}
 		body, err := io.ReadAll(r.Body)
 		if err != nil || len(body) == 0 {
-			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed loading body")
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
 		defer func() {
@@ -784,12 +784,12 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			os.WriteFile(fn, all.Bytes(), 0660)
 		}()
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed unmarshalling jsonld body")
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed unmarshalling jsonld body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
 		}
 
 		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed initializing the Activity processor")
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed initializing the Activity processor")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
 		processor.SetActor(&act)
@@ -816,7 +816,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 						return acceptFollows(*o, *a, processor)
 					})
 					if err != nil {
-						o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to automatically accept follow")
+						o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to automatically accept follow")
 					}
 				}()
 			}()
