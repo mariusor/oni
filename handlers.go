@@ -802,7 +802,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			return nil
 		})
 		if it, err = processor.ProcessActivity(it, receivedIn); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err}).Errorf("failed processing activity")
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed processing activity")
 			err = errors.Annotatef(err, "Can't save %q activity to %s", it.GetType(), receivedIn)
 			return it, errors.HttpStatus(err), err
 		}
