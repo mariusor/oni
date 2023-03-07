@@ -386,8 +386,12 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 			"ONI":   func() vocab.Actor { return oniActor },
 			"Title": titleFromActor(oniActor),
 		}
+		templatePath := "components/person"
+		if !vocab.ActorTypes.Contains(it.GetType()) {
+			templatePath = "components/item"
+		}
 		wrt := bytes.Buffer{}
-		if err := ren.HTML(&wrt, http.StatusOK, "components/person", it, render.HTMLOptions{Funcs: oniFn}); err != nil {
+		if err := ren.HTML(&wrt, http.StatusOK, templatePath, it, render.HTMLOptions{Funcs: oniFn}); err != nil {
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}
