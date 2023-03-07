@@ -202,10 +202,10 @@ export function relativeDate(old) {
     }
     if (hours < 1) {
         if (minutes < 1) {
-            val = seconds / 60;
+            val = seconds;
             unit = "second";
         } else {
-            val = minutes / 60;
+            val = minutes;
             unit = "minute";
         }
     } else if (hours < 24) {
