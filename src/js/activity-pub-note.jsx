@@ -1,4 +1,4 @@
-import {css, html, nothing} from "lit";
+import {css, html} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 
 export class ActivityPubNote extends ActivityPubObject {
@@ -14,7 +14,8 @@ export class ActivityPubNote extends ActivityPubObject {
 
     render() {
         return html`${this.renderMetadata()}
+        <oni-natural-language-values it=${JSON.stringify(this.summary())}></oni-natural-language-values>
         <oni-natural-language-values it=${JSON.stringify(this.content())}></oni-natural-language-values>
-        ${this.renderAttachment()}`
+        ${this.renderAttachment()}`;
     }
 }
