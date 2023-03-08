@@ -38,6 +38,15 @@ export class OniMainActor extends ActivityPubActor {
         :host oni-natural-language-values[name=preferredUsername]::before {
             content: "~";
         }
+        :host aside {
+            display: inline;
+        }
+        :host aside small::before {
+            content: "(";
+        }
+        :host aside small::after {
+            content: ")";
+        }
         a[target=external] {}
     `;
     static properties = {
@@ -102,7 +111,7 @@ export class OniMainActor extends ActivityPubActor {
     renderIconName() {
         return html`
             <a href=${this.iri()}> ${this.renderIcon()}</a>
-            <a href=${this.iri()}><h2>${this.renderPreferredUsername()}</h2></a>
+            <h2><a href=${this.iri()}>${this.renderPreferredUsername()}</a></h2>
         `;
     }
 
