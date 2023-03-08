@@ -111,17 +111,20 @@ func GenerateID(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) 
 		return it.GetID(), err
 	}
 
-	id := by.GetLink().AddPath("object")
-	if it.IsLink() {
-		return id, vocab.OnLink(it, func(l *vocab.Link) error {
-			l.ID = id
+	var id vocab.ID
+	if by != nil {
+		id = by.GetLink().AddPath("object")
+		if it.IsLink() {
+			return id, vocab.OnLink(it, func(l *vocab.Link) error {
+				l.ID = id
+				return nil
+			})
+		}
+		return id, vocab.OnObject(it, func(o *vocab.Object) error {
+			o.ID = id
 			return nil
 		})
 	}
-	return id, vocab.OnObject(it, func(o *vocab.Object) error {
-		o.ID = id
-		return nil
-	})
 
 	return id, nil
 }
