@@ -17,7 +17,7 @@ export class ActivityPubNote extends ActivityPubObject {
         const summary = this.summary();
         return html`${this.renderMetadata()}
         ${when(summary,
-            () => html`<h2><oni-natural-language-values it=${JSON.stringify(summary)}></oni-natural-language-values></h2>`)
+            () => html`<strong><oni-natural-language-values it=${JSON.stringify(summary)}></oni-natural-language-values></strong><br/>`)
         }
         <oni-natural-language-values it=${JSON.stringify(this.content())}></oni-natural-language-values>
         ${this.renderAttachment()}`;
