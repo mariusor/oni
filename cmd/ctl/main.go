@@ -156,7 +156,7 @@ func (c *Control) GenAuthToken(clientID, actorIdentifier string, dat interface{}
 		RedirectUri:   cl.GetRedirectUri(),
 		Scope:         "scope",
 		Authorized:    true,
-		Expiration:    86400,
+		Expiration:    -1,
 	}
 
 	ad := &osin.AccessData{
