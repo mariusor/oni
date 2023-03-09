@@ -3,9 +3,21 @@ import {ActivityPubObject} from "./activity-pub-object";
 
 export class ActivityPubVideo extends ActivityPubObject {
     static styles = [css`
-        audio {
+        video {
             max-width: 100%; 
             max-height: 12vw;
+            align-self: start;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        main > * {
+            margin: .1rem;
+        }
+        main aside {
+            align-self: end;
         }
     `, ActivityPubObject.styles];
     static properties = {
@@ -17,7 +29,6 @@ export class ActivityPubVideo extends ActivityPubObject {
     }
 
     render() {
-        return html`${this.renderMetadata()}
-        <video src=${this.iri() ?? nothing}></video>`;
+        return html`<main><video src=${this.iri() ?? nothing}></video> ${this.renderMetadata()}</main>`;
     }
 }

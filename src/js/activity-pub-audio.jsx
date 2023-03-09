@@ -6,6 +6,18 @@ export class ActivityPubAudio extends ActivityPubObject {
         audio {
             max-width: 100%; 
             max-height: 12vw;
+            align-self: start;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        main > * {
+            margin: .1rem;
+        }
+        main aside {
+            align-self: end;
         }
     `, ActivityPubObject.styles];
     static properties = {
@@ -17,7 +29,6 @@ export class ActivityPubAudio extends ActivityPubObject {
     }
 
     render() {
-        return html`${this.renderMetadata()}
-        <audio src=${this.iri() ?? nothing}></audio>`;
+        return html`<main><audio src=${this.iri() ?? nothing}></audio> ${this.renderMetadata()}</main>`;
     }
 }

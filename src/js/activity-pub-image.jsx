@@ -6,6 +6,18 @@ export class ActivityPubImage extends ActivityPubObject {
         img {
             max-width: 100%; 
             max-height: 12vw;
+            align-self: start;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        main > * {
+            margin: .1rem;
+        }
+        main aside {
+            align-self: end;
         }
     `, ActivityPubObject.styles];
     static properties = {
@@ -21,7 +33,6 @@ export class ActivityPubImage extends ActivityPubObject {
         if (!src) {
             src = this.url();
         }
-        return html`${this.renderMetadata()}
-        <img src=${src ?? nothing} title="${this.name()}"/>`;
+        return html`<main><img src=${src ?? nothing} title="${this.name()}"/> ${this.renderMetadata()}</main>`;
     }
 }
