@@ -100,15 +100,36 @@ export class ActivityPubObject extends LitElement {
     }
 
     name() {
-        return [this.it.name || null];
+        if (!this.it.hasOwnProperty('name')) {
+            return [];
+        }
+        let s = this.it.name;
+        if (!Array.isArray(s)) {
+            s = [s];
+        }
+        return s;
     }
 
     summary() {
-        return [this.it.summary || null];
+        if (!this.it.hasOwnProperty('summary')) {
+            return [];
+        }
+        let s = this.it.summary;
+        if (!Array.isArray(s)) {
+            s = [s];
+        }
+        return s;
     }
 
     content() {
-        return [this.it.content || null];
+        if (!this.it.hasOwnProperty('content')) {
+            return [];
+        }
+        let s = this.it.content;
+        if (!Array.isArray(s)) {
+            s = [s];
+        }
+        return s;
     }
 
     icon() {
