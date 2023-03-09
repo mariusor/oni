@@ -1,4 +1,4 @@
-import {css, html} from "lit";
+import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {when} from "lit-html/directives/when.js";
 
@@ -33,13 +33,13 @@ export class ActivityPubNote extends ActivityPubObject {
     }
 
     render() {
-        const summary = this.summary();
-        console.debug(`summary: `, summary.length)
+        const name = this.name().length > 0 ? html`<h1>${this.renderName()}</h1>` : nothing;
+        const summary = this.summary().length > 0 ? html`<h2>${this.renderSummary()}</h2>` : nothing;
+        const header = this.name().length+this.summary().length > 0 ? html`<header>${name}${summary}</header>` : nothing;
+
         return html`<article>
-        ${when(summary.length > 0,
-            () => html`<header><h2><oni-natural-language-values it=${JSON.stringify(summary)}></oni-natural-language-values></h2></header>`)
-        }
-        <oni-natural-language-values it=${JSON.stringify(this.content())}></oni-natural-language-values>
+        ${header}
+        ${this.renderContent()}
         <aside>${this.renderAttachment()}</aside>
         <footer>${this.renderMetadata()}</footer>
         </article>`;

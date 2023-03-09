@@ -223,49 +223,43 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
         const auth = this.renderAttributedTo();
-        return html`<aside>Published ${until(auth)}${this.renderPublished()}</aside>`;
+        return html`<aside>
+            Published ${until(auth)}${this.renderPublished()} 
+            <a href="${this.iri() ?? nothing}"><oni-icon name="share"></oni-icon></a>
+        </aside>`;
     }
 
     renderName() {
-        if (!this.it.hasOwnProperty("name")){
+        const name = this.name();
+        if (name.length == 0) {
             return nothing;
         }
         return html`<div>
-            <a href=${this.iri()}><oni-natural-language-values name="name" it=${JSON.stringify(this.name())}></oni-natural-language-values></a>
+            <a href=${this.iri()}><oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values></a>
         </div>`;
     }
 
     renderContent() {
-        if (!this.it.hasOwnProperty('content')) {
+        const content = this.content();
+        if (content.length == 0) {
             return nothing;
         }
-        return html`
-            <div>
-                <oni-natural-language-values name="content" it=${JSON.stringify(this.content())}></oni-natural-language-values>
-            </div>`;
+        return html`<oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
     }
 
     renderSummary() {
-        if (this.it.hasOwnProperty('summary')) {
-            return html`
-                <aside>
-                    <oni-natural-language-values name="summary" it=${JSON.stringify(this.summary())}></oni-natural-language-values>
-                </aside>`;
+        const summary = this.summary();
+        if (summary.length == 0) {
+            return nothing;
         }
-        return nothing;
+        return html`<oni-natural-language-values name="summary" it=${JSON.stringify(summary)}></oni-natural-language-values>`;
     }
 
     render() {
         if (this.it == null) {
             return nothing;
         }
-        return html`
-            <main id=${this.iri() || nothing} class=${this.type() || nothing}>
-                ${this.renderName()}
-                ${this.renderSummary()}
-                ${this.renderContent()}
-                ${this.renderMetadata()}
-            </main>`;
+        return ActivityPubObject.renderByType(this.it);
     }
 }
 
