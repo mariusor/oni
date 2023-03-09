@@ -1,6 +1,5 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {when} from "lit-html/directives/when.js";
 
 export class ActivityPubNote extends ActivityPubObject {
     static styles = [css`
@@ -11,9 +10,14 @@ export class ActivityPubNote extends ActivityPubObject {
     article > * {
         margin: .1rem;
     }
-    article header h2 {
+    article header * {
         padding: 0 .1rem;
         margin: 0;
+    }
+    article header h2 {
+        font-size: 1.2rem;
+    }
+    article header h1 {
         font-size: 1.2rem;
     }
     article header {
