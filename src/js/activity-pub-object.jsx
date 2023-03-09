@@ -28,10 +28,21 @@ export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page'
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
-    :host aside {
-        opacity: 0.8;
-        font-size: 0.8rem;
-    }
+        :host aside {
+            opacity: 0.8;
+            font-size: 0.8rem;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        main > * {
+            margin: .1rem;
+        }
+        main aside {
+            align-self: end;
+        }
     `;
     static properties = {it: {type: Object}};
 
@@ -249,12 +260,12 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
         return html`
-            <div id=${this.iri() || nothing} class=${this.type() || nothing}>
-                ${this.renderMetadata()}
+            <main id=${this.iri() || nothing} class=${this.type() || nothing}>
                 ${this.renderName()}
                 ${this.renderSummary()}
                 ${this.renderContent()}
-            </div>`
+                ${this.renderMetadata()}
+            </main>`;
     }
 }
 

@@ -7,19 +7,7 @@ export class ActivityPubAudio extends ActivityPubObject {
             max-width: 100%; 
             max-height: 12vw;
             align-self: start;
-        }
-        main {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        main > * {
-            margin: .1rem;
-        }
-        main aside {
-            align-self: end;
-        }
-    `, ActivityPubObject.styles];
+        }`, ActivityPubObject.styles];
     static properties = {
         it: {type: Object},
     };
