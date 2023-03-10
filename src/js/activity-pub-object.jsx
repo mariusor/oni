@@ -284,8 +284,11 @@ ActivityPubObject.renderByMediaType = function (it) {
 }
 
 ActivityPubObject.renderByType = function (it) {
-    if (it == null || !it.hasOwnProperty('type')) {
+    if (it == null ) {
         return nothing;
+    }
+    if (!it.hasOwnProperty('type')) {
+        return html`<oni-tag it=${JSON.stringify(it)}></oni-tag>`;
     }
     switch (it.type) {
         case 'Document':
