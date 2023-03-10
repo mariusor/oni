@@ -13,6 +13,7 @@ import {ActivityPubVideo} from "./activity-pub-video";
 import {Icon} from "./icon";
 import {LoginDialog, LoginLink} from "./login-elements";
 import {ActivityPubTombstone} from "./activity-pub-tombstone";
+import {ActivityPubTag} from "./activity-pub-tag";
 
 customElements.define('oni-main', OniMainActor);
 customElements.define('oni-object', ActivityPubObject);
@@ -24,6 +25,7 @@ customElements.define('oni-actor', ActivityPubActor);
 customElements.define('oni-collection', ActivityPubCollection);
 customElements.define('oni-tombstone', ActivityPubTombstone);
 customElements.define('oni-activity', ActivityPubActivity);
+customElements.define('oni-tag', ActivityPubTag);
 
 customElements.define('oni-natural-language-values', NaturalLanguageValues);
 customElements.define('oni-collection-link', CollectionLink);

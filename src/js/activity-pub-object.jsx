@@ -1,6 +1,7 @@
 import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI, isLocalIRI, relativeDate} from "./utils";
 import {until} from "lit-html/directives/until.js";
+import {map} from "lit-html/directives/map.js";
 
 export class ActivityPubItem {
     id = '';
@@ -24,7 +25,8 @@ export class ActivityPubItem {
         return this;
     }
 }
-export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone'];
+
+export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', ''];
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -175,16 +177,21 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderAttributedTo() {
-        const act = await this.load('attributedTo');
+        let act = await this.load('attributedTo');
         if (!act) {
             return nothing;
         }
-
-        let username = act.preferredUsername;
-        if (!isLocalIRI(act.id)) {
-            username = `${username}@${new URL(act.id).hostname}`
+        if (!Array.isArray(act)) {
+            act = [act];
         }
-        return html`by <a href=${act.id}><oni-natural-language-values it=${JSON.stringify(username)}></oni-natural-language-values></a>`
+
+        return html`by ${map(act, function (act, i) {
+            let username = act.preferredUsername;
+            if (!isLocalIRI(act.id)) {
+                username = `${username}@${new URL(act.id).hostname}`
+            }
+            return html`<a href=${act.id}><oni-natural-language-values it=${JSON.stringify(username)}></oni-natural-language-values></a>`
+        })}`;
     }
 
     attachment() {
@@ -294,6 +301,8 @@ ActivityPubObject.renderByType = function (it) {
             return html`<oni-note it=${JSON.stringify(it)}></oni-note>`;
         case 'Tombstone':
             return html`<oni-tombstone it=${JSON.stringify(it)}></oni-tombstone>`;
+        case 'Mention':
+            return html`<oni-tag it=${JSON.stringify(it)}></oni-tag>`;
     }
     return html`<oni-object it=${JSON.stringify(it)}></oni-object>`
 }
