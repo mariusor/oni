@@ -114,6 +114,7 @@ body {
     justify-content: center;
 }
 
-oni-main > div {
-    margin: 0 1rem;
+oni-activity, oni-collection, oni-object, oni-image, oni-note, oni-video, oni-audio {
+    display: block;
+    margin: 1rem;
 }

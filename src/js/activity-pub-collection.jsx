@@ -101,10 +101,9 @@ export class ActivityPubCollection extends ActivityPubObject {
                         <ul>${this.renderItems()}</ul>`;
 
             return html`
-                <div class="content">
                     ${list}
                     ${this.renderPrevNext()}
-                </div>`;
+                `;
         }
         return html`${collection()}`;
     }
