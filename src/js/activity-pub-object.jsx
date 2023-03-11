@@ -30,6 +30,18 @@ export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page'
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
+        :host {
+            color: var(--fg-color);
+        }
+        a {
+            color: var(--link-color);
+        }
+        a:visited {
+            color: var(--link-visited-color);
+        }
+        a:active {
+            color: var(--link-active-color);
+        }
         :host aside {
             opacity: 0.8;
             font-size: 0.8rem;

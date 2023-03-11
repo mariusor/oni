@@ -8,7 +8,7 @@ import {map} from "lit-html/directives/map.js";
 export const ActivityTypes = [ 'Create', 'Update', 'Delete', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore' ];
 
 export class ActivityPubActivity extends ActivityPubObject {
-    static styles = css` :host { color: var(--fg-color); }`;
+    static styles = ActivityPubObject.styles;
 
     constructor() {
         super();

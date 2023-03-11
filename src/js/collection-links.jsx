@@ -1,5 +1,6 @@
 import {css, html, LitElement} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
+import {ActivityPubObject} from "./activity-pub-object";
 
 export class CollectionLinks extends LitElement {
     static styles = css`
@@ -24,7 +25,7 @@ export class CollectionLinks extends LitElement {
             padding: .4rem .8rem .4rem 0;
         }
         :host li.active {
-            border: 1px solid var(--fg-color);
+            border: 1px solid var(--shadow-color);
             border-bottom: 0;
         }
     `

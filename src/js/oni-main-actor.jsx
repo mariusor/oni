@@ -1,15 +1,15 @@
-import {css, html, nothing} from "lit";
+import {css, html, nothing, unsafeCSS} from "lit";
 import {ActivityPubActor} from "./activity-pub-actor";
-import {getAverageImageRGB, isAuthenticated, isLocalIRI, rgba, setStyles} from "./utils";
+import {isAuthenticated, prefersDarkTheme, rgba, setStyles} from "./utils";
 import {until} from "lit-html/directives/until.js";
 import {ActivityPubObject} from "./activity-pub-object";
+import {average, prominent} from "color.js";
 
 export class OniMainActor extends ActivityPubActor {
-    static styles = css`
+    static styles = [css`
         :host {
             background-clip: padding-border;
             display: block;
-            color: var(--fg-color); 
             overflow-x: hidden;
             width: 100%;
         }
@@ -48,7 +48,7 @@ export class OniMainActor extends ActivityPubActor {
             content: ")";
         }
         a[target=external] {}
-    `;
+    `, ActivityPubObject.styles];
     static properties = {
         it: {type: Object},
     };
@@ -59,8 +59,37 @@ export class OniMainActor extends ActivityPubActor {
         this.addEventListener('content.change', this.updateActivityPubItem)
     }
 
+    async loadPalette(it) {
+        const defaultImagePalette = prefersDarkTheme() ? [
+            '#000000',
+            '#AAAAAA',
+        ] : [
+            '#AAAAAA',
+            '#000000',
+        ];
+
+        const isDarkTheme = prefersDarkTheme();
+
+        const iconPalette = (it.hasOwnProperty('icon')) ?
+            await prominent(it.icon, { amount: 5, group: 40, format: 'hex' }) : [];
+        const imagePalette = (it.hasOwnProperty('image')) ?
+            await prominent(it.image, { amount: 5, group: 40, format: 'hex' }) : defaultImagePalette;
+
+        console.debug(iconPalette);
+        return {
+            fgColor: iconPalette[1],
+            linkColor: iconPalette[2],
+            bgColor: imagePalette[0],
+            linkVisitedColor: imagePalette[1],
+            shadowColor: iconPalette[2],
+        }
+    }
+
     async loadAverageImageRGB(imageURL) {
-        const avgRGB = await getAverageImageRGB(imageURL);
+        const col = await average(imageURL );
+        const avgRGB = {r: col[0], g: col[1], b: col[2]};
+        console.debug(avgRGB);
+
         const rgbLow = rgba(avgRGB, 0);
         const rgbHigh = rgba(avgRGB, 1);
         setStyles(avgRGB)
@@ -92,7 +121,6 @@ export class OniMainActor extends ActivityPubActor {
         if (c.length == 0) {
             return nothing;
         }
-        console.debug('actor has following collections', c);
         return html`<oni-collection-links it=${JSON.stringify(c)}></oni-collection-links>`;
     };
 
@@ -170,15 +198,29 @@ export class OniMainActor extends ActivityPubActor {
             <oni-login-link authorizeURL=${authURL} tokenURL=${tokenURL}></oni-login-link>`;
     }
 
+    async renderPalette() {
+        const palette = await this.loadPalette(this.it);
+        console.info(`palette: `, palette);
+        return html`
+            :host {
+                --bg-color: ${palette.bgColor};
+                --fg-color: ${palette.fgColor};
+                --link-color: ${palette.linkColor};
+                --link-visited-color: ${palette.linkVisitedColor};
+                --shadow-color: ${palette.shadowColor};
+            }
+        `;
+    }
+
     render() {
         let bg = nothing;
+        const root = html`${until(this.renderPalette())}`;
+
         if (this.it.hasOwnProperty('image')) {
-            bg = html`
-                <style> :host div {
-                    background-image: ${until(this.loadAverageImageRGB(this.it.image))};
-                } </style>`;
+            bg = html`:host div {background-image: ${until(this.loadAverageImageRGB(this.it.image))};`
         }
-        return html`${bg}
+
+        return html`<style>${root}${bg}</style>
         <div>
             ${this.renderIconName()}
             ${this.renderSummary()}

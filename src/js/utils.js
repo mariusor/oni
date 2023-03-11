@@ -8,6 +8,7 @@ export function setStyles(bgColor) {
     const bri = brightness(bgColor)
     const scheme = getColorScheme(bri);
 
+    console.debug('bg color:', bgColor);
     localStorage.setItem('colorScheme', scheme);
     localStorage.setItem('backgroundColor', rgb(bgColor));
 };
@@ -36,6 +37,10 @@ function getColorScheme(bri) {
         scheme = 'light';
     }
     return scheme;
+};
+
+export function prefersDarkTheme() {
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
 };
 
 export async function getAverageImageRGB(url) {

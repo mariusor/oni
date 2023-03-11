@@ -1,13 +1,17 @@
 import {css, html, LitElement, nothing} from "lit";
 import {editableContent, isAuthenticated} from "./utils";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
+import {ActivityPubObject} from "./activity-pub-object";
 
 export class NaturalLanguageValues extends LitElement {
-    static styles = css`
+    static styles = [css`
         :host { display: inline-block; }
+        :host a { color: var(--link-color); }
+        :host a:visited { color: var(--link-visited-color); }
+        :host a:active { color: var(--link-active-color); }
         :host div { display: inline-block; }
         :host::before { margin-right: -.4rem; }
-    `;
+    `, ActivityPubObject.styles];
 
     static properties = {
         it: {type: Object},

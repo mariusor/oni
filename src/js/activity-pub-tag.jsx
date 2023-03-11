@@ -2,7 +2,7 @@ import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 
 export class ActivityPubTag extends ActivityPubObject {
-    static styles = css``;
+    static styles = ActivityPubObject.styles;
 
     constructor(it) {
         super(it);
