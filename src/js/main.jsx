@@ -41,14 +41,11 @@ OnReady(function () {
         const palette = JSON.parse(localStorage.getItem('palette'));
         if (palette === null) return;
 
-        const colorScheme = palette.colorScheme;
-        if (colorScheme) {
-            root.style.colorScheme = colorScheme;
-        }
-        root.style.setProperty('--bg-color', palette.bgColor);
-        root.style.setProperty('--fg-color', palette.fgColor);
-        root.style.setProperty('--link-color', palette.linkColor);
-        root.style.setProperty('--link-active-color', palette.linkActiveColor);
-        root.style.setProperty('--link-visited-color', palette.linkVisitedColor);
+        if (palette.colorScheme) root.style.colorScheme = palette.colorScheme;
+        if (palette.bgColor) root.style.setProperty('--bg-color', palette.bgColor);
+        if (palette.fgColor) root.style.setProperty('--fg-color', palette.fgColor);
+        if (palette.linkColor) root.style.setProperty('--link-color', palette.linkColor);
+        if (palette.linkActiveColor) root.style.setProperty('--link-active-color', palette.linkActiveColor);
+        if (palette.linkVisitedColor) root.style.setProperty('--link-visited-color', palette.linkVisitedColor);
     });
 });

@@ -7,7 +7,6 @@ import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = css`
-        :host { width: 100%; }
         :host ul, :host ol { 
             width: 100%; 
             padding: 0; 
@@ -75,11 +74,9 @@ export class ActivityPubCollection extends ActivityPubObject {
             let renderedItem = unsafeHTML(`<!-- Unknown activity object ${type} -->`);
             if (ActivityTypes.indexOf(type) >= 0) {
                 renderedItem = html`<oni-activity it=${JSON.stringify(it)}></oni-activity>`;
-            }
-            if (ActorTypes.indexOf(type) >= 0) {
+            } else if (ActorTypes.indexOf(type) >= 0) {
                 renderedItem = html`<oni-actor it=${JSON.stringify(it)} simplified=true></oni-actor>`
-            }
-            if (ObjectTypes.indexOf(type) >= 0) {
+            } else {
                 renderedItem = ActivityPubObject.renderByType(it);
             }
 

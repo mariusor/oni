@@ -1,9 +1,8 @@
+import {html} from "lit";
+import {map} from "lit-html/directives/map.js";
+
 export function rgb(rgb) {
     return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-};
-
-export function setStyles(palette) {
-    localStorage.setItem('theme', JSON.stringify(palette));
 };
 
 export function rgba(rgb, a) {
@@ -32,51 +31,32 @@ export function getColorScheme(bri) {
     return scheme;
 };
 
+export function getBestContrastColor(hex, colors){
+    const hBrightness = brightness(hexToRGB(hex));
+    let maxBrightnessDiff = 130;
+    let result = prefersDarkTheme() ? '#000000' : '#ffffff';
+    colors.forEach(function (col) {
+        if (hex == col) return;
+        const cBrightness = brightness(hexToRGB(col))
+        if (hBrightness - cBrightness < maxBrightnessDiff) return;
+
+        maxBrightnessDiff = hBrightness - cBrightness;
+        result = col;
+    });
+    return result;
+}
+
+export function hexToRGB(hex) {
+    function hexToR(h) {return parseInt((cutHex(h)).substring(0,2),16)}
+    function hexToG(h) {return parseInt((cutHex(h)).substring(2,4),16)}
+    function hexToB(h) {return parseInt((cutHex(h)).substring(4,6),16)}
+    function hexToA(h) {return (cutHex(h)).substring(6,8) ?parseInt((cutHex(h)).substring(6,8),16):255}
+    function cutHex(h) {return (h.charAt(0)=="#") ? h.substring(1,7):h}
+    return {r: hexToR(hex), g: hexToG(hex), b: hexToB(hex), a: hexToA(hex)};
+}
+
 export function prefersDarkTheme() {
     return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-};
-
-export async function getAverageImageRGB(url) {
-    let blockSize = 5, // only visit every 5 pixels
-        i = -4, rgb = {r: 0, g: 0, b: 0}, count = 0, data;
-
-    let canvas = document.createElement('canvas');
-    let context = canvas.getContext('2d');
-    let img = await loadImage(url);
-
-    canvas.width = img.width;
-    canvas.height = img.height;
-    context.drawImage(img, 0, 0);
-
-    try {
-        data = context.getImageData(0, 0, img.width, img.height);
-    } catch (e) {
-        console.error(`failed: ${e}`);
-        return rgb;
-    }
-
-    const length = data.data.length;
-    while ((i += blockSize * 4) < length) {
-        ++count;
-        rgb.r += data.data[i];
-        rgb.g += data.data[i + 1];
-        rgb.b += data.data[i + 2];
-    }
-
-    // ~~ used to floor values
-    rgb.r = ~~(rgb.r / count);
-    rgb.g = ~~(rgb.g / count);
-    rgb.b = ~~(rgb.b / count);
-
-    return rgb;
-};
-
-export function loadImage(url) {
-    return new Promise(r => {
-        let i = new Image();
-        i.onload = (() => r(i));
-        i.src = url;
-    });
 };
 
 export function OnReady(a) {

@@ -1,9 +1,10 @@
 import {css, html, nothing} from "lit";
-import {ActivityPubActor} from "./activity-pub-actor";
-import {isAuthenticated, prefersDarkTheme, rgba, setStyles, rgb} from "./utils";
 import {until} from "lit-html/directives/until.js";
-import {ActivityPubObject} from "./activity-pub-object";
+import {when} from "lit-html/directives/when.js";
 import {average, prominent} from "color.js";
+import {ActivityPubActor} from "./activity-pub-actor";
+import {ActivityPubObject} from "./activity-pub-object";
+import {isAuthenticated, rgba, getColorScheme, brightness, getBestContrastColor, hexToRGB} from "./utils";
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
@@ -51,54 +52,49 @@ export class OniMainActor extends ActivityPubActor {
     `, ActivityPubObject.styles];
     static properties = {
         it: {type: Object},
+        palette: {type: Object},
+        colors: {type: Array},
+        paletteLoaded: {type: Boolean},
     };
 
     constructor(it) {
         super(it);
+        this.palette = {};
 
         this.addEventListener('content.change', this.updateActivityPubItem)
+
+        const palette = JSON.parse(localStorage.getItem('palette'));
+        if (palette !== null) {
+            this.palette = palette;
+            this.paletteLoaded = true;
+        };
     }
 
     async loadPalette(it) {
-        const isDarkTheme = prefersDarkTheme();
-        const root = document.querySelectorAll(":root").item(0);
-        const defaultPalette = {
-            fgColor: root.style.getPropertyValue('--fg-color'),
-            bgColor: root.style.getPropertyValue('--bg-color'),
-            linkColor: root.style.getPropertyValue('--link-color'),
-            linkVisitedColor: root.style.getPropertyValue('--link-visited-color'),
-            linkActiveColor: root.style.getPropertyValue('--link-active-color'),
-            shadowColor: root.style.getPropertyValue('--fg-color'),
-            colorScheme: isDarkTheme ? 'dark' : 'light',
-        };
+        if (this.paletteLoaded) return this.palette;
 
-        const iconPalette = (it.hasOwnProperty('icon')) ?
-            await prominent(it.icon, { amount: 5, group: 40, format: 'hex' }) : [];
-        const imagePalette = (it.hasOwnProperty('image')) ?
-            await prominent(it.image, { amount: 5, group: 40, format: 'hex' }) : [];
+        const iconPalette = await prominent(it.icon, { amount: 20, group: 50, format: 'hex' });
 
-        if (iconPalette[1]) {
-            defaultPalette.fgColor = iconPalette[1];
-            //defaultPalette.colorScheme: getColorScheme(brightness(imagePalette[0])),
+        if (it.hasOwnProperty('image')) {
+            const col = await average(it.image, {format: 'hex'});
+
+            const imagePalette = await prominent(it.image, { amount: 20, group: 50, format: 'hex' });
+
+            this.palette.bgColor = col;
+            this.palette.fgColor = getBestContrastColor(this.palette.bgColor, imagePalette);
+            this.palette.colorScheme = getColorScheme(brightness(this.palette.bgColor));
+            this.palette.bgImageURL = it.image;
         }
-        if (iconPalette[2]) {
-            defaultPalette.linkColor = iconPalette[2];
-            defaultPalette.shadowColor = iconPalette[2];
-        }
-        setStyles(defaultPalette);
-        return defaultPalette;
-    }
 
-    async loadAverageImageRGB(imageURL) {
-        const col = await average(imageURL );
-        const avgRGB = {r: col[0], g: col[1], b: col[2]};
+        this.palette.linkColor = getBestContrastColor(this.palette.bgColor, iconPalette);
+        this.palette.linkActiveColor = getBestContrastColor(this.palette.bgColor, iconPalette);
+        this.palette.linkVisitedColor = getBestContrastColor(this.palette.bgColor, iconPalette);
+        this.palette.shadowColor = this.palette.linkColor;
 
-        const rgbLow = rgba(avgRGB, 0);
-        const rgbHigh = rgba(avgRGB, 1);
+        this.paletteLoaded = true;
 
-        document.querySelectorAll(":root").item(0).style.setProperty('--bg-color', rgb(avgRGB));
-
-        return `linear-gradient(${rgbLow}, ${rgbHigh}), url("${imageURL}")`;
+        localStorage.setItem('palette', JSON.stringify(this.palette));
+        return this.palette;
     }
 
     collections() {
@@ -204,16 +200,29 @@ export class OniMainActor extends ActivityPubActor {
     }
 
     async renderPalette() {
-        const palette = await this.loadPalette(this.it);
-        console.info(`palette: `, palette);
+        this.palette = await this.loadPalette(this.it);
+        if (!this.palette) {
+            return nothing;
+        }
+
+        const p = this.palette;
         return html`
             :host {
-                --bg-color: ${palette.bgColor};
-                --fg-color: ${palette.fgColor};
-                --link-color: ${palette.linkColor};
-                --link-visited-color: ${palette.linkVisitedColor};
-                --shadow-color: ${palette.shadowColor};
+                --bg-color: ${p.bgColor};
+                --fg-color: ${p.fgColor};
+                --link-color: ${p.linkColor};
+                --link-visited-color: ${p.linkVisitedColor};
+                --link-active-color: ${p.linkActiveColor};
+                --shadow-color: ${p.shadowColor};
             }
+            ${when(p.bgImageURL.length > 0, () => html`
+                :host div {
+                    background-image: linear-gradient(${rgba(hexToRGB(p.bgColor), 0)}, ${rgba(hexToRGB(p.bgColor), 1)}), url(${p.bgImageURL});
+                }`, () => html`
+                :host div {
+                    background-image: linear-gradient(${rgba(hexToRGB(p.bgColor), 0)}, ${rgba(hexToRGB(p.bgColor), 1)});
+                }`
+            )}
         `;
     }
 
@@ -222,7 +231,7 @@ export class OniMainActor extends ActivityPubActor {
         const root = html`${until(this.renderPalette())}`;
 
         if (this.it.hasOwnProperty('image')) {
-            bg = html`:host div {background-image: ${until(this.loadAverageImageRGB(this.it.image))};`
+            bg = html``
         }
 
         return html`<style>${root}${bg}</style>
