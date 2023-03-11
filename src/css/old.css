@@ -114,7 +114,8 @@ body {
     justify-content: center;
 }
 
-oni-activity, oni-collection, oni-object, oni-image, oni-note, oni-video, oni-audio {
+oni-activity, oni-collection, oni-object, oni-image, oni-note,
+oni-video, oni-audio, oni-natural-language-values {
     display: block;
     margin: 1rem;
 }
