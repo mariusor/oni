@@ -38,13 +38,17 @@ customElements.define('oni-login-dialog', LoginDialog);
 
 OnReady(function () {
     document.querySelectorAll(":root").forEach((root) => {
-        const colorScheme = localStorage.getItem('colorScheme');
+        const palette = JSON.parse(localStorage.getItem('palette'));
+        if (palette === null) return;
+
+        const colorScheme = palette.colorScheme;
         if (colorScheme) {
             root.style.colorScheme = colorScheme;
         }
-        const backgroundColor = localStorage.getItem('backgroundColor');
-        if (backgroundColor) {
-            root.style.setProperty('--bg-color', backgroundColor);
-        }
+        root.style.setProperty('--bg-color', palette.bgColor);
+        root.style.setProperty('--fg-color', palette.fgColor);
+        root.style.setProperty('--link-color', palette.linkColor);
+        root.style.setProperty('--link-active-color', palette.linkActiveColor);
+        root.style.setProperty('--link-visited-color', palette.linkVisitedColor);
     });
 });

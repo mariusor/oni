@@ -1,6 +1,6 @@
-import {css, html, nothing, unsafeCSS} from "lit";
+import {css, html, nothing} from "lit";
 import {ActivityPubActor} from "./activity-pub-actor";
-import {isAuthenticated, prefersDarkTheme, rgba, setStyles} from "./utils";
+import {isAuthenticated, prefersDarkTheme, rgba, setStyles, rgb} from "./utils";
 import {until} from "lit-html/directives/until.js";
 import {ActivityPubObject} from "./activity-pub-object";
 import {average, prominent} from "color.js";
@@ -60,39 +60,44 @@ export class OniMainActor extends ActivityPubActor {
     }
 
     async loadPalette(it) {
-        const defaultImagePalette = prefersDarkTheme() ? [
-            '#000000',
-            '#AAAAAA',
-        ] : [
-            '#AAAAAA',
-            '#000000',
-        ];
-
         const isDarkTheme = prefersDarkTheme();
+        const root = document.querySelectorAll(":root").item(0);
+        const defaultPalette = {
+            fgColor: root.style.getPropertyValue('--fg-color'),
+            bgColor: root.style.getPropertyValue('--bg-color'),
+            linkColor: root.style.getPropertyValue('--link-color'),
+            linkVisitedColor: root.style.getPropertyValue('--link-visited-color'),
+            linkActiveColor: root.style.getPropertyValue('--link-active-color'),
+            shadowColor: root.style.getPropertyValue('--fg-color'),
+            colorScheme: isDarkTheme ? 'dark' : 'light',
+        };
 
         const iconPalette = (it.hasOwnProperty('icon')) ?
             await prominent(it.icon, { amount: 5, group: 40, format: 'hex' }) : [];
         const imagePalette = (it.hasOwnProperty('image')) ?
-            await prominent(it.image, { amount: 5, group: 40, format: 'hex' }) : defaultImagePalette;
+            await prominent(it.image, { amount: 5, group: 40, format: 'hex' }) : [];
 
-        console.debug(iconPalette);
-        return {
-            fgColor: iconPalette[1],
-            linkColor: iconPalette[2],
-            bgColor: imagePalette[0],
-            linkVisitedColor: imagePalette[1],
-            shadowColor: iconPalette[2],
+        if (iconPalette[1]) {
+            defaultPalette.fgColor = iconPalette[1];
+            //defaultPalette.colorScheme: getColorScheme(brightness(imagePalette[0])),
         }
+        if (iconPalette[2]) {
+            defaultPalette.linkColor = iconPalette[2];
+            defaultPalette.shadowColor = iconPalette[2];
+        }
+        setStyles(defaultPalette);
+        return defaultPalette;
     }
 
     async loadAverageImageRGB(imageURL) {
         const col = await average(imageURL );
         const avgRGB = {r: col[0], g: col[1], b: col[2]};
-        console.debug(avgRGB);
 
         const rgbLow = rgba(avgRGB, 0);
         const rgbHigh = rgba(avgRGB, 1);
-        setStyles(avgRGB)
+
+        document.querySelectorAll(":root").item(0).style.setProperty('--bg-color', rgb(avgRGB));
+
         return `linear-gradient(${rgbLow}, ${rgbHigh}), url("${imageURL}")`;
     }
 

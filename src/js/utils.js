@@ -2,28 +2,21 @@ export function rgb(rgb) {
     return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
 };
 
-export function setStyles(bgColor) {
-    bgColor = (bgColor || {r: 0, g: 0, b: 0});
-
-    const bri = brightness(bgColor)
-    const scheme = getColorScheme(bri);
-
-    console.debug('bg color:', bgColor);
-    localStorage.setItem('colorScheme', scheme);
-    localStorage.setItem('backgroundColor', rgb(bgColor));
+export function setStyles(palette) {
+    localStorage.setItem('theme', JSON.stringify(palette));
 };
 
 export function rgba(rgb, a) {
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${a})`;
 };
 
-function brightness(rgb) {
+export function brightness(rgb) {
     //return ((rgb.r * 299) + (rgb.g * 587) + (rgb.b * 114)) / 1000;
     // from https://www.nbdtech.com/Blog/archive/2008/04/27/Calculating-the-Perceived-Brightness-of-a-Color.aspx
     return 255 - Math.sqrt((rgb.r * rgb.r * .241 + rgb.g * rgb.g * .691 + rgb.b * rgb.b * .068));
 };
 
-function getColorScheme(bri) {
+export function getColorScheme(bri) {
     let scheme;
     if (Math.abs(bri - 120) < 75) {
         if (bri >= 130) {
