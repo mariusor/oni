@@ -26,6 +26,9 @@ export class ActivityPubNote extends ActivityPubObject {
     article footer {
         align-self: end;
     }
+    p {
+        margin: 0 .2rem;
+    }
     `, ActivityPubObject.styles];
 
     static properties = {
