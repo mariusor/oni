@@ -1,13 +1,11 @@
-import {css, html, nothing} from "lit";
+import {html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {isLocalIRI} from "./utils";
 
 export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
 
 export class ActivityPubActor extends ActivityPubObject {
-    static styles = css`
-        :host { }
-    `;
+    static styles = ActivityPubObject.styles;
     static properties = {
         it: {type: Object},
     };
@@ -67,6 +65,6 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     render() {
-        return html`<div> ${this.renderIconName()}</div>`;
+        return html`<div>${this.renderIconName()}</div>`;
     }
 }

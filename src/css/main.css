@@ -2,9 +2,9 @@
 :root {
     --bg-color: #232627;
     --fg-color: #EFF0F1;
-    --link-color: dodgerblue;
-    --link-visited-color: mediumpurple;
-    --link-active-color: mediumpurple;
+    --link-color: #1e90ff; /* dodgerblue */
+    --link-visited-color: #9370db; /* mediumpurple */
+    --link-active-color: #9370db;
     --shadow-color: #EFF0F1;
 }
 
@@ -12,9 +12,9 @@
     :root {
         --bg-color: #EFF0F1;
         --fg-color: #232627;
-        --link-color: blue;
-        --link-visited-color: rebeccapurple;
-        --link-active-color: rebeccapurple;
+        --link-color: #0000cd; /* mediumblue */
+        --link-visited-color: #663399; /* rebeccapurple */
+        --link-active-color: #663399;
         --shadow-color: #232627;
     }
 }

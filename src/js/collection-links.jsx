@@ -1,6 +1,5 @@
 import {css, html, LitElement} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
-import {ActivityPubObject} from "./activity-pub-object";
 
 export class CollectionLinks extends LitElement {
     static styles = css`
@@ -8,7 +7,7 @@ export class CollectionLinks extends LitElement {
             display: flex;
             width: 100%;
             justify-content: flex-end;
-            border-bottom: 3px inset var(--fg-color);
+            border-bottom: 3px inset var(--shadow-color);
             margin-right: 1rem;
             margin-bottom: 0;
         }
@@ -26,6 +25,7 @@ export class CollectionLinks extends LitElement {
         }
         :host li.active {
             border: 1px solid var(--shadow-color);
+            background-color: var(--shadow-color);
             border-bottom: 0;
         }
     `
@@ -57,8 +57,11 @@ export class CollectionLink extends LitElement {
     static styles = css`
         :host a {
             text-transform: capitalize;
-            color: var(--fg-color);
+            color: var(--shadow-color);
             text-decoration: none;
+        }
+        :host a.active, :host a:visited.active {
+            color: var(--bg-color);
         }
     `;
 
@@ -76,6 +79,6 @@ export class CollectionLink extends LitElement {
     }
 
     render() {
-        return html`<oni-icon name=${this.label()}></oni-icon> <a href="${this.it}">${this.label()}</a>`;
+        return html`<a href="${this.it}" class=${classMap({'active': (this.it === window.location.href)})}><oni-icon name=${this.label()}></oni-icon> ${this.label()}</a>`;
     }
 }

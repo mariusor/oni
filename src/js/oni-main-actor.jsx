@@ -4,15 +4,21 @@ import {when} from "lit-html/directives/when.js";
 import {average, prominent} from "color.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
-import {isAuthenticated, rgba, getColorScheme, brightness, getBestContrastColor, hexToRGB} from "./utils";
+import {isAuthenticated, rgba, prefersDarkTheme, contrast} from "./utils";
+import {map} from "lit-html/directives/map.js";
+import tinycolor from "tinycolor2";
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
         :host {
-            background-clip: padding-border;
             display: block;
             overflow-x: hidden;
             width: 100%;
+            background-clip: padding-border;
+            background-color: var(--bg-color);
+        }
+        :host h2 a, h2 a:visited {
+            color: var(--shadow-color);
         }
         :host div {
             min-height: 12vw;
@@ -48,6 +54,9 @@ export class OniMainActor extends ActivityPubActor {
         :host aside small::after {
             content: ")";
         }
+        .urls {
+            background-color: rgba(var(--bg-color), 0.8);
+        }
         a[target=external] {}
     `, ActivityPubObject.styles];
     static properties = {
@@ -60,36 +69,46 @@ export class OniMainActor extends ActivityPubActor {
     constructor(it) {
         super(it);
         this.palette = {};
+        this.colors = [];
 
         this.addEventListener('content.change', this.updateActivityPubItem)
-
-        const palette = JSON.parse(localStorage.getItem('palette'));
-        if (palette !== null) {
-            this.palette = palette;
-            this.paletteLoaded = true;
-        };
     }
 
     async loadPalette(it) {
         if (this.paletteLoaded) return this.palette;
 
-        const iconPalette = await prominent(it.icon, { amount: 20, group: 50, format: 'hex' });
+        const style = getComputedStyle(document.documentElement);
+        this.palette = {
+            bgColor: style.getPropertyValue('--bg-color').trim(),
+            fgColor: style.getPropertyValue('--fg-color').trim(),
+            linkColor: style.getPropertyValue('--link-color').trim(),
+            linkActiveColor: style.getPropertyValue('--link-active-color').trim(),
+            linkVisitedColor: style.getPropertyValue('--link-visited-color').trim(),
+            colorScheme: prefersDarkTheme() ? 'dark' : 'light',
+        };
+
+        let iconColors = await prominent(it.icon, {amount: 20, group: 30, format: 'hex', sample: 5});
+        iconColors = iconColors.filter(col => tinycolor(col).toHsl().s > 0.18 && tinycolor(col).toHsl().s < 0.84)
 
         if (it.hasOwnProperty('image')) {
             const col = await average(it.image, {format: 'hex'});
 
-            const imagePalette = await prominent(it.image, { amount: 20, group: 50, format: 'hex' });
-
+            document.querySelectorAll(':root').item(0).style.setProperty('--bg-color', col);
             this.palette.bgColor = col;
-            this.palette.fgColor = getBestContrastColor(this.palette.bgColor, imagePalette);
-            this.palette.colorScheme = getColorScheme(brightness(this.palette.bgColor));
+            this.palette.colorScheme = tinycolor(col).isDark() ? 'dark' : 'light';
             this.palette.bgImageURL = it.image;
         }
 
-        this.palette.linkColor = getBestContrastColor(this.palette.bgColor, iconPalette);
-        this.palette.linkActiveColor = getBestContrastColor(this.palette.bgColor, iconPalette);
-        this.palette.linkVisitedColor = getBestContrastColor(this.palette.bgColor, iconPalette);
-        this.palette.shadowColor = this.palette.linkColor;
+        this.colors = iconColors
+
+        const modifyColor = (col) => tinycolor(this.palette.bgColor).isDark() ?
+            tinycolor(col).saturate(20)
+            : tinycolor(col).desaturate(20)
+
+        this.palette.shadowColor = tinycolor.mostReadable(this.palette.bgColor, iconColors);
+        this.palette.linkColor = tinycolor.mostReadable(this.palette.bgColor, iconColors, {includeFallbackColors:true,level:"AAA",size:"small"});
+        this.palette.linkVisitedColor = modifyColor(this.palette.linkColor)
+        this.palette.linkActiveColor = this.palette.linkVisitedColor;
 
         this.paletteLoaded = true;
 
@@ -153,11 +172,10 @@ export class OniMainActor extends ActivityPubActor {
             url = [url];
         }
         return html`
-            <ul>
+            <ul class="urls">
                 ${url.map((u) => html`
                     <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}>
-                        <oni-icon name="external-href"></oni-icon>
-                        ${u}</a></li>`)}
+                        <oni-icon name="external-href"></oni-icon>${u}</a></li>`)}
             </ul>`;
     }
 
@@ -206,6 +224,8 @@ export class OniMainActor extends ActivityPubActor {
         }
 
         const p = this.palette;
+        const bgColor = tinycolor(p.bgColor);
+        const haveBgImg = p.hasOwnProperty('bgImageURL') && p.bgImageURL.length > 0 && bgColor;
         return html`
             :host {
                 --bg-color: ${p.bgColor};
@@ -215,24 +235,28 @@ export class OniMainActor extends ActivityPubActor {
                 --link-active-color: ${p.linkActiveColor};
                 --shadow-color: ${p.shadowColor};
             }
-            ${when(p.bgImageURL.length > 0, () => html`
+            ${when(haveBgImg, () => html`
                 :host div {
-                    background-image: linear-gradient(${rgba(hexToRGB(p.bgColor), 0)}, ${rgba(hexToRGB(p.bgColor), 1)}), url(${p.bgImageURL});
-                }`, () => html`
-                :host div {
-                    background-image: linear-gradient(${rgba(hexToRGB(p.bgColor), 0)}, ${rgba(hexToRGB(p.bgColor), 1)});
+                    background-image: linear-gradient(${rgba(bgColor.toRgb(), 0)}, ${rgba(bgColor.toRgb(), 1)}), url(${p.bgImageURL});
                 }`
             )}
         `;
     }
 
+    renderColors() {
+        let ordered = this.colors.sort((a, b) => contrast(b, this.palette.bgColor) - contrast(a, this.palette.bgColor))
+        return html`
+            ${map(ordered, value => {
+                return html`
+            <span style="padding: .2rem 1rem; display: inline-block; width: 9vw; background-color: ${value}; color: ${this.palette.bgColor}">
+                ${tinycolor(value).toHsl().s}
+            </span>
+        `})}`
+    }
+
     render() {
         let bg = nothing;
         const root = html`${until(this.renderPalette())}`;
-
-        if (this.it.hasOwnProperty('image')) {
-            bg = html``
-        }
 
         return html`<style>${root}${bg}</style>
         <div>

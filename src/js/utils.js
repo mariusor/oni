@@ -1,5 +1,4 @@
-import {html} from "lit";
-import {map} from "lit-html/directives/map.js";
+import tinycolor from "tinycolor2";
 
 export function rgb(rgb) {
     return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
@@ -9,51 +8,13 @@ export function rgba(rgb, a) {
     return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${a})`;
 };
 
-export function brightness(rgb) {
-    //return ((rgb.r * 299) + (rgb.g * 587) + (rgb.b * 114)) / 1000;
-    // from https://www.nbdtech.com/Blog/archive/2008/04/27/Calculating-the-Perceived-Brightness-of-a-Color.aspx
-    return 255 - Math.sqrt((rgb.r * rgb.r * .241 + rgb.g * rgb.g * .691 + rgb.b * rgb.b * .068));
-};
-
-export function getColorScheme(bri) {
-    let scheme;
-    if (Math.abs(bri - 120) < 75) {
-        if (bri >= 130) {
-            scheme = 'dark';
-        } else {
-            scheme = 'light';
-        }
-    } else if (bri > 120) {
-        scheme = 'dark';
-    } else {
-        scheme = 'light';
-    }
-    return scheme;
-};
-
 export function getBestContrastColor(hex, colors){
-    const hBrightness = brightness(hexToRGB(hex));
-    let maxBrightnessDiff = 130;
-    let result = prefersDarkTheme() ? '#000000' : '#ffffff';
-    colors.forEach(function (col) {
-        if (hex == col) return;
-        const cBrightness = brightness(hexToRGB(col))
-        if (hBrightness - cBrightness < maxBrightnessDiff) return;
-
-        maxBrightnessDiff = hBrightness - cBrightness;
-        result = col;
-    });
-    return result;
+    return colors
+        .sort((a, b) => contrast(b, hex) - contrast(a, hex))
+        .filter(value => contrast(value, hex) >= 3.4 && contrast(value, hex) < 6.4)[0];
 }
 
-export function hexToRGB(hex) {
-    function hexToR(h) {return parseInt((cutHex(h)).substring(0,2),16)}
-    function hexToG(h) {return parseInt((cutHex(h)).substring(2,4),16)}
-    function hexToB(h) {return parseInt((cutHex(h)).substring(4,6),16)}
-    function hexToA(h) {return (cutHex(h)).substring(6,8) ?parseInt((cutHex(h)).substring(6,8),16):255}
-    function cutHex(h) {return (h.charAt(0)=="#") ? h.substring(1,7):h}
-    return {r: hexToR(hex), g: hexToG(hex), b: hexToB(hex), a: hexToA(hex)};
-}
+export const contrast = tinycolor.readability;
 
 export function prefersDarkTheme() {
     return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);

@@ -37,15 +37,5 @@ customElements.define('oni-login-link', LoginLink);
 customElements.define('oni-login-dialog', LoginDialog);
 
 OnReady(function () {
-    document.querySelectorAll(":root").forEach((root) => {
-        const palette = JSON.parse(localStorage.getItem('palette'));
-        if (palette === null) return;
-
-        if (palette.colorScheme) root.style.colorScheme = palette.colorScheme;
-        if (palette.bgColor) root.style.setProperty('--bg-color', palette.bgColor);
-        if (palette.fgColor) root.style.setProperty('--fg-color', palette.fgColor);
-        if (palette.linkColor) root.style.setProperty('--link-color', palette.linkColor);
-        if (palette.linkActiveColor) root.style.setProperty('--link-active-color', palette.linkActiveColor);
-        if (palette.linkVisitedColor) root.style.setProperty('--link-visited-color', palette.linkVisitedColor);
-    });
+    console.log(`Loading ${window.location}`);
 });
