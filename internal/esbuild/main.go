@@ -16,6 +16,7 @@ func main() {
 func buildJS() {
 	// JS
 	result := api.Build(api.BuildOptions{
+		LogLevel:          api.LogLevelInfo,
 		EntryPoints:       []string{"src/js/main.jsx"},
 		Bundle:            true,
 		MinifyWhitespace:  true,
@@ -35,6 +36,7 @@ func buildJS() {
 func buildCSS() {
 	// CSS
 	result := api.Build(api.BuildOptions{
+		LogLevel:          api.LogLevelInfo,
 		EntryPoints:       []string{"src/css/main.css"},
 		Bundle:            true,
 		MinifyWhitespace:  true,
