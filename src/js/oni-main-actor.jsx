@@ -4,7 +4,7 @@ import {when} from "lit-html/directives/when.js";
 import {average, prominent} from "color.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
-import {isAuthenticated, rgba, prefersDarkTheme, contrast} from "./utils";
+import {isAuthenticated, prefersDarkTheme, contrast} from "./utils";
 import {map} from "lit-html/directives/map.js";
 import tinycolor from "tinycolor2";
 
@@ -77,13 +77,15 @@ export class OniMainActor extends ActivityPubActor {
     }
 
     async loadPalette(it) {
+        const root = document.documentElement;
         if (localStorage.getItem('palette')) {
             this.palette = JSON.parse(localStorage.getItem('palette'));
-            document.querySelectorAll(':root').item(0).style.setProperty('--bg-color', this.palette.bgColor);
+            const col = this.palette.bgColor, img = this.palette.bgImageURL;
+            root.style.setProperty('--bg-color', col);
             return this.palette;
         }
 
-        const style = getComputedStyle(document.documentElement);
+        const style = getComputedStyle(root);
         this.palette = {
             bgColor: style.getPropertyValue('--bg-color').trim(),
             fgColor: style.getPropertyValue('--fg-color').trim(),
@@ -104,7 +106,8 @@ export class OniMainActor extends ActivityPubActor {
                 this.palette.bgColor = col;
                 this.palette.colorScheme = tinycolor(col).isDark() ? 'dark' : 'light';
                 this.palette.bgImageURL = it.image;
-                document.querySelectorAll(':root').item(0).style.setProperty('--bg-color', col.trim());
+                root.style.setProperty('--bg-color', col.trim());
+                root.style.setProperty('backgroundImage', `linear-gradient(${tinycolor(col).setAlpha(0).toRgb()}, ${tinycolor(col).setAlpha(1).toRgb()}), url(${it.image});`)
             }
         }
 
@@ -240,8 +243,9 @@ export class OniMainActor extends ActivityPubActor {
         }
 
         const p = this.palette;
-        const bgColor = tinycolor(p.bgColor);
-        const haveBgImg = p.hasOwnProperty('bgImageURL') && p.bgImageURL.length > 0 && bgColor;
+        const col = tinycolor(p.bgColor);
+        const img = p.bgImageURL;
+        const haveBgImg = p.hasOwnProperty('bgImageURL') && img.length > 0 && col;
         return html`
             :host {
                 --bg-color: ${p.bgColor};
@@ -253,7 +257,7 @@ export class OniMainActor extends ActivityPubActor {
             }
             ${when(haveBgImg, () => html`
                 :host div {
-                    background-image: linear-gradient(${rgba(bgColor.toRgb(), 0)}, ${rgba(bgColor.toRgb(), 1)}), url(${p.bgImageURL});
+                    background-image: linear-gradient(${col.setAlpha(0).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
                 }`
             )}
         `;
@@ -271,10 +275,9 @@ export class OniMainActor extends ActivityPubActor {
     }
 
     render() {
-        let bg = nothing;
-        const root = html`${until(this.renderPalette())}`;
+        const style = html`${until(this.renderPalette())}`;
 
-        return html`<style>${root}${bg}</style>
+        return html`<style>${style}</style>
         <div>
             ${this.renderIconName()}
             ${this.renderSummary()}

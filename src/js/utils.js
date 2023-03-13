@@ -1,19 +1,5 @@
 import tinycolor from "tinycolor2";
 
-export function rgb(rgb) {
-    return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
-};
-
-export function rgba(rgb, a) {
-    return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${a})`;
-};
-
-export function getBestContrastColor(hex, colors){
-    return colors
-        .sort((a, b) => contrast(b, hex) - contrast(a, hex))
-        .filter(value => contrast(value, hex) >= 3.4 && contrast(value, hex) < 6.4)[0];
-}
-
 export const contrast = tinycolor.readability;
 
 export function prefersDarkTheme() {
