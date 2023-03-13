@@ -63,7 +63,6 @@ export class OniMainActor extends ActivityPubActor {
         it: {type: Object},
         palette: {type: Object},
         colors: {type: Array},
-        paletteLoaded: {type: Boolean},
     };
 
     constructor(it) {
@@ -75,7 +74,11 @@ export class OniMainActor extends ActivityPubActor {
     }
 
     async loadPalette(it) {
-        if (this.paletteLoaded) return this.palette;
+        if (localStorage.getItem('palette')) {
+            this.palette = JSON.parse(localStorage.getItem('palette'));
+            document.querySelectorAll(':root').item(0).style.setProperty('--bg-color', this.palette.bgColor);
+            return this.palette;
+        }
 
         const style = getComputedStyle(document.documentElement);
         this.palette = {
@@ -93,25 +96,31 @@ export class OniMainActor extends ActivityPubActor {
         if (it.hasOwnProperty('image')) {
             const col = await average(it.image, {format: 'hex'});
 
-            document.querySelectorAll(':root').item(0).style.setProperty('--bg-color', col);
-            this.palette.bgColor = col;
-            this.palette.colorScheme = tinycolor(col).isDark() ? 'dark' : 'light';
-            this.palette.bgImageURL = it.image;
+            if (col !== null) {
+                this.palette.bgColor = col;
+                this.palette.colorScheme = tinycolor(col).isDark() ? 'dark' : 'light';
+                this.palette.bgImageURL = it.image;
+                document.querySelectorAll(':root').item(0).style.setProperty('--bg-color', col.trim());
+            }
         }
 
-        this.colors = iconColors
+        this.colors = iconColors;
 
-        const modifyColor = (col) => tinycolor(this.palette.bgColor).isDark() ?
-            tinycolor(col).saturate(20)
-            : tinycolor(col).desaturate(20)
+        const strongerColor = (col) => tinycolor(this.palette.bgColor).isDark() ?
+            tinycolor(col).lighten(10).saturate(15)
+            : tinycolor(col).darken(20).saturate(10)
 
-        this.palette.shadowColor = tinycolor.mostReadable(this.palette.bgColor, iconColors);
-        this.palette.linkColor = tinycolor.mostReadable(this.palette.bgColor, iconColors, {includeFallbackColors:true,level:"AAA",size:"small"});
-        this.palette.linkVisitedColor = modifyColor(this.palette.linkColor)
-        this.palette.linkActiveColor = this.palette.linkVisitedColor;
-
-        this.paletteLoaded = true;
-
+        const shadowColor = tinycolor.mostReadable(this.palette.bgColor, iconColors);
+        if (shadowColor !== null) {
+            this.palette.shadowColor = shadowColor.toHexString();
+        }
+        iconColors = iconColors.filter((value, index, array) => array.at(index) !== this.palette.shadowColor);
+        const linkVisitedColor = tinycolor.mostReadable(this.palette.bgColor, iconColors, {level:"AAA",size:"small"});
+        if (linkVisitedColor !== null && tinycolor.isReadable(linkVisitedColor, this.palette.bgColor,{level:"AAA",size:"small"})) {
+            this.palette.linkVisitedColor = linkVisitedColor.toHexString();
+            this.palette.linkActiveColor = this.palette.linkVisitedColor;
+            this.palette.linkColor = strongerColor(this.palette.linkVisitedColor)?.toHexString();
+        }
         localStorage.setItem('palette', JSON.stringify(this.palette));
         return this.palette;
     }
