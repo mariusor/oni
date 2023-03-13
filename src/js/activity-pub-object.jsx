@@ -42,6 +42,10 @@ export class ActivityPubObject extends LitElement {
         a:active {
             color: var(--link-active-color);
         }
+        a[rel=mention], a[rel=tag] {
+            font-size: .9rem;
+            font-weight: bold;
+        }
         :host aside {
             opacity: 0.8;
             font-size: 0.8rem;
@@ -253,9 +257,7 @@ export class ActivityPubObject extends LitElement {
         if (name.length == 0) {
             return nothing;
         }
-        return html`<div>
-            <a href=${this.iri()}><oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values></a>
-        </div>`;
+        return html`<a href=${this.iri()}><oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values></a>`;
     }
 
     renderContent() {

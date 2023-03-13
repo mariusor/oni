@@ -17,11 +17,13 @@ export class OniMainActor extends ActivityPubActor {
             background-clip: padding-border;
             background-color: var(--bg-color);
         }
-        :host h2 {
+        :host h1 {
             margin: .8rem 0 .4rem 0;
+            font-size: 1.6rem;
         }
-        :host h2 a, h2 a:visited {
+        :host h1 a oni-natural-language-values {
             color: var(--shadow-color);
+            text-shadow:  0 0 1em var(--bg-color), 0 0 0.2em var(--shadow-color);
         }
         :host div {
             min-height: 12vw;
@@ -47,9 +49,6 @@ export class OniMainActor extends ActivityPubActor {
             display: inline-block;
             margin-right: .8rem;
         }
-        :host oni-natural-language-values[name=preferredUsername]::before {
-            content: "~";
-        }
         :host aside {
             display: inline;
         }
@@ -59,16 +58,15 @@ export class OniMainActor extends ActivityPubActor {
         :host aside small::after {
             content: ")";
         }
+        oni-natural-language-values[name=preferredUsername]::before {
+            content: "~";
+        }
+        oni-natural-language-values[name=summary] {
+            font-size: .9rem;
+        }
         a[target=external] {
-            font-size: .8rem;
-        }
-        a[rel=mention] {
             font-size: .9rem;
-            font-weight: bold;
-        }
-        a[rel=tag] {
-            font-size: .9rem;
-            font-weight: bold;
+            font-weight: light;
         }
     `, ActivityPubObject.styles];
     static properties = {
@@ -184,7 +182,7 @@ export class OniMainActor extends ActivityPubActor {
     renderIconName() {
         return html`
             <a href=${this.iri()}> ${this.renderIcon()}</a>
-            <h2><a href=${this.iri()}>${this.renderPreferredUsername()}</a></h2>
+            <h1><a href=${this.iri()}>${this.renderPreferredUsername()}</a></h1>
         `;
     }
 

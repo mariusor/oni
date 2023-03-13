@@ -15,7 +15,14 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     preferredUsername() {
-        return [this.it.preferredUsername || []];
+        if (!this.it.hasOwnProperty('preferredUsername')) {
+            return [];
+        }
+        let s = this.it.preferredUsername;
+        if (!Array.isArray(s)) {
+            s = [s];
+        }
+        return s;
     }
 
     renderIcon() {
