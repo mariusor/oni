@@ -5,11 +5,10 @@ export class CollectionLinks extends LitElement {
     static styles = css`
         :host {
             display: flex;
-            width: 100%;
             justify-content: flex-end;
             border-bottom: 3px inset var(--shadow-color);
-            margin-right: 1rem;
-            margin-bottom: 0;
+            margin: .4rem -1rem 0 -1rem;
+            clear: both;
         }
         :host ul {
             margin: 0 .8rem 0;
@@ -24,7 +23,9 @@ export class CollectionLinks extends LitElement {
             text-align: center;
             list-style: none;
             display: inline-block;
-            padding: .4rem .8rem .4rem 0;
+            line-height: 2.2rem;
+            padding: 0 .4rem;
+            margin: 0 .2rem;
         }
         :host li.active {
             background-color: var(--shadow-color);

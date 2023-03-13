@@ -17,6 +17,9 @@ export class OniMainActor extends ActivityPubActor {
             background-clip: padding-border;
             background-color: var(--bg-color);
         }
+        :host h2 {
+            margin: .8rem 0 .4rem 0;
+        }
         :host h2 a, h2 a:visited {
             color: var(--shadow-color);
         }
@@ -30,12 +33,14 @@ export class OniMainActor extends ActivityPubActor {
             max-width: 20%;
             margin-right: 1rem;
             border: .3vw solid var(--shadow-color);
-            border-radius: 20%;
+            border-radius: 0 1.6em 1.6em 1.6em;
             float: left;
             shape-outside: margin-box;
         }
         :host ul {
-            padding: auto .5rem;
+            margin: 0;
+            padding: .8rem .4rem .8rem 0;
+            border-radius: 0 1.6em 1.6em 1.6em;
         }
         :host ul li {
             list-style: none;
@@ -54,10 +59,17 @@ export class OniMainActor extends ActivityPubActor {
         :host aside small::after {
             content: ")";
         }
-        .urls {
-            background-color: rgba(var(--bg-color), 0.8);
+        a[target=external] {
+            font-size: .8rem;
         }
-        a[target=external] {}
+        a[rel=mention] {
+            font-size: .9rem;
+            font-weight: bold;
+        }
+        a[rel=tag] {
+            font-size: .9rem;
+            font-weight: bold;
+        }
     `, ActivityPubObject.styles];
     static properties = {
         it: {type: Object},
@@ -185,7 +197,7 @@ export class OniMainActor extends ActivityPubActor {
             url = [url];
         }
         return html`
-            <ul class="urls">
+            <ul style="background-color: ${tinycolor(this.palette.bgColor).setAlpha(0.8).toRgbString()};">
                 ${url.map((u) => html`
                     <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}>
                         <oni-icon name="external-href"></oni-icon>${u}</a></li>`)}
@@ -276,9 +288,9 @@ export class OniMainActor extends ActivityPubActor {
             ${this.renderIconName()}
             ${this.renderSummary()}
             ${this.renderUrl()}
-            ${this.renderOAuth()}
+            ${this.renderCollections()}
         </div>
-        ${this.renderCollections()}
+        ${this.renderOAuth()}
         <slot></slot>`;
     }
 }
