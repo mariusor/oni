@@ -114,10 +114,13 @@ export class OniMainActor extends ActivityPubActor {
         const shadowColor = tinycolor.mostReadable(this.palette.bgColor, iconColors);
         if (shadowColor !== null) {
             this.palette.shadowColor = shadowColor.toHexString();
+            this.palette.linkVisitedColor = shadowColor.toHexString();
+            this.palette.linkActiveColor = this.palette.linkVisitedColor;
+            this.palette.linkColor = strongerColor(this.palette.linkVisitedColor)?.toHexString();
         }
         iconColors = iconColors.filter((value, index, array) => array.at(index) !== this.palette.shadowColor);
-        const linkVisitedColor = tinycolor.mostReadable(this.palette.bgColor, iconColors, {level:"AAA",size:"small"});
-        if (linkVisitedColor !== null && tinycolor.isReadable(linkVisitedColor, this.palette.bgColor,{level:"AAA",size:"small"})) {
+        let linkVisitedColor = tinycolor.mostReadable(this.palette.bgColor, iconColors, {level:"AAA",size:"small"});
+        if (linkVisitedColor !== null && tinycolor.isReadable(linkVisitedColor, this.palette.bgColor,{level:"AAA", size:"small"})) {
             this.palette.linkVisitedColor = linkVisitedColor.toHexString();
             this.palette.linkActiveColor = this.palette.linkVisitedColor;
             this.palette.linkColor = strongerColor(this.palette.linkVisitedColor)?.toHexString();
