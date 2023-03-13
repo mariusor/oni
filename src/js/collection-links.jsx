@@ -16,17 +16,18 @@ export class CollectionLinks extends LitElement {
             padding: 0;
         }
         :host li {
+            border-width: 1px;
+            border-style: solid; 
+            border-color: var(--shadow-color);
+            border-bottom-width: 0;
             min-width: 8vw;
             text-align: center;
-            /*line-height: 2.4rem;*/
             list-style: none;
             display: inline-block;
             padding: .4rem .8rem .4rem 0;
         }
         :host li.active {
-            border: 1px solid var(--shadow-color);
             background-color: var(--shadow-color);
-            border-bottom: 0;
         }
     `
     static properties = {
