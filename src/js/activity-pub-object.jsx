@@ -246,9 +246,10 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
         const auth = this.renderAttributedTo();
+        const hasName = this.name().length > 0;
         return html`<aside>
             Published ${until(auth)}${this.renderPublished()} 
-            <a href="${this.iri() ?? nothing}"><oni-icon name="share"></oni-icon></a>
+            ${!hasName ? html`<a href="${this.iri() ?? nothing}"><oni-icon name="bookmark"></oni-icon></a>` : nothing}
         </aside>`;
     }
 
@@ -257,7 +258,9 @@ export class ActivityPubObject extends LitElement {
         if (name.length == 0) {
             return nothing;
         }
-        return html`<a href=${this.iri()}><oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values></a>`;
+        return html`<a href=${this.iri() ?? nothing}>
+            <oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values><oni-icon name="bookmark"></oni-icon>
+        </a>`;
     }
 
     renderContent() {

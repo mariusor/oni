@@ -122,7 +122,20 @@ oni-icon {
 }
 
 oni-main > oni-activity, oni-main > oni-collection, oni-main > oni-object, oni-main > oni-image,
-oni-main > oni-note,oni-main >  oni-video, oni-main > oni-audio, oni-main > oni-natural-language-values {
+oni-main > oni-note,oni-main >  oni-video, oni-main > oni-audio {
     display: block;
     margin: 0 1rem;
 }
+
+oni-main > oni-natural-language-values {
+    display: inline-block;
+}
+
+oni-main {
+    display: block;
+    overflow-x: hidden;
+    background-clip: padding-box;
+    background-color: var(--bg-color);
+    width: 100%;
+}
+

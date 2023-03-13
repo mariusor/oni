@@ -10,20 +10,13 @@ import tinycolor from "tinycolor2";
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
-        :host {
-            display: block;
-            overflow-x: hidden;
-            width: 100%;
-            background-clip: padding-border;
-            background-color: var(--bg-color);
-        }
         :host h1 {
             margin: .8rem 0 .4rem 0;
             font-size: 1.6rem;
         }
         :host h1 a oni-natural-language-values {
             color: var(--shadow-color);
-            text-shadow:  0 0 1em var(--bg-color), 0 0 0.2em var(--shadow-color);
+            text-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
         }
         :host div {
             min-height: 12vw;
