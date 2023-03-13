@@ -84,6 +84,7 @@ export class OniMainActor extends ActivityPubActor {
         this.palette = {
             bgColor: style.getPropertyValue('--bg-color').trim(),
             fgColor: style.getPropertyValue('--fg-color').trim(),
+            shadowColor: style.getPropertyValue('--shadow-color').trim(),
             linkColor: style.getPropertyValue('--link-color').trim(),
             linkActiveColor: style.getPropertyValue('--link-active-color').trim(),
             linkVisitedColor: style.getPropertyValue('--link-visited-color').trim(),
