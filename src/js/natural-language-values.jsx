@@ -8,6 +8,7 @@ export class NaturalLanguageValues extends LitElement {
         :host { display: inline-block; }
         :host div { display: inline-block; }
         :host::before { margin-right: -.4rem; }
+        :host p { line-height: 1.8em; }
     `, ActivityPubObject.styles];
 
     static properties = {
