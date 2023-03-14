@@ -56,7 +56,7 @@ export class ActivityPubCollection extends ActivityPubObject {
 
     items() {
         let items = [];
-        if (this.it === null) {
+        if (this.it === null || this.type() === null) {
             return items;
         }
         if (this.type().toLowerCase().includes('ordered') && this.it.hasOwnProperty('orderedItems')) {
