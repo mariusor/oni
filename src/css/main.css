@@ -116,29 +116,6 @@ a:active {
     color: var(--link-active-color);
 }
 
-oni-icon {
-    fill: currentColor;
-}
-
-oni-main > oni-activity, oni-main > oni-collection, oni-main > oni-object, oni-main > oni-image,
-oni-main > oni-note,oni-main >  oni-video, oni-main > oni-audio, oni-main > oni-natural-language-values {
-    display: block;
-    margin: 0 1rem;
-}
-
-oni-natural-language-values, oni-tag, oni-icon {
-    display: inline-block;
-}
-
-oni-main {
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
-    background-clip: padding-box;
-    background-color: var(--bg-color);
-    width: 100%;
-}
-
 body > footer {
     padding: .8rem 0;
     width: 100%;
@@ -155,5 +132,18 @@ body > footer ul {
 
 body > footer ul li {
     display: inline-block;
+}
+
+oni-icon {
+    fill: currentColor;
+}
+
+oni-natural-language-values, oni-tag, oni-icon {
+    display: inline-block;
+}
+
+oni-main > * {
+    display: block;
+    margin: 0 1rem;
 }
 

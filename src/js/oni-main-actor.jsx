@@ -10,41 +10,48 @@ import tinycolor from "tinycolor2";
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
-        :host h1 {
-            margin: .8rem 0 .4rem 0;
-            font-size: 1.6rem;
-        }
-        :host h1 a oni-natural-language-values {
-            color: var(--shadow-color);
-            text-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
-        }
-        :host div {
+        :host header {
             min-height: 12vw;
             background-size: cover;
             padding: 1rem;
+            display: grid;
+            align-content: center;
+            align-items: start;
+            justify-items: stretch;
+            background-clip: padding-box;
         }
-        :host img {
-            width: 10rem;
+        header h1 {
+            font-size: 1.6rem;
+            align-self: start;
+        }
+        header h1 a {
+            text-decoration: none;
+        }
+        header h1 a oni-natural-language-values {
+            color: var(--shadow-color);
+            text-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
+        }
+        header img {
+            width: 10em;
             max-width: 20%;
             margin-right: 1rem;
             border: .3vw solid var(--shadow-color);
             border-radius: 0 1.6em 1.6em 1.6em;
-            float: left;
             shape-outside: margin-box;
         }
-        :host ul {
+        header ul {
             margin: 0;
             padding: .8rem .4rem .8rem 0;
             border-radius: 0 1.6em 1.6em 1.6em;
         }
-        :host ul li {
+        header ul li {
             list-style: none;
             display: inline-block;
             margin-right: .8rem;
         }
-        :host aside {
+        /*:host aside {
             display: inline;
-        }
+        }*/
         :host aside small::before {
             content: "(";
         }
@@ -254,7 +261,7 @@ export class OniMainActor extends ActivityPubActor {
                 --shadow-color: ${p.shadowColor};
             }
             ${when(haveBgImg, () => html`
-                :host div {
+                :host header {
                     background-image: linear-gradient(${col.setAlpha(0).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
                 }`
             )}
@@ -275,14 +282,15 @@ export class OniMainActor extends ActivityPubActor {
     render() {
         const style = html`${until(this.renderPalette())}`;
 
-        return html`<style>${style}</style>
-        <div>
-            ${this.renderIconName()}
-            ${this.renderSummary()}
-            ${this.renderUrl()}
-            ${this.renderCollections()}
-        </div>
-        ${this.renderOAuth()}
-        <slot></slot>`;
+        return html`${this.renderOAuth()}
+            <style>${style}</style>
+            <header>
+                ${this.renderIconName()}
+                ${this.renderSummary()}
+                <aside>${this.renderUrl()}</aside>
+                <nav>${this.renderCollections()}</nav>
+            </header>
+            <slot></slot>
+        `;
     }
 }
