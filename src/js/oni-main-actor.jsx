@@ -80,8 +80,6 @@ export class OniMainActor extends ActivityPubActor {
         const root = document.documentElement;
         if (localStorage.getItem('palette')) {
             this.palette = JSON.parse(localStorage.getItem('palette'));
-            const col = this.palette.bgColor, img = this.palette.bgImageURL;
-            root.style.setProperty('--bg-color', col);
             return this.palette;
         }
 
