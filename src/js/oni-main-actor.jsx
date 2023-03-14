@@ -194,7 +194,7 @@ export class OniMainActor extends ActivityPubActor {
             <ul style="background-color: ${tinycolor(this.palette.bgColor).setAlpha(0.8).toRgbString()};">
                 ${url.map((u) => html`
                     <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}>
-                        <oni-icon name="external-href"></oni-icon>${u}</a></li>`)}
+                        ${u}<oni-icon name="external-href"></oni-icon></a></li>`)}
             </ul>`;
     }
 

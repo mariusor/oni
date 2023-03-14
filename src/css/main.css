@@ -127,7 +127,7 @@ oni-main > oni-note,oni-main >  oni-video, oni-main > oni-audio {
     margin: 0 1rem;
 }
 
-oni-main > oni-natural-language-values {
+oni-natural-language-values, oni-tag, oni-icon {
     display: inline-block;
 }
 

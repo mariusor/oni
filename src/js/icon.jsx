@@ -2,13 +2,22 @@ import {css, html, LitElement, nothing} from "lit";
 import {unsafeSVG} from "lit-html/directives/unsafe-svg.js";
 
 export class Icon extends LitElement {
-    static styles = css`svg { 
+    static styles = css`
+    :host, :host svg {
+        display: inline-block;
+    }
+    svg {
         max-width: 1em;
         max-height: 1.2em;
         fill: currentColor;
         vertical-align: text-bottom;
         margin: 0 .2rem;
-    }`;
+    }
+    svg[name=icon-external-href] {
+        width: .6em;
+        vertical-align: bottom;
+    }
+    `;
     static properties = {name: {type: String}};
 
     constructor() {
