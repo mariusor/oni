@@ -1,5 +1,5 @@
 import {css, html, LitElement, nothing} from "lit";
-import {fetchActivityPubIRI, isLocalIRI, relativeDate} from "./utils";
+import {fetchActivityPubIRI, isLocalIRI, pluralize, relativeDate} from "./utils";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 
@@ -241,15 +241,21 @@ export class ActivityPubObject extends LitElement {
         </time>`;
     }
 
+    renderBookmark() {
+        const hasName = this.name().length > 0;
+        return !hasName ? html`<a href="${this.iri() ?? nothing}"><oni-icon name="bookmark"></oni-icon></a>` : nothing
+    }
+
     renderMetadata() {
         if (!this.it.hasOwnProperty("attributedTo")){
             return nothing;
         }
         const auth = this.renderAttributedTo();
-        const hasName = this.name().length > 0;
         return html`<aside>
-            Published ${until(auth)}${this.renderPublished()} 
-            ${!hasName ? html`<a href="${this.iri() ?? nothing}"><oni-icon name="bookmark"></oni-icon></a>` : nothing}
+            Published ${until(auth)}
+            ${this.renderPublished()}
+            ${until(this.renderReplyCount())}
+            ${this.renderBookmark()}
         </aside>`;
     }
 
@@ -279,11 +285,34 @@ export class ActivityPubObject extends LitElement {
         return html`<oni-natural-language-values name="summary" it=${JSON.stringify(summary)}></oni-natural-language-values>`;
     }
 
+    async renderReplyCount() {
+        if (this.inFocus()) {
+            return nothing;
+        }
+        const replies = await this.load('replies') ?? [];
+        return html` - <span>${replies.length || 'No'} ${pluralize(replies.length, 'reply')} </span>`;
+    }
+
+    async renderReplies() {
+        if (!this.inFocus()) {
+            return nothing;
+        }
+        const replies = await this.load('replies');
+        if (replies === null) {
+            return nothing;
+        }
+        return html`<oni-collection it=${JSON.stringify(replies)}></oni-collection>`;
+    }
+
+    inFocus() {
+        return this.iri() === window.location.href;
+    }
+
     render() {
         if (this.it == null) {
             return nothing;
         }
-        return ActivityPubObject.renderByType(this.it);
+        return html`${ActivityPubObject.renderByType(this.it)}${until(this.renderReplies())}`;
     }
 }
 

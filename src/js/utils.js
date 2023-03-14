@@ -158,7 +158,7 @@ export function relativeDate(old) {
     return `${Math.round(val)} ${pluralize(val, unit)} ${when}`;
 }
 
-function pluralize(d, unit) {
+export function pluralize(d, unit) {
     let l = unit.length;
     if (Math.round(d) == 1) {
         return unit;
