@@ -289,8 +289,11 @@ export class ActivityPubObject extends LitElement {
         if (this.inFocus()) {
             return nothing;
         }
-        const replies = await this.load('replies') ?? [];
-        return html` - <span>${replies.length || 'No'} ${pluralize(replies.length, 'reply')} </span>`;
+        const replies = await this.load('replies');
+        if (replies === null) {
+            return nothing;
+        }
+        return html` - <span>${replies.length} ${pluralize(replies.length, 'reply')} </span>`;
     }
 
     async renderReplies() {
