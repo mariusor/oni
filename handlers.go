@@ -23,6 +23,8 @@ import (
 	"github.com/go-ap/errors"
 	json "github.com/go-ap/jsonld"
 	"github.com/go-ap/processing"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
 	"github.com/mariusor/render"
 )
 
@@ -42,7 +44,7 @@ func muxPattern(i vocab.IRI) string {
 	return strings.Replace(i.String(), "https://", "", 1)
 }
 
-func (o *oni) collectionRoutes(m *http.ServeMux, actor vocab.Actor, collections ...vocab.CollectionPath) {
+func (o *oni) collectionRoutes(m chi.Router, actor vocab.Actor, collections ...vocab.CollectionPath) {
 	for _, collectionPath := range collections {
 		colIRI := collectionPath.Of(actor.GetLink()).GetLink()
 		m.HandleFunc(muxPattern(colIRI), o.OnCollectionHandler)
@@ -50,7 +52,7 @@ func (o *oni) collectionRoutes(m *http.ServeMux, actor vocab.Actor, collections 
 	}
 }
 
-func (o *oni) setupOauthRoutes(m *http.ServeMux, a vocab.Actor) {
+func (o *oni) setupOauthRoutes(m chi.Router, a vocab.Actor) {
 	base, _ := IRIPath(a.ID)
 
 	as, err := auth.New(
@@ -76,24 +78,22 @@ func (o *oni) setupOauthRoutes(m *http.ServeMux, a vocab.Actor) {
 }
 
 func (o *oni) setupRoutes(actors []vocab.Actor) {
-	m := http.NewServeMux()
+	m := chi.NewMux()
 
 	if len(actors) == 0 {
 		m.HandleFunc("/", o.NotFound)
 		return
 	}
 
-	for _, actor := range actors {
-		o.setupActorRoutes(m, actor)
-		o.setupOauthRoutes(m, actor)
-		o.setupStaticRoutes(m, actor)
-		o.setupWebfingerRoutes(m, actor)
-	}
+	o.setupActorRoutes(m, actor)
+	o.setupOauthRoutes(m, actor)
+	o.setupStaticRoutes(m, actor)
+	o.setupWebfingerRoutes(m, actor)
 
 	o.m = m
 }
 
-func (o *oni) setupStaticRoutes(m *http.ServeMux, actor vocab.Actor) {
+func (o *oni) setupStaticRoutes(m chi.Router, actor vocab.Actor) {
 	var fsServe http.HandlerFunc
 	if assetFilesFS, err := fs.Sub(AssetsFS, "static"); err == nil {
 		fsServe = func(w http.ResponseWriter, r *http.Request) {
@@ -111,15 +111,24 @@ func (o *oni) setupStaticRoutes(m *http.ServeMux, actor vocab.Actor) {
 	m.HandleFunc(muxPattern(actor.ID.AddPath("/favicon.ico")), o.NotFound)
 }
 
-func (o *oni) setupWebfingerRoutes(m *http.ServeMux, actor vocab.Actor) {
+func (o *oni) setupWebfingerRoutes(m chi.Router, actor vocab.Actor) {
 	// TODO(marius): we need the nodeinfo handlers also
 	m.HandleFunc(muxPattern(actor.ID.AddPath(".well-known", "webfinger")), HandleWebFinger(*o))
 	m.HandleFunc(muxPattern(actor.ID.AddPath(".well-known", "host-meta")), HandleHostMeta(*o))
 }
 
-func (o *oni) setupActorRoutes(m *http.ServeMux, actor vocab.Actor) {
-	m.HandleFunc(muxPattern(actor.ID.AddPath("/")), o.OnItemHandler)
-	o.collectionRoutes(m, actor, vocab.ActivityPubCollections...)
+func (o *oni) setupActorRoutes(m chi.Router, actor vocab.Actor) {
+	m.Group(func(m chi.Router) {
+		m.Use(cors.Handler(cors.Options{
+			AllowedOrigins: []string{"https://*"},
+			Debug:          true,
+			AllowedMethods: []string{"GET", "POST", "OPTIONS"},
+			AllowedHeaders: []string{"Accept", "Authorization", "Signature", "Content-Type"},
+			MaxAge:         300, // Maximum value not ignored by any of major browsers
+		}))
+		m.Get(muxPattern(actor.ID.AddPath("/")), o.OnItemHandler)
+		o.collectionRoutes(m, actor, vocab.ActivityPubCollections...)
+	})
 }
 
 func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
