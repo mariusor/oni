@@ -11,38 +11,45 @@ import tinycolor from "tinycolor2";
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
         :host main {
-            min-height: 12vw;
             background-size: cover;
             padding: 1rem;
             background-clip: padding-box;
         }
         main header {
-            display: flex;
+            display: grid;
+            place-content: space-evenly start;
+            place-items: start;
+            grid-template-areas: "icon name" "icon description";
+            grid-template-rows: minmax(3rem, min-content) auto;
+            grid-template-columns: minmax(1fr, min-content) auto;
+            column-gap: 1rem;
         }
         header h1 {
-            display: inline-block;
+            grid-area: name;
+            margin: .2rem 0;
         }
         header > a {
+            grid-area: icon;
             text-decoration: none;
         }
         header aside {
-        }
-        nav {
+            grid-area: description;
         }
         header h1 a oni-natural-language-values {
             color: var(--shadow-color);
             text-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
         }
         header img {
-            margin-right: 1rem;
             border: .3vw solid var(--shadow-color);
             border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
+            max-height: 12vw;
+            min-width: 12hw;
         }
         header ul {
-            margin: 0;
-            padding: .8rem .4rem .8rem 0;
-            border-radius: 0 1.6em 1.6em 1.6em;
+            margin: .4rem 0 0 -.4rem;
+            padding: .8rem;
+            border-radius: 1.6em;
         }
         header ul li {
             list-style: none;
