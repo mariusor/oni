@@ -22,7 +22,8 @@ export class OniMainActor extends ActivityPubActor {
             grid-template-areas: "icon name" "icon description";
             grid-template-rows: minmax(3rem, min-content) auto;
             grid-template-columns: minmax(1fr, min-content) auto;
-            column-gap: 1rem;
+            column-gap: .8rem;
+            row-gap: .4rem;
         }
         header h1 {
             grid-area: name;
@@ -34,6 +35,10 @@ export class OniMainActor extends ActivityPubActor {
         }
         header aside {
             grid-area: description;
+        }
+        header aside oni-natural-language-values {
+            margin: 0 0 .8rem 1rem;
+            font-size: .9rem;
         }
         header h1 a oni-natural-language-values {
             color: var(--shadow-color);
@@ -47,7 +52,7 @@ export class OniMainActor extends ActivityPubActor {
             min-width: 12hw;
         }
         header ul {
-            margin: .4rem 0 0 -.4rem;
+            margin: 0;
             padding: .8rem;
             border-radius: 1.6em;
         }
@@ -64,10 +69,6 @@ export class OniMainActor extends ActivityPubActor {
         }
         oni-natural-language-values[name=preferredUsername]::before {
             content: "~";
-        }
-        oni-natural-language-values[name=summary] {
-            grid-area: description;
-            font-size: .9rem;
         }
         a[target=external] {
             font-size: .9rem;
