@@ -10,30 +10,30 @@ import tinycolor from "tinycolor2";
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
-        :host header {
+        :host main {
             min-height: 12vw;
             background-size: cover;
             padding: 1rem;
-            display: grid;
-            align-content: center;
-            align-items: start;
-            justify-items: stretch;
             background-clip: padding-box;
         }
-        header h1 {
-            font-size: 1.6rem;
-            align-self: start;
+        main header {
+            display: flex;
         }
-        header h1 a {
+        header h1 {
+            display: inline-block;
+        }
+        header > a {
             text-decoration: none;
+        }
+        header aside {
+        }
+        nav {
         }
         header h1 a oni-natural-language-values {
             color: var(--shadow-color);
             text-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
         }
         header img {
-            width: 10em;
-            max-width: 20%;
             margin-right: 1rem;
             border: .3vw solid var(--shadow-color);
             border-radius: 0 1.6em 1.6em 1.6em;
@@ -49,9 +49,6 @@ export class OniMainActor extends ActivityPubActor {
             display: inline-block;
             margin-right: .8rem;
         }
-        /*:host aside {
-            display: inline;
-        }*/
         :host aside small::before {
             content: "(";
         }
@@ -62,6 +59,7 @@ export class OniMainActor extends ActivityPubActor {
             content: "~";
         }
         oni-natural-language-values[name=summary] {
+            grid-area: description;
             font-size: .9rem;
         }
         a[target=external] {
@@ -180,13 +178,6 @@ export class OniMainActor extends ActivityPubActor {
         }
     }
 
-    renderIconName() {
-        return html`
-            <a href=${this.iri()}> ${this.renderIcon()}</a>
-            <h1><a href=${this.iri()}>${this.renderPreferredUsername()}</a></h1>
-        `;
-    }
-
     renderUrl() {
         let url = this.url();
         if (!url) {
@@ -261,7 +252,7 @@ export class OniMainActor extends ActivityPubActor {
                 --shadow-color: ${p.shadowColor};
             }
             ${when(haveBgImg, () => html`
-                :host header {
+                :host main {
                     background-image: linear-gradient(${col.setAlpha(0).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
                 }`
             )}
@@ -284,12 +275,17 @@ export class OniMainActor extends ActivityPubActor {
 
         return html`${this.renderOAuth()}
             <style>${style}</style>
-            <header>
-                ${this.renderIconName()}
-                ${this.renderSummary()}
-                <aside>${this.renderUrl()}</aside>
+            <main>
+                <header>
+                    <a href=${this.iri()}>${this.renderIcon()}</a>
+                    <h1><a href=${this.iri()}>${this.renderPreferredUsername()}</a></h1>
+                    <aside>
+                        ${this.renderSummary()}
+                        ${this.renderUrl()}
+                    </aside>
+                </header>
                 <nav>${this.renderCollections()}</nav>
-            </header>
+            </main>
             <slot></slot>
         `;
     }
