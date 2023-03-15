@@ -3,6 +3,17 @@ import {ActivityPubObject} from "./activity-pub-object";
 
 export class ActivityPubNote extends ActivityPubObject {
     static styles = [css`
+    main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    main > * {
+        margin: .1rem;
+    }
+    main aside {
+        align-self: end;
+    }
     article {
         display: flex;
         flex-direction: column;
