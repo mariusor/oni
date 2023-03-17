@@ -45,11 +45,12 @@ export class OniMainActor extends ActivityPubActor {
             text-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
         }
         header img {
-            border: .3vw solid var(--shadow-color);
+            border: .1vw solid var(--shadow-color);
             border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
             max-height: 12vw;
             min-width: 12hw;
+            box-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
         }
         header ul {
             margin: 0;
