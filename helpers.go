@@ -35,6 +35,14 @@ func IRIPath(iri vocab.IRI) (string, bool) {
 	return u.Path, true
 }
 
+func IRIHost(iri vocab.IRI) (string, bool) {
+	u, err := iri.URL()
+	if err != nil {
+		return "", false
+	}
+	return u.Host, true
+}
+
 func CollectionExists(ob vocab.Item, col vocab.CollectionPath) bool {
 	has := false
 	switch col {

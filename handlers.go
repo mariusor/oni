@@ -23,6 +23,8 @@ import (
 	"github.com/go-ap/errors"
 	json "github.com/go-ap/jsonld"
 	"github.com/go-ap/processing"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/mariusor/render"
 )
 
@@ -38,62 +40,28 @@ func (o *oni) Error(err error) http.HandlerFunc {
 	}
 }
 
-func muxPattern(i vocab.IRI) string {
-	return strings.Replace(i.String(), "https://", "", 1)
-}
-
-func (o *oni) collectionRoutes(m *http.ServeMux, actor vocab.Actor, collections ...vocab.CollectionPath) {
-	for _, collectionPath := range collections {
-		colIRI := collectionPath.Of(actor.GetLink()).GetLink()
-		m.HandleFunc(muxPattern(colIRI), o.OnCollectionHandler)
-		m.HandleFunc(muxPattern(colIRI.AddPath("/")), o.OnItemHandler)
-	}
-}
-
-func (o *oni) setupOauthRoutes(m *http.ServeMux, a vocab.Actor) {
-	base, _ := IRIPath(a.ID)
-
-	as, err := auth.New(
-		auth.WithURL(base),
-		auth.WithStorage(o.s),
-		auth.WithClient(o.c),
-		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
-	)
-	if err != nil {
-		o.l.Errorf("unable to initialize OAuth2 server")
-		return
-	}
-	o.o = as
-
-	//o.m.HandleFunc("/login", h.HandleLogin)
-	m.HandleFunc(muxPattern(a.ID.AddPath("oauth", "authorize")), o.Authorize(a))
-	m.HandleFunc(muxPattern(a.ID.AddPath("oauth", "token")), o.Token)
-
-	//o.m.HandleFunc("/authModel", h.ShowLogin)
-	//o.m.HandleFunc("/authModel", h.HandleLogin)
-	//o.m.HandleFunc("/pw", h.ShowChangePw)
-	//o.m.HandleFunc("/pw", h.HandleChangePw)
+func (o *oni) setupOauthRoutes(m chi.Router) {
+	m.HandleFunc("/oauth/authorize", o.Authorize)
+	m.HandleFunc("/oauth/token", o.Token)
 }
 
 func (o *oni) setupRoutes(actors []vocab.Actor) {
-	m := http.NewServeMux()
+	m := chi.NewMux()
 
 	if len(actors) == 0 {
 		m.HandleFunc("/", o.NotFound)
 		return
 	}
 
-	for _, actor := range actors {
-		o.setupActorRoutes(m, actor)
-		o.setupOauthRoutes(m, actor)
-		o.setupStaticRoutes(m, actor)
-		o.setupWebfingerRoutes(m, actor)
-	}
+	o.setupActorRoutes(m)
+	o.setupOauthRoutes(m)
+	o.setupStaticRoutes(m)
+	o.setupWebfingerRoutes(m)
 
 	o.m = m
 }
 
-func (o *oni) setupStaticRoutes(m *http.ServeMux, actor vocab.Actor) {
+func (o *oni) setupStaticRoutes(m chi.Router) {
 	var fsServe http.HandlerFunc
 	if assetFilesFS, err := fs.Sub(AssetsFS, "static"); err == nil {
 		fsServe = func(w http.ResponseWriter, r *http.Request) {
@@ -104,22 +72,40 @@ func (o *oni) setupStaticRoutes(m *http.ServeMux, actor vocab.Actor) {
 	} else {
 		fsServe = o.Error(err).ServeHTTP
 	}
-	m.Handle(muxPattern(actor.ID.AddPath("main.js")), fsServe)
-	m.Handle(muxPattern(actor.ID.AddPath("main.js.map")), fsServe)
-	m.Handle(muxPattern(actor.ID.AddPath("main.css")), fsServe)
-	m.HandleFunc(muxPattern(actor.ID.AddPath("icons.svg")), fsServe)
-	m.HandleFunc(muxPattern(actor.ID.AddPath("/favicon.ico")), o.NotFound)
+	m.Handle("/main.js", fsServe)
+	m.Handle("/main.js.map", fsServe)
+	m.Handle("/main.css", fsServe)
+	m.HandleFunc("/icons.svg", fsServe)
+	m.HandleFunc("/favicon.ico", o.NotFound)
 }
 
-func (o *oni) setupWebfingerRoutes(m *http.ServeMux, actor vocab.Actor) {
+func (o *oni) setupWebfingerRoutes(m chi.Router) {
 	// TODO(marius): we need the nodeinfo handlers also
-	m.HandleFunc(muxPattern(actor.ID.AddPath(".well-known", "webfinger")), HandleWebFinger(*o))
-	m.HandleFunc(muxPattern(actor.ID.AddPath(".well-known", "host-meta")), HandleHostMeta(*o))
+	m.HandleFunc("/.well-known/webfinger", HandleWebFinger(*o))
+	m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
 }
 
-func (o *oni) setupActorRoutes(m *http.ServeMux, actor vocab.Actor) {
-	m.HandleFunc(muxPattern(actor.ID.AddPath("/")), o.OnItemHandler)
-	o.collectionRoutes(m, actor, vocab.ActivityPubCollections...)
+type corsLogger struct {
+	lw.Logger
+}
+
+func (c corsLogger) Printf(s string, p ...interface{}) {
+	c.Logger.Debugf(s, p...)
+}
+
+func (o *oni) setupActorRoutes(m chi.Router) {
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"https://*"},
+		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders: []string{"Accept", "Authorization", "Signature", "Content-Type"},
+		MaxAge:         300, // Maximum value not ignored by any of major browsers
+		Debug:          true,
+	})
+	c.Log = corsLogger{o.l}
+	m.Group(func(m chi.Router) {
+		m.Use(c.Handler)
+		m.HandleFunc("/*", o.OnItemHandler)
+	})
 }
 
 func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
@@ -153,6 +139,11 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 	if err != nil {
 		return nil, err
 	}
+
+	if vocab.ValidCollectionIRI(iri) {
+		return it, nil
+	}
+
 	tryInActivity, prop := propNameInIRI(iri)
 	if vocab.IsItemCollection(it) {
 		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
@@ -358,10 +349,42 @@ func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct
 	return checkAcceptMediaType(accepted)
 }
 
+func loadResultIntoCollectionPage(iri vocab.IRI, it vocab.ItemCollection) (vocab.CollectionInterface, error) {
+	// NOTE(marius): the IRI of the Collection is w/o the filters to load the Actor and Object
+	res := vocab.OrderedCollectionPage{
+		ID:   iri,
+		Type: vocab.OrderedCollectionPageType,
+	}
+	var err error
+	if vocab.IsItemCollection(it) {
+		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+			res.OrderedItems = *col
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	err = vocab.OnCollectionIntf(it, func(items vocab.CollectionInterface) error {
+		res.OrderedItems = orderItems(items.Collection())
+		res.TotalItems = res.OrderedItems.Count()
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return PaginateCollection(&res)
+}
+
 func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 
 	iri := irif(r)
+	if vocab.ValidCollectionIRI(iri) && r.Method == http.MethodPost {
+		o.ProcessActivity().ServeHTTP(w, r)
+		return
+	}
+
 	it, err := loadItemFromStorage(o.s, iri)
 	if err != nil {
 		o.Error(err).ServeHTTP(w, r)
@@ -370,6 +393,14 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 	if vocab.IsNil(it) {
 		o.Error(iriNotFound(iri)).ServeHTTP(w, r)
 		return
+	}
+
+	if vocab.ValidCollectionIRI(iri) {
+		vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+			res, err := loadResultIntoCollectionPage(iri, *col)
+			it = res
+			return err
+		})
 	}
 
 	accepts := getItemAcceptedContentType(it, r)
@@ -634,70 +665,6 @@ func PaginateCollection(col vocab.CollectionInterface) (vocab.CollectionInterfac
 	})
 
 	return col, nil
-}
-
-func (o *oni) OnCollectionHandler(w http.ResponseWriter, r *http.Request) {
-	now := time.Now().UTC()
-	if r.Method == http.MethodPost {
-		o.ProcessActivity().ServeHTTP(w, r)
-		return
-	}
-
-	id := irif(r)
-	// NOTE(marius): the IRI of the Collection is w/o the filters to load the Actor and Object
-	res := vocab.OrderedCollectionPage{
-		ID:   id,
-		Type: vocab.OrderedCollectionPageType,
-	}
-	it, err := o.s.Load(colIRI(r))
-	if err != nil {
-		o.Error(err).ServeHTTP(w, r)
-		return
-	}
-	if vocab.IsItemCollection(it) {
-		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-			res.OrderedItems = *col
-			return nil
-		})
-	}
-	err = vocab.OnCollectionIntf(it, func(items vocab.CollectionInterface) error {
-		res.OrderedItems = orderItems(items.Collection())
-		res.TotalItems = res.OrderedItems.Count()
-		return nil
-	})
-	if err != nil {
-		o.Error(err).ServeHTTP(w, r)
-		return
-	}
-	if col, err := PaginateCollection(&res); err != nil {
-		o.Error(err).ServeHTTP(w, r)
-		return
-	} else {
-		it = col
-	}
-
-	accepts := getItemAcceptedContentType(it, r)
-	switch {
-	case accepts(jsonLD, activityJson, applicationJson):
-		o.ServeActivityPubItem(it).ServeHTTP(w, r)
-	case accepts(imageAny):
-		o.ServeBinData(it).ServeHTTP(w, r)
-	case accepts(textHTML):
-		fallthrough
-	default:
-		oniActor := o.oniActor(r)
-		oniFn := template.FuncMap{
-			"ONI":   func() vocab.Actor { return oniActor },
-			"Title": titleFromActor(oniActor),
-		}
-		wrt := bytes.Buffer{}
-		if err := ren.HTML(w, http.StatusOK, "components/item", it, render.HTMLOptions{Funcs: oniFn}); err != nil {
-			o.Error(err).ServeHTTP(w, r)
-			return
-		}
-		io.Copy(w, &wrt)
-	}
-	o.logRequest(r, http.StatusOK, now)
 }
 
 func acceptFollows(o oni, f vocab.Follow, p *processing.P) error {
