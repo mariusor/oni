@@ -24,6 +24,7 @@ import (
 	json "github.com/go-ap/jsonld"
 	"github.com/go-ap/processing"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/mariusor/render"
 )
@@ -35,7 +36,6 @@ func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
 
 func (o *oni) Error(err error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer o.logRequest(r, errors.HttpStatus(err), time.Now().UTC())
 		errors.HandleError(err).ServeHTTP(w, r)
 	}
 }
@@ -52,7 +52,7 @@ func (o *oni) setupRoutes(actors []vocab.Actor) {
 		m.HandleFunc("/", o.NotFound)
 		return
 	}
-
+	m.Use(Log(o.l))
 	o.setupActivityPubRoutes(m)
 	o.setupOauthRoutes(m)
 	o.setupStaticRoutes(m)
@@ -65,9 +65,7 @@ func (o *oni) setupStaticRoutes(m chi.Router) {
 	var fsServe http.HandlerFunc
 	if assetFilesFS, err := fs.Sub(AssetsFS, "static"); err == nil {
 		fsServe = func(w http.ResponseWriter, r *http.Request) {
-			st := time.Now().UTC()
 			http.FileServer(http.FS(assetFilesFS)).ServeHTTP(w, r)
-			o.logRequest(r, http.StatusOK, st)
 		}
 	} else {
 		fsServe = o.Error(err).ServeHTTP
@@ -85,14 +83,6 @@ func (o *oni) setupWebfingerRoutes(m chi.Router) {
 	m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
 }
 
-type corsLogger struct {
-	lw.Logger
-}
-
-func (c corsLogger) Printf(s string, p ...interface{}) {
-	c.Logger.Debugf(s, p...)
-}
-
 func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"https://*"},
@@ -102,7 +92,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 		Debug:            true,
 	})
-	c.Log = corsLogger{o.l}
+	c.Log, _ = o.l.WithContext(lw.Ctx{"log": "cors"}).(cors.Logger)
 	m.Group(func(m chi.Router) {
 		m.Use(c.Handler)
 		m.HandleFunc("/*", o.OnItemHandler)
@@ -142,7 +132,12 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 	}
 
 	if vocab.ValidCollectionIRI(iri) {
-		return it, nil
+		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
+			res, err := loadResultIntoCollectionPage(iri, *col)
+			it = res
+			return err
+		})
+		return it, err
 	}
 
 	tryInActivity, prop := propNameInIRI(iri)
@@ -378,8 +373,6 @@ func loadResultIntoCollectionPage(iri vocab.IRI, it vocab.ItemCollection) (vocab
 }
 
 func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
-	now := time.Now().UTC()
-
 	iri := irif(r)
 	if vocab.ValidCollectionIRI(iri) {
 		if r.Method == http.MethodPost {
@@ -400,14 +393,6 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 	if vocab.IsNil(it) {
 		o.Error(iriNotFound(iri)).ServeHTTP(w, r)
 		return
-	}
-
-	if vocab.ValidCollectionIRI(iri) {
-		vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-			res, err := loadResultIntoCollectionPage(iri, *col)
-			it = res
-			return err
-		})
 	}
 
 	accepts := getItemAcceptedContentType(it, r)
@@ -435,7 +420,6 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		io.Copy(w, &wrt)
 	}
-	o.logRequest(r, http.StatusOK, now)
 }
 
 func (o *oni) oniActor(r *http.Request) vocab.Actor {
@@ -452,33 +436,6 @@ func titleFromActor(o vocab.Actor) func() template.HTML {
 	return func() template.HTML {
 		return template.HTML(o.PreferredUsername.First().String())
 	}
-}
-
-func (o *oni) logRequest(r *http.Request, st int, rt time.Time) {
-	if o.l == nil {
-		return
-	}
-
-	ctx := lw.Ctx{
-		"method": r.Method,
-		"iri":    irif(r),
-		"status": st,
-		"accept": r.Header.Get("Accept"),
-	}
-	if !rt.IsZero() {
-		ctx["duration"] = fmt.Sprintf("%0.3fms", float64(time.Now().UTC().Sub(rt).Microseconds())/1000)
-	}
-	if ua := r.Header.Get("User-Agent"); r.Method == http.MethodPost && ua != "" {
-		ctx["ua"] = ua
-	}
-
-	var logFn func(string, ...any)
-	if st == http.StatusOK {
-		logFn = o.l.WithContext(ctx).Debugf
-	} else {
-		logFn = o.l.WithContext(ctx).Infof
-	}
-	logFn(http.StatusText(st))
 }
 
 func col(r *http.Request) vocab.CollectionPath {
@@ -737,7 +694,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
-		now := time.Now().UTC()
 
 		act, err := auth.LoadActorFromAuthHeader(r)
 		if err != nil {
@@ -805,7 +761,80 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			status = http.StatusGone
 		}
 
-		o.logRequest(r, status, now)
 		return it, status, nil
 	}
+}
+
+func Log(l lw.Logger) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			entry := req(l, r)
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+
+			buf := bytes.NewBuffer(make([]byte, 0, 512))
+			ww.Tee(buf)
+
+			t1 := time.Now()
+			defer func() {
+				var respBody []byte
+				if ww.Status() >= 400 {
+					respBody, _ = io.ReadAll(buf)
+				}
+				entry.Write(ww.Status(), ww.BytesWritten(), ww.Header(), time.Since(t1), respBody)
+			}()
+
+			next.ServeHTTP(ww, middleware.WithLogEntry(r, entry))
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+type reqLogger struct {
+	lw.Logger
+}
+
+func (r reqLogger) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
+	ctx := lw.Ctx{
+		"st":   status,
+		"size": bytes,
+	}
+	if elapsed > 0 {
+		ctx["elapsed"] = elapsed
+	}
+
+	var logFn func(string, ...any)
+
+	switch {
+	case status <= 0:
+		logFn = r.Logger.WithContext(ctx).Warnf
+	case status < 400: // for codes in 100s, 200s, 300s
+		logFn = r.Logger.WithContext(ctx).Infof
+	case status >= 400 && status < 500:
+		logFn = r.Logger.WithContext(ctx).Warnf
+	case status >= 500:
+		logFn = r.Logger.WithContext(ctx).Errorf
+	default:
+		logFn = r.Logger.WithContext(ctx).Infof
+	}
+	logFn(http.StatusText(status))
+}
+
+func (r reqLogger) Panic(v interface{}, stack []byte) {
+	r.Logger.WithContext(lw.Ctx{"panic": v}).Tracef("")
+}
+
+func req(l lw.Logger, r *http.Request) reqLogger {
+	ctx := lw.Ctx{
+		"method": r.Method,
+		"iri":    irif(r),
+	}
+
+	if acc := r.Header.Get("Accept"); acc != "" {
+		ctx["accept"] = acc
+	}
+	if ua := r.Header.Get("User-Agent"); ua != "" {
+		ctx["ua"] = ua
+	}
+
+	return reqLogger{l.WithContext(ctx)}
 }
