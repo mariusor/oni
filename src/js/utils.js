@@ -155,7 +155,7 @@ export function relativeDate(old) {
         val = hours / 876000;
         unit = "century";
     }
-    return `${Math.round(val)} ${pluralize(val, unit)} ${when}`;
+    return `${pluralize(val, unit)} ${when}`;
 }
 
 export function pluralize(d, unit) {
@@ -166,7 +166,7 @@ export function pluralize(d, unit) {
     if (l > 2 && unit[l - 1] == 'y' && isCons(unit[l - 2])) {
         unit = `${unit.substring(0, l - 1)}ie`;
     }
-    return `${unit}s`;
+    return `${Math.round(d)} ${unit}s`;
 }
 
 function isCons(c) {
