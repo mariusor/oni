@@ -17,6 +17,6 @@ export class ActivityPubVideo extends ActivityPubObject {
     }
 
     render() {
-        return html`<main><video src=${this.iri() ?? nothing}></video> ${this.renderMetadata()}</main>`;
+        return html`<article><video src=${this.iri() ?? nothing}></video> <footer>${this.renderMetadata()}</footer></article>`;
     }
 }

@@ -17,6 +17,6 @@ export class ActivityPubAudio extends ActivityPubObject {
     }
 
     render() {
-        return html`<main><audio src=${this.iri() ?? nothing}></audio> ${this.renderMetadata()}</main>`;
+        return html`<article><audio src=${this.iri() ?? nothing}></audio> <footer>${this.renderMetadata()}</footer></article>`;
     }
 }

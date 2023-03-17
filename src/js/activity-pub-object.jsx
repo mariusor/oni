@@ -53,6 +53,29 @@ export class ActivityPubObject extends LitElement {
             opacity: 0.8;
             font-size: 0.8rem;
         }
+        article {
+            display: flex;
+            flex-direction: column;
+        }
+        article > * {
+            margin: .1rem;
+        }
+        article header * {
+            padding: 0 .1rem;
+            margin: 0;
+        }
+        article header h2 {
+            font-size: 1.2rem;
+        }
+        article header h1 {
+            font-size: 1.2rem;
+        }
+        article header {
+            align-self: start;
+        }
+        article footer {
+            align-self: end;
+        }
     `;
     static properties = {it: {type: Object}};
 

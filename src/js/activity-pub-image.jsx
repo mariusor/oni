@@ -23,6 +23,8 @@ export class ActivityPubImage extends ActivityPubObject {
         if (!src) {
             src = this.url();
         }
-        return html`<main><img src=${src ?? nothing} title="${this.name()}"/> ${this.renderMetadata()}</main>`;
+        return html`<article>
+            <img src=${src ?? nothing} title="${this.name()}"/> <footer>${this.renderMetadata()}</footer>
+        </article>`;
     }
 }

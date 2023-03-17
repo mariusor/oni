@@ -14,29 +14,6 @@ export class ActivityPubNote extends ActivityPubObject {
     main aside {
         align-self: end;
     }
-    article {
-        display: flex;
-        flex-direction: column;
-    }
-    article > * {
-        margin: .1rem;
-    }
-    article header * {
-        padding: 0 .1rem;
-        margin: 0;
-    }
-    article header h2 {
-        font-size: 1.2rem;
-    }
-    article header h1 {
-        font-size: 1.2rem;
-    }
-    article header {
-        align-self: start;
-    }
-    article footer {
-        align-self: end;
-    }
     p {
         margin: 0 .2rem;
     }
