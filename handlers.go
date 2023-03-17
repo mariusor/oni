@@ -53,7 +53,7 @@ func (o *oni) setupRoutes(actors []vocab.Actor) {
 		return
 	}
 
-	o.setupActorRoutes(m)
+	o.setupActivityPubRoutes(m)
 	o.setupOauthRoutes(m)
 	o.setupStaticRoutes(m)
 	o.setupWebfingerRoutes(m)
@@ -93,13 +93,14 @@ func (c corsLogger) Printf(s string, p ...interface{}) {
 	c.Logger.Debugf(s, p...)
 }
 
-func (o *oni) setupActorRoutes(m chi.Router) {
+func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"https://*"},
-		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
-		AllowedHeaders: []string{"Accept", "Authorization", "Signature", "Content-Type"},
-		MaxAge:         300, // Maximum value not ignored by any of major browsers
-		Debug:          true,
+		AllowedOrigins:   []string{"https://*"},
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+		Debug:            true,
 	})
 	c.Log = corsLogger{o.l}
 	m.Group(func(m chi.Router) {
