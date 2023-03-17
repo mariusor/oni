@@ -10,10 +10,11 @@ import {ActivityPubImage} from "./activity-pub-image";
 import {ActivityPubNote} from "./activity-pub-note";
 import {ActivityPubAudio} from "./activity-pub-audio";
 import {ActivityPubVideo} from "./activity-pub-video";
-import {Icon} from "./icon";
+import {OniIcon} from "./oni-icon";
 import {LoginDialog, LoginLink} from "./login-elements";
 import {ActivityPubTombstone} from "./activity-pub-tombstone";
 import {ActivityPubTag} from "./activity-pub-tag";
+import {OniErrors} from "./oni-errors";
 
 customElements.define('oni-main', OniMainActor);
 customElements.define('oni-object', ActivityPubObject);
@@ -31,10 +32,12 @@ customElements.define('oni-natural-language-values', NaturalLanguageValues);
 customElements.define('oni-collection-link', CollectionLink);
 customElements.define('oni-collection-links', CollectionLinks);
 
-customElements.define('oni-icon', Icon);
+customElements.define('oni-icon', OniIcon);
 
 customElements.define('oni-login-link', LoginLink);
 customElements.define('oni-login-dialog', LoginDialog);
+
+customElements.define('oni-errors', OniErrors);
 
 OnReady(function () {
     console.log(`Loading ${window.location}`);

@@ -36,7 +36,24 @@ func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
 
 func (o *oni) Error(err error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		errors.HandleError(err).ServeHTTP(w, r)
+		acceptableMediaTypes := []ct.MediaType{textHTML, applicationJson}
+		accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
+		if !checkAcceptMediaType(accepted)(textHTML) {
+			errors.HandleError(err).ServeHTTP(w, r)
+			return
+		}
+		errs := errors.HttpErrors(err)
+		oniFn := template.FuncMap{
+			"ONI":   func() vocab.Actor { return o.oniActor(r) },
+			"Title": func() string { return http.StatusText(errors.HttpStatus(err)) },
+		}
+		templatePath := "components/errors"
+		wrt := bytes.Buffer{}
+		if err := ren.HTML(&wrt, http.StatusOK, templatePath, errs, render.HTMLOptions{Funcs: oniFn}); err != nil {
+			errors.HandleError(err).ServeHTTP(w, r)
+			return
+		}
+		io.Copy(w, &wrt)
 	}
 }
 

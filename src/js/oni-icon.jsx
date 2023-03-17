@@ -1,7 +1,7 @@
 import {css, html, LitElement, nothing} from "lit";
 import {unsafeSVG} from "lit-html/directives/unsafe-svg.js";
 
-export class Icon extends LitElement {
+export class OniIcon extends LitElement {
     static styles = css`
     :host, :host svg {
         display: inline-block;
