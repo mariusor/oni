@@ -308,7 +308,7 @@ export class ActivityPubObject extends LitElement {
         if (replies === null) {
             return nothing;
         }
-        if (!replies.hasOwnProperty('totalItems')) {
+        if (!replies.hasOwnProperty('totalItems') || replies.totalItems == 0) {
             return nothing;
         }
         return html` - <span>${pluralize(replies.totalItems, 'reply')}</span>`;
