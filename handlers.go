@@ -381,9 +381,15 @@ func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 
 	iri := irif(r)
-	if vocab.ValidCollectionIRI(iri) && r.Method == http.MethodPost {
-		o.ProcessActivity().ServeHTTP(w, r)
-		return
+	if vocab.ValidCollectionIRI(iri) {
+		if r.Method == http.MethodPost {
+			o.ProcessActivity().ServeHTTP(w, r)
+			return
+		}
+		_, whichCollection := vocab.Split(iri)
+		if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
+			iri = colIRI(r)
+		}
 	}
 
 	it, err := loadItemFromStorage(o.s, iri)
