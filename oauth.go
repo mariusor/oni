@@ -4,6 +4,7 @@ import (
 	"crypto"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -77,36 +78,70 @@ func (o *oni) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
 	return o.s.PasswordCheck(actor, []byte(pw))
 }
 
-func (o *oni) Authorize(a vocab.Actor) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			state := base64.URLEncoding.EncodeToString(authKey())
-			m := authModel{
-				AuthorizeURL: AuthorizeURL(a, state),
-				State:        state,
-			}
+func actorIRIFromRequest(r *http.Request) vocab.IRI {
+	rr := *r
+	rr.RequestURI = "/"
+	return irif(&rr)
+}
 
-			json.NewEncoder(w).Encode(m)
+func loadBaseActor(o *oni, r *http.Request) (vocab.Actor, error) {
+	result, err := o.s.Load(actorIRIFromRequest(r))
+	if err != nil {
+		return auth.AnonymousActor, err
+	}
+	actor := auth.AnonymousActor
+	err = vocab.OnActor(result, func(act *vocab.Actor) error {
+		actor = *act
+		return nil
+	})
+	return actor, err
+}
+
+func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
+	a, err := loadBaseActor(o, r)
+	if err != nil {
+		o.Error(err).ServeHTTP(w, r)
+		return
+	}
+	as, err := auth.New(
+		auth.WithURL(a.ID.String()),
+		auth.WithStorage(o.s),
+		auth.WithClient(o.c),
+		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
+	)
+	if err != nil {
+		o.l.Errorf("unable to initialize OAuth2 server")
+		return
+	}
+	o.o = as
+
+	if r.Method == http.MethodGet {
+		state := base64.URLEncoding.EncodeToString(authKey())
+		m := authModel{
+			AuthorizeURL: AuthorizeURL(a, state),
+			State:        state,
+		}
+
+		json.NewEncoder(w).Encode(m)
+		return
+	}
+
+	s := o.o
+	resp := s.NewResponse()
+	defer resp.Close()
+
+	if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
+		if err := o.loadAccountFromPost(a, r); err != nil {
+			o.l.WithContext(lw.Ctx{"err": err}).Errorf("wrong password")
+			errors.HandleError(errors.Unauthorizedf("Wrong password")).ServeHTTP(w, r)
 			return
 		}
-
-		s := o.o
-		resp := s.NewResponse()
-		defer resp.Close()
-
-		if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
-			if err := o.loadAccountFromPost(a, r); err != nil {
-				o.l.WithContext(lw.Ctx{"err": err}).Errorf("wrong password")
-				errors.HandleError(errors.Unauthorizedf("Wrong password")).ServeHTTP(w, r)
-				return
-			}
-			ar.Authorized = true
-			ar.UserData = a.ID
-			s.FinishAuthorizeRequest(resp, r, ar)
-		}
-		resp.Type = osin.DATA
-		redirectOrOutput(resp, w, r)
+		ar.Authorized = true
+		ar.UserData = a.ID
+		s.FinishAuthorizeRequest(resp, r, ar)
 	}
+	resp.Type = osin.DATA
+	redirectOrOutput(resp, w, r)
 }
 
 var (
@@ -118,6 +153,18 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 	s := o.o
 	resp := s.NewResponse()
 	defer resp.Close()
+
+	as, err := auth.New(
+		auth.WithURL(fmt.Sprintf("https://%s", r.URL.Host)),
+		auth.WithStorage(o.s),
+		auth.WithClient(o.c),
+		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
+	)
+	if err != nil {
+		o.l.Errorf("unable to initialize OAuth2 server")
+		return
+	}
+	o.o = as
 
 	actor := &auth.AnonymousActor
 	if ar := s.HandleAccessRequest(resp, r); ar != nil {
