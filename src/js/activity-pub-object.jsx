@@ -49,8 +49,7 @@ export class ActivityPubObject extends LitElement {
             font-size: .9rem;
             font-weight: bold;
         }
-        :host aside {
-            opacity: 0.8;
+        article footer aside {
             font-size: 0.8rem;
         }
         article {
