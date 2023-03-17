@@ -112,7 +112,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	c.Log, _ = o.l.WithContext(lw.Ctx{"log": "cors"}).(cors.Logger)
 	m.Group(func(m chi.Router) {
 		m.Use(c.Handler)
-		m.HandleFunc("/*", o.OnItemHandler)
+		m.HandleFunc("/*", o.ActivityPubItem)
 	})
 }
 
@@ -389,17 +389,20 @@ func loadResultIntoCollectionPage(iri vocab.IRI, it vocab.ItemCollection) (vocab
 	return PaginateCollection(&res)
 }
 
-func (o *oni) OnItemHandler(w http.ResponseWriter, r *http.Request) {
+func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
 	if vocab.ValidCollectionIRI(iri) {
 		if r.Method == http.MethodPost {
 			o.ProcessActivity().ServeHTTP(w, r)
 			return
 		}
+
+		types := make(vocab.ActivityVocabularyTypes, 0)
 		_, whichCollection := vocab.Split(iri)
 		if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
-			iri = colIRI(r)
+			types = append(types, vocab.CreateType)
 		}
+		iri = colIRI(r, types...)
 	}
 
 	it, err := loadItemFromStorage(o.s, iri)
@@ -471,14 +474,17 @@ func col(r *http.Request) vocab.CollectionPath {
 	return col
 }
 
-func colIRI(r *http.Request) vocab.IRI {
-	colURL := url.URL{Scheme: "https", Host: r.Host, Path: r.RequestURI}
+func colIRI(r *http.Request, types ...vocab.ActivityVocabularyType) vocab.IRI {
+	colURL := url.URL{Scheme: "https", Host: r.Host, Path: r.URL.Path}
 	c := col(r)
 	if vocab.ValidActivityCollection(c) {
-		q := url.Values{}
+		q := r.URL.Query()
 		q.Set("object.iri", "!")
 		q.Set("actor.iri", "!")
-		q.Set("type", string(vocab.CreateType))
+		for _, t := range types {
+			q.Add("type", string(t))
+		}
+		q.Set("maxItems", "20")
 		colURL.RawQuery = q.Encode()
 	}
 	return vocab.IRI(colURL.String())
@@ -486,8 +492,8 @@ func colIRI(r *http.Request) vocab.IRI {
 
 const MaxItems = 20
 
-func paginateItems(col vocab.ItemCollection, count int) (vocab.ItemCollection, string, string, error) {
-	var prev, next string
+func paginateItems(col vocab.ItemCollection, count int) (vocab.ItemCollection, vocab.IRI, vocab.IRI, error) {
+	var prev, next vocab.IRI
 	if vocab.IsNil(col) {
 		return nil, prev, next, nil
 	}
@@ -495,13 +501,10 @@ func paginateItems(col vocab.ItemCollection, count int) (vocab.ItemCollection, s
 		count = MaxItems
 	}
 
-	if len(col) <= count {
-		return col, prev, next, nil
-	}
 	start := 0
 	cnt := len(col)
-	prev = filepath.Base(col[start].GetLink().String())
-	next = filepath.Base(col[cnt-1].GetLink().String())
+	prev = col[start].GetLink()
+	next = col[cnt-1].GetLink()
 	return col, prev, next, nil
 }
 
@@ -524,14 +527,15 @@ func PaginateCollection(col vocab.CollectionInterface) (vocab.CollectionInterfac
 
 	u, _ := col.GetLink().URL()
 	u.User = nil
+	q := u.Query()
 	u.RawQuery = ""
 	baseURL := vocab.IRI(u.String())
-	curURL := getURL(baseURL, nil)
+	curURL := getURL(baseURL, q)
 
 	var haveItems bool
-	var prev, next string // uuids
+	var prev, next vocab.IRI // IRIs
 
-	mi, _ := strconv.ParseInt(u.Query().Get("maxItems"), 10, 32)
+	mi, _ := strconv.ParseInt(q.Get("maxItems"), 10, 32)
 	maxItems := int(mi)
 	haveItems = col.Count() > 0
 
@@ -549,8 +553,7 @@ func PaginateCollection(col vocab.CollectionInterface) (vocab.CollectionInterfac
 		var firstURL vocab.IRI
 
 		fp := u.Query()
-		fp.Add("maxItems", fmt.Sprintf("%d", maxItems))
-		fp.Add("curPage", fmt.Sprintf("%d", 1))
+
 		firstURL = getURL(baseURL, fp)
 		if col.GetType() == vocab.CollectionOfItems {
 			err := vocab.OnItemCollection(col, func(items *vocab.ItemCollection) error {
@@ -564,68 +567,57 @@ func PaginateCollection(col vocab.CollectionInterface) (vocab.CollectionInterfac
 				if len(firstURL) > 0 {
 					oc.First = firstURL
 				}
+				oc.Current = curURL
 				oc.OrderedItems, prev, next, _ = paginateItems(oc.OrderedItems, maxItems)
 				return nil
 			})
 		}
 		if unOrdered.Contains(col.GetType()) {
 			vocab.OnCollection(col, func(c *vocab.Collection) error {
-				c.First = firstURL
+				c.Current = curURL
+				if len(firstURL) > 0 {
+					c.First = firstURL
+				}
 				c.Items, prev, next, _ = paginateItems(c.Items, maxItems)
+
 				return nil
 			})
 		}
 		var nextURL, prevURL vocab.IRI
 		if len(next) > 0 {
 			np := u.Query()
-			np.Add("maxItems", fmt.Sprintf("%d", maxItems))
-			np.Add("next", next)
+			np.Add("after", next.String())
 			nextURL = getURL(baseURL, np)
 		}
 		if len(prev) > 0 {
 			pp := u.Query()
-			pp.Add("maxItems", fmt.Sprintf("%d", maxItems))
-			pp.Add("prev", prev)
+			pp.Add("before", prev.String())
 			prevURL = getURL(baseURL, pp)
 		}
 
-		if col.GetType() == vocab.OrderedCollectionType {
-			oc, err := vocab.ToOrderedCollection(col)
-			if err == nil {
-				page := vocab.OrderedCollectionPageNew(oc)
-				page.ID = curURL
-				page.PartOf = baseURL
-				if firstURL != curURL {
-					page.First = oc.First
-				}
+		if col.GetType() == vocab.OrderedCollectionPageType {
+			vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
+				c.PartOf = baseURL
 				if len(nextURL) > 0 {
-					page.Next = nextURL
+					c.Next = nextURL
 				}
 				if len(prevURL) > 0 {
-					page.Prev = prevURL
+					c.Prev = prevURL
 				}
-				page.OrderedItems, _, _, _ = paginateItems(oc.OrderedItems, maxItems)
-				page.TotalItems = col.Count()
-				col = page
-			}
-			if col.GetType() == vocab.CollectionType {
-				c, err := vocab.ToCollection(col)
-				if err == nil {
-					page := vocab.CollectionPageNew(c)
-					page.ID = curURL
-					page.PartOf = baseURL
-					page.First = c.First
-					if len(nextURL) > 0 {
-						page.Next = nextURL
-					}
-					if len(prevURL) > 0 {
-						page.Prev = prevURL
-					}
-					page.TotalItems = col.Count()
-					page.Items, _, _, _ = paginateItems(c.Items, maxItems)
-					col = page
+				return nil
+			})
+		}
+		if col.GetType() == vocab.CollectionPageType {
+			vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
+				c.PartOf = baseURL
+				if len(nextURL) > 0 {
+					c.Next = nextURL
 				}
-			}
+				if len(prevURL) > 0 {
+					c.Prev = prevURL
+				}
+				return nil
+			})
 		}
 	}
 	updatedAt := time.Time{}
