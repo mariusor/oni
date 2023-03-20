@@ -1,5 +1,6 @@
 import {css, html, LitElement} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
+import {ActivityPubCollection} from "./activity-pub-collection";
 
 export class CollectionLinks extends LitElement {
     static styles = css`
@@ -47,7 +48,7 @@ export class CollectionLinks extends LitElement {
                     <slot></slot>
                     ${this.it.map(value => html`
                         <li class=${classMap({'active': (value === window.location.href)})}>
-                            <oni-collection-link it=${value}></oni-collection-link>
+                            <oni-collection-link it=${JSON.stringify(value)}></oni-collection-link>
                         </li>`
                     )}
                 </ul>
@@ -55,7 +56,7 @@ export class CollectionLinks extends LitElement {
     }
 }
 
-export class CollectionLink extends LitElement {
+export class CollectionLink extends ActivityPubCollection {
     static styles = css`
         :host a {
             text-transform: capitalize;
@@ -68,19 +69,23 @@ export class CollectionLink extends LitElement {
     `;
 
     static properties = {
-        it: {type: String},
+        it: {type: Object},
     }
 
-    constructor() {
-        super();
+    constructor(it) {
+        super(it);
     }
 
     label() {
-        const pieces = this.it.split('/');
+        const name = this.name();
+        if (name.length > 0) {
+            return name;
+        }
+        const pieces = this.iri().split('/');
         return pieces[pieces.length -1];
     }
 
     render() {
-        return html`<a href="${this.it}" class=${classMap({'active': (this.it === window.location.href)})}><oni-icon name=${this.label()}></oni-icon> ${this.label()}</a>`;
+        return html`<a href=${this.iri()} class=${classMap({'active': (this.it === window.location.href)})}><oni-icon name=${this.label()}></oni-icon> ${this.label()}</a>`;
     }
 }

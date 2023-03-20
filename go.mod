@@ -7,15 +7,15 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20230104101555-9bfc303f6588
 	github.com/elnormous/contenttype v1.0.3
 	github.com/evanw/esbuild v0.17.5
-	github.com/go-ap/activitypub v0.0.0-20230317030458-892480c77bb6
-	github.com/go-ap/auth v0.0.0-20230317030655-4fa972d5dd43
-	github.com/go-ap/client v0.0.0-20230317030549-9bf6268ae536
+	github.com/go-ap/activitypub v0.0.0-20230320155903-ee35dc25d11e
+	github.com/go-ap/auth v0.0.0-20230320173932-6a523e8c4679
+	github.com/go-ap/client v0.0.0-20230320173807-4ee8f1037d28
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
 	github.com/go-ap/fedbox v0.0.0-20230111150432-bab3b45bf9a2
-	github.com/go-ap/filters v0.0.0-20230317030740-709e1cf11df9
+	github.com/go-ap/filters v0.0.0-20230320174302-405e916be72e
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20230317030718-0f75b1d5ecdd
-	github.com/go-ap/storage-fs v0.0.0-20230317101210-4e0a6cf7248a
+	github.com/go-ap/processing v0.0.0-20230320174143-3a0a437e99d7
+	github.com/go-ap/storage-fs v0.0.0-20230320180454-6c998b075207
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0

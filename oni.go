@@ -54,11 +54,7 @@ func Oni(initFns ...optionFn) *oni {
 			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to find Actor")
 			continue
 		}
-		var actor *vocab.Actor
-		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-			actor, err = vocab.ToActor(col.First())
-			return err
-		})
+		actor, err := vocab.ToActor(it)
 		if err != nil || actor == nil {
 			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to load Actor")
 			continue

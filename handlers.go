@@ -148,31 +148,11 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 		return nil, err
 	}
 
-	if vocab.ValidCollectionIRI(iri) {
-		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-			res, err := loadResultIntoCollectionPage(iri, *col)
-			it = res
-			return err
-		})
-		return it, err
+	if it.GetID().Equals(iri, true) {
+		return it, nil
 	}
 
 	tryInActivity, prop := propNameInIRI(iri)
-	if vocab.IsItemCollection(it) {
-		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-			tryInActivity = tryInActivity && col.Count() == 0
-			if col.Count() != 1 {
-				it = nil
-				return iriNotFound(iri)
-			}
-			it = col.First()
-			if !it.GetID().Equals(iri, true) {
-				it = nil
-				return iriNotFound(iri)
-			}
-			return nil
-		})
-	}
 	u, _ := iri.URL()
 	if !tryInActivity || u.Path == "/" {
 		return it, err
@@ -398,7 +378,7 @@ func actorURLs(act vocab.Actor) func() vocab.IRIs {
 			}
 			return nil
 		})
-	} else {
+	} else if !vocab.IsNil(act.URL) {
 		urls.Append(act.URL.GetLink())
 	}
 	return func() vocab.IRIs {
