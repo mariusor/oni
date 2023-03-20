@@ -389,6 +389,23 @@ func loadResultIntoCollectionPage(iri vocab.IRI, it vocab.ItemCollection) (vocab
 	return PaginateCollection(&res)
 }
 
+func actorURLs(act vocab.Actor) func() vocab.IRIs {
+	urls := make(vocab.IRIs, 0)
+	if vocab.IsItemCollection(act.URL) {
+		vocab.OnItemCollection(act.URL, func(col *vocab.ItemCollection) error {
+			for _, u := range *col {
+				urls.Append(u.GetLink())
+			}
+			return nil
+		})
+	} else {
+		urls.Append(act.URL.GetLink())
+	}
+	return func() vocab.IRIs {
+		return urls
+	}
+}
+
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
 	if vocab.ValidCollectionIRI(iri) {
@@ -427,6 +444,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		oniActor := o.oniActor(r)
 		oniFn := template.FuncMap{
 			"ONI":   func() vocab.Actor { return oniActor },
+			"URLS":  actorURLs(oniActor),
 			"Title": titleFromActor(oniActor),
 		}
 		templatePath := "components/person"
