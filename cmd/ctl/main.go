@@ -27,13 +27,13 @@ type Control struct {
 	Logger      lw.Logger
 }
 
-var token = &cli.Command{
+var tokenCmd = &cli.Command{
 	Name:        "token",
 	Usage:       "OAuth2 authorization token management",
-	Subcommands: []*cli.Command{tokenAdd},
+	Subcommands: []*cli.Command{tokenAddCmd},
 }
 
-var tokenAdd = &cli.Command{
+var tokenAddCmd = &cli.Command{
 	Name:    "add",
 	Aliases: []string{"new"},
 	Usage:   "Adds an OAuth2 token",
@@ -45,17 +45,15 @@ var tokenAdd = &cli.Command{
 }
 
 var OAuth2Cmd = &cli.Command{
-	Name:  "oauth",
-	Usage: "OAuth2 client and access token helper",
-	Flags: []cli.Flag{
-		&cli.PathFlag{
-			Name:  "path",
-			Value: dataPath(),
-		},
-	},
-	Subcommands: []*cli.Command{
-		token,
-	},
+	Name:        "oauth",
+	Usage:       "OAuth2 client and access token helper",
+	Subcommands: []*cli.Command{tokenCmd},
+}
+
+var fixCollectionsCmd = &cli.Command{
+	Name:   "fix-collections",
+	Usage:  "",
+	Action: fixCollectionsAct(&ctl),
 }
 
 func dataPath() string {
@@ -70,19 +68,110 @@ func dataPath() string {
 	return filepath.Join(dh, "oni")
 }
 
+func newOrderedCollection(id vocab.IRI) *vocab.OrderedCollection {
+	return &vocab.OrderedCollection{
+		ID:        id,
+		Type:      vocab.OrderedCollectionType,
+		Generator: ctl.Service.GetLink(),
+		Published: time.Now().UTC(),
+	}
+}
+func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
+	var collection *vocab.OrderedCollection
+	items, err := ctl.Storage.Load(colIRI.GetLink())
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			ctl.Logger.Errorf("Unable to load %s: %s", colIRI, err)
+			return err
+		}
+		colSaver, ok := storage.(processing.CollectionStore)
+		if !ok {
+			return errors.Newf("Invalid storage type %T. Unable to handle collection operations.", storage)
+		}
+		it, err := colSaver.Create(newOrderedCollection(colIRI.GetLink()))
+		if err != nil {
+			ctl.Logger.Errorf("Unable to create collection %s: %s", colIRI, err)
+			return err
+		}
+		collection, err = vocab.ToOrderedCollection(it)
+		if err != nil {
+			ctl.Logger.Errorf("Saved object is not a valid OrderedCollection, but %s: %s", it.GetType(), err)
+			return err
+		}
+	}
+
+	if vocab.IsNil(items) {
+		return nil
+	}
+
+	if !items.IsCollection() {
+		if _, err := storage.Save(items); err != nil {
+			ctl.Logger.Errorf("Unable to save object %s: %s", items.GetLink(), err)
+			return err
+		}
+	}
+	collection, err = vocab.ToOrderedCollection(items)
+	if err != nil {
+		ctl.Logger.Errorf("Saved object is not a valid OrderedCollection, but %s: %s", items.GetType(), err)
+		return err
+	}
+	vocab.OnCollectionIntf(items, func(col vocab.CollectionInterface) error {
+		collection.TotalItems = col.Count()
+		for _, it := range col.Collection() {
+			// Try saving objects in collection, which would create the collections if they exist
+			if _, err := storage.Save(it); err != nil {
+				ctl.Logger.Errorf("Unable to save object %s: %s", it.GetLink(), err)
+			}
+		}
+		return nil
+	})
+
+	collection.OrderedItems = nil
+	_, err = storage.Save(collection)
+	if err != nil {
+		ctl.Logger.Errorf("Unable to save collection with updated totalItems", err)
+		return err
+	}
+
+	return nil
+}
+
+func fixCollectionsAct(ctl *Control) cli.ActionFunc {
+	return func(context *cli.Context) error {
+		urls := context.Args()
+
+		for _, url := range urls.Slice() {
+			it, err := ctl.Storage.Load(vocab.IRI(url))
+			if err != nil {
+				ctl.Logger.Errorf("Invalid actor url %s: %s", url, err)
+				continue
+			}
+			actor, err := vocab.ToActor(it)
+			if err != nil {
+				ctl.Logger.Errorf("Invalid actor found for url %s: %s", url, err)
+				continue
+			}
+			_, err = ctl.Storage.Save(actor)
+			if err != nil {
+				ctl.Logger.Errorf("Unable to save main actor %s: %s", actor.ID, err)
+				continue
+			}
+			err = tryCreateCollection(ctl.Storage, actor.Outbox.GetLink())
+			if err != nil {
+				ctl.Logger.Errorf("Unable to save Outbox collection for main actor %s: %s", actor.ID, err)
+				continue
+			}
+		}
+		return nil
+	}
+}
+
 func tokenAct(ctl *Control) cli.ActionFunc {
 	return func(c *cli.Context) error {
 		clientID := c.String("client")
 		if clientID == "" {
 			return errors.Newf("Need to provide the client id")
 		}
-		conf := storage.Config{CacheEnable: true, Path: c.Path("path"), ErrFn: ctl.Logger.Errorf, LogFn: ctl.Logger.Infof}
-		st, err := storage.New(conf)
-		if err != nil {
-			ctl.Logger.Errorf("%s", err.Error())
-			return err
-		}
-		ctl.Storage = st
 
 		actor := clientID
 		tok, err := ctl.GenAuthToken(clientID, actor, nil)
@@ -193,6 +282,14 @@ func Before(c *cli.Context) error {
 	fields := lw.Ctx{}
 	ctl = Control{Logger: lw.Dev().WithContext(fields)}
 
+	conf := storage.Config{CacheEnable: true, Path: c.Path("path"), ErrFn: ctl.Logger.Errorf, LogFn: ctl.Logger.Infof}
+	st, err := storage.New(conf)
+	if err != nil {
+		ctl.Logger.Errorf("%s", err.Error())
+		return err
+	}
+	ctl.Storage = st
+
 	return nil
 }
 
@@ -207,12 +304,16 @@ func main() {
 	}
 	app.Before = Before
 	app.Flags = []cli.Flag{
-		&cli.StringFlag{
-			Name:  "url",
-			Usage: "The url used by the application",
+		&cli.PathFlag{
+			Name:  "path",
+			Value: dataPath(),
 		},
+		//	&cli.StringFlag{
+		//		Name:  "url",
+		//		Usage: "The url used by the application",
+		//	},
 	}
-	app.Commands = []*cli.Command{OAuth2Cmd}
+	app.Commands = []*cli.Command{OAuth2Cmd, fixCollectionsCmd}
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
