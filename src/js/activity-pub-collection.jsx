@@ -1,5 +1,5 @@
 import {css, html, nothing} from "lit";
-import {ActivityPubObject, ObjectTypes} from "./activity-pub-object";
+import {ActivityPubObject} from "./activity-pub-object";
 import {ifDefined} from "lit-html/directives/if-defined.js";
 import {ActivityTypes} from "./activity-pub-activity";
 import {ActorTypes} from "./activity-pub-actor";

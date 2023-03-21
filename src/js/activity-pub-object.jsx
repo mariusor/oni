@@ -116,6 +116,9 @@ export class ActivityPubObject extends LitElement {
         if (this.it == null) {
             return null;
         }
+        if (typeof this.it == "string") {
+            return this.it;
+        }
         return this.it.hasOwnProperty('id') ? this.it.id : null;
     }
 
