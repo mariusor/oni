@@ -147,6 +147,9 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 	if err != nil {
 		return nil, err
 	}
+	if vocab.IsNil(it) {
+		return nil, errors.NotFoundf("not found")
+	}
 
 	if it.GetID().Equals(iri, true) {
 		return it, nil
