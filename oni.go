@@ -64,24 +64,26 @@ func Oni(initFns ...optionFn) *oni {
 			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save OAuth2 Client")
 		}
 
-		// NOTE(marius): this generates a new key pair for every run of the service
-		prvKey, err := rsa.GenerateKey(rand.Reader, 2048)
-		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save Private Key")
-			continue
-		}
+		if actor.PublicKey.PublicKeyPem != "" {
+			// NOTE(marius): this generates a new key pair for every run of the service
+			prvKey, err := rsa.GenerateKey(rand.Reader, 2048)
+			if err != nil {
+				o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save Private Key")
+				continue
+			}
 
-		// NOTE(marius): even though we generate the keys, we don't save them if storage reports they exist
-		it, err = o.s.SaveKey(actor.GetLink(), prvKey)
-		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save Private Key")
-			continue
-		}
+			// NOTE(marius): even though we generate the keys, we don't save them if storage reports they exist
+			it, err = o.s.SaveKey(actor.GetLink(), prvKey)
+			if err != nil {
+				o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save Private Key")
+				continue
+			}
 
-		actor, err = vocab.ToActor(it)
-		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to convert saved Item to Actor")
-			continue
+			actor, err = vocab.ToActor(it)
+			if err != nil {
+				o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to convert saved Item to Actor")
+				continue
+			}
 		}
 
 		o.a[i] = *actor
