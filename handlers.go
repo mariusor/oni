@@ -142,6 +142,14 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 	}
 }
 
+func sameishIRI(check, colIRI vocab.IRI) bool {
+	uc, _ := check.GetID().URL()
+	ui, _ := colIRI.URL()
+	uc.RawQuery = ""
+	ui.RawQuery = ""
+	return strings.EqualFold(uc.String(), ui.String())
+}
+
 func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, error) {
 	it, err := s.Load(iri)
 	if err != nil {
@@ -151,7 +159,10 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 		return nil, errors.NotFoundf("not found")
 	}
 
-	if it.GetID().Equals(iri, true) {
+	if sameishIRI(it.GetLink(), iri) {
+		if vocab.ValidCollectionIRI(iri) {
+			return PaginateCollection(it)
+		}
 		return it, nil
 	}
 
@@ -345,33 +356,6 @@ func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct
 	return checkAcceptMediaType(accepted)
 }
 
-func loadResultIntoCollectionPage(iri vocab.IRI, it vocab.ItemCollection) (vocab.CollectionInterface, error) {
-	// NOTE(marius): the IRI of the Collection is w/o the filters to load the Actor and Object
-	res := vocab.OrderedCollectionPage{
-		ID:   iri,
-		Type: vocab.OrderedCollectionPageType,
-	}
-	var err error
-	if vocab.IsItemCollection(it) {
-		err = vocab.OnItemCollection(it, func(col *vocab.ItemCollection) error {
-			res.OrderedItems = *col
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-	err = vocab.OnCollectionIntf(it, func(items vocab.CollectionInterface) error {
-		res.OrderedItems = orderItems(items.Collection())
-		res.TotalItems = res.OrderedItems.Count()
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return PaginateCollection(&res)
-}
-
 func actorURLs(act vocab.Actor) func() vocab.IRIs {
 	urls := make(vocab.IRIs, 0)
 	if vocab.IsItemCollection(act.URL) {
@@ -521,12 +505,17 @@ func getURL(i vocab.IRI, f url.Values) vocab.IRI {
 }
 
 // PaginateCollection is a function that populates the received collection
-func PaginateCollection(col vocab.CollectionInterface) (vocab.CollectionInterface, error) {
-	if col == nil {
-		return col, errors.Newf("unable to paginate nil collection")
+func PaginateCollection(it vocab.Item) (vocab.CollectionInterface, error) {
+	if vocab.IsNil(it) {
+		return nil, errors.Newf("unable to paginate nil collection")
 	}
 
-	u, _ := col.GetLink().URL()
+	c, err := vocab.ToOrderedCollection(it)
+	if err != nil {
+		return nil, err
+	}
+
+	u, _ := it.GetLink().URL()
 	u.User = nil
 	q := u.Query()
 	u.RawQuery = ""
@@ -536,18 +525,17 @@ func PaginateCollection(col vocab.CollectionInterface) (vocab.CollectionInterfac
 	var haveItems bool
 	var prev, next vocab.IRI // IRIs
 
+	col := &vocab.OrderedCollectionPage{
+		ID:           it.GetLink(),
+		Type:         vocab.OrderedCollectionPageType,
+		TotalItems:   c.TotalItems,
+		OrderedItems: c.OrderedItems,
+		PartOf:       c.ID,
+	}
+
 	mi, _ := strconv.ParseInt(q.Get("maxItems"), 10, 32)
 	maxItems := int(mi)
 	haveItems = col.Count() > 0
-
-	ordered := vocab.ActivityVocabularyTypes{
-		vocab.OrderedCollectionPageType,
-		vocab.OrderedCollectionType,
-	}
-	unOrdered := vocab.ActivityVocabularyTypes{
-		vocab.CollectionPageType,
-		vocab.CollectionType,
-	}
 
 	// TODO(marius): refactor this with OnCollection functions
 	if haveItems {
@@ -556,70 +544,38 @@ func PaginateCollection(col vocab.CollectionInterface) (vocab.CollectionInterfac
 		fp := u.Query()
 
 		firstURL = getURL(baseURL, fp)
-		if col.GetType() == vocab.CollectionOfItems {
-			err := vocab.OnItemCollection(col, func(items *vocab.ItemCollection) error {
-				*items, _, _, _ = paginateItems(items.Collection(), maxItems)
-				return nil
-			})
-			return col, err
-		}
-		if ordered.Contains(col.GetType()) {
-			vocab.OnOrderedCollection(col, func(oc *vocab.OrderedCollection) error {
-				if len(firstURL) > 0 {
-					oc.First = firstURL
-				}
-				oc.Current = curURL
-				oc.OrderedItems, prev, next, _ = paginateItems(oc.OrderedItems, maxItems)
-				return nil
-			})
-		}
-		if unOrdered.Contains(col.GetType()) {
-			vocab.OnCollection(col, func(c *vocab.Collection) error {
-				c.Current = curURL
-				if len(firstURL) > 0 {
-					c.First = firstURL
-				}
-				c.Items, prev, next, _ = paginateItems(c.Items, maxItems)
+		vocab.OnOrderedCollection(col, func(oc *vocab.OrderedCollection) error {
+			if len(firstURL) > 0 {
+				oc.First = firstURL
+			}
+			oc.Current = curURL
+			oc.OrderedItems, prev, next, _ = paginateItems(oc.OrderedItems, maxItems)
+			return nil
+		})
+	}
+	var nextURL, prevURL vocab.IRI
+	if len(next) > 0 {
+		np := u.Query()
+		np.Add("after", next.String())
+		nextURL = getURL(baseURL, np)
+	}
+	if len(prev) > 0 {
+		pp := u.Query()
+		pp.Add("before", prev.String())
+		prevURL = getURL(baseURL, pp)
+	}
 
-				return nil
-			})
-		}
-		var nextURL, prevURL vocab.IRI
-		if len(next) > 0 {
-			np := u.Query()
-			np.Add("after", next.String())
-			nextURL = getURL(baseURL, np)
-		}
-		if len(prev) > 0 {
-			pp := u.Query()
-			pp.Add("before", prev.String())
-			prevURL = getURL(baseURL, pp)
-		}
-
-		if col.GetType() == vocab.OrderedCollectionPageType {
-			vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
-				c.PartOf = baseURL
-				if len(nextURL) > 0 {
-					c.Next = nextURL
-				}
-				if len(prevURL) > 0 {
-					c.Prev = prevURL
-				}
-				return nil
-			})
-		}
-		if col.GetType() == vocab.CollectionPageType {
-			vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
-				c.PartOf = baseURL
-				if len(nextURL) > 0 {
-					c.Next = nextURL
-				}
-				if len(prevURL) > 0 {
-					c.Prev = prevURL
-				}
-				return nil
-			})
-		}
+	if col.GetType() == vocab.OrderedCollectionPageType {
+		vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
+			c.PartOf = baseURL
+			if len(nextURL) > 0 {
+				c.Next = nextURL
+			}
+			if len(prevURL) > 0 {
+				c.Prev = prevURL
+			}
+			return nil
+		})
 	}
 	updatedAt := time.Time{}
 	for _, it := range col.Collection() {
