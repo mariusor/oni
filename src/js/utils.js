@@ -22,7 +22,7 @@ export async function fetchActivityPubIRI(iri) {
     } else {
         // generate HTTP-signature for the actor
     }
-    const response = await fetch(iri, {headers: headers}).catch(console.error);
+    const response = await fetch(iri, {headers: headers, mode: 'no-cors'}).catch(console.error);
     if (typeof response == 'undefined') {
         return null;
     }
