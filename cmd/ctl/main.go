@@ -282,7 +282,8 @@ func Before(c *cli.Context) error {
 	fields := lw.Ctx{}
 	ctl = Control{Logger: lw.Dev().WithContext(fields)}
 
-	conf := storage.Config{CacheEnable: true, Path: c.Path("path"), ErrFn: ctl.Logger.Errorf, LogFn: ctl.Logger.Infof}
+	storagePath := c.Path("path")
+	conf := storage.Config{CacheEnable: true, Path: storagePath, ErrFn: ctl.Logger.Errorf, LogFn: ctl.Logger.Infof}
 	st, err := storage.New(conf)
 	if err != nil {
 		ctl.Logger.Errorf("%s", err.Error())
@@ -308,10 +309,6 @@ func main() {
 			Name:  "path",
 			Value: dataPath(),
 		},
-		//	&cli.StringFlag{
-		//		Name:  "url",
-		//		Usage: "The url used by the application",
-		//	},
 	}
 	app.Commands = []*cli.Command{OAuth2Cmd, fixCollectionsCmd}
 

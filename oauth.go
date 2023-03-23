@@ -4,11 +4,6 @@ import (
 	"crypto"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
-	"math/rand"
-	"net/http"
-	"net/url"
-
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
@@ -17,6 +12,8 @@ import (
 	"github.com/go-ap/processing"
 	"github.com/openshift/osin"
 	"golang.org/x/oauth2"
+	"math/rand"
+	"net/http"
 )
 
 type ClientSaver interface {
@@ -150,12 +147,13 @@ var (
 )
 
 func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
-	s := o.o
-	resp := s.NewResponse()
-	defer resp.Close()
-
+	a, err := loadBaseActor(o, r)
+	if err != nil {
+		o.Error(err).ServeHTTP(w, r)
+		return
+	}
 	as, err := auth.New(
-		auth.WithURL(fmt.Sprintf("https://%s", r.URL.Host)),
+		auth.WithURL(a.ID.String()),
 		auth.WithStorage(o.s),
 		auth.WithClient(o.c),
 		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
@@ -165,22 +163,14 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	o.o = as
+	resp := as.NewResponse()
+	defer resp.Close()
 
 	actor := &auth.AnonymousActor
-	if ar := s.HandleAccessRequest(resp, r); ar != nil {
+	if ar := as.HandleAccessRequest(resp, r); ar != nil {
 		actorFilters := activitypub.FiltersNew()
-		switch ar.Type {
-		case osin.PASSWORD:
-			if u, _ := url.ParseRequestURI(ar.Username); u != nil {
-				// NOTE(marius): here we send the full actor IRI as a username to avoid handler collisions
-				actorFilters.IRI = vocab.IRI(ar.Username)
-			} else {
-				actorFilters.Name = activitypub.CompStrs{activitypub.StringEquals(ar.Username)}
-			}
-		case osin.AUTHORIZATION_CODE:
-			if iri, ok := ar.UserData.(string); ok {
-				actorFilters.IRI = vocab.IRI(iri)
-			}
+		if iri, ok := ar.UserData.(string); ok {
+			actorFilters.IRI = vocab.IRI(iri)
 		}
 		it, err := o.s.Load(actorFilters.GetLink())
 		if err != nil {
@@ -189,58 +179,15 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = vocab.OnActor(it, func(act *vocab.Actor) error {
-			actor = act
-			return nil
-		})
-		if err != nil {
+		if actor, err = vocab.ToActor(it); err != nil {
 			o.l.Errorf("%s", errUnauthorized)
 			errors.HandleError(errUnauthorized).ServeHTTP(w, r)
 			return
 		}
 
-		isLogged := !actor.GetID().Equals(auth.AnonymousActor.ID, true)
-		if ar.Type == osin.PASSWORD {
-			if actor.IsCollection() {
-				err = vocab.OnCollectionIntf(actor, func(col vocab.CollectionInterface) error {
-					// NOTE(marius): This is a stupid way of doing pw authentication, as it will produce collisions
-					//  for users with the same handle/pw and it will login the first in the collection.
-					for _, it := range col.Collection() {
-						err := vocab.OnActor(it, func(act *vocab.Actor) error {
-							if err := o.s.PasswordCheck(act, []byte(ar.Password)); err != nil {
-								return err
-							}
-							actor = act
-							return nil
-						})
-						if err != nil {
-							o.l.WithContext(lw.Ctx{"actor": it.GetID(), "err": err}).
-								Errorf("password check failed")
-						}
-					}
-					return errors.Newf("No actor matched the password")
-				})
-			} else {
-				err = o.s.PasswordCheck(actor, []byte(ar.Password))
-			}
-			if err != nil {
-				if err != nil {
-					o.l.Errorf("%s", err)
-				}
-				errors.HandleError(errUnauthorized).ServeHTTP(w, r)
-				return
-			}
-			ar.Authorized = isLogged
-			ar.UserData = actor.GetLink()
-		}
-		if ar.Type == osin.AUTHORIZATION_CODE {
-			vocab.OnActor(actor, func(p *vocab.Actor) error {
-				ar.Authorized = isLogged
-				ar.UserData = actor.GetLink()
-				return nil
-			})
-		}
-		s.FinishAccessRequest(resp, r, ar)
+		ar.Authorized = !actor.GetID().Equals(auth.AnonymousActor.ID, true)
+		ar.UserData = actor.GetLink()
+		as.FinishAccessRequest(resp, r, ar)
 	}
 	redirectOrOutput(resp, w, r)
 }
