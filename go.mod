@@ -14,7 +14,7 @@ require (
 	github.com/go-ap/fedbox v0.0.0-20230111150432-bab3b45bf9a2
 	github.com/go-ap/filters v0.0.0-20230322094528-7e910dfd258b
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20230322094514-ccecbb4ca1e4
+	github.com/go-ap/processing v0.0.0-20230323084442-95b47d6e796c
 	github.com/go-ap/storage-fs v0.0.0-20230322202137-0e972623522b
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/cors v1.2.1
