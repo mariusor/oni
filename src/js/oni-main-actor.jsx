@@ -80,14 +80,16 @@ export class OniMainActor extends ActivityPubActor {
         it: {type: Object},
         palette: {type: Object},
         colors: {type: Array},
+        authenticated: {type: Boolean},
     };
 
     constructor(it) {
         super(it);
         this.palette = {};
         this.colors = [];
+        this.authenticated = isAuthenticated();
 
-        this.addEventListener('content.change', this.updateActivityPubItem)
+        this.addEventListener('content.change', this.updateActivityPubActor)
     }
 
     async loadPalette(it) {
@@ -149,7 +151,7 @@ export class OniMainActor extends ActivityPubActor {
 
     collections() {
         let collections = super.collections();
-        if (this.it.hasOwnProperty('inbox') && isAuthenticated()) {
+        if (this.it.hasOwnProperty('inbox') && this.authenticated) {
             collections.push(this.it.inbox);
         }
         if (this.it.hasOwnProperty('outbox')) {
@@ -209,18 +211,27 @@ export class OniMainActor extends ActivityPubActor {
                 <oni-natural-language-values
                     name="preferredUsername" 
                     it=${JSON.stringify(this.preferredUsername())}
+                    ?editable=${this.authenticated}
                 ></oni-natural-language-values>
             `;
         }
         return nothing;
     }
 
-    updateActivityPubItem(e) {
+    updateActivityPubActor(e) {
         const it = this.it;
         const prop = e.detail.name;
         const val = e.detail.content;
         it[prop] = val;
         console.debug('will update', it);
+    }
+
+    loggedIn(e) {
+        this.authenticated = true;
+    }
+
+    loggedOut(e) {
+        this.authenticated = false;
     }
 
     renderOAuth() {
@@ -238,7 +249,12 @@ export class OniMainActor extends ActivityPubActor {
         const tokenURL = endPoints.oauthTokenEndpoint;
 
         return html`
-            <oni-login-link authorizeURL=${authURL} tokenURL=${tokenURL}></oni-login-link>`;
+            <oni-login-link 
+                authorizeURL=${authURL} 
+                tokenURL=${tokenURL} 
+                @logged.in=${this.loggedIn}
+                @logged.out=${this.loggedOut}
+            ></oni-login-link>`;
     }
 
     async renderPalette() {

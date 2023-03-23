@@ -299,7 +299,11 @@ export class ActivityPubObject extends LitElement {
         if (summary.length == 0) {
             return nothing;
         }
-        return html`<oni-natural-language-values name="summary" it=${JSON.stringify(summary)}></oni-natural-language-values>`;
+        return html`<oni-natural-language-values
+                name="summary"
+                it=${JSON.stringify(summary)}
+                ?editable=${this.authenticated}
+        ></oni-natural-language-values>`;
     }
 
     async renderReplyCount() {

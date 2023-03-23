@@ -81,8 +81,9 @@ export class LoginDialog extends LitElement {
     loginSuccessful() {
         this.close();
 
-        this.dispatchEvent(new CustomEvent('login.successful', {
+        this.dispatchEvent(new CustomEvent('logged.in', {
             bubbles: true,
+            composed: true,
         }));
     }
 
@@ -188,8 +189,6 @@ export class LoginLink extends LitElement {
     }
 
     hideDialog(e) {
-        console.debug(e);
-
         this.dialogVisible = false;
         this.loginVisible = true;
     }
@@ -204,6 +203,10 @@ export class LoginLink extends LitElement {
         localStorage.removeItem('state');
 
         this.loginVisible = true;
+        this.dispatchEvent(new CustomEvent('logged.out', {
+            bubbles: true,
+            composed: true,
+        }));
     }
 
     render() {
@@ -221,7 +224,7 @@ export class LoginLink extends LitElement {
                                     authorizeURL=${this.authorizeURL}
                                     tokenURL=${this.tokenURL}
                                     @dialog.closed=${this.hideDialog}
-                                    @login.successful=${() => {this.loginVisible = false}}
+                                    @logged.in=${() => {this.loginVisible = false}}
                             ></oni-login-dialog>
                         `,
                     () => html`
