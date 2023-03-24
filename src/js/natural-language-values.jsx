@@ -69,7 +69,7 @@ export class NaturalLanguageValues extends LitElement {
         if (!this.it) { return nothing; }
 
         return html`
-            <div ?contenteditable=${this.editable} @blur="${this.checkChanged}" @click="${this.checkEditable}">
+            <div ?contenteditable=${this.editable} @blur="${this.checkChanged}">
                 ${unsafeHTML(this.value()) ?? nothing}
                 <slot></slot>
             </div>`;

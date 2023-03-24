@@ -1,4 +1,4 @@
-import {OnReady} from "./utils";
+import {isAuthenticated, OnReady} from "./utils";
 import {OniMainActor} from "./oni-main-actor";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {CollectionLink, CollectionLinks} from "./collection-links";
@@ -40,7 +40,7 @@ customElements.define('oni-login-dialog', LoginDialog);
 customElements.define('oni-errors', OniErrors);
 
 OnReady(function () {
-    console.log(`Loading ${window.location}`);
+    console.debug(`Loading ${window.location}`);
 
     const root = document.documentElement;
     if (localStorage.getItem('palette')) {
@@ -51,4 +51,13 @@ OnReady(function () {
         root.style.setProperty('--link-active-color', palette.linkActiveColor);
         root.style.setProperty('--shadow-color', palette.shadowColor);
     }
+
+    // use the window event listener to set the editable status of the slotted conent (if exists)
+    const content = document.querySelectorAll('oni-main oni-natural-language-values[name=content]');
+    window.addEventListener('logged.out', (e) => {
+        content.forEach(x => x.editable = false );
+    });
+    window.addEventListener('logged.in', (e) => {
+        content.forEach(x => x.editable = isAuthenticated());
+    });
 });

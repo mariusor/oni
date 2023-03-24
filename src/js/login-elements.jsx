@@ -112,7 +112,8 @@ export class LoginDialog extends LitElement {
                     display: none;
                     position: fixed;
                     flex-direction: column;
-                    border: 2px outset black;
+                    border: 2px outset var(--shadow-color);
+                    background-color: var(--bg-color);
                     padding: 1em;
                     margin: 1em;
                     align-content: center;
