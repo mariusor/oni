@@ -21,6 +21,7 @@ import (
 	"github.com/go-ap/auth"
 	"github.com/go-ap/client"
 	"github.com/go-ap/errors"
+	"github.com/go-ap/filters"
 	json "github.com/go-ap/jsonld"
 	"github.com/go-ap/processing"
 	"github.com/go-chi/chi/v5"
@@ -477,20 +478,17 @@ func colIRI(r *http.Request, types ...vocab.ActivityVocabularyType) vocab.IRI {
 
 const MaxItems = 20
 
-func paginateItems(col vocab.ItemCollection, count int) (vocab.ItemCollection, vocab.IRI, vocab.IRI, error) {
+func getPrevNext(col vocab.ItemCollection) (vocab.IRI, vocab.IRI) {
 	var prev, next vocab.IRI
-	if vocab.IsNil(col) {
-		return nil, prev, next, nil
-	}
-	if count == 0 {
-		count = MaxItems
+	if vocab.IsNil(col) || col.Count() == 0 {
+		return prev, next
 	}
 
 	start := 0
 	cnt := len(col)
 	prev = col[start].GetLink()
 	next = col[cnt-1].GetLink()
-	return col, prev, next, nil
+	return prev, next
 }
 
 func getURL(i vocab.IRI, f url.Values) vocab.IRI {
@@ -504,70 +502,139 @@ func getURL(i vocab.IRI, f url.Values) vocab.IRI {
 	return i
 }
 
+func filterCollection(col vocab.ItemCollection, fns ...filters.Fn) vocab.ItemCollection {
+	result := make(vocab.ItemCollection, 0, len(col))
+
+invalidItem:
+	for _, it := range col {
+		for _, fn := range fns {
+			if !fn(it) {
+				continue invalidItem
+			}
+		}
+		result = append(result, it)
+	}
+	return result
+}
+
+func sortItemsByPublishedUpdated(col vocab.ItemCollection) vocab.ItemCollection {
+	sort.SliceStable(col, func(i int, j int) bool {
+		it1 := col.Collection()[i]
+		it2 := col.Collection()[j]
+		var (
+			p1 time.Time
+			p2 time.Time
+			u1 time.Time
+			u2 time.Time
+		)
+		vocab.OnObject(it1, func(ob *vocab.Object) error {
+			p1 = ob.Published
+			u1 = ob.Updated
+			return nil
+		})
+		vocab.OnObject(it2, func(ob *vocab.Object) error {
+			p2 = ob.Published
+			u2 = ob.Updated
+			return nil
+		})
+
+		if d1 := u1.Sub(p1); d1 < 0 {
+			u1 = p1
+		}
+		if d2 := u2.Sub(p2); d2 < 0 {
+			u2 = p2
+		}
+		return u2.Sub(u1) < 0
+	})
+	return col
+}
+
+func collectionPageFromItem(it vocab.Item) vocab.CollectionInterface {
+	typ := it.GetType()
+
+	if !vocab.CollectionTypes.Contains(typ) {
+		return nil
+	}
+
+	result, _ := it.(vocab.CollectionInterface)
+
+	filters := []filters.Fn{
+		filters.Object(filters.HasType(vocab.NoteType, vocab.ArticleType)),
+		filters.WithMaxCount(MaxItems),
+	}
+
+	items := result.Collection()
+	switch typ {
+	case vocab.OrderedCollectionPageType:
+		vocab.OnOrderedCollectionPage(result, func(new *vocab.OrderedCollectionPage) error {
+			new.OrderedItems = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+			return nil
+		})
+	case vocab.CollectionPageType:
+		vocab.OnCollectionPage(result, func(new *vocab.CollectionPage) error {
+			new.Items = filterCollection(items, filters...)
+			return nil
+		})
+	case vocab.OrderedCollectionType:
+		result = new(vocab.OrderedCollectionPage)
+		old, _ := it.(*vocab.OrderedCollection)
+		vocab.OnOrderedCollection(result, func(new *vocab.OrderedCollection) error {
+			_, err := vocab.CopyOrderedCollectionProperties(new, old)
+			new.Type = vocab.OrderedCollectionPageType
+			new.OrderedItems = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+			return err
+		})
+	case vocab.CollectionType:
+		result = new(vocab.CollectionPage)
+		old, _ := it.(*vocab.Collection)
+		vocab.OnCollection(result, func(new *vocab.Collection) error {
+			_, err := vocab.CopyCollectionProperties(new, old)
+			new.Type = vocab.CollectionPageType
+			new.Items = filterCollection(items, filters...)
+			return err
+		})
+	case vocab.CollectionOfItems:
+		new := new(vocab.OrderedCollectionPage)
+		new.Type = vocab.CollectionPageType
+		new.OrderedItems = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+		result = new
+	}
+
+	return result
+}
+
 // PaginateCollection is a function that populates the received collection
 func PaginateCollection(it vocab.Item) (vocab.CollectionInterface, error) {
 	if vocab.IsNil(it) {
 		return nil, errors.Newf("unable to paginate nil collection")
 	}
 
-	c, err := vocab.ToOrderedCollection(it)
-	if err != nil {
-		return nil, err
+	col := collectionPageFromItem(it)
+	if vocab.IsNil(col) {
+		return nil, errors.Newf("unable to paginate %T[%s] collection", it, it.GetType())
 	}
 
-	u, _ := it.GetLink().URL()
-	u.User = nil
-	q := u.Query()
-	u.RawQuery = ""
-	baseURL := vocab.IRI(u.String())
-	curURL := getURL(baseURL, q)
+	curURL := it.GetID()
 
-	var haveItems bool
 	var prev, next vocab.IRI // IRIs
 
-	col := &vocab.OrderedCollectionPage{
-		ID:           it.GetLink(),
-		Type:         vocab.OrderedCollectionPageType,
-		TotalItems:   c.TotalItems,
-		OrderedItems: c.OrderedItems,
-		PartOf:       c.ID,
-	}
-
-	mi, _ := strconv.ParseInt(q.Get("maxItems"), 10, 32)
-	maxItems := int(mi)
-	haveItems = col.Count() > 0
-
-	// TODO(marius): refactor this with OnCollection functions
-	if haveItems {
-		var firstURL vocab.IRI
-
-		fp := u.Query()
-
-		firstURL = getURL(baseURL, fp)
-		vocab.OnOrderedCollection(col, func(oc *vocab.OrderedCollection) error {
-			if len(firstURL) > 0 {
-				oc.First = firstURL
-			}
-			oc.Current = curURL
-			oc.OrderedItems, prev, next, _ = paginateItems(oc.OrderedItems, maxItems)
-			return nil
-		})
-	}
 	var nextURL, prevURL vocab.IRI
 	if len(next) > 0 {
-		np := u.Query()
+		np := url.Values{}
 		np.Add("after", next.String())
-		nextURL = getURL(baseURL, np)
+		nextURL = getURL(curURL, np)
 	}
 	if len(prev) > 0 {
-		pp := u.Query()
+		pp := url.Values{}
 		pp.Add("before", prev.String())
-		prevURL = getURL(baseURL, pp)
+		prevURL = getURL(curURL, pp)
 	}
 
 	if col.GetType() == vocab.OrderedCollectionPageType {
 		vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
-			c.PartOf = baseURL
+			c.PartOf = curURL
+			c.Current = curURL
+			prev, next = getPrevNext(c.OrderedItems)
 			if len(nextURL) > 0 {
 				c.Next = nextURL
 			}
@@ -577,22 +644,20 @@ func PaginateCollection(it vocab.Item) (vocab.CollectionInterface, error) {
 			return nil
 		})
 	}
-	updatedAt := time.Time{}
-	for _, it := range col.Collection() {
-		vocab.OnObject(it, func(o *vocab.Object) error {
-			if o.Published.Sub(updatedAt) > 0 {
-				updatedAt = o.Published
+	if col.GetType() == vocab.CollectionPageType {
+		vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
+			c.PartOf = curURL
+			c.Current = curURL
+			prev, next = getPrevNext(c.Items)
+			if len(nextURL) > 0 {
+				c.Next = nextURL
 			}
-			if o.Updated.Sub(updatedAt) > 0 {
-				updatedAt = o.Updated
+			if len(prevURL) > 0 {
+				c.Prev = prevURL
 			}
 			return nil
 		})
 	}
-	vocab.OnObject(col, func(o *vocab.Object) error {
-		o.Updated = updatedAt
-		return nil
-	})
 
 	return col, nil
 }
