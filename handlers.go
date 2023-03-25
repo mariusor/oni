@@ -76,6 +76,8 @@ func (o *oni) setupRoutes(actors []vocab.Actor) {
 	o.setupStaticRoutes(m)
 	o.setupWebfingerRoutes(m)
 
+	m.Mount("/debug", middleware.Profiler())
+
 	o.m = m
 }
 
