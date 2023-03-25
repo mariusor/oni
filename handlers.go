@@ -507,33 +507,43 @@ func filterCollection(col vocab.ItemCollection, fns ...filters.Fn) (vocab.ItemCo
 	pp := url.Values{}
 	np := url.Values{}
 
-	needsNewTop := false
-	top := col[0]
-	bottom := col[len(col)-1]
 invalidItem:
 	for _, it := range col {
-		if needsNewTop {
-			top = it
-			needsNewTop = false
-		}
 		for _, fn := range fns {
 			if !fn(it) {
-				if it.GetLink().Equals(top.GetLink(), true) {
-					needsNewTop = true
-				}
 				continue invalidItem
 			}
 		}
 		result = append(result, it)
 	}
-	if len(result) > 0 {
-		if first := result[0]; !first.GetLink().Equals(top.GetLink(), true) {
+
+	if len(result) == 0 {
+		return result, pp, np
+	}
+	first := result[0]
+	if len(col) > MaxItems {
+		firstPage := col[0:MaxItems]
+		onFirstPage := false
+		for _, top := range firstPage {
+			if onFirstPage = first.GetLink().Equals(top.GetLink(), true); onFirstPage {
+				break
+			}
+		}
+		if !onFirstPage {
 			pp.Add("before", first.GetLink().String())
 		}
-	}
-	if len(result) > 1 {
-		if last := result[len(result)-1]; !last.GetLink().Equals(bottom.GetLink(), true) {
-			np.Add("after", last.GetLink().String())
+		if len(result) > 1 && len(col) > MaxItems+1 {
+			last := result[len(result)-1]
+			bottomPage := col[len(col)-MaxItems-1 : len(col)-1]
+			onLastPage := false
+			for _, bottom := range bottomPage {
+				if onLastPage = last.GetLink().Equals(bottom.GetLink(), true); onLastPage {
+					break
+				}
+			}
+			if !onLastPage {
+				np.Add("after", last.GetLink().String())
+			}
 		}
 	}
 	return result, pp, np
