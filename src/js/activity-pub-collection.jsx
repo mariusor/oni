@@ -6,7 +6,7 @@ import {ActorTypes} from "./activity-pub-actor";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
-    static styles = css`
+    static styles = [css`
         :host ul, :host ol { 
             width: 100%; 
             padding: 0; 
@@ -18,7 +18,7 @@ export class ActivityPubCollection extends ActivityPubObject {
             overflow: hidden;
             border-bottom: 1px solid var(--fg-color);
         }
-    `;
+    `, ActivityPubObject.styles];
 
     static properties = {
         it: {type: Object},
@@ -70,7 +70,7 @@ export class ActivityPubCollection extends ActivityPubObject {
     renderItems() {
         return html`${this.items().map(it => {
             const type = it.hasOwnProperty('type')? it.type : 'unknown';
-            console.debug(it);
+
             let renderedItem = unsafeHTML(`<!-- Unknown activity object ${type} -->`);
             if (ActivityTypes.indexOf(type) >= 0) {
                 renderedItem = html`<oni-activity it=${JSON.stringify(it)}></oni-activity>`;
