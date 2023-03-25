@@ -366,8 +366,14 @@ func actorURLs(act vocab.Actor) func() vocab.IRIs {
 	}
 }
 
+var validObjectTypes = vocab.ActivityVocabularyTypes{
+	vocab.NoteType, vocab.ArticleType, vocab.ImageType, vocab.AudioType, vocab.VideoType,
+}
+
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
+	colFilters := make(filters.Fns, 0)
+
 	if vocab.ValidCollectionIRI(iri) {
 		if r.Method == http.MethodPost {
 			o.ProcessActivity().ServeHTTP(w, r)
@@ -376,10 +382,24 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 
 		types := make(vocab.ActivityVocabularyTypes, 0)
 		_, whichCollection := vocab.Split(iri)
+
 		if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
 			types = append(types, vocab.CreateType)
+			colFilters = append(colFilters, filters.Object(filters.HasType(validObjectTypes...)))
 		}
+
 		iri = colIRI(r, types...)
+
+		if u, err := iri.URL(); err == nil {
+			if after := u.Query().Get("after"); after != "" {
+				colFilters = append(colFilters, filters.After(vocab.IRI(after)))
+			}
+			if after := u.Query().Get("before"); after != "" {
+				colFilters = append(colFilters, filters.Before(vocab.IRI(after)))
+			}
+		}
+
+		colFilters = append(colFilters, filters.WithMaxCount(MaxItems))
 	}
 
 	it, err := loadItemFromStorage(o.s, iri)
@@ -388,21 +408,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if vocab.ValidCollectionIRI(iri) {
-		paginateFilters := []filters.Fn{
-			filters.Object(filters.HasType(vocab.NoteType, vocab.ArticleType)),
-		}
-
-		if u, err := iri.URL(); err == nil {
-			if after := u.Query().Get("after"); after != "" {
-				paginateFilters = append(paginateFilters, filters.After(vocab.IRI(after)))
-			}
-			if after := u.Query().Get("before"); after != "" {
-				paginateFilters = append(paginateFilters, filters.Before(vocab.IRI(after)))
-			}
-		}
-
-		paginateFilters = append(paginateFilters, filters.WithMaxCount(MaxItems))
-		it, err = PaginateCollection(it, filters.All(paginateFilters...))
+		it, err = PaginateCollection(it, filters.All(colFilters...))
 	}
 	if err != nil {
 		o.Error(err).ServeHTTP(w, r)
