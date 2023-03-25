@@ -163,9 +163,6 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, err
 	}
 
 	if sameishIRI(it.GetLink(), iri) {
-		if vocab.ValidCollectionIRI(iri) {
-			return PaginateCollection(it)
-		}
 		return it, nil
 	}
 
@@ -390,8 +387,25 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
-	if vocab.IsNil(it) {
-		o.Error(iriNotFound(iri)).ServeHTTP(w, r)
+	if vocab.ValidCollectionIRI(iri) {
+		paginateFilters := []filters.Fn{
+			filters.Object(filters.HasType(vocab.NoteType, vocab.ArticleType)),
+		}
+
+		if u, err := iri.URL(); err == nil {
+			if after := u.Query().Get("after"); after != "" {
+				paginateFilters = append(paginateFilters, filters.After(vocab.IRI(after)))
+			}
+			if after := u.Query().Get("before"); after != "" {
+				paginateFilters = append(paginateFilters, filters.Before(vocab.IRI(after)))
+			}
+		}
+
+		paginateFilters = append(paginateFilters, filters.WithMaxCount(MaxItems))
+		it, err = PaginateCollection(it, filters.All(paginateFilters...))
+	}
+	if err != nil {
+		o.Error(err).ServeHTTP(w, r)
 		return
 	}
 
@@ -512,11 +526,15 @@ invalidItem:
 		}
 		result = append(result, it)
 	}
-	if first := result[0]; !first.GetLink().Equals(top.GetLink(), true) {
-		pp.Add("before", first.GetLink().String())
+	if len(result) > 0 {
+		if first := result[0]; !first.GetLink().Equals(top.GetLink(), true) {
+			pp.Add("before", first.GetLink().String())
+		}
 	}
-	if last := result[len(result)-1]; !last.GetLink().Equals(bottom.GetLink(), true) {
-		np.Add("after", last.GetLink().String())
+	if len(result) > 1 {
+		if last := result[len(result)-1]; !last.GetLink().Equals(bottom.GetLink(), true) {
+			np.Add("after", last.GetLink().String())
+		}
 	}
 	return result, pp, np
 }
@@ -553,7 +571,7 @@ func sortItemsByPublishedUpdated(col vocab.ItemCollection) vocab.ItemCollection 
 	return col
 }
 
-func collectionPageFromItem(it vocab.Item) (vocab.CollectionInterface, vocab.Item, vocab.Item) {
+func collectionPageFromItem(it vocab.Item, filters ...filters.Fn) (vocab.CollectionInterface, vocab.Item, vocab.Item) {
 	typ := it.GetType()
 
 	if !vocab.CollectionTypes.Contains(typ) {
@@ -561,11 +579,6 @@ func collectionPageFromItem(it vocab.Item) (vocab.CollectionInterface, vocab.Ite
 	}
 
 	result, _ := it.(vocab.CollectionInterface)
-
-	filters := []filters.Fn{
-		filters.Object(filters.HasType(vocab.NoteType, vocab.ArticleType)),
-		filters.WithMaxCount(MaxItems),
-	}
 
 	var prev url.Values
 	var next url.Values
@@ -644,12 +657,12 @@ func collectionPageFromItem(it vocab.Item) (vocab.CollectionInterface, vocab.Ite
 }
 
 // PaginateCollection is a function that populates the received collection
-func PaginateCollection(it vocab.Item) (vocab.CollectionInterface, error) {
+func PaginateCollection(it vocab.Item, filters ...filters.Fn) (vocab.CollectionInterface, error) {
 	if vocab.IsNil(it) {
 		return nil, errors.Newf("unable to paginate nil collection")
 	}
 
-	col, prevIRI, nextIRI := collectionPageFromItem(it)
+	col, prevIRI, nextIRI := collectionPageFromItem(it, filters...)
 	if vocab.IsNil(col) {
 		return nil, errors.Newf("unable to paginate %T[%s] collection", it, it.GetType())
 	}
