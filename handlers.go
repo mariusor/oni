@@ -261,13 +261,6 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 	}
 }
 
-func orderItems(col vocab.ItemCollection) vocab.ItemCollection {
-	sort.SliceStable(col, func(i, j int) bool {
-		return vocab.ItemOrderTimestamp(col[i], col[j])
-	})
-	return col
-}
-
 func notAcceptable(err error) func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		return nil, http.StatusNotAcceptable, errors.NewMethodNotAllowed(err, "current instance does not federate")
@@ -480,19 +473,6 @@ func colIRI(r *http.Request, types ...vocab.ActivityVocabularyType) vocab.IRI {
 
 const MaxItems = 20
 
-func getPrevNext(col vocab.ItemCollection) (vocab.IRI, vocab.IRI) {
-	var prev, next vocab.IRI
-	if vocab.IsNil(col) || col.Count() == 0 {
-		return prev, next
-	}
-
-	start := 0
-	cnt := len(col)
-	prev = col[start].GetLink()
-	next = col[cnt-1].GetLink()
-	return prev, next
-}
-
 func getURL(i vocab.IRI, f url.Values) vocab.IRI {
 	if f == nil {
 		return i
@@ -504,19 +484,41 @@ func getURL(i vocab.IRI, f url.Values) vocab.IRI {
 	return i
 }
 
-func filterCollection(col vocab.ItemCollection, fns ...filters.Fn) vocab.ItemCollection {
+func filterCollection(col vocab.ItemCollection, fns ...filters.Fn) (vocab.ItemCollection, url.Values, url.Values) {
+	if len(col) == 0 {
+		return col, nil, nil
+	}
 	result := make(vocab.ItemCollection, 0, len(col))
 
+	pp := url.Values{}
+	np := url.Values{}
+
+	needsNewTop := false
+	top := col[0]
+	bottom := col[len(col)-1]
 invalidItem:
 	for _, it := range col {
+		if needsNewTop {
+			top = it
+			needsNewTop = false
+		}
 		for _, fn := range fns {
 			if !fn(it) {
+				if it.GetLink().Equals(top.GetLink(), true) {
+					needsNewTop = true
+				}
 				continue invalidItem
 			}
 		}
 		result = append(result, it)
 	}
-	return result
+	if first := result[0]; !first.GetLink().Equals(top.GetLink(), true) {
+		pp.Add("before", first.GetLink().String())
+	}
+	if last := result[len(result)-1]; !last.GetLink().Equals(bottom.GetLink(), true) {
+		np.Add("after", last.GetLink().String())
+	}
+	return result, pp, np
 }
 
 func sortItemsByPublishedUpdated(col vocab.ItemCollection) vocab.ItemCollection {
@@ -551,11 +553,11 @@ func sortItemsByPublishedUpdated(col vocab.ItemCollection) vocab.ItemCollection 
 	return col
 }
 
-func collectionPageFromItem(it vocab.Item) vocab.CollectionInterface {
+func collectionPageFromItem(it vocab.Item) (vocab.CollectionInterface, vocab.Item, vocab.Item) {
 	typ := it.GetType()
 
 	if !vocab.CollectionTypes.Contains(typ) {
-		return nil
+		return nil, nil, nil
 	}
 
 	result, _ := it.(vocab.CollectionInterface)
@@ -565,16 +567,34 @@ func collectionPageFromItem(it vocab.Item) vocab.CollectionInterface {
 		filters.WithMaxCount(MaxItems),
 	}
 
+	var prev url.Values
+	var next url.Values
+
+	var prevIRI vocab.IRI
+	var nextIRI vocab.IRI
+
 	items := result.Collection()
 	switch typ {
 	case vocab.OrderedCollectionPageType:
 		vocab.OnOrderedCollectionPage(result, func(new *vocab.OrderedCollectionPage) error {
-			new.OrderedItems = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+			new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+			if len(prev) > 0 {
+				prevIRI = getURL(it.GetLink(), prev)
+			}
+			if len(next) > 0 {
+				nextIRI = getURL(it.GetLink(), next)
+			}
 			return nil
 		})
 	case vocab.CollectionPageType:
 		vocab.OnCollectionPage(result, func(new *vocab.CollectionPage) error {
-			new.Items = filterCollection(items, filters...)
+			new.Items, prev, next = filterCollection(items, filters...)
+			if len(prev) > 0 {
+				prevIRI = getURL(it.GetLink(), prev)
+			}
+			if len(next) > 0 {
+				nextIRI = getURL(it.GetLink(), next)
+			}
 			return nil
 		})
 	case vocab.OrderedCollectionType:
@@ -583,7 +603,13 @@ func collectionPageFromItem(it vocab.Item) vocab.CollectionInterface {
 		vocab.OnOrderedCollection(result, func(new *vocab.OrderedCollection) error {
 			_, err := vocab.CopyOrderedCollectionProperties(new, old)
 			new.Type = vocab.OrderedCollectionPageType
-			new.OrderedItems = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+			new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+			if len(prev) > 0 {
+				prevIRI = getURL(it.GetLink(), prev)
+			}
+			if len(next) > 0 {
+				nextIRI = getURL(it.GetLink(), next)
+			}
 			return err
 		})
 	case vocab.CollectionType:
@@ -592,17 +618,29 @@ func collectionPageFromItem(it vocab.Item) vocab.CollectionInterface {
 		vocab.OnCollection(result, func(new *vocab.Collection) error {
 			_, err := vocab.CopyCollectionProperties(new, old)
 			new.Type = vocab.CollectionPageType
-			new.Items = filterCollection(items, filters...)
+			new.Items, prev, next = filterCollection(items, filters...)
+			if len(prev) > 0 {
+				prevIRI = getURL(it.GetLink(), prev)
+			}
+			if len(next) > 0 {
+				nextIRI = getURL(it.GetLink(), next)
+			}
 			return err
 		})
 	case vocab.CollectionOfItems:
 		new := new(vocab.OrderedCollectionPage)
 		new.Type = vocab.CollectionPageType
-		new.OrderedItems = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+		new.OrderedItems, prev, next = filterCollection(sortItemsByPublishedUpdated(items), filters...)
+		if len(prev) > 0 {
+			prevIRI = getURL(it.GetLink(), prev)
+		}
+		if len(next) > 0 {
+			nextIRI = getURL(it.GetLink(), next)
+		}
 		result = new
 	}
 
-	return result
+	return result, prevIRI, nextIRI
 }
 
 // PaginateCollection is a function that populates the received collection
@@ -611,52 +649,28 @@ func PaginateCollection(it vocab.Item) (vocab.CollectionInterface, error) {
 		return nil, errors.Newf("unable to paginate nil collection")
 	}
 
-	col := collectionPageFromItem(it)
+	col, prevIRI, nextIRI := collectionPageFromItem(it)
 	if vocab.IsNil(col) {
 		return nil, errors.Newf("unable to paginate %T[%s] collection", it, it.GetType())
 	}
 
-	curURL := it.GetID()
-
-	var prev, next vocab.IRI // IRIs
-
-	var nextURL, prevURL vocab.IRI
-	if len(next) > 0 {
-		np := url.Values{}
-		np.Add("after", next.String())
-		nextURL = getURL(curURL, np)
-	}
-	if len(prev) > 0 {
-		pp := url.Values{}
-		pp.Add("before", prev.String())
-		prevURL = getURL(curURL, pp)
-	}
+	curIRI := it.GetID()
 
 	if col.GetType() == vocab.OrderedCollectionPageType {
 		vocab.OnOrderedCollectionPage(col, func(c *vocab.OrderedCollectionPage) error {
-			c.PartOf = curURL
-			c.Current = curURL
-			prev, next = getPrevNext(c.OrderedItems)
-			if len(nextURL) > 0 {
-				c.Next = nextURL
-			}
-			if len(prevURL) > 0 {
-				c.Prev = prevURL
-			}
+			c.PartOf = curIRI
+			c.Current = curIRI
+			c.Next = nextIRI
+			c.Prev = prevIRI
 			return nil
 		})
 	}
 	if col.GetType() == vocab.CollectionPageType {
 		vocab.OnCollectionPage(col, func(c *vocab.CollectionPage) error {
-			c.PartOf = curURL
-			c.Current = curURL
-			prev, next = getPrevNext(c.Items)
-			if len(nextURL) > 0 {
-				c.Next = nextURL
-			}
-			if len(prevURL) > 0 {
-				c.Prev = prevURL
-			}
+			c.PartOf = curIRI
+			c.Current = curIRI
+			c.Next = nextIRI
+			c.Prev = prevIRI
 			return nil
 		})
 	}
