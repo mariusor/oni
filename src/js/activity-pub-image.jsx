@@ -10,9 +10,6 @@ export class ActivityPubImage extends ActivityPubObject {
             border-radius: .4rem;
             border: 1px solid var(--shadow-color);
         }`, ActivityPubObject.styles];
-    static properties = {
-        it: {type: Object},
-    };
 
     constructor(it) {
         super(it);

@@ -8,9 +8,6 @@ export class ActivityPubAudio extends ActivityPubObject {
             max-height: 12vw;
             align-self: start;
         }`, ActivityPubObject.styles];
-    static properties = {
-        it: {type: Object},
-    };
 
     constructor(it) {
         super(it);

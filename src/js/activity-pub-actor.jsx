@@ -6,9 +6,6 @@ export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
 
 export class ActivityPubActor extends ActivityPubObject {
     static styles = ActivityPubObject.styles;
-    static properties = {
-        it: {type: Object},
-    };
 
     constructor(it) {
         super(it);

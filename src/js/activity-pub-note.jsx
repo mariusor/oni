@@ -19,10 +19,6 @@ export class ActivityPubNote extends ActivityPubObject {
     }
     `, ActivityPubObject.styles];
 
-    static properties = {
-        it: {type: Object},
-    };
-
     constructor(it) {
         super(it);
     }

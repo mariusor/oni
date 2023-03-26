@@ -5,10 +5,6 @@ import {relativeDate} from "./utils";
 export class ActivityPubTombstone extends ActivityPubObject {
     static styles = [css``, ActivityPubObject.styles];
 
-    static properties = {
-        it: {type: Object},
-    };
-
     constructor(it) {
         super(it);
     }

@@ -20,12 +20,8 @@ export class ActivityPubCollection extends ActivityPubObject {
         }
     `, ActivityPubObject.styles];
 
-    static properties = {
-        it: {type: Object},
-    }
-
-    constructor() {
-        super();
+    constructor(it) {
+        super(it);
     }
 
     renderNext() {

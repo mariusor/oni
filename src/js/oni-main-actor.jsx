@@ -77,7 +77,6 @@ export class OniMainActor extends ActivityPubActor {
         }
     `, ActivityPubObject.styles];
     static properties = {
-        it: {type: Object},
         palette: {type: Object},
         colors: {type: Array},
         authenticated: {type: Boolean},
