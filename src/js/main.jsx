@@ -52,7 +52,7 @@ OnReady(function () {
         root.style.setProperty('--shadow-color', palette.shadowColor);
     }
 
-    // use the window event listener to set the editable status of the slotted conent (if exists)
+    // use the window event listener to set the editable status of the slotted content (if exists)
     const content = document.querySelectorAll('oni-main oni-natural-language-values[name=content]');
     window.addEventListener('logged.out', (e) => {
         content.forEach(x => x.editable = false );

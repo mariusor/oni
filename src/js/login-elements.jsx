@@ -3,6 +3,52 @@ import {classMap} from "lit-html/directives/class-map.js";
 import {when} from "lit-html/directives/when.js";
 
 export class LoginDialog extends LitElement {
+    static styles = css`
+        dialog[opened] {
+            display: flex;
+            margin: auto;
+        }
+        dialog {
+            opacity: 1;
+            display: none;
+            position: fixed;
+            flex-direction: column;
+            border: 2px outset var(--shadow-color);
+            background-color: var(--bg-color);
+            padding: 1em;
+            margin: 1em;
+            align-content: center;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        form input {
+            width: 12rem;
+        }
+        form button {
+            width: 12.4rem;
+        }
+        .error {
+            text-align: center;
+            color: red;
+            font-size: .7em;
+        }
+        .overlay {
+            background-color: var(--bg-color);
+            opacity: .8;
+            display: none;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        .opened {
+            display: block;
+        }
+    `;
     static properties = {
         opened: {type: Boolean},
         fetched: {type: Boolean},
@@ -103,50 +149,6 @@ export class LoginDialog extends LitElement {
         this.getAuthURL();
         return html`
             <style>
-                dialog[opened] {
-                    display: flex;
-                    margin: auto;
-                }
-                dialog {
-                    opacity: 1;
-                    display: none;
-                    position: fixed;
-                    flex-direction: column;
-                    border: 2px outset var(--shadow-color);
-                    background-color: var(--bg-color);
-                    padding: 1em;
-                    margin: 1em;
-                    align-content: center;
-                }
-                form {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                }
-                form input {
-                    width: 12rem;
-                }
-                form button {
-                    width: 12.4rem;
-                }
-                .error {
-                    text-align: center;
-                    color: red;
-                    font-size: .7em;
-                }
-                .overlay {
-                    background-color: var(--bg-color);
-                    opacity: .8;
-                    display: none;
-                    position: fixed;
-                    top: 0;
-                    bottom: 0;
-                    left: 0;
-                    right: 0;
-                }
-                .opened {
-                    display: block;
-                }
             </style>
             <div class=${classMap({overlay: true, opened: this.opened})} @click=${this.close}></div>
             <dialog ?opened="${this.opened}">
@@ -163,7 +165,7 @@ export class LoginDialog extends LitElement {
 export class LoginLink extends LitElement {
     static styles = css`
         :host {
-            position: fixed;
+            position: absolute;
             top: 1rem;
             right: 1rem;
         }
