@@ -1,5 +1,13 @@
 import {css, html, LitElement, nothing} from "lit";
-import {fetchActivityPubIRI, isLocalIRI, pluralize, relativeDate} from "./utils";
+import {
+    authorization,
+    fetchActivityPubIRI,
+    isAuthorized,
+    isLocalIRI,
+    mainActorOutbox,
+    pluralize,
+    relativeDate
+} from "./utils";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 
@@ -85,6 +93,47 @@ export class ActivityPubObject extends LitElement {
         } else {
             this.it = it;
         }
+
+        this.addEventListener('content.change', this.updateActivityPubActor)
+    }
+
+    async updateActivityPubActor(e) {
+        const it = this.it;
+        const prop = e.detail.name;
+        const val = e.detail.content;
+        const outbox = mainActorOutbox();
+
+        e.stopPropagation();
+        e.stopPropagation();
+
+        it[prop] = val;
+
+        const update = {
+            type: "Update",
+            actor: this.iri(),
+            object: it,
+        }
+        const headers = {
+            'Content-Type': 'application/activity+json',
+        }
+        const auth = authorization();
+        if (isAuthorized()) {
+            headers.Authorization = `${auth.token_type} ${auth.access_token}`;
+        }
+        const req = {
+            headers: headers,
+            method: "POST",
+            body: JSON.stringify(update)
+        };
+        console.debug(`will update to ${outbox}`, update);
+        fetch(outbox, req)
+            .then(response => {
+                response.json().then( it => {
+                    console.debug('updating', it)
+                    this.it = it
+                });
+            })
+            .catch(console.error);
     }
 
     collections() {

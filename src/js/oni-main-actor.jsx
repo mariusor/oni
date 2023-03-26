@@ -87,8 +87,6 @@ export class OniMainActor extends ActivityPubActor {
         this.palette = {};
         this.colors = [];
         this.authenticated = isAuthorized();
-
-        this.addEventListener('content.change', this.updateActivityPubActor)
     }
 
     async loadPalette(it) {
@@ -230,36 +228,9 @@ export class OniMainActor extends ActivityPubActor {
         return nothing;
     }
 
-    async updateActivityPubActor(e) {
-        const it = this.it;
-        const prop = e.detail.name;
-        const val = e.detail.content;
-        it[prop] = val;
-
-        const update = {
-            type: "Update",
-            actor: this.iri(),
-            object: it,
-        }
-        const headers = {
-            'Content-Type': 'application/activity+json',
-        }
-        const auth = authorization();
-        if (isAuthorized()) {
-            headers.Authorization = `${auth.token_type} ${auth.access_token}`;
-        }
-        const req = {
-            headers: headers,
-            method: "POST",
-            body: JSON.stringify(update)
-        };
-        console.debug(`will update to ${this.outbox()}`, update);
-        const response = await fetch(this.outbox(), req)
-            .catch(console.error);
-    }
-
     loggedIn(e) {
         this.authenticated = true;
+        localStorage.setItem("outbox", this.outbox());
     }
 
     loggedOut(e) {

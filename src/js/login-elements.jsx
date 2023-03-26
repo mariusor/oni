@@ -166,11 +166,15 @@ export class LoginDialog extends LitElement {
             return;
         }
         console.debug(`loading: ${this.authorizeURL}`);
-        const cont = await fetch(this.authorizeURL, { method: "GET", }).catch(console.error);
+        fetch(this.authorizeURL, { method: "GET", })
+            .then( cont => {
+                cont.json().then(login => {
+                    this.authorizeURL = login.authorizeURL;
+                    this.fetched = true;
+                }).catch(console.error);
+            })
+            .catch(console.error);
 
-        const login = await cont.json();
-        this.authorizeURL = login.authorizeURL;
-        this.fetched = true;
     }
 
     render() {
