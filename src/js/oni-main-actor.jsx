@@ -4,7 +4,7 @@ import {when} from "lit-html/directives/when.js";
 import {average, prominent} from "color.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
-import {isAuthenticated, prefersDarkTheme, contrast} from "./utils";
+import {authorization, contrast, isAuthorized, prefersDarkTheme} from "./utils";
 import {map} from "lit-html/directives/map.js";
 import tinycolor from "tinycolor2";
 
@@ -87,7 +87,7 @@ export class OniMainActor extends ActivityPubActor {
         super(it);
         this.palette = {};
         this.colors = [];
-        this.authenticated = isAuthenticated();
+        this.authenticated = isAuthorized();
 
         this.addEventListener('content.change', this.updateActivityPubActor)
     }
@@ -139,14 +139,24 @@ export class OniMainActor extends ActivityPubActor {
             this.palette.linkColor = strongerColor(this.palette.linkVisitedColor)?.toHexString();
         }
         iconColors = iconColors.filter((value, index, array) => array.at(index) !== this.palette.shadowColor);
-        let linkVisitedColor = tinycolor.mostReadable(this.palette.bgColor, iconColors, {level:"AAA",size:"small"});
-        if (linkVisitedColor !== null && tinycolor.isReadable(linkVisitedColor, this.palette.bgColor,{level:"AAA", size:"small"})) {
+        let linkVisitedColor = tinycolor.mostReadable(this.palette.bgColor, iconColors, {level: "AAA", size: "small"});
+        if (linkVisitedColor !== null && tinycolor.isReadable(linkVisitedColor, this.palette.bgColor, {
+            level: "AAA",
+            size: "small"
+        })) {
             this.palette.linkVisitedColor = linkVisitedColor.toHexString();
             this.palette.linkActiveColor = this.palette.linkVisitedColor;
             this.palette.linkColor = strongerColor(this.palette.linkVisitedColor)?.toHexString();
         }
         localStorage.setItem('palette', JSON.stringify(this.palette));
         return this.palette;
+    }
+
+    outbox() {
+        if (!this.it.hasOwnProperty('outbox')) {
+            return null;
+        }
+        return this.it.outbox
     }
 
     collections() {
@@ -174,7 +184,8 @@ export class OniMainActor extends ActivityPubActor {
         if (c.length == 0) {
             return nothing;
         }
-        return html`<oni-collection-links it=${JSON.stringify(c)}></oni-collection-links>`;
+        return html`
+            <oni-collection-links it=${JSON.stringify(c)}></oni-collection-links>`;
     };
 
     renderIcon() {
@@ -201,7 +212,9 @@ export class OniMainActor extends ActivityPubActor {
             <ul style="background-color: ${tinycolor(this.palette.bgColor).setAlpha(0.8).toRgbString()};">
                 ${url.map((u) => html`
                     <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}>
-                        ${u}<oni-icon name="external-href"></oni-icon></a></li>`)}
+                        ${u}
+                        <oni-icon name="external-href"></oni-icon>
+                    </a></li>`)}
             </ul>`;
     }
 
@@ -209,21 +222,41 @@ export class OniMainActor extends ActivityPubActor {
         if (this.preferredUsername().length > 0) {
             return html`
                 <oni-natural-language-values
-                    name="preferredUsername" 
-                    it=${JSON.stringify(this.preferredUsername())}
-                    ?editable=${this.authenticated}
+                        name="preferredUsername"
+                        it=${JSON.stringify(this.preferredUsername())}
+                        ?editable=${this.authenticated}
                 ></oni-natural-language-values>
             `;
         }
         return nothing;
     }
 
-    updateActivityPubActor(e) {
+    async updateActivityPubActor(e) {
         const it = this.it;
         const prop = e.detail.name;
         const val = e.detail.content;
         it[prop] = val;
-        console.debug('will update', it);
+
+        const update = {
+            type: "Update",
+            actor: this.iri(),
+            object: it,
+        }
+        const headers = {
+            'Content-Type': 'application/activity+json',
+        }
+        const auth = authorization();
+        if (isAuthorized()) {
+            headers.Authorization = `${auth.token_type} ${auth.access_token}`;
+        }
+        const req = {
+            headers: headers,
+            method: "POST",
+            body: JSON.stringify(update)
+        };
+        console.debug(`will update to ${this.outbox()}`, update);
+        const response = await fetch(this.outbox(), req)
+            .catch(console.error);
     }
 
     loggedIn(e) {
@@ -249,11 +282,11 @@ export class OniMainActor extends ActivityPubActor {
         const tokenURL = endPoints.oauthTokenEndpoint;
 
         return html`
-            <oni-login-link 
-                authorizeURL=${authURL} 
-                tokenURL=${tokenURL} 
-                @logged.in=${this.loggedIn}
-                @logged.out=${this.loggedOut}
+            <oni-login-link
+                    authorizeURL=${authURL}
+                    tokenURL=${tokenURL}
+                    @logged.in=${this.loggedIn}
+                    @logged.out=${this.loggedOut}
             ></oni-login-link>`;
     }
 
@@ -289,29 +322,31 @@ export class OniMainActor extends ActivityPubActor {
         return html`
             ${map(ordered, value => {
                 return html`
-            <span style="padding: .2rem 1rem; display: inline-block; width: 9vw; background-color: ${value}; color: ${this.palette.bgColor}">
+                    <span style="padding: .2rem 1rem; display: inline-block; width: 9vw; background-color: ${value}; color: ${this.palette.bgColor}">
                 ${tinycolor(value).toHsl().s}
             </span>
-        `})}`
+                `
+            })}`
     }
 
     render() {
         const style = html`${until(this.renderPalette())}`;
 
         return html`${this.renderOAuth()}
-            <style>${style}</style>
-            <main>
-                <header>
-                    <a href=${this.iri()}>${this.renderIcon()}</a>
-                    <h1><a href=${this.iri()}>${this.renderPreferredUsername()}</a></h1>
-                    <aside>
-                        ${this.renderSummary()}
-                        ${this.renderUrl()}
-                    </aside>
-                </header>
-                <nav>${this.renderCollections()}</nav>
-            </main>
-            <slot></slot>
+        <style>${style}</style>
+        <main>
+            <header>
+                <a href=${this.iri()}>${this.renderIcon()}</a>
+                <h1><a href=${this.iri()}>${this.renderPreferredUsername()}</a></h1>
+                <aside>
+                    ${this.renderSummary()}
+                    ${this.renderUrl()}
+                </aside>
+            </header>
+            <nav>${this.renderCollections()}</nav>
+        </main>
+        <slot ?contenteditable=${this.authenticated}></slot>
+        ${this.renderColors()}
         `;
     }
 }

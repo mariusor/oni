@@ -1,6 +1,7 @@
 import {css, html, LitElement} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {when} from "lit-html/directives/when.js";
+import {authorization, handleServerError, isAuthorized} from "./utils";
 
 export class LoginDialog extends LitElement {
     static styles = css`
@@ -89,8 +90,11 @@ export class LoginDialog extends LitElement {
         const form = e.target;
         const pw = form._pw.value
         form._pw.value = "";
-        const targetURI = form.action;
 
+        this.authorizationToken(form.action, pw)
+    }
+
+    async authorizationToken(targetURI, pw) {
         const l = new URLSearchParams({_pw: pw});
 
         const req = {
@@ -103,26 +107,50 @@ export class LoginDialog extends LitElement {
             .then(response => {
                 response.json().then(value => {
                     if (response.status == 200) {
-                        localStorage.setItem('token', value.code);
-                        localStorage.setItem('state', value.state);
-                        this.loginSuccessful();
+                        console.debug(`Obtained authorization code: ${value.code}`)
+                        this.accessToken(value.code, value.state);
                     } else {
-                        if (value.hasOwnProperty('errors')) {
-                            console.error(value.errors);
-                            if (!Array.isArray(value.errors)) {
-                                value.errors = [value.errors];
-                            }
-                            value.errors.forEach((err) => {
-                                this.error += ` ${err.message}`;
-                            })
-                        } else {
-                            console.error(value);
-                            this.error += value.toString();
-                        }
+                        this.error = handleServerError(value)
                     }
                 }).catch(console.error);
             }).catch(console.error);
     }
+
+    async accessToken(code, state) {
+        const tokenURL = this.tokenURL;
+
+        const client = window.location.hostname;
+        const l = new URLSearchParams({
+            grant_type: 'authorization_code',
+            code: code,
+            state: state,
+            client_id: client,
+        });
+
+        const auth = btoa(`${client}:NotSoSecretPassword`);
+        const req = {
+            method: 'POST',
+            body: l.toString(),
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                Authorization: `Basic ${auth}`
+            }
+        };
+
+        const accessResponse = await fetch(tokenURL, req)
+            .then(response => {
+                response.json().then(value => {
+                    if (response.status == 200) {
+                        localStorage.setItem('authorization', JSON.stringify(value));
+                        this.loginSuccessful();
+                    } else {
+                        this.error = handleServerError(value)
+                    }
+                }).catch(console.error);
+            }).catch(console.error);
+        console.debug(accessResponse);
+    }
+
 
     loginSuccessful() {
         this.close();
@@ -181,7 +209,7 @@ export class LoginLink extends LitElement {
     constructor() {
         super()
         this.dialogVisible = false;
-        this.loginVisible = !this.haveToken();
+        this.loginVisible = !isAuthorized();
     }
 
     showDialog(e) {
@@ -196,14 +224,8 @@ export class LoginLink extends LitElement {
         this.loginVisible = true;
     }
 
-    haveToken() {
-        const token = localStorage.getItem('token');
-        return typeof token == 'string' && token.length > 0;
-    }
-
     logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('state');
+        localStorage.removeItem('authorization');
 
         this.loginVisible = true;
         this.dispatchEvent(new CustomEvent('logged.out', {

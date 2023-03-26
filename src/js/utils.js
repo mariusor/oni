@@ -15,9 +15,9 @@ const fetchHeaders = {Accept: 'application/activity+json', 'Cache-Control': 'no-
 export async function fetchActivityPubIRI(iri) {
     let headers= fetchHeaders;
     if (isLocalIRI(iri)) {
-        const token = localStorage.getItem('token');
-        if (token) {
-            headers.Authorization = 'Bearer ' + token;
+        const auth = authorization();
+        if (auth.hasOwnProperty('token_type') && auth.hasOwnProperty('access_token')) {
+            headers.Authorization = `${auth.token_type} ${auth.access_token}`;
         }
     } else {
         // generate HTTP-signature for the actor
@@ -86,8 +86,10 @@ function splitCollectionIRI(iri) {
     return [u.toString(), col];
 }
 
-export function isAuthenticated() {
-    return (localStorage.getItem('token') || '').length > 0;
+export function isAuthorized() {
+    const auth = authorization();
+    return auth.hasOwnProperty('access_token') && auth.hasOwnProperty('token_type') &&
+        auth.access_token.length > 0 && auth.token_type.length > 0;
 }
 
 export function editableContent(root) {
@@ -177,4 +179,25 @@ function isCons(c) {
         }
     }
     return false;
+}
+
+export function authorization() {
+    return JSON.parse(localStorage.getItem('authorization')) || {};
+}
+
+export function handleServerError(err) {
+    let errMessage;
+    if (err.hasOwnProperty('errors')) {
+        console.error(err.errors);
+        if (!Array.isArray(err.errors)) {
+            err.errors = [err.errors];
+        }
+        err.errors.forEach((err) => {
+            errMessage += ` ${err.message}`;
+        })
+    } else {
+        console.error(err);
+        errMessage += err.toString();
+    }
+    return errMessage;
 }

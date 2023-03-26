@@ -1,5 +1,5 @@
 import {css, html, LitElement, nothing} from "lit";
-import {editableContent, isAuthenticated} from "./utils";
+import {editableContent, isAuthorized} from "./utils";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {ActivityPubObject} from "./activity-pub-object";
 
@@ -61,7 +61,7 @@ export class NaturalLanguageValues extends LitElement {
     }
 
     checkEditable(e) {
-        this.editable = isAuthenticated() && this.name.length > 0;
+        this.editable = isAuthorized() && this.name.length > 0;
         console.debug(`${this.name} is editable: ${this.editable}`)
     }
 

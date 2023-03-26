@@ -1,4 +1,4 @@
-import {isAuthenticated, OnReady} from "./utils";
+import {isAuthorized, OnReady} from "./utils";
 import {OniMainActor} from "./oni-main-actor";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {CollectionLink, CollectionLinks} from "./collection-links";
@@ -58,6 +58,6 @@ OnReady(function () {
         content.forEach(x => x.editable = false );
     });
     window.addEventListener('logged.in', (e) => {
-        content.forEach(x => x.editable = isAuthenticated());
+        content.forEach(x => x.editable = isAuthorized());
     });
 });
