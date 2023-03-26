@@ -346,7 +346,6 @@ export class OniMainActor extends ActivityPubActor {
             <nav>${this.renderCollections()}</nav>
         </main>
         <slot ?contenteditable=${this.authenticated}></slot>
-        ${this.renderColors()}
         `;
     }
 }

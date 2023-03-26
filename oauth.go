@@ -189,6 +189,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 		ar.UserData = actor.GetLink()
 		as.FinishAccessRequest(resp, r, ar)
 	}
+	resp.Type = osin.DATA
 	redirectOrOutput(resp, w, r)
 }
 
