@@ -174,7 +174,7 @@ func tokenAct(ctl *Control) cli.ActionFunc {
 		}
 
 		actor := clientID
-		tok, err := ctl.GenAuthToken(clientID, actor, nil)
+		tok, err := ctl.GenAccessToken(clientID, actor, nil)
 		if err == nil {
 			fmt.Printf("Authorization: Bearer %s\n", tok)
 		}
@@ -182,7 +182,7 @@ func tokenAct(ctl *Control) cli.ActionFunc {
 	}
 }
 
-func (c *Control) GenAuthToken(clientID, actorIdentifier string, dat interface{}) (string, error) {
+func (c *Control) GenAccessToken(clientID, actorIdentifier string, dat interface{}) (string, error) {
 	if u, err := url.Parse(clientID); err == nil {
 		clientID = path.Base(u.Path)
 	}
