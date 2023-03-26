@@ -366,6 +366,10 @@ func actorURLs(act vocab.Actor) func() vocab.IRIs {
 	}
 }
 
+var validActivityTypes = vocab.ActivityVocabularyTypes{
+	vocab.CreateType, vocab.UpdateType,
+}
+
 var validObjectTypes = vocab.ActivityVocabularyTypes{
 	vocab.NoteType, vocab.ArticleType, vocab.ImageType, vocab.AudioType, vocab.VideoType,
 }
@@ -379,16 +383,16 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 			o.ProcessActivity().ServeHTTP(w, r)
 			return
 		}
-
-		types := make(vocab.ActivityVocabularyTypes, 0)
 		_, whichCollection := vocab.Split(iri)
 
 		if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
-			types = append(types, vocab.CreateType)
-			colFilters = append(colFilters, filters.Object(filters.HasType(validObjectTypes...)))
+			colFilters = append(
+				colFilters,
+				filters.HasType(validActivityTypes...),
+				filters.Object(filters.HasType(validObjectTypes...)),
+			)
 		}
-
-		iri = colIRI(r, types...)
+		iri = colIRI(r)
 
 		if u, err := iri.URL(); err == nil {
 			if after := u.Query().Get("after"); after != "" {
@@ -475,17 +479,13 @@ func col(r *http.Request) vocab.CollectionPath {
 	return col
 }
 
-func colIRI(r *http.Request, types ...vocab.ActivityVocabularyType) vocab.IRI {
+func colIRI(r *http.Request) vocab.IRI {
 	colURL := url.URL{Scheme: "https", Host: r.Host, Path: r.URL.Path}
 	c := col(r)
 	if vocab.ValidActivityCollection(c) {
 		q := r.URL.Query()
 		q.Set("object.iri", "!")
 		q.Set("actor.iri", "!")
-		for _, t := range types {
-			q.Add("type", string(t))
-		}
-		q.Set("maxItems", "20")
 		colURL.RawQuery = q.Encode()
 	}
 	return vocab.IRI(colURL.String())
