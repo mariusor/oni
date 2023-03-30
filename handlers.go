@@ -374,6 +374,22 @@ var validObjectTypes = vocab.ActivityVocabularyTypes{
 	vocab.NoteType, vocab.ArticleType, vocab.ImageType, vocab.AudioType, vocab.VideoType,
 }
 
+func iriHasTypeFilter(iri vocab.IRI) bool {
+	u, err := iri.URL()
+	if err != nil {
+		return false
+	}
+	return u.Query().Has("type")
+}
+
+func iriHasObjectFilter(iri vocab.IRI) bool {
+	u, err := iri.URL()
+	if err != nil {
+		return false
+	}
+	return u.Query().Has("object.type")
+}
+
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
 	colFilters := make(filters.Fns, 0)
@@ -386,11 +402,12 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		_, whichCollection := vocab.Split(iri)
 
 		if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
-			colFilters = append(
-				colFilters,
-				filters.HasType(validActivityTypes...),
-				filters.Object(filters.HasType(validObjectTypes...)),
-			)
+			if !iriHasTypeFilter(iri) {
+				colFilters = append(colFilters, filters.HasType(validActivityTypes...))
+			}
+			if !iriHasObjectFilter(iri) {
+				colFilters = append(colFilters, filters.Object(filters.HasType(validObjectTypes...)))
+			}
 		}
 		iri = colIRI(r)
 
