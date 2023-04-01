@@ -84,6 +84,7 @@ export class ActivityPubObject extends LitElement {
             align-self: end;
         }
     `;
+
     static properties = {it: {type: Object}};
 
     constructor(it) {
@@ -348,6 +349,7 @@ export class ActivityPubObject extends LitElement {
         if (summary.length == 0) {
             return nothing;
         }
+
         return html`<oni-natural-language-values
                 name="summary"
                 it=${JSON.stringify(summary)}
@@ -359,13 +361,16 @@ export class ActivityPubObject extends LitElement {
         if (this.inFocus()) {
             return nothing;
         }
+
         const replies = await this.load('replies');
         if (replies === null) {
             return nothing;
         }
+
         if (!replies.hasOwnProperty('totalItems') || replies.totalItems == 0) {
             return nothing;
         }
+
         return html` - <span>${pluralize(replies.totalItems, 'reply')}</span>`;
     }
 
@@ -373,10 +378,12 @@ export class ActivityPubObject extends LitElement {
         if (!this.inFocus()) {
             return nothing;
         }
+
         const replies = await this.load('replies');
         if (replies === null) {
             return nothing;
         }
+
         return html`<oni-collection it=${JSON.stringify(replies)}></oni-collection>`;
     }
 
@@ -388,6 +395,7 @@ export class ActivityPubObject extends LitElement {
         if (this.it == null) {
             return nothing;
         }
+
         return html`${ActivityPubObject.renderByType(this.it)}${until(this.renderReplies())}`;
     }
 }
@@ -396,6 +404,7 @@ ActivityPubObject.renderByMediaType = function (it) {
     if (it == null || !it.hasOwnProperty('mediaType')) {
         return nothing;
     }
+
     switch (it.mediaType) {
         case 'image/png':
         case 'image/jpeg':
@@ -409,9 +418,11 @@ ActivityPubObject.renderByType = function (it) {
     if (it == null ) {
         return nothing;
     }
+
     if (!it.hasOwnProperty('type')) {
         return html`<oni-tag it=${JSON.stringify(it)}></oni-tag>`;
     }
+
     switch (it.type) {
         case 'Document':
             return ActivityPubObject.renderByMediaType(it);

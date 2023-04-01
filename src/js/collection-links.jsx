@@ -32,6 +32,7 @@ export class CollectionLinks extends LitElement {
             background-color: var(--shadow-color);
         }
     `
+
     static properties = {
         it: {type: Object}
     }

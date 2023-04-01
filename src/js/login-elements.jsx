@@ -50,6 +50,7 @@ export class LoginDialog extends LitElement {
             display: block;
         }
     `;
+
     static properties = {
         opened: {type: Boolean},
         fetched: {type: Boolean},
@@ -150,7 +151,6 @@ export class LoginDialog extends LitElement {
             }).catch(console.error);
         console.debug(accessResponse);
     }
-
 
     loginSuccessful() {
         this.close();
