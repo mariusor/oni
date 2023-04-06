@@ -1,8 +1,8 @@
 {
   "dependencies": {
     "color.js": "^1.2.0",
-    "lit": "^2.6.1",
-    "lit-html": "^2.6.1",
+    "lit": "^2.7.2",
+    "lit-html": "^2.7.2",
     "tinycolor2": "^1.6.0"
   }
 }
