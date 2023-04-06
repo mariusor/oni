@@ -2,6 +2,7 @@ import {css, html, LitElement} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {when} from "lit-html/directives/when.js";
 import {authorization, handleServerError, isAuthorized} from "./utils";
+import {Ref} from "lit-html/directives/ref.js";
 
 export class LoginDialog extends LitElement {
     static styles = css`
@@ -70,10 +71,6 @@ export class LoginDialog extends LitElement {
         return {
             opened: {type: Boolean}
         }
-    }
-
-    open() {
-        this.opened = true;
     }
 
     close() {
@@ -177,16 +174,22 @@ export class LoginDialog extends LitElement {
 
     }
 
+    firstUpdated(changedProperties) {
+        const e = this.renderRoot.querySelector('input');
+        console.debug(e, e.name, e.focus);
+        if (e.autofocus && this.opened) e.focus({preventScroll:false});
+    }
+
+
     render() {
         this.getAuthURL();
+
         return html`
-            <style>
-            </style>
             <div class=${classMap({overlay: true, opened: this.opened})} @click=${this.close}></div>
             <dialog ?opened="${this.opened}">
                 <div class=${classMap({error: (this.error.length > 0)})}>${this.error}</div>
                 <form method="post" action=${this.authorizeURL} @submit="${this.login}">
-                    <input type="password" name="_pw" placeholder="Password"/><br/>
+                    <input type="password" id="_pw" name="_pw" placeholder="Password" autofocus/><br/>
                     <button type="submit">Sign in</button>
                 </form>
             </dialog>
