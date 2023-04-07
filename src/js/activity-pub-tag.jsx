@@ -12,7 +12,7 @@ export class ActivityPubTag extends ActivityPubObject {
         if (this.it == null) {
             return nothing;
         }
-        const rel = this.type() == 'Mention' ? 'mention' : 'tag';
-        return html`<span><a rel="${rel}" href="${this.iri()}">${this.name()}</a></span> `;
+        const rel = this.it.type === 'Mention' ? 'mention' : 'tag';
+        return html`<span><a rel="${rel}" href="${this.it.iri()}">${this.it.getName()}</a></span> `;
     }
 }

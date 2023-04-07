@@ -1,8 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ifDefined} from "lit-html/directives/if-defined.js";
-import {ActivityTypes} from "./activity-pub-activity";
-import {ActorTypes} from "./activity-pub-actor";
+import {ActivityTypes, ActorTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
@@ -41,7 +40,7 @@ export class ActivityPubCollection extends ActivityPubObject {
     renderPrevNext() {
         const prev = this.renderPrev();
         const next = this.renderNext();
-        if (prev == nothing && next == nothing) {
+        if (prev === nothing && next === nothing) {
             return nothing;
         }
         return html`
@@ -50,21 +49,8 @@ export class ActivityPubCollection extends ActivityPubObject {
             </nav>`;
     }
 
-    items() {
-        let items = [];
-        if (this.it === null || this.type() === null) {
-            return items;
-        }
-        if (this.type().toLowerCase().includes('ordered') && this.it.hasOwnProperty('orderedItems')) {
-            items = this.it.orderedItems;
-        } else if (this.it.hasOwnProperty('items')) {
-            items = this.it.items;
-        }
-        return items.sort(sortByPublished);
-    }
-
     renderItems() {
-        return html`${this.items().map(it => {
+        return html`${this.it.getItems().map(it => {
             const type = it.hasOwnProperty('type')? it.type : 'unknown';
 
             let renderedItem = unsafeHTML(`<!-- Unknown activity object ${type} -->`);
@@ -82,12 +68,12 @@ export class ActivityPubCollection extends ActivityPubObject {
 
     render() {
         const collection = () => {
-            if (this.items().length == 0) {
+            if (this.it.getItems().length === 0) {
                 return html`
                     <div class="content">Nothing to see here, please move along.</div>`;
             }
 
-            const list = this.type().toLowerCase().includes('ordered')
+            const list = this.it.type.toLowerCase().includes('ordered')
                 ? html`
                         <ol>${this.renderItems()}</ol>`
                 : html`
@@ -100,15 +86,4 @@ export class ActivityPubCollection extends ActivityPubObject {
         }
         return html`${collection()}`;
     }
-}
-
-const sortByPublished = function (a, b) {
-    const aHas = a.hasOwnProperty('published');
-    const bHas = b.hasOwnProperty('published');
-    if (!aHas && !bHas) {
-        return (a.id <= b.id) ? 1 : -1;
-    }
-    if (aHas && !bHas) return -1;
-    if (!aHas && bHas) return 1;
-    return Date.parse(b.published) - Date.parse(a.published);
 }

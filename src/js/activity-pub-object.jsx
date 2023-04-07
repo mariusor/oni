@@ -10,31 +10,7 @@ import {
 } from "./utils";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
-
-export class ActivityPubItem {
-    id = '';
-    url = '';
-    actor = '';
-    object = '';
-
-    constructor(it) {
-        if (it.hasOwnProperty('id')) {
-            this.id = it.id;
-        }
-        if (it.hasOwnProperty('url')) {
-            this.url = it.url;
-        }
-        if (it.hasOwnProperty('actor')) {
-            this.actor = it.actor;
-        }
-        if (it.hasOwnProperty('object')) {
-            this.object = it.object;
-        }
-        return this;
-    }
-}
-
-export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', ''];
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -85,7 +61,19 @@ export class ActivityPubObject extends LitElement {
         }
     `;
 
-    static properties = {it: {type: Object}};
+    static properties = {
+        it: {
+            type: ActivityPubItem,
+            converter: {
+                toAttribute : (value, type) => {
+                    return JSON.toString(value);
+                },
+                fromAttribute : (value, type)  => {
+                    return new ActivityPubItem(JSON.parse(value));
+                },
+            },
+        },
+    };
 
     constructor(it) {
         super();
@@ -111,7 +99,7 @@ export class ActivityPubObject extends LitElement {
 
         const update = {
             type: "Update",
-            actor: this.iri(),
+            actor: this.it.iri(),
             object: it,
         }
         const headers = {
@@ -162,103 +150,6 @@ export class ActivityPubObject extends LitElement {
         return it;
     }
 
-    iri() {
-        if (this.it == null) {
-            return null;
-        }
-        if (typeof this.it == "string") {
-            return this.it;
-        }
-        return this.it.hasOwnProperty('id') ? this.it.id : null;
-    }
-
-    url() {
-        if (this.it == null) {
-            return null;
-        }
-        return this.it.hasOwnProperty('url') ? this.it.url : null;
-    }
-
-    type() {
-        if (this.it == null) {
-            return null;
-        }
-        return this.it.hasOwnProperty('type') ? this.it.type : null;
-    }
-
-    published() {
-        if (!this.it || !this.it.hasOwnProperty('published')) {
-            return null;
-        }
-        const d = new Date();
-        d.setTime(Date.parse(this.it.published));
-        return d || null;
-    }
-
-    name() {
-        if (!this.it.hasOwnProperty('name')) {
-            return [];
-        }
-        let s = this.it.name;
-        if (!Array.isArray(s)) {
-            s = [s];
-        }
-        return s;
-    }
-
-    summary() {
-        if (!this.it.hasOwnProperty('summary')) {
-            return [];
-        }
-        let s = this.it.summary;
-        if (!Array.isArray(s)) {
-            s = [s];
-        }
-        return s;
-    }
-
-    content() {
-        if (!this.it.hasOwnProperty('content')) {
-            return [];
-        }
-        let s = this.it.content;
-        if (!Array.isArray(s)) {
-            s = [s];
-        }
-        return s;
-    }
-
-    icon() {
-        if (this.it == null) {
-            return null;
-        }
-        return this.it.hasOwnProperty('icon') ? this.it.icon : null;
-    }
-
-    recipients() {
-        let recipients = [];
-        if (this.it == null) {
-            return recipients;
-        }
-        if (this.it.hasOwnProperty('to')) {
-            recipients.concat(this.it.to);
-        }
-        if (this.it.hasOwnProperty('cc')) {
-            recipients.concat(this.it.cc);
-        }
-        if (this.it.hasOwnProperty('bto')) {
-            recipients.concat(this.it.bto);
-        }
-        if (this.it.hasOwnProperty('bcc')) {
-            recipients.concat(this.it.bcc);
-        }
-        if (this.it.hasOwnProperty('audience')) {
-            recipients.concat(this.it.audience);
-        }
-        return recipients.flat()
-            .filter((value, index, array) => array.indexOf(value) === index);
-    }
-
     async renderAttributedTo() {
         let act = await this.load('attributedTo');
         if (!act) {
@@ -277,19 +168,11 @@ export class ActivityPubObject extends LitElement {
         })}`;
     }
 
-    attachment() {
-        if (!this.it || !this.it.hasOwnProperty('attachment')) {
-            return null;
-        }
-        return this.it.attachment;
-    }
-
     renderAttachment() {
-        const attachment = this.attachment()
+        const attachment = this.it.getAttachment();
         if (!attachment) {
             return nothing;
         }
-        console.debug(attachment);
         if (Array.isArray(attachment)) {
             return html`<div class="attachment">${attachment.map(
                 value => ActivityPubObject.renderByType(value)
@@ -299,7 +182,7 @@ export class ActivityPubObject extends LitElement {
     }
 
     renderPublished() {
-        const published = this.published()
+        const published = this.it.getPublished();
         if (!published) {
             return nothing;
         }
@@ -309,8 +192,8 @@ export class ActivityPubObject extends LitElement {
     }
 
     renderBookmark() {
-        const hasName = this.name().length > 0;
-        return !hasName ? html`<a href="${this.iri() ?? nothing}"><oni-icon name="bookmark"></oni-icon></a>` : nothing
+        const hasName = this.it.getName().length > 0;
+        return !hasName ? html`<a href="${this.it.iri() ?? nothing}"><oni-icon name="bookmark"></oni-icon></a>` : nothing
     }
 
     renderMetadata() {
@@ -327,26 +210,26 @@ export class ActivityPubObject extends LitElement {
     }
 
     renderName() {
-        const name = this.name();
-        if (name.length == 0) {
+        const name = this.it.getName();
+        if (name.length === 0) {
             return nothing;
         }
-        return html`<a href=${this.iri() ?? nothing}>
+        return html`<a href=${this.it.iri() ?? nothing}>
             <oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values><oni-icon name="bookmark"></oni-icon>
         </a>`;
     }
 
     renderContent() {
-        const content = this.content();
-        if (content.length == 0) {
+        const content = this.it.getContent();
+        if (content.length === 0) {
             return nothing;
         }
         return html`<oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
     }
 
     renderSummary() {
-        const summary = this.summary();
-        if (summary.length == 0) {
+        const summary = this.it.getSummary();
+        if (summary.length === 0) {
             return nothing;
         }
 
@@ -388,7 +271,7 @@ export class ActivityPubObject extends LitElement {
     }
 
     inFocus() {
-        return this.iri() === window.location.href;
+        return this.it.iri() === window.location.href;
     }
 
     render() {

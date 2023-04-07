@@ -16,12 +16,12 @@ export class ActivityPubImage extends ActivityPubObject {
     }
 
     render() {
-        let src = this.iri();
+        let src = this.it.iri();
         if (!src) {
-            src = this.url();
+            src = this.it.getUrl();
         }
         return html`<article>
-            <img src=${src ?? nothing} title="${this.name()}"/> <footer>${this.renderMetadata()}</footer>
+            <img src=${src ?? nothing} title="${this.it.getName()}"/> <footer>${this.renderMetadata()}</footer>
         </article>`;
     }
 }

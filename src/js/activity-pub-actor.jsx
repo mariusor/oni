@@ -2,8 +2,6 @@ import {html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {isLocalIRI} from "./utils";
 
-export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
-
 export class ActivityPubActor extends ActivityPubObject {
     static styles = ActivityPubObject.styles;
 
@@ -11,19 +9,8 @@ export class ActivityPubActor extends ActivityPubObject {
         super(it);
     }
 
-    preferredUsername() {
-        if (!this.it.hasOwnProperty('preferredUsername')) {
-            return [];
-        }
-        let s = this.it.preferredUsername;
-        if (!Array.isArray(s)) {
-            s = [s];
-        }
-        return s;
-    }
-
     renderIcon() {
-        const icon = this.icon();
+        const icon = this.it.getIcon();
         if (!icon) {
             return nothing;
         }
@@ -35,17 +22,18 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     renderIconName() {
-            let username = this.preferredUsername();
-            if (!isLocalIRI(this.iri())) {
-                username = `${username}@${new URL(this.iri()).hostname}`
+            let username = this.it.getPreferredUsername();
+            const iri = this.it.iri();
+            if (!isLocalIRI(iri)) {
+                username = `${username}@${new URL(iri).hostname}`
             }
             return html`
-                <a href=${this.iri()}> ${this.renderIcon()} ${username}</a>
+                <a href=${iri}> ${this.renderIcon()} ${username}</a>
             `;
     }
 
     renderUrl() {
-        let url = this.url();
+        let url = this.it.getUrl();
         if (!url) {
             return nothing;
         }
@@ -62,7 +50,7 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     renderPreferredUsername() {
-        if (this.preferredUsername().length == 0) {
+        if (this.it.getPreferredUsername().length === 0) {
             return nothing;
         }
         return html`<oni-natural-language-values it=${JSON.stringify(this.preferredUsername())}></oni-natural-language-values>`;

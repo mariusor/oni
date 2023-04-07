@@ -4,7 +4,7 @@ import {when} from "lit-html/directives/when.js";
 import {average, prominent} from "color.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
-import {authorization, contrast, isAuthorized, prefersDarkTheme} from "./utils";
+import {contrast, isAuthorized, prefersDarkTheme} from "./utils";
 import {map} from "lit-html/directives/map.js";
 import tinycolor from "tinycolor2";
 
@@ -107,11 +107,11 @@ export class OniMainActor extends ActivityPubActor {
             colorScheme: prefersDarkTheme() ? 'dark' : 'light',
         };
 
-        let iconColors = await prominent(it.icon, {amount: 20, group: 30, format: 'hex', sample: 5});
+        let iconColors = await prominent(it.getIcon(), {amount: 20, group: 30, format: 'hex', sample: 5});
         iconColors = iconColors.filter(col => tinycolor(col).toHsl().s > 0.18 && tinycolor(col).toHsl().s < 0.84)
 
         if (it.hasOwnProperty('image')) {
-            const col = await average(it.image, {format: 'hex'});
+            const col = await average(it.getImage(), {format: 'hex'});
 
             if (col !== null) {
                 this.palette.bgColor = col;
@@ -186,7 +186,7 @@ export class OniMainActor extends ActivityPubActor {
     };
 
     renderIcon() {
-        const icon = this.icon();
+        const icon = this.it.getIcon();
         if (!icon) {
             return nothing;
         }
@@ -198,12 +198,9 @@ export class OniMainActor extends ActivityPubActor {
     }
 
     renderUrl() {
-        let url = this.url();
+        let url = this.it.getUrl();
         if (!url) {
             return nothing;
-        }
-        if (!Array.isArray(url)) {
-            url = [url];
         }
         return html`
             <ul style="background-color: ${tinycolor(this.palette.bgColor).setAlpha(0.8).toRgbString()};">
@@ -216,11 +213,11 @@ export class OniMainActor extends ActivityPubActor {
     }
 
     renderPreferredUsername() {
-        if (this.preferredUsername().length > 0) {
+        if (this.it.getPreferredUsername().length > 0) {
             return html`
                 <oni-natural-language-values
                         name="preferredUsername"
-                        it=${JSON.stringify(this.preferredUsername())}
+                        it=${JSON.stringify(this.it.getPreferredUsername())}
                         ?editable=${this.authenticated}
                 ></oni-natural-language-values>
             `;
@@ -302,12 +299,13 @@ export class OniMainActor extends ActivityPubActor {
     render() {
         const style = html`${until(this.renderPalette())}`;
 
+        const iri = this.it.iri();
         return html`${this.renderOAuth()}
         <style>${style}</style>
         <main>
             <header>
-                <a href=${this.iri()}>${this.renderIcon()}</a>
-                <h1><a href=${this.iri()}>${this.renderPreferredUsername()}</a></h1>
+                <a href=${iri}>${this.renderIcon()}</a>
+                <h1><a href=${iri}>${this.renderPreferredUsername()}</a></h1>
                 <aside>
                     ${this.renderSummary()}
                     ${this.renderUrl()}

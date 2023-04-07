@@ -69,24 +69,20 @@ export class CollectionLink extends ActivityPubCollection {
         }
     `;
 
-    static properties = {
-        it: {type: Object},
-    }
-
     constructor(it) {
         super(it);
     }
 
     label() {
-        const name = this.name();
+        const name = this.it.getName();
         if (name.length > 0) {
             return name;
         }
-        const pieces = this.iri().split('/');
+        const pieces = this.it.iri().split('/');
         return pieces[pieces.length -1];
     }
 
     render() {
-        return html`<a href=${this.iri()} class=${classMap({'active': (this.it === window.location.href)})}><oni-icon name=${this.label()}></oni-icon> ${this.label()}</a>`;
+        return html`<a href=${this.it.iri()} class=${classMap({'active': (this.it === window.location.href)})}><oni-icon name=${this.label()}></oni-icon> ${this.label()}</a>`;
     }
 }

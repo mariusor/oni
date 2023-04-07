@@ -23,12 +23,11 @@ export async function fetchActivityPubIRI(iri) {
         // generate HTTP-signature for the actor
     }
     const response = await fetch(iri, {headers: headers, mode: 'no-cors'}).catch(console.error);
-    if (response.status == 200) {
-        const it = await response.json();
-        return it;
+    if (response.status === 200) {
+        return await response.json();
     }
     return null;
-};
+}
 
 export function isLocalIRI(iri) {
     if (typeof iri !== 'string') {

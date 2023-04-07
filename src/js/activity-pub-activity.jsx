@@ -1,11 +1,9 @@
 import {css, html, nothing} from "lit";
-import {ActivityPubObject, ObjectTypes} from "./activity-pub-object";
+import {ActivityPubObject} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
-import {ActorTypes} from "./activity-pub-actor";
+import {ObjectTypes, ActorTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {map} from "lit-html/directives/map.js";
-
-export const ActivityTypes = [ 'Create', 'Update', 'Delete', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore' ];
 
 export class ActivityPubActivity extends ActivityPubObject {
     static styles = ActivityPubObject.styles;

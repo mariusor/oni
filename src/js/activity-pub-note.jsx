@@ -24,9 +24,9 @@ export class ActivityPubNote extends ActivityPubObject {
     }
 
     render() {
-        const name = this.name().length > 0 ? html`<h1>${this.renderName()}</h1>` : nothing;
-        const summary = this.summary().length > 0 ? html`<h2>${this.renderSummary()}</h2>` : nothing;
-        const header = this.name().length+this.summary().length > 0 ? html`<header>${name}${summary}</header>` : nothing;
+        const name = this.it.getName().length > 0 ? html`<h1>${this.renderName()}</h1>` : nothing;
+        const summary = this.it.getSummary().length > 0 ? html`<h2>${this.renderSummary()}</h2>` : nothing;
+        const header = this.it.getName().length+this.it.getSummary().length > 0 ? html`<header>${name}${summary}</header>` : nothing;
 
         return html`<article>
         ${header}
