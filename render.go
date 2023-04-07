@@ -1,11 +1,11 @@
 package oni
 
 import (
+	"html/template"
+
 	vocab "github.com/go-ap/activitypub"
-	"github.com/go-ap/errors"
 	json "github.com/go-ap/jsonld"
 	"github.com/mariusor/render"
-	"html/template"
 )
 
 var (
@@ -64,15 +64,5 @@ var (
 				return template.HTMLAttr(res)
 			},
 		}},
-	})
-
-	errRenderer = render.New(render.Options{
-		Directory:                 "templates",
-		Layout:                    "main",
-		Extensions:                []string{".html"},
-		FileSystem:                TemplateFS,
-		IsDevelopment:             false,
-		DisableHTTPErrorRendering: true,
-		Funcs:                     []template.FuncMap{{"HTTPErrors": errors.HttpErrors}},
 	})
 )
