@@ -2,7 +2,7 @@ import {css, html, LitElement} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {when} from "lit-html/directives/when.js";
 import {authorization, handleServerError, isAuthorized} from "./utils";
-import {Ref} from "lit-html/directives/ref.js";
+import {ref} from "lit-html/directives/ref.js";
 
 export class LoginDialog extends LitElement {
     static styles = css`
@@ -104,7 +104,7 @@ export class LoginDialog extends LitElement {
         fetch(targetURI, req)
             .then(response => {
                 response.json().then(value => {
-                    if (response.status == 200) {
+                    if (response.status === 200) {
                         console.debug(`Obtained authorization code: ${value.code}`)
                         this.accessToken(value.code, value.state);
                     } else {
@@ -138,7 +138,7 @@ export class LoginDialog extends LitElement {
         const accessResponse = await fetch(tokenURL, req)
             .then(response => {
                 response.json().then(value => {
-                    if (response.status == 200) {
+                    if (response.status === 200) {
                         localStorage.setItem('authorization', JSON.stringify(value));
                         this.loginSuccessful();
                     } else {
@@ -174,22 +174,17 @@ export class LoginDialog extends LitElement {
 
     }
 
-    firstUpdated(changedProperties) {
-        const e = this.renderRoot.querySelector('input');
-        console.debug(e, e.name, e.focus);
-        if (e.autofocus && this.opened) e.focus({preventScroll:false});
-    }
-
-
     render() {
         this.getAuthURL();
+
+        const setFocus = (pw) => pw && pw.focus();
 
         return html`
             <div class=${classMap({overlay: true, opened: this.opened})} @click=${this.close}></div>
             <dialog ?opened="${this.opened}">
                 <div class=${classMap({error: (this.error.length > 0)})}>${this.error}</div>
                 <form method="post" action=${this.authorizeURL} @submit="${this.login}">
-                    <input type="password" id="_pw" name="_pw" placeholder="Password" autofocus/><br/>
+                    <input type="password" id="_pw" name="_pw" placeholder="Password" ${ref(setFocus)} /><br/>
                     <button type="submit">Sign in</button>
                 </form>
             </dialog>
