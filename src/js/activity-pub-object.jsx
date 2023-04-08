@@ -119,7 +119,7 @@ export class ActivityPubObject extends LitElement {
             .then(response => {
                 response.json().then( it => {
                     console.debug('updating', it)
-                    this.it = it
+                    this.it = new ActivityPubItem(it);
                 });
             })
             .catch(console.error);
