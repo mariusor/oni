@@ -25,9 +25,7 @@ export class NaturalLanguageValues extends LitElement {
     }
 
     checkChanged(e) {
-        this.checkEditable(e);
-
-        if (!this.editable || this.name.length == 0) {
+        if (!this.editable || this.name.length === 0) {
             console.warn('Unable to save, current settings are read-only');
             return;
         }
@@ -60,14 +58,8 @@ export class NaturalLanguageValues extends LitElement {
         return value;
     }
 
-    checkEditable(e) {
-        this.editable = isAuthorized() && this.name.length > 0;
-        console.debug(`${this.name} is editable: ${this.editable}`)
-    }
-
     render() {
         if (!this.it) { return nothing; }
-        this.checkEditable();
 
         return html`
             <div ?contenteditable=${this.editable} @blur="${this.checkChanged}">
