@@ -83,6 +83,8 @@ export class CollectionLink extends ActivityPubCollection {
     }
 
     render() {
-        return html`<a href=${this.it.iri()} class=${classMap({'active': (this.it === window.location.href)})}><oni-icon name=${this.label()}></oni-icon> ${this.label()}</a>`;
+        const iri = this.it.iri();
+        const label = this.label();
+        return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}><oni-icon name=${label}></oni-icon> ${label}</a>`;
     }
 }
