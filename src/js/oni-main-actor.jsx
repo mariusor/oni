@@ -193,14 +193,21 @@ export class OniMainActor extends ActivityPubActor {
         if (typeof icon == 'string') {
             return html`<img src=${icon}/>`;
         } else {
-            return ActivityPubObject.renderByMediaType(icon);
+            const url = icon.id || icon.url;
+            if (url) {
+                return html`<img src=${url}/>`;
+            }
         }
+        return nothing;
     }
 
     renderUrl() {
         let url = this.it.getUrl();
         if (!url) {
             return nothing;
+        }
+        if (!Array.isArray(url)) {
+            url = [url];
         }
         return html`
             <ul style="background-color: ${tinycolor(this.palette.bgColor).setAlpha(0.8).toRgbString()};">

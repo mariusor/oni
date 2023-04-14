@@ -34,12 +34,9 @@ export class ActivityPubActor extends ActivityPubObject {
 
     renderUrl() {
         let url = this.it.getUrl();
-        if (!url) {
-            return nothing;
-        }
-        if (!Array.isArray(url)) {
-            url = [url];
-        }
+        if (!url) return nothing;
+        if (!Array.isArray(url)) url = [url];
+
         return html`
             <ul>
                 ${url.map((u) => html`

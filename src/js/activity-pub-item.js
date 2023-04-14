@@ -37,35 +37,35 @@ export class ActivityPubItem {
     }
 
     getUrl() {
-        return this.hasOwnProperty('url') ? this.url : null;
+        if (!this.hasOwnProperty('url')) {
+            this.url = null;
+        }
+        return this.url;
     }
 
     getAttachment() {
-        if (!this || !this.hasOwnProperty('attachment')) {
-            return null;
+        if (!this.hasOwnProperty('attachment')) {
+            this.attachment = null;
         }
         return this.attachment;
     }
 
     getRecipients() {
         let recipients = [];
-        if (this.it == null) {
-            return recipients;
+        if (this.hasOwnProperty('to')) {
+            recipients.concat(this.to);
         }
-        if (this.it.hasOwnProperty('to')) {
-            recipients.concat(this.it.to);
+        if (this.hasOwnProperty('cc')) {
+            recipients.concat(this.cc);
         }
-        if (this.it.hasOwnProperty('cc')) {
-            recipients.concat(this.it.cc);
+        if (this.hasOwnProperty('bto')) {
+            recipients.concat(this.bto);
         }
-        if (this.it.hasOwnProperty('bto')) {
-            recipients.concat(this.it.bto);
+        if (this.hasOwnProperty('bcc')) {
+            recipients.concat(this.bcc);
         }
-        if (this.it.hasOwnProperty('bcc')) {
-            recipients.concat(this.it.bcc);
-        }
-        if (this.it.hasOwnProperty('audience')) {
-            recipients.concat(this.it.audience);
+        if (this.hasOwnProperty('audience')) {
+            recipients.concat(this.audience);
         }
         return recipients.flat()
             .filter((value, index, array) => array.indexOf(value) === index);
@@ -73,7 +73,7 @@ export class ActivityPubItem {
 
 
     getPublished() {
-        if (!this || !this.hasOwnProperty('published')) {
+        if (!this.hasOwnProperty('published')) {
             return null;
         }
         const d = new Date();
@@ -83,7 +83,7 @@ export class ActivityPubItem {
 
     getName() {
         if (!this.hasOwnProperty('name')) {
-            return [];
+            this.name = [];
         }
         let s = this.name;
         if (!Array.isArray(s)) {
@@ -94,7 +94,7 @@ export class ActivityPubItem {
 
     getSummary() {
         if (!this.hasOwnProperty('summary')) {
-            return [];
+            this.summary = [];
         }
         let s = this.summary;
         if (!Array.isArray(s)) {
@@ -105,7 +105,7 @@ export class ActivityPubItem {
 
     getContent() {
         if (!this.hasOwnProperty('content')) {
-            return [];
+            this.content = [];
         }
         let s = this.content;
         if (!Array.isArray(s)) {
@@ -115,22 +115,22 @@ export class ActivityPubItem {
     }
 
     getIcon() {
-        if (this == null) {
-            return null;
+        if (!this.hasOwnProperty('icon')) {
+            this.icon = null;
         }
-        return this.hasOwnProperty('icon') ? this.icon : null;
+        return this.icon;
     }
 
     getImage() {
-        if (this == null) {
-            return null;
+        if(!this.hasOwnProperty('image')) {
+            this.image = null;
         }
-        return this.hasOwnProperty('image') ? this.image : null;
+        return this.image;
     }
 
     getPreferredUsername() {
         if (!this.hasOwnProperty('preferredUsername')) {
-            return [];
+            this.preferredUsername = [];
         }
         let s = this.preferredUsername;
         if (!Array.isArray(s)) {
@@ -141,9 +141,6 @@ export class ActivityPubItem {
 
     getItems() {
         let items = [];
-        if (this === null) {
-            return items;
-        }
         if (this.type.toLowerCase().includes('ordered') && this.hasOwnProperty('orderedItems')) {
             items = this['orderedItems'];
         } else if (this.hasOwnProperty('items')) {
