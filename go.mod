@@ -11,7 +11,6 @@ require (
 	github.com/go-ap/auth v0.0.0-20230323123857-c6b121c09288
 	github.com/go-ap/client v0.0.0-20230323123805-a1114dc5ba4f
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
-	github.com/go-ap/fedbox v0.0.0-20230111150432-bab3b45bf9a2
 	github.com/go-ap/filters v0.0.0-20230402103332-be164708444f
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-ap/processing v0.0.0-20230402103201-6798993132ff

@@ -4,16 +4,17 @@ import (
 	"crypto"
 	"encoding/base64"
 	"encoding/json"
+	"math/rand"
+	"net/http"
+
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/errors"
-	"github.com/go-ap/fedbox/activitypub"
+	"github.com/go-ap/filters"
 	"github.com/go-ap/processing"
 	"github.com/openshift/osin"
 	"golang.org/x/oauth2"
-	"math/rand"
-	"net/http"
 )
 
 type ClientSaver interface {
@@ -143,7 +144,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 
 var (
 	errUnauthorized = errors.Unauthorizedf("Invalid username or password")
-	errNotFound     = activitypub.ErrNotFound("actor not found")
+	errNotFound     = filters.ErrNotFound("actor not found")
 )
 
 func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
@@ -168,7 +169,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 
 	actor := &auth.AnonymousActor
 	if ar := as.HandleAccessRequest(resp, r); ar != nil {
-		actorFilters := activitypub.FiltersNew()
+		actorFilters := filters.FiltersNew()
 		if iri, ok := ar.UserData.(string); ok {
 			actorFilters.IRI = vocab.IRI(iri)
 		}
