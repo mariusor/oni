@@ -4,10 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/fs"
 	"oni"
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strings"
 
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
@@ -28,19 +30,44 @@ var dataPath = func() string {
 var listen string
 var path string
 
+func loadAccountsFromStorage(base string) (vocab.ItemCollection, error) {
+	urls := make(vocab.ItemCollection, 0)
+	err := filepath.WalkDir(base, func(file string, d fs.DirEntry, err error) error {
+		if maybeActor, ok := maybeLoadServiceActor(path, file); ok {
+			urls = append(urls, maybeActor.ID)
+		}
+		return nil
+	})
+	return urls, err
+}
+
+func maybeLoadServiceActor(base, path string) (*vocab.Actor, bool) {
+	if base[len(base)-1] != '/' {
+		base = base + "/"
+	}
+	pieces := strings.Split(strings.Replace(path, base, "", 1), string(filepath.Separator))
+	if len(pieces) == 2 && pieces[1] == "__raw" {
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			return nil, false
+		}
+		it, err := vocab.UnmarshalJSON(raw)
+		if err != nil || vocab.IsNil(it) {
+			return nil, false
+		}
+		act, err := vocab.ToActor(it)
+		if err != nil {
+			return nil, false
+		}
+		return act, true
+	}
+	return nil, false
+}
+
 func main() {
 	flag.StringVar(&listen, "listen", "127.0.0.1:60123", "Listen socket")
 	flag.StringVar(&path, "path", dataPath, "Path for ActivityPub storage")
 	flag.Parse()
-
-	urls := make(vocab.ItemCollection, 0)
-	if flag.NArg() == 0 {
-		urls = append(urls, vocab.IRI("https://oni.local"))
-	} else {
-		for _, arg := range flag.Args() {
-			urls = append(urls, vocab.IRI(arg))
-		}
-	}
 
 	if build, ok := debug.ReadBuildInfo(); ok && build.Main.Version != "" {
 		oni.Version = build.Main.Version
@@ -48,6 +75,12 @@ func main() {
 	log := lw.Dev()
 
 	err := mkDirIfNotExists(path)
+	if err != nil {
+		log.Errorf("%s", err.Error())
+		os.Exit(1)
+	}
+
+	urls, err := loadAccountsFromStorage(path)
 	if err != nil {
 		log.Errorf("%s", err.Error())
 		os.Exit(1)
