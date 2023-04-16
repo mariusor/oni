@@ -67,7 +67,6 @@ export class TextEditor extends LitElement {
         content: {type: String},
     };
 
-
     constructor() {
         super();
     }
@@ -78,16 +77,80 @@ export class TextEditor extends LitElement {
         this.reset();
     }
 
+    // connectedCallback() {
+    //     super.connectedCallback();
+    //     document.addEventListener('selectionchange', this.requestUpdate);
+    // }
+    //
+    // disconnectedCallback() {
+    //     document.removeEventListener('selectionchange', this.requestUpdate);
+    //     super.disconnectedCallback();
+    // }
+
     reset() {
         const parser = new DOMParser();
         const doc = parser.parseFromString(this.content, "text/html");
         document.execCommand("defaultParagraphSeparator", false, "br");
-        document.addEventListener("selectionchange", () => {
-            this.requestUpdate();
-        });
+        document.addEventListener("selectionchange", this.requestUpdate);
         const root = doc.querySelector("body");
         root.setAttribute("contenteditable", "");
+
         this.root = root;
+    }
+
+    handleDrop(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        this.handleFiles(e.dataTransfer.files);
+    }
+
+    handleDragOver(e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        // Explicitly show this is a copy. (Why?)
+        e.dataTransfer.dropEffect = 'copy';
+
+        this.handleFiles(e.dataTransfer.files);
+    }
+
+    handleFiles(files) {
+        if (!files) {
+            return;
+        }
+        for (let i = 0, f; f = files[i]; i++) {
+            if (!f.type.match('image.*')) {
+                console.warn(`Files of type ${f.type} are not supported for upload.`);
+                continue;
+            }
+            console.debug(f);
+
+            const reader = new FileReader();
+            reader.addEventListener("load", (theFile) => {
+                     const img = document.createElement("img");
+                     img.src = reader.result.toString();
+                     img.title = theFile.name;
+                     img.dataSize = theFile.size;
+                     img.dataName = theFile.name;
+
+                     console.debug(img);
+                     this.root.appendChild(img);
+                    // if (selection.rangeCount > 0 && selection.getRangeAt(0).startContainer != $('body').get(0)) {
+                    //     const range = selection.getRangeAt(0);
+                    //     const fragment = document.createDocumentFragment();
+                    //     fragment.appendChild(img);
+                    //
+                    //     range.deleteContents();
+                    //     range.insertNode(fragment);
+                    // } else {
+                    //     const elem = $(evt.target);
+                    //     elem.append(img);
+                    // }
+            });
+
+            reader.readAsDataURL(f);
+        }
     }
 
     renderToolbar() {
@@ -137,7 +200,7 @@ export class TextEditor extends LitElement {
                 icon: "format_italic",
                 text: "<em>I</em>",
                 command: "emphasize",
-                active: tags.includes("em"),
+                active: tags.includes("i"),
             },
             {
                 icon: "format_underlined",
@@ -212,29 +275,20 @@ export class TextEditor extends LitElement {
             {
                 icon: "add_image",
                 text: "<span>&#128443;</span>",
-                command: () => { console.debug("adding image") },
+                command: () => {
+
+                },
             },
         ];
-        return html`
-      ${commands.map((n) => {
-            return html`
-          ${n.values
-                ? html` <select
-                id="${n.icon}"
-                @change=${(e) => {
-                    const val = e.target.value;
-                    if (val === "--") {
-                        this.command("removeFormat", undefined);
-                    } else if (typeof n.command === "string") {
-                        this.command(n.command, val);
-                    }
-                }}
-              >
-                ${n.values.map(
-                    (v) => html` <option value=${v.value}>${v.name}</option>`
-                )}
-              </select>`
-                : html` <button class=${classMap({"active": n.active})}
+        return html`${commands.map((n) => {
+            if (n.icon == "add_image") return this.renderImageUpload(n);
+            if (n.values) return this.renderSelect(n);
+            return this.renderButton(n)
+        })}`;
+    }
+
+    renderButton(n) {
+        return html`<button class=${classMap({"active": n.active})}
                 @click=${() => {
                     if (n.values) {
                     } else if (typeof n.command === "string") {
@@ -242,11 +296,27 @@ export class TextEditor extends LitElement {
                     } else {
                         n.command();
                     }
-                }}><!--<oni-icon name=${n.icon}>--></oni-icon>${unsafeHTML(n.text)}</button>`}
-          
-        `;
-        })}
-    `;
+        }}>${unsafeHTML(n.text)}</button>`;
+    }
+
+    renderImageUpload(n) {
+        return html`<input type=file multiple @change=${(e) => this.handleFiles(e.target?.files)}>`;
+    }
+
+    renderSelect(n) {
+       return html`
+           <select id="${n.icon}"
+            @change=${(e) => {
+                const val = e.target.value;
+                if (val === "--") {
+                    this.command("removeFormat", undefined);
+                } else if (typeof n.command === "string") {
+                    this.command(n.command, val);
+                }
+            }}>
+                ${n.values.map((v) => html` <option value=${v.value}>${v.name}</option>`)}
+            </select>
+       `;
     }
 
     command(command, val) {
@@ -258,7 +328,10 @@ export class TextEditor extends LitElement {
     render() {
         return html`<main>
             <div>${this.renderToolbar()}</div>
-            <div>${this.root}</div>
+            <div 
+                @dragover="${this.handleDragOver}"
+                @drop="${this.handleDrop}"
+            >${this.root}</div>
         </main>`;
     }
 }
