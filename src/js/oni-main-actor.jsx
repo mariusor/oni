@@ -7,6 +7,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {contrast, isAuthorized, prefersDarkTheme} from "./utils";
 import {map} from "lit-html/directives/map.js";
 import tinycolor from "tinycolor2";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
@@ -90,12 +91,12 @@ export class OniMainActor extends ActivityPubActor {
     }
 
     async loadPalette(it) {
-        const root = document.documentElement;
         if (localStorage.getItem('palette')) {
             this.palette = JSON.parse(localStorage.getItem('palette'));
             return this.palette;
         }
 
+        const root = document.documentElement;
         const style = getComputedStyle(root);
         this.palette = {
             bgColor: style.getPropertyValue('--bg-color').trim(),
@@ -107,44 +108,52 @@ export class OniMainActor extends ActivityPubActor {
             colorScheme: prefersDarkTheme() ? 'dark' : 'light',
         };
 
-        let iconColors = await prominent(it.getIcon(), {amount: 20, group: 30, format: 'hex', sample: 5});
-        iconColors = iconColors.filter(col => tinycolor(col).toHsl().s > 0.18 && tinycolor(col).toHsl().s < 0.84)
-
-        if (it.hasOwnProperty('image')) {
-            const col = await average(it.getImage(), {format: 'hex'});
-
-            if (col !== null) {
-                this.palette.bgColor = col;
-                this.palette.colorScheme = tinycolor(col).isDark() ? 'dark' : 'light';
-                this.palette.bgImageURL = it.image;
-                root.style.setProperty('--bg-color', col.trim());
-                root.style.setProperty('backgroundImage', `linear-gradient(${tinycolor(col).setAlpha(0).toRgb()}, ${tinycolor(col).setAlpha(1).toRgb()}), url(${it.image});`)
-            }
-        }
-
-        this.colors = iconColors;
-
         const strongerColor = (col) => tinycolor(this.palette.bgColor).isDark() ?
             tinycolor(col).lighten(10).saturate(15)
             : tinycolor(col).darken(20).saturate(10)
 
-        const shadowColor = tinycolor.mostReadable(this.palette.bgColor, iconColors);
-        if (shadowColor !== null) {
-            this.palette.shadowColor = shadowColor.toHexString();
-            this.palette.linkVisitedColor = shadowColor.toHexString();
-            this.palette.linkActiveColor = this.palette.linkVisitedColor;
-            this.palette.linkColor = strongerColor(this.palette.linkVisitedColor)?.toHexString();
+        let imageURL = apURL(it.getImage());
+        if (imageURL) {
+            const avgColor = await average(imageURL, {format: 'hex'});
+            if (avgColor !== null) {
+                this.palette.bgColor = avgColor;
+                this.palette.colorScheme = tinycolor(avgColor).isDark() ? 'dark' : 'light';
+                this.palette.bgImageURL = imageURL;
+                root.style.setProperty('--bg-color', avgColor.trim());
+                root.style.setProperty('backgroundImage', `linear-gradient(${tinycolor(avgColor).setAlpha(0).toRgb()}, ${tinycolor(avgColor).setAlpha(1).toRgb()}), url(${imageURL});`)
+            }
         }
-        iconColors = iconColors.filter((value, index, array) => array.at(index) !== this.palette.shadowColor);
-        let linkVisitedColor = tinycolor.mostReadable(this.palette.bgColor, iconColors, {level: "AAA", size: "small"});
-        if (linkVisitedColor !== null && tinycolor.isReadable(linkVisitedColor, this.palette.bgColor, {
-            level: "AAA",
-            size: "small"
-        })) {
-            this.palette.linkVisitedColor = linkVisitedColor.toHexString();
-            this.palette.linkActiveColor = this.palette.linkVisitedColor;
-            this.palette.linkColor = strongerColor(this.palette.linkVisitedColor)?.toHexString();
+
+        let iconURL = apURL(it.getIcon());
+        if (iconURL) {
+            let iconColors = await prominent(iconURL, {amount: 20, group: 30, format: 'hex', sample: 5});
+            this.colors = iconColors;
+
+            iconColors = iconColors.filter(col => {
+                return tinycolor(col).toHsl().s > 0.18 && tinycolor(col).toHsl().s < 0.84
+            })
+
+            const shadowColor = tinycolor.mostReadable(this.palette.bgColor, iconColors);
+            if (shadowColor !== null) {
+                this.palette.shadowColor = shadowColor.toHexString();
+                this.palette.linkVisitedColor = shadowColor.toHexString();
+                this.palette.linkActiveColor = this.palette.linkVisitedColor;
+                this.palette.linkColor = strongerColor(this.palette.linkVisitedColor)?.toHexString();
+            }
+            iconColors = iconColors
+                .filter((value, index, array) => array.at(index) !== this.palette.shadowColor);
+
+            let linkVisitedColor = tinycolor.mostReadable(this.palette.bgColor, iconColors, {level: "AAA", size: "small"});
+            if (linkVisitedColor !== null && tinycolor.isReadable(linkVisitedColor, this.palette.bgColor, {
+                level: "AAA",
+                size: "small"
+            })) {
+                this.palette.linkVisitedColor = linkVisitedColor.toHexString();
+                this.palette.linkActiveColor = this.palette.linkVisitedColor;
+                this.palette.linkColor = strongerColor(this.palette.linkVisitedColor)?.toHexString();
+            }
         }
+
         localStorage.setItem('palette', JSON.stringify(this.palette));
         return this.palette;
     }
@@ -320,7 +329,15 @@ export class OniMainActor extends ActivityPubActor {
             </header>
             <nav>${this.renderCollections()}</nav>
         </main>
-        <slot ?contenteditable=${this.authenticated}></slot>
+        <slot></slot>
+        ${this.renderColors()}
         `;
     }
+}
+
+function apURL(ob) {
+    if (typeof ob === 'object' && ob !== null) {
+        return new ActivityPubItem(ob).iri();
+    }
+    return ob
 }
