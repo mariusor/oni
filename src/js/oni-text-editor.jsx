@@ -1,42 +1,147 @@
-import {css, html, LitElement, nothing} from "lit";
+import {css, html, LitElement} from "lit";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {classMap} from "lit-html/directives/class-map.js";
 
 export class TextEditor extends LitElement {
     static styles = [css`
-    :host {
-      --editor-width: 100%;
-      --editor-height: 100vh;
-      --editor-background: transparent;
-      --editor-toolbar-height: 2rem;
-      --editor-toolbar-background: transparent;
-      --editor-toolbar-on-background: white;
-      --editor-toolbar-on-active-background: #a4a4a4;
+        :host {
+          --editor-width: 100%;
+          --editor-height: 100vh;
+          --editor-background: transparent;
+          --editor-toolbar-height: 2rem;
+          --editor-toolbar-background: transparent;
+          --editor-toolbar-on-background: white;
+          --editor-toolbar-on-active-background: #a4a4a4;
+        }
+        main {
+          width: var(--editor-width);
+          height: var(--editor-height);
+          display: grid;
+          grid-template-areas: "toolbar toolbar" "editor editor";
+          grid-template-rows: var(--editor-toolbar-height) auto;
+          grid-template-columns: auto auto;
+        }
+        :host oni-text-editor-toolbar {
+          grid-area: toolbar;
+          width: var(--editor-width);
+          height: var(--editor-toolbar-height);
+          background-color: var(--editor-toolbar-background);
+          color: var(--editor-toolbar-on-background);
+          overscroll-behavior: contain;
+          overflow-y: auto;
+          scrollbar-width: none;
+        }
+    `];
+
+    static properties = {
+        root: {type: Element},
+        content: {type: String}
+    };
+
+    constructor() {
+        super();
+        document.addEventListener("image.upload", (e) => this.handleFiles(e.detail));
+        //document.addEventListener("selectionchange", this.requestUpdate);
     }
-    main {
-      width: var(--editor-width);
-      height: var(--editor-height);
-      display: grid;
-      grid-template-areas: "toolbar toolbar" "editor editor";
-      grid-template-rows: var(--editor-toolbar-height) auto;
-      grid-template-columns: auto auto;
+
+    async firstUpdated(props) {
+        const elem = this.parentElement.querySelector("oni-text-editor slot");
+        this.content = elem?.innerHTML ?? "";
+        this.reset();
     }
-    :host div:first-of-type {
-      grid-area: toolbar;
-      width: var(--editor-width);
-      height: var(--editor-toolbar-height);
-      background-color: var(--editor-toolbar-background);
-      color: var(--editor-toolbar-on-background);
-      overscroll-behavior: contain;
-      overflow-y: auto;
-      -ms-overflow-style: none;
-      scrollbar-width: none;
+
+    reset() {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(this.content, "text/html");
+        document.execCommand("defaultParagraphSeparator", true, "br");
+        const root = doc.querySelector("body");
+        root.setAttribute("contenteditable", "");
+
+        this.root = root;
+    }
+
+    handleDrop(e) {
+        if (!e.dataTransfer.types.filter((i) => i.match('image.*')).length === 0) {
+            console.warn("No supported elements for drop.");
+            return;
+        }
+
+        this.handleFiles(e.dataTransfer.files);
+
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    dragAllowed(e) {
+        if (!e.dataTransfer.types.filter((i) => i.match('image.*')).length === 0) {
+            console.warn("No supported elements for drag'n'drop.");
+            return;
+        }
+
+        e.stopPropagation();
+        e.preventDefault();
+    }
+
+    handleFiles(files) {
+        if (!files) {
+            return;
+        }
+
+        const appendImage = (progress) => {
+            const f = progress.target
+
+            const selection = document.getSelection();
+
+            const img = document.createElement("img");
+            img.src = f.result;
+            img.title = f.name;
+            img.dataSize = f.size;
+            img.dataName = f.name;
+
+            if (selection?.rangeCount > 0 && selection?.getRangeAt(0).startContainer != this.root) {
+                const range = selection.getRangeAt(0);
+                const fragment = document.createDocumentFragment();
+                fragment.appendChild(img);
+
+                range.deleteContents();
+                range.insertNode(fragment);
+            } else {
+                this.root.append(img);
+            }
+        }
+        for (let i = 0, f; f = files[i]; i++) {
+            if (!f.type.match('image.*')) {
+                console.warn(`Files of type ${f.type} are not supported for upload.`);
+                continue;
+            }
+
+            const reader = new FileReader();
+            reader.addEventListener("load", appendImage);
+            reader.readAsDataURL(f);
+
+            console.debug(reader);
+            console.debug(f);
+        }
+    }
+
+    render() {
+        return html`
+            <main>
+                <oni-text-editor-toolbar></oni-text-editor-toolbar>
+                <div @drop="${this.handleDrop}" 
+                    @dragenter="${this.dragAllowed}"
+                    @dragover="${this.dragAllowed}"
+                >${this.root}</div>
+            </main>`;
+    }
+}
+
+export class TextEditorToolbar extends LitElement {
+    static styles = [css`
+    :host div {
       border-bottom: 1px solid var(--editor-toolbar-on-background);
     }
-    :host div:first-of-type::-webkit-scrollbar {
-      display: none;
-    }
-    :host div:first-of-type > .active {
+    :host div {
       color: var(--editor-toolbar-on-active-background);
     }
     select {
@@ -52,110 +157,16 @@ export class TextEditor extends LitElement {
     input[type="color"]::-webkit-color-swatch-wrapper {
       padding: 0;
     }
-    input[type="color"]::-webkit-color-swatch {
-      b
-    mwc-icon-button {
-      color: var(--editor-toolbar-on-background);
-      --mdc-icon-size: 20px;
-      --mdc-icon-button-size: 30px;
-      cursor: pointer;
-    }
+    input[type="color"]::-webkit-color-swatch { }
     `];
-
-    static properties = {
-        root: {type: Element},
-        content: {type: String},
-    };
 
     constructor() {
         super();
     }
 
-    async firstUpdated(props) {
-        const elem = this.parentElement.querySelector("oni-text-editor slot");
-        this.content = elem?.innerHTML ?? "";
-        this.reset();
-    }
-
-    // connectedCallback() {
-    //     super.connectedCallback();
-    //     document.addEventListener('selectionchange', this.requestUpdate);
-    // }
-    //
-    // disconnectedCallback() {
-    //     document.removeEventListener('selectionchange', this.requestUpdate);
-    //     super.disconnectedCallback();
-    // }
-
-    reset() {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(this.content, "text/html");
-        document.execCommand("defaultParagraphSeparator", false, "br");
-        document.addEventListener("selectionchange", this.requestUpdate);
-        const root = doc.querySelector("body");
-        root.setAttribute("contenteditable", "");
-
-        this.root = root;
-    }
-
-    handleDrop(e) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        this.handleFiles(e.dataTransfer.files);
-    }
-
-    handleDragOver(e) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        // Explicitly show this is a copy. (Why?)
-        e.dataTransfer.dropEffect = 'copy';
-
-        this.handleFiles(e.dataTransfer.files);
-    }
-
-    handleFiles(files) {
-        if (!files) {
-            return;
-        }
-        for (let i = 0, f; f = files[i]; i++) {
-            if (!f.type.match('image.*')) {
-                console.warn(`Files of type ${f.type} are not supported for upload.`);
-                continue;
-            }
-            console.debug(f);
-
-            const reader = new FileReader();
-            reader.addEventListener("load", (theFile) => {
-                     const img = document.createElement("img");
-                     img.src = reader.result.toString();
-                     img.title = theFile.name;
-                     img.dataSize = theFile.size;
-                     img.dataName = theFile.name;
-
-                     console.debug(img);
-                     this.root.appendChild(img);
-                    // if (selection.rangeCount > 0 && selection.getRangeAt(0).startContainer != $('body').get(0)) {
-                    //     const range = selection.getRangeAt(0);
-                    //     const fragment = document.createDocumentFragment();
-                    //     fragment.appendChild(img);
-                    //
-                    //     range.deleteContents();
-                    //     range.insertNode(fragment);
-                    // } else {
-                    //     const elem = $(evt.target);
-                    //     elem.append(img);
-                    // }
-            });
-
-            reader.readAsDataURL(f);
-        }
-    }
-
-    renderToolbar() {
-        const selection = this.shadowRoot?.getSelection ? this.shadowRoot.getSelection() : null;
+    render() {
         const tags = [];
+        const selection = document.getSelection();
         if (selection?.type === "Range") {
             let parentNode = selection?.baseNode;
             if (parentNode) {
@@ -169,20 +180,21 @@ export class TextEditor extends LitElement {
                 }
             }
         }
+
         const commands = [
             {
                 icon: "title",
                 command: "formatBlock",
                 values: [
-                    { name: "Normal Text", value: "--" },
-                    { name: "Heading 1", value: "h1" },
-                    { name: "Heading 2", value: "h2" },
-                    { name: "Heading 3", value: "h3" },
-                    { name: "Heading 4", value: "h4" },
-                    { name: "Heading 5", value: "h5" },
-                    { name: "Heading 6", value: "h6" },
-                    { name: "Paragraph", value: "p" },
-                    { name: "Pre-Formatted", value: "pre" },
+                    {name: "Normal Text", value: "--"},
+                    {name: "Heading 1", value: "h1"},
+                    {name: "Heading 2", value: "h2"},
+                    {name: "Heading 3", value: "h3"},
+                    {name: "Heading 4", value: "h4"},
+                    {name: "Heading 5", value: "h5"},
+                    {name: "Heading 6", value: "h6"},
+                    {name: "Paragraph", value: "p"},
+                    {name: "Pre-Formatted", value: "pre"},
                 ],
             },
             {
@@ -280,58 +292,64 @@ export class TextEditor extends LitElement {
                 },
             },
         ];
-        return html`${commands.map((n) => {
-            if (n.icon == "add_image") return this.renderImageUpload(n);
-            if (n.values) return this.renderSelect(n);
-            return this.renderButton(n)
-        })}`;
+
+        return html`
+            <div>${commands.map((n) => {
+                if (n.icon == "add_image") return this.renderImageUpload(n);
+                if (n.values) return this.renderSelect(n);
+                return this.renderButton(n)
+            })}
+            </div>`;
     }
 
     renderButton(n) {
-        return html`<button class=${classMap({"active": n.active})}
-                @click=${() => {
-                    if (n.values) {
-                    } else if (typeof n.command === "string") {
-                        this.command(n.command, n.command_value);
-                    } else {
-                        n.command();
-                    }
-        }}>${unsafeHTML(n.text)}</button>`;
+        return html`
+            <button class=${classMap({"active": n.active})}
+                    @click=${() => {
+                        if (n.values) {
+                        } else if (typeof n.command === "string") {
+                            this.command(n.command, n.command_value);
+                        } else {
+                            n.command();
+                        }
+                    }}>${unsafeHTML(n.text)}
+            </button>`;
     }
 
     renderImageUpload(n) {
-        return html`<input type=file multiple @change=${(e) => this.handleFiles(e.target?.files)}>`;
+        return html`<input type=file multiple
+               @change="${(e) => {
+                   document.dispatchEvent(
+                       new CustomEvent("image.upload", {
+                           trusted: true,
+                           bubbles: true,
+                           detail: e.target?.files,
+                       })
+                   );
+               }}"
+        >`;
     }
 
     renderSelect(n) {
-       return html`
-           <select id="${n.icon}"
-            @change=${(e) => {
-                const val = e.target.value;
-                if (val === "--") {
-                    this.command("removeFormat", undefined);
-                } else if (typeof n.command === "string") {
-                    this.command(n.command, val);
-                }
-            }}>
-                ${n.values.map((v) => html` <option value=${v.value}>${v.name}</option>`)}
+        return html`
+            <select id="${n.icon}"
+                    @change=${(e) => {
+                        const val = e.target.value;
+                        if (val === "--") {
+                            this.command("removeFormat", undefined);
+                        } else if (typeof n.command === "string") {
+                            this.command(n.command, val);
+                        }
+                    }}>
+                ${n.values.map((v) => html`
+                    <option value=${v.value}>${v.name}</option>`)}
             </select>
-       `;
+        `;
     }
 
     command(command, val) {
         // NOTE(marius): this should be probably be replaced with something
         // based on the ideas from here: https://stackoverflow.com/a/62266439
-        document.execCommand(command, false, val);
-    }
-
-    render() {
-        return html`<main>
-            <div>${this.renderToolbar()}</div>
-            <div 
-                @dragover="${this.handleDragOver}"
-                @drop="${this.handleDrop}"
-            >${this.root}</div>
-        </main>`;
+        document.execCommand(command, true, val);
     }
 }
