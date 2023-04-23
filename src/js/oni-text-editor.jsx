@@ -1,6 +1,7 @@
 import {css, html, LitElement} from "lit";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {classMap} from "lit-html/directives/class-map.js";
+import {showError} from "./utils";
 
 export class TextEditor extends LitElement {
     static styles = [css`
@@ -41,7 +42,7 @@ export class TextEditor extends LitElement {
     constructor() {
         super();
         document.addEventListener("image.upload", (e) => this.handleFiles(e.detail));
-        //document.addEventListener("selectionchange", this.requestUpdate);
+        document.addEventListener("selectionchange", this.reset);
     }
 
     async firstUpdated(props) {
@@ -74,7 +75,7 @@ export class TextEditor extends LitElement {
 
     dragAllowed(e) {
         if (!e.dataTransfer.types.filter((i) => i.match('image.*')).length === 0) {
-            console.warn("No supported elements for drag'n'drop.");
+            console.warn("No supported elements for drag and drop.");
             return;
         }
 
@@ -90,30 +91,30 @@ export class TextEditor extends LitElement {
         const appendImage = (progress) => {
             const f = progress.target
 
-            const selection = document.getSelection();
+            // NOTE(marius): replacing the selection with the image doesn't seem to work very well.
+            // I need to research more. For now, appending the images at the end of the editable block
+            // seems OK.
+            console.debug(document.getSelection());
 
             const img = document.createElement("img");
             img.src = f.result;
             img.title = f.name;
             img.dataSize = f.size;
             img.dataName = f.name;
+            img.style.maxWidth = '100%';
 
-            if (selection?.rangeCount > 0 && selection?.getRangeAt(0).startContainer != this.root) {
-                const range = selection.getRangeAt(0);
-                const fragment = document.createDocumentFragment();
-                fragment.appendChild(img);
-
-                range.deleteContents();
-                range.insertNode(fragment);
-            } else {
-                this.root.append(img);
-            }
+            this.root.append(img);
         }
         for (let i = 0, f; f = files[i]; i++) {
             if (!f.type.match('image.*')) {
-                console.warn(`Files of type ${f.type} are not supported for upload.`);
+                showError(`Files of type ${f.type} are not supported for upload.`);
                 continue;
             }
+            if (f.size > 256000) {
+                showError("Image attachment is too large.")
+                continue;
+            }
+
 
             const reader = new FileReader();
             reader.addEventListener("load", appendImage);

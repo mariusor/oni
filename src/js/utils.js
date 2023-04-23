@@ -194,3 +194,8 @@ export function handleServerError(err) {
 export function mainActorOutbox() {
     return localStorage.getItem("outbox");
 }
+
+export function showError(e) {
+    console.warn(e);
+    alert(e);
+}
