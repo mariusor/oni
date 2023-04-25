@@ -24,13 +24,6 @@ export class TextEditor extends LitElement {
         }
         :host oni-text-editor-toolbar {
           grid-area: toolbar;
-          width: var(--editor-width);
-          height: var(--editor-toolbar-height);
-          background-color: var(--editor-toolbar-background);
-          color: var(--editor-toolbar-on-background);
-          overscroll-behavior: contain;
-          overflow-y: auto;
-          scrollbar-width: none;
         }
     `];
 
@@ -139,10 +132,25 @@ export class TextEditor extends LitElement {
 
 export class TextEditorToolbar extends LitElement {
     static styles = [css`
-    :host div {
-      border-bottom: 1px solid var(--editor-toolbar-on-background);
+    :host {
+          --editor-width: 100%;
+          --editor-height: 100vh;
+          --editor-background: transparent;
+          --editor-toolbar-height: 2rem;
+          --editor-toolbar-background: transparent;
+          --editor-toolbar-on-background: white;
+          --editor-toolbar-on-active-background: #a4a4a4;
     }
-    :host div {
+    :host {
+      width: var(--editor-width);
+      height: var(--editor-toolbar-height);
+      background-color: var(--editor-toolbar-background);
+      color: var(--editor-toolbar-on-background);
+      overscroll-behavior: contain;
+      overflow-y: auto;
+      scrollbar-width: none;
+      border-bottom: 1px solid var(--editor-toolbar-on-background);
+      background: linear-gradient(#e66465, #9198e5);
       color: var(--editor-toolbar-on-active-background);
     }
     select {
