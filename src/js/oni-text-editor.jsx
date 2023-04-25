@@ -10,9 +10,6 @@ export class TextEditor extends LitElement {
           --editor-height: 100vh;
           --editor-background: transparent;
           --editor-toolbar-height: 2rem;
-          --editor-toolbar-background: transparent;
-          --editor-toolbar-on-background: white;
-          --editor-toolbar-on-active-background: #a4a4a4;
         }
         main {
           width: var(--editor-width);
@@ -133,40 +130,24 @@ export class TextEditor extends LitElement {
 export class TextEditorToolbar extends LitElement {
     static styles = [css`
     :host {
-          --editor-width: 100%;
-          --editor-height: 100vh;
-          --editor-background: transparent;
-          --editor-toolbar-height: 2rem;
-          --editor-toolbar-background: transparent;
-          --editor-toolbar-on-background: white;
-          --editor-toolbar-on-active-background: #a4a4a4;
+      --toolbar-width: max-content;
+      --toolbar-height: 100%;
+      --toolbar-background-top: white;
+      --toolbar-background-bottom: silver;
+      --toolbar-on-background: white;
+      --toolbar-on-active-background: #a4a4a4;
     }
     :host {
-      width: var(--editor-width);
-      height: var(--editor-toolbar-height);
-      background-color: var(--editor-toolbar-background);
-      color: var(--editor-toolbar-on-background);
+      height: var(--toolbar-height);
+      width: var(--toolbar-width);
       overscroll-behavior: contain;
       overflow-y: auto;
       scrollbar-width: none;
-      border-bottom: 1px solid var(--editor-toolbar-on-background);
-      background: linear-gradient(#e66465, #9198e5);
-      color: var(--editor-toolbar-on-active-background);
+      color: var(--toolbar-on-active-background);
+      background: linear-gradient(var(--toolbar-background-top), var(--toolbar-background-bottom));
+      border: 1px solid var(--toolbar-on-background);
     }
-    select {
-      margin-top: 5px;
-      height: calc(var(--editor-toolbar-height) - 10px);
-    }
-    input[type="color"] {
-      height: calc(var(--editor-toolbar-height) - 15px);
-      -webkit-appearance: none;
-      border: none;
-      width: 22px;
-    }
-    input[type="color"]::-webkit-color-swatch-wrapper {
-      padding: 0;
-    }
-    input[type="color"]::-webkit-color-swatch { }
+    button { font-family: serif; font-size: 1.2em; }
     `];
 
     constructor() {
@@ -208,79 +189,79 @@ export class TextEditorToolbar extends LitElement {
             },
             {
                 icon: "format_clear",
-                text: "<span>&#10799;</span>",
+                text: "<span title='Remove format'>&#11034;</span>",
                 command: "removeFormat",
             },
             {
                 icon: "format_bold",
-                text: "<strong>B</strong>",
+                text: "<strong title='Bold'>B</strong>",
                 command: "bold",
                 active: tags.includes("b"),
             },
             {
                 icon: "format_italic",
-                text: "<em>I</em>",
-                command: "emphasize",
+                text: "<em title='Italic'>I</em>",
+                command: "italic",
                 active: tags.includes("i"),
             },
             {
                 icon: "format_underlined",
-                text: "<span style='text-decoration: underline'>U</span>",
+                text: "<span title='Underscored' style='text-decoration: underline'>U</span>",
                 command: "underline",
                 active: tags.includes("u"),
             },
             {
                 icon: "format_strikethrough",
-                text: "<strike>S</strike>",
+                text: "<strike title='Strike-through'>S</strike>",
                 command: "strikethrough",
                 active: tags.includes("strike"),
             },
             {
                 icon: "format_align_left",
-                text: "<span>&#8612;</span>",
+                text: "<span title='Align Left'>&#8612;</span>",
                 command: "justifyleft",
             },
             {
                 icon: "format_align_center",
-                text: "<span>&#8633;</span>",
+                text: "<span title='Align Center'>&#8633;</span>",
                 command: "justifycenter",
             },
             {
                 icon: "format_align_right",
-                text: "<span>&#8614;</span>",
+                text: "<span title='Align Right'>&#8614;</span>",
                 command: "justifyright",
             },
             {
                 icon: "format_list_numbered",
-                text: "<span>1.</span>",
+                text: "<span title='Ordered List'>1.</span>",
                 command: "insertorderedlist",
                 active: tags.includes("ol"),
             },
             {
                 icon: "format_list_bulleted",
-                text: "<span>&bullet;</span>",
+                text: "<span title='Unordered List'>&bullet;</span>",
                 command: "insertunorderedlist",
                 active: tags.includes("ul"),
             },
             {
                 icon: "format_quote",
-                text: "<span>&rdquor;</span>",
+                text: "<span title='Quote'>&rdquor;</span>",
                 command: "formatblock",
                 command_value: "blockquote",
             },
             {
                 icon: "format_indent_decrease",
-                text: "<span>&#8676;</span>",
+                text: "<span title='Decrease Indent'>&#8676;</span>",
                 command: "outdent",
             },
             {
                 icon: "format_indent_increase",
-                text: "<span>&#8677;</span>",
+                text: "<span title='Indent'>&#8677;</span>",
                 command: "indent",
             },
             {
                 icon: "add_link",
-                text: "<span>&#128279;</span>",
+                text: "<span title='Insert Link'>&#128279;</span>",
                 command: () => {
                     const newLink = prompt("Write the URL here", "http://");
                     if (newLink && newLink != "" && newLink != "http://") {
@@ -290,14 +271,14 @@ export class TextEditorToolbar extends LitElement {
             },
             {
                 icon: "link_off",
-                text: "<strike>&#128279;</strike>",
+                text: "<strike title='Remove Link'>&#128279;</strike>",
                 command: "unlink"
             },
             {
                 icon: "add_image",
-                text: "<span>&#128443;</span>",
+                text: "<span title='Add image'>&#128443;</span>",
                 command: () => {
-
+                    // TODO
                 },
             },
         ];
@@ -351,7 +332,7 @@ export class TextEditorToolbar extends LitElement {
                         }
                     }}>
                 ${n.values.map((v) => html`
-                    <option value=${v.value}>${v.name}</option>`)}
+                    <option value=${v.value}>${unsafeHTML(v.name)}</option>`)}
             </select>
         `;
     }
