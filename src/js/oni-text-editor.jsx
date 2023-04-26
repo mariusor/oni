@@ -131,7 +131,7 @@ export class TextEditorToolbar extends LitElement {
     static styles = [css`
     :host {
       --toolbar-width: max-content;
-      --toolbar-height: 100%;
+      --toolbar-height: min-content;
       --toolbar-background-top: white;
       --toolbar-background-bottom: silver;
       --toolbar-on-background: white;
@@ -141,6 +141,7 @@ export class TextEditorToolbar extends LitElement {
       height: var(--toolbar-height);
       width: var(--toolbar-width);
       overscroll-behavior: contain;
+      display: inline-block;
       overflow-y: auto;
       scrollbar-width: none;
       color: var(--toolbar-on-active-background);
@@ -283,12 +284,12 @@ export class TextEditorToolbar extends LitElement {
             },
         ];
 
-        return html`
-            <div>${commands.map((n) => {
-                if (n.icon == "add_image") return this.renderImageUpload(n);
-                if (n.values) return this.renderSelect(n);
-                return this.renderButton(n)
-            })}
+        return html`<div >
+                ${commands.map((n) => {
+                    if (n.icon == "add_image") return this.renderImageUpload(n);
+                    if (n.values) return this.renderSelect(n);
+                    return this.renderButton(n)
+                })}
             </div>`;
     }
 
