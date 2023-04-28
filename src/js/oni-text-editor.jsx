@@ -9,14 +9,13 @@ export class TextEditor extends LitElement {
           --editor-width: 100%;
           --editor-height: 100vh;
           --editor-background: transparent;
-          --editor-toolbar-height: 2rem;
         }
         main {
           width: var(--editor-width);
           height: var(--editor-height);
           display: grid;
           grid-template-areas: "toolbar toolbar" "editor editor";
-          grid-template-rows: var(--editor-toolbar-height) auto;
+          grid-template-rows: min-content auto;
           grid-template-columns: auto auto;
         }
         :host oni-text-editor-toolbar {
@@ -119,10 +118,11 @@ export class TextEditor extends LitElement {
         return html`
             <main>
                 <oni-text-editor-toolbar></oni-text-editor-toolbar>
-                <div @drop="${this.handleDrop}" 
-                    @dragenter="${this.dragAllowed}"
-                    @dragover="${this.dragAllowed}"
-                >${this.root}</div>
+                <div @drop="${this.handleDrop}"
+                     @dragenter="${this.dragAllowed}"
+                     @dragover="${this.dragAllowed}"
+                >${this.root}
+                </div>
             </main>`;
     }
 }
@@ -172,10 +172,127 @@ export class TextEditorToolbar extends LitElement {
             }
         }
 
-        const commands = [
-            {
+        const commands = {
+            bold: {
+                shortcut: "Ctrl+b",
+                toolbarHtml: "B",
+                icon: "format_bold",
+                text: "<strong title='Bold'>B</strong>",
+                execCommand: "bold",
+                active: tags.includes("b"),
+            },
+            italic: {
+                shortcut: "Ctrl+i",
+                toolbarHtml: "I",
+                icon: "format_italic",
+                text: "<em title='Italic'>I</em>",
+                execCommand: "italic",
+                active: tags.includes("i"),
+            },
+            underline: {
+                shortcut: "Ctrl+u",
+                toolbarHtml: "U",
+                icon: "format_underlined",
+                text: "<span title='Underscored' style='text-decoration: underline'>U</span>",
+                execCommand: "underline",
+                active: tags.includes("u"),
+            },
+            removeFormat: {
+                shortcut: "Ctrl+m",
+                execCommand: ["removeFormat", "unlink", "formatBlock"],
+                execCommandValue: [null, null, ["<P>"]],
+                toolbarHtml: "&minus;",
+                icon: "format_clear",
+                text: "<span title='Remove format'>&#11034;</span>",
+            },
+            createLink: {
+                shortcut: "Ctrl+l",
+                execCommandValue: function (callback) {
+                    callback(prompt("Enter URL:", "https://"));
+                },
+                toolbarHtml: "@",
+
+                icon: "add_link",
+                text: "<span title='Insert Link'>&#128279;</span>",
+                //execCommand: "createLink",
+                execCommand: () => {
+                    const newLink = prompt("Write the URL here", "http://");
+                    if (newLink && newLink != "" && newLink != "http://") {
+                        this.command("createlink", newLink);
+                    }
+                },
+            },
+            insertImage: {
+                shortcut: "Ctrl+g",
+                execCommand: "insertImage",
+                execCommandValue: function (callback) {
+                    callback(prompt("Enter image URL:", "http://"));
+                }
+            },
+            inserthorizontalrule: {shortcut: "Ctrl+Alt+h", execCommand: "inserthorizontalrule"},
+            strikethrough: {
+                shortcut: "Ctrl+Alt+t",
+                icon: "format_strikethrough",
+                text: "<strike title='Strike-through'>S</strike>",
+                execCommand: "strikethrough",
+                active: tags.includes("strike"),
+            },
+            increaseFontSize: {
+                shortcut: "Ctrl+Alt+=",
+                execCommand: "increasefontsize",
+            },
+            decreaseFontSize: {
+                shortcut: "Ctrl+Alt+m",
+                execCommand: "decreasefontsize"
+            }, // keyCode for - seems to be interpreted as M
+            blockquote: {
+                shortcut: "Ctrl+q",
+                execCommandValue: ["<BLOCKQUOTE>"],
+                toolbarHtml: "&ldquo;&bdquo;",
+                icon: "format_quote",
+                text: "<span title='Quote'>&rdquor;</span>",
+                execCommand: "formatblock",
+                command_value: "blockquote",
+            },
+            code: {
+                shortcut: "Ctrl+Alt+c",
+                execCommand: "formatBlock",
+                execCommandValue: ["<PRE>"],
+                toolbarHtml: "{&nbsp;}"
+            },
+            ol: {
+                shortcut: "Ctrl+Alt+o",
+                icon: "format_list_numbered",
+                text: "<span title='Ordered List'>1.</span>",
+                execCommand: "insertorderedlist",
+                active: tags.includes("ol"),
+            },
+            ul: {
+                shortcut: "Ctrl+Alt+u",
+                icon: "format_list_bulleted",
+                text: "<span title='Unordered List'>&bullet;</span>",
+                execCommand: "insertunorderedlist",
+                active: tags.includes("ul"),
+            },
+            sup: {
+                shortcut: "Ctrl+.",
+                execCommand: "superscript",
+                toolbarHtml: "x<sup>2</sup>",
+            },
+            sub: {
+                shortcut: "Ctrl+Shift+.",
+                execCommand: "subscript",
+                toolbarHtml: "x<sub>2</sub>"
+            },
+            p: {
+                shortcut: "Ctrl+Alt+0",
+                execCommand: "formatBlock",
+                execCommandValue: ["<P>"],
+                toolbarHtml: "P"
+            },
+            para: {
                 icon: "title",
-                command: "formatBlock",
+                execCommand: "formatBlock",
                 values: [
                     {name: "Normal Text", value: "--"},
                     {name: "Heading 1", value: "h1"},
@@ -188,109 +305,96 @@ export class TextEditorToolbar extends LitElement {
                     {name: "Pre-Formatted", value: "pre"},
                 ],
             },
-            {
-                icon: "format_clear",
-                text: "<span title='Remove format'>&#11034;</span>",
-                command: "removeFormat",
+            h1: {
+                shortcut: "Ctrl+Alt+1",
+                execCommand: "formatBlock",
+                execCommandValue: ["<H1>"],
+                toolbarHtml: "H<sub>1</sub>"
             },
-            {
-                icon: "format_bold",
-                text: "<strong title='Bold'>B</strong>",
-                command: "bold",
-                active: tags.includes("b"),
+            h2: {
+                shortcut: "Ctrl+Alt+2",
+                execCommand: "formatBlock",
+                execCommandValue: ["<H2>"],
+                toolbarHtml: "H<sub>2</sub>"
             },
-            {
-                icon: "format_italic",
-                text: "<em title='Italic'>I</em>",
-                command: "italic",
-                active: tags.includes("i"),
+            h3: {
+                shortcut: "Ctrl+Alt+3",
+                execCommand: "formatBlock",
+                execCommandValue: ["<H3>"],
+                toolbarHtml: "H<sub>3</sub>"
             },
-            {
-                icon: "format_underlined",
-                text: "<span title='Underscored' style='text-decoration: underline'>U</span>",
-                command: "underline",
-                active: tags.includes("u"),
+            h4: {
+                shortcut: "Ctrl+Alt+4",
+                execCommand: "formatBlock",
+                execCommandValue: ["<H4>"],
+                toolbarHtml: "H<sub>4</sub>"
             },
-            {
-                icon: "format_strikethrough",
-                text: "<strike title='Strike-through'>S</strike>",
-                command: "strikethrough",
-                active: tags.includes("strike"),
+            h5: {
+                shortcut: "Ctrl+Alt+5",
+                execCommand: "formatBlock",
+                execCommandValue: ["<H5>"],
+                toolbarHtml: "H<sub>5</sub>"
             },
-            {
+            h6: {
+                shortcut: "Ctrl+Alt+6",
+                execCommand: "formatBlock",
+                execCommandValue: ["<H6>"],
+                toolbarHtml: "H<sub>6</sub>"
+            },
+            alignLeft: {
+                shortcut: "Ctrl+Alt+l",
+                toolbarHtml: "<span title='Align Left'>&#8612;</span>",
                 icon: "format_align_left",
                 text: "<span title='Align Left'>&#8612;</span>",
-                command: "justifyleft",
+                execCommand: "justifyleft",
             },
-            {
-                icon: "format_align_center",
-                text: "<span title='Align Center'>&#8633;</span>",
-                command: "justifycenter",
-            },
-            {
+            alignRight: {
+                shortcut: "Ctrl+Alt+r",
+                toolbarHtml: "<span title='Align Right'>&#8614;</span>",
                 icon: "format_align_right",
                 text: "<span title='Align Right'>&#8614;</span>",
-                command: "justifyright",
+                execCommand: "justifyright",
             },
-            {
-                icon: "format_list_numbered",
-                text: "<span title='Ordered List'>1.</span>",
-                command: "insertorderedlist",
-                active: tags.includes("ol"),
+            alignCenter: {
+                shortcut: "Ctrl+Alt+c",
+                toolbarHtml: "<span title='Align Center'>&#8633;</span>",
+                icon: "format_align_right",
+                text: "<span title='Align Center'>&#8633;</span>",
+                execCommand: "justifycenter",
             },
-            {
-                icon: "format_list_bulleted",
-                text: "<span title='Unordered List'>&bullet;</span>",
-                command: "insertunorderedlist",
-                active: tags.includes("ul"),
-            },
-            {
-                icon: "format_quote",
-                text: "<span title='Quote'>&rdquor;</span>",
-                command: "formatblock",
-                command_value: "blockquote",
-            },
-            {
-                icon: "format_indent_decrease",
-                text: "<span title='Decrease Indent'>&#8676;</span>",
-                command: "outdent",
-            },
-            {
+            indent: {
+                shortcut: "Tab",
+                toolbarHtml: "&rArr;",
+
                 icon: "format_indent_increase",
                 text: "<span title='Indent'>&#8677;</span>",
-                command: "indent",
+                execCommand: "indent",
             },
-            {
-                icon: "add_link",
-                text: "<span title='Insert Link'>&#128279;</span>",
-                command: () => {
-                    const newLink = prompt("Write the URL here", "http://");
-                    if (newLink && newLink != "" && newLink != "http://") {
-                        this.command("createlink", newLink);
-                    }
-                },
-            },
-            {
-                icon: "link_off",
-                text: "<strike title='Remove Link'>&#128279;</strike>",
-                command: "unlink"
-            },
-            {
-                icon: "add_image",
-                text: "<span title='Add image'>&#128443;</span>",
-                command: () => {
-                    // TODO
-                },
-            },
-        ];
+            outdent: {
+                shortcut: ["Ctrl+Tab", "Shift+Tab"],
+                toolbarHtml: "&lArr;",
 
-        return html`<div >
-                ${commands.map((n) => {
-                    if (n.icon == "add_image") return this.renderImageUpload(n);
-                    if (n.values) return this.renderSelect(n);
-                    return this.renderButton(n)
-                })}
+                icon: "format_indent_decrease",
+                text: "<span title='Decrease Indent'>&#8676;</span>",
+                execCommand: "outdent",
+            }
+        };
+
+        return html`
+            <div>
+                ${this.renderCommands(commands)}
             </div>`;
+    }
+
+    renderCommands(commands) {
+        let elements = [];
+        for (const c in commands) {
+            const n = commands[c];
+            if (n.icon == "add_image") elements.push(this.renderImageUpload(n));
+            else if (n.values) elements.push(this.renderSelect(n));
+            else elements.push(this.renderButton(n));
+        }
+        return html`${elements.map()}`
     }
 
     renderButton(n) {
@@ -298,10 +402,10 @@ export class TextEditorToolbar extends LitElement {
             <button class=${classMap({"active": n.active})}
                     @click=${() => {
                         if (n.values) {
-                        } else if (typeof n.command === "string") {
-                            this.command(n.command, n.command_value);
+                        } else if (typeof n.execCommand === "string") {
+                            this.command(n.execCommand, n.command_value);
                         } else {
-                            n.command();
+                            n.execCommand();
                         }
                     }}>${unsafeHTML(n.text)}
             </button>`;
@@ -309,15 +413,15 @@ export class TextEditorToolbar extends LitElement {
 
     renderImageUpload(n) {
         return html`<input type=file multiple
-               @change="${(e) => {
-                   document.dispatchEvent(
-                       new CustomEvent("image.upload", {
-                           trusted: true,
-                           bubbles: true,
-                           detail: e.target?.files,
-                       })
-                   );
-               }}"
+                           @change="${(e) => {
+                               document.dispatchEvent(
+                                       new CustomEvent("image.upload", {
+                                           trusted: true,
+                                           bubbles: true,
+                                           detail: e.target?.files,
+                                       })
+                               );
+                           }}"
         >`;
     }
 
@@ -327,9 +431,13 @@ export class TextEditorToolbar extends LitElement {
                     @change=${(e) => {
                         const val = e.target.value;
                         if (val === "--") {
-                            this.command("removeFormat", undefined);
-                        } else if (typeof n.command === "string") {
-                            this.command(n.command, val);
+                            this.execCommand("removeFormat", undefined);
+                        } else if (typeof n.execCommand === "string") {
+                            this.execCommand(n.execCommand, val);
+                        } else if (Array.isArray(n.execCommand)) {
+                            for (const i in n.execCommand) {
+                                this.execCommand(n.execCommand[i], val);
+                            }
                         }
                     }}>
                 ${n.values.map((v) => html`
@@ -338,7 +446,7 @@ export class TextEditorToolbar extends LitElement {
         `;
     }
 
-    command(command, val) {
+    execCommand(command, val) {
         // NOTE(marius): this should be probably be replaced with something
         // based on the ideas from here: https://stackoverflow.com/a/62266439
         document.execCommand(command, true, val);
