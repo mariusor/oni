@@ -1,16 +1,15 @@
 /**
- * Modernization of code found at
- * http://www.openjs.com/scripts/events/keyboard_shortcuts/
+ * Based on code from http://www.openjs.com/scripts/events/keyboard_shortcuts/
  * Version : 2.01.B
  * By Binny V A
  * License : BSD
  */
 export const Shortcut = {
-    all_shortcuts: {},
+    allShortcuts: {},
 
-    add: function (shortcut_combinations, callbacks, opt) {
-        if (typeof shortcut_combinations == 'undefined') return;
-        if (!Array.isArray(shortcut_combinations)) shortcut_combinations = [shortcut_combinations];
+    add: function (shortcutCombinations, callbacks, opt) {
+        if (typeof shortcutCombinations == 'undefined') return;
+        if (!Array.isArray(shortcutCombinations)) shortcutCombinations = [shortcutCombinations];
         if (!Array.isArray(callbacks)) callbacks = [callbacks];
 
         // Provide a set of default options
@@ -30,7 +29,7 @@ export const Shortcut = {
 
         let ele = opt.target;
         if (typeof opt.target == 'string') ele = document.getElementById(opt.target);
-        for (const i in shortcut_combinations) shortcut_combinations[i] = shortcut_combinations[i].toLowerCase();
+        for (const i in shortcutCombinations) shortcutCombinations[i] = shortcutCombinations[i].toLowerCase();
 
         // The function to be called at keypress
         const bindFn = function (e) {
@@ -51,8 +50,8 @@ export const Shortcut = {
             if (e.altKey) modifiers.alt.pressed = true;
             if (e.metaKey) modifiers.meta.pressed = true;
 
-            if (shortcutMatches(shortcut_combinations, code, modifiers)) {
-                console.debug(`found shortcut ${shortcut_combinations}`, callbacks);
+            if (shortcutMatches(shortcutCombinations, code, modifiers)) {
+                console.debug(`found shortcut ${shortcutCombinations}`, callbacks);
                 for (const i in callbacks) {
                     callbacks[i](e);
                 }
@@ -71,9 +70,9 @@ export const Shortcut = {
                 }
             }
         };
-        for (const i in shortcut_combinations) {
-            const shortcut = shortcut_combinations[i];
-            this.all_shortcuts[shortcut] = {
+        for (const i in shortcutCombinations) {
+            const shortcut = shortcutCombinations[i];
+            this.allShortcuts[shortcut] = {
                 'callback': bindFn,
                 'target': ele,
                 'event': opt['type'],
@@ -81,10 +80,9 @@ export const Shortcut = {
         }
         // Attach the function with the event
         if (ele.addEventListener) {
-            console.debug(`Bound ${opt['type']} event with callback on`, ele);
             ele.addEventListener(opt['type'], bindFn);
         } else {
-            console.error(`Unable to bind ${opt['type']} event with callback`, bindFn)
+            console.error(`Unable to bind ${opt['type']} event`);
         }
     },
 
@@ -95,9 +93,9 @@ export const Shortcut = {
 
         for(const i in shortcut_combinations) {
             const shortcut = shortcut_combinations[i].toLowerCase();
-            delete (this.all_shortcuts[shortcut])
+            delete (this.allShortcuts[shortcut])
 
-            const binding = this.all_shortcuts[shortcut];
+            const binding = this.allShortcuts[shortcut];
             if (!binding) continue;
 
             const type = binding['event'];
@@ -111,14 +109,14 @@ export const Shortcut = {
     },
 };
 
-function shortcutMatches(shortcut_combinations, code, modifiers) {
+function shortcutMatches(shortcutCombinations, code, modifiers) {
     let character = String.fromCharCode(code).toLowerCase();
 
     if (code == 188) character = ","; // If the user presses , when the type is onkeydown
     if (code == 190) character = "."; // If the user presses . when the type is onkeydown
 
     // Work around for stupid Shift key bug created by using lowercase - as a result the shift+num combination was broken
-    const shift_nums = {
+    const shiftNums = {
         "`": "~",
         "1": "!",
         "2": "@",
@@ -140,7 +138,7 @@ function shortcutMatches(shortcut_combinations, code, modifiers) {
         "\\": "|"
     };
     // Special Keys - and their codes
-    const special_keys = {
+    const specialKeys = {
         'esc': 27,
         'escape': 27,
         'tab': 9,
@@ -194,8 +192,8 @@ function shortcutMatches(shortcut_combinations, code, modifiers) {
         'f12': 123
     };
 
-    for (const i in shortcut_combinations) {
-        const keys = shortcut_combinations[i].split("+");
+    for (const i in shortcutCombinations) {
+        const keys = shortcutCombinations[i].split("+");
 
         // Key Pressed - counts the number of valid key presses - if it is same as the number of keys, the shortcut function is invoked
         let kp = 0;
@@ -215,14 +213,14 @@ function shortcutMatches(shortcut_combinations, code, modifiers) {
                 kp++;
                 modifiers.meta.wanted = true;
             } else if (k.length > 1) { //If it is a special key
-                if (special_keys[k] == code) kp++;
+                if (specialKeys[k] == code) kp++;
             } else { // The special keys did not match
                 if (character == k) {
                     kp++;
                 } else {
-                    if (shift_nums[character] || modifiers.shift?.pressed) {
+                    if (shiftNums[character] || modifiers.shift?.pressed) {
                         // Stupid Shift key bug created by using lowercase
-                        character = shift_nums[character];
+                        character = shiftNums[character];
                         if (character == k) kp++;
                     }
                 }
