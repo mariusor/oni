@@ -11,17 +11,14 @@ export class Shortcut {
         this.all_shortcuts = {}
     }
 
-    add (shortcut_combination, callback, opt) {
-        if (typeof shortcut_combination != 'string') {
-            console.error('Unable to add shortcut', shortcut_combination);
-            return;
-        }
+    add (shortcut_combinations, callbacks, opt) {
+        if (typeof shortcut_combinations == 'undefined') return;
+        if (!Array.isArray(shortcut_combinations)) shortcut_combinations = [shortcut_combinations];
 
-        //Provide a set of default options
+        // Provide a set of default options
         const default_options = {
             'type': 'keydown',
             'propagate': false,
-            'disable_in_input': false,
             'target': document,
             'keycode': false
         };
@@ -36,22 +33,12 @@ export class Shortcut {
         let ele = opt.target;
         if (typeof opt.target == 'string') ele = document.getElementById(opt.target);
         const ths = this;
-        shortcut_combination = shortcut_combination.toLowerCase();
+        for (const i in shortcut_combinations) shortcut_combinations[i] = shortcut_combinations[i].toLowerCase();
 
-        //The function to be called at keypress
-        const func = function (e) {
-            e = e || window.event;
-
-            if (opt['disable_in_input']) { //Don't enable shortcut keys in Input, Textarea fields
-                let element;
-                if (e.target) element = e.target;
-                else if (e.srcElement) element = e.srcElement;
-                if (element.nodeType == 3) element = element.parentNode;
-
-                if (element.tagName == 'INPUT' || element.tagName == 'TEXTAREA') return;
-            }
+        // The function to be called at keypress
+        const onKeyPress = function (e) {
             let code;
-            //Find Which key is pressed
+            // Find Which key is pressed
             if (e.which) code = e.which;
             else if (e.keyCode) code = e.keyCode;
 
@@ -60,11 +47,13 @@ export class Shortcut {
             if (code == 188) character = ","; //If the user presses , when the type is onkeydown
             if (code == 190) character = "."; //If the user presses . when the type is onkeydown
 
-            const keys = shortcut_combination.split("+");
-            //Key Pressed - counts the number of valid keypresses - if it is same as the number of keys, the shortcut function is invoked
+            let keys = [];
+            for (const i in shortcut_combinations) keys.push(shortcut_combinations[i].split("+"));
+
+            // Key Pressed - counts the number of valid key presses - if it is same as the number of keys, the shortcut function is invoked
             let kp = 0;
 
-            //Work around for stupid Shift key bug created by using lowercase - as a result the shift+num combination was broken
+            // Work around for stupid Shift key bug created by using lowercase - as a result the shift+num combination was broken
             const shift_nums = {
                 "`": "~",
                 "1": "!",
@@ -86,7 +75,7 @@ export class Shortcut {
                 "/": "?",
                 "\\": "|"
             };
-            //Special Keys - and their codes
+            // Special Keys - and their codes
             const special_keys = {
                 'esc': 27,
                 'escape': 27,
@@ -183,19 +172,21 @@ export class Shortcut {
                 }
             }
 
-            if (kp == keys.length &&
+            if (
+                kp == keys.length &&
                 modifiers.ctrl.pressed == modifiers.ctrl.wanted &&
                 modifiers.shift.pressed == modifiers.shift.wanted &&
                 modifiers.alt.pressed == modifiers.alt.wanted &&
-                modifiers.meta.pressed == modifiers.meta.wanted) {
-                callback(e);
+                modifiers.meta.pressed == modifiers.meta.wanted
+            ) {
+                callbacks(e);
 
-                if (!opt['propagate']) { //Stop the event
-                    //e.cancelBubble is supported by IE - this will kill the bubbling process.
+                if (!opt['propagate']) { // Stop the event
+                    // e.cancelBubble is supported by IE - this will kill the bubbling process.
                     e.cancelBubble = true;
                     e.returnValue = false;
 
-                    //e.stopPropagation works in Firefox.
+                    // e.stopPropagation works in Firefox.
                     if (e.stopPropagation) {
                         e.stopPropagation();
                         e.preventDefault();
@@ -204,29 +195,53 @@ export class Shortcut {
                 }
             }
         };
-        this.all_shortcuts[shortcut_combination] = {
-            'callback': func,
-            'target': ele,
-            'event': opt['type']
-        };
-        //Attach the function with the event
-        if (ele.addEventListener) ele.addEventListener(opt['type'], func, false);
-        else if (ele.attachEvent) ele.attachEvent('on' + opt['type'], func);
-        else ele['on' + opt['type']] = func;
+        for (const i in shortcut_combinations) {
+            const shortcut = shortcut_combinations[i];
+            this.all_shortcuts[shortcut] = {
+                'callback': onKeyPress,
+                'target': ele,
+                'event': opt['type']
+            };
+        }
+        // Attach the function with the event
+        if (ele.addEventListener) ele.addEventListener(opt['type'], onKeyPress, false);
+        else if (ele.attachEvent) ele.attachEvent('on' + opt['type'], onKeyPress);
+        else ele['on' + opt['type']] = onKeyPress;
     }
 
-    //Remove the shortcut - just specify the shortcut and I will remove the binding
-    remove (shortcut_combination) {
-        shortcut_combination = shortcut_combination.toLowerCase();
-        const binding = this.all_shortcuts[shortcut_combination];
-        delete (this.all_shortcuts[shortcut_combination])
-        if (!binding) return;
-        const type = binding['event'];
-        const ele = binding['target'];
-        const callback = binding['callback'];
+    // Remove the shortcut - just specify the shortcut and I will remove the binding
+    remove (shortcut_combinations) {
+        if (typeof shortcut_combinations == 'undefined') return;
+        if (!Array.isArray(shortcut_combinations)) shortcut_combinations = [shortcut_combinations];
 
-        if (ele.detachEvent) ele.detachEvent('on' + type, callback);
-        else if (ele.removeEventListener) ele.removeEventListener(type, callback, false);
-        else ele['on' + type] = false;
+        for(const i in shortcut_combinations) {
+            const shortcut = shortcut_combinations[i].toLowerCase();
+            delete (this.all_shortcuts[shortcut])
+
+            const binding = this.all_shortcuts[shortcut];
+            if (!binding) continue;
+
+            const type = binding['event'];
+            const ele = binding['target'];
+            let callbacks = binding['callback'];
+            if (!Array.isArray(callbacks)) {
+                callbacks = [callbacks];
+            }
+
+            for (const j in callbacks) {
+                const callback = callbacks[i];
+                if (ele.detachEvent) ele.detachEvent('on' + type, callback);
+                else if (ele.removeEventListener) ele.removeEventListener(type, callback, false);
+                else ele['on' + type] = false;
+            }
+        }
     }
 };
+
+Shortcut.add = (shortcut_combinations, callbacks, opt) => (new Shortcut()).add(
+    shortcut_combinations,
+    callbacks,
+    opt,
+);
+
+Shortcut.remove = (shortcut_combinations) => (new Shortcut()).remove(shortcut_combinations);
