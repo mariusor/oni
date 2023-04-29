@@ -2,6 +2,7 @@ import {css, html, LitElement} from "lit";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {classMap} from "lit-html/directives/class-map.js";
 import {showError} from "./utils";
+import {Shortcut} from "./shortcut";
 
 export class TextEditor extends LitElement {
     static styles = [css`
