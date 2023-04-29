@@ -74,9 +74,7 @@ export class TextEditor extends LitElement {
     }
 
     handleFiles(files) {
-        if (!files) {
-            return;
-        }
+        if (!files) return;
 
         const appendImage = (progress) => {
             const f = progress.target
@@ -118,12 +116,12 @@ export class TextEditor extends LitElement {
     render() {
         return html`
             <main>
-                <oni-text-editor-toolbar></oni-text-editor-toolbar>
                 <div @drop="${this.handleDrop}"
                      @dragenter="${this.dragAllowed}"
                      @dragover="${this.dragAllowed}"
                 >${this.root}
                 </div>
+                <simple-tooltip><oni-text-editor-toolbar></oni-text-editor-toolbar></simple-tooltip>
             </main>`;
     }
 }
@@ -140,7 +138,7 @@ export class TextEditorToolbar extends LitElement {
     }
     :host {
       height: var(--toolbar-height);
-      width: var(--toolbar-width);
+      max-width: var(--toolbar-width);
       overscroll-behavior: contain;
       display: inline-block;
       overflow-y: auto;
@@ -401,4 +399,4 @@ function execCommand (n) {
             command(val);
         }
     }
-}
+};

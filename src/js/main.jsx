@@ -16,6 +16,7 @@ import {ActivityPubTombstone} from "./activity-pub-tombstone";
 import {ActivityPubTag} from "./activity-pub-tag";
 import {OniErrors} from "./oni-errors";
 import {TextEditor, TextEditorToolbar} from "./oni-text-editor";
+import {SimpleTooltip} from "./simple-tooltip";
 
 customElements.define('oni-main', OniMainActor);
 customElements.define('oni-object', ActivityPubObject);
@@ -41,6 +42,8 @@ customElements.define('oni-login-dialog', LoginDialog);
 customElements.define('oni-errors', OniErrors);
 customElements.define('oni-text-editor', TextEditor);
 customElements.define('oni-text-editor-toolbar', TextEditorToolbar);
+
+customElements.define('simple-tooltip', SimpleTooltip);
 
 OnReady(function () {
     console.debug(`Loading ${window.location}`);
