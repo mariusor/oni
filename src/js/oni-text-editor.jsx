@@ -204,18 +204,18 @@ export class TextEditorToolbar extends LitElement {
             },
             createLink: {
                 shortcut: "Ctrl+l",
+                toolbarHtml: "<span title='Insert Link'>&#128279;</span>",
+                icon: "add_link",
+                execCommand: "createLink",
                 execCommandValue: function (callback) {
                     callback(prompt("Enter URL:", "https://"));
                 },
-                toolbarHtml: "<span title='Insert Link'>&#128279;</span>",
-                icon: "add_link",
-                //execCommand: "createLink",
-                execCommand: () => {
-                    const newLink = prompt("Write the URL here", "http://");
-                    if (newLink && newLink != "" && newLink != "http://") {
-                        this.execCommand("createlink", newLink);
-                    }
-                },
+                // execCommand: () => {
+                //     const newLink = prompt("Write the URL here", "http://");
+                //     if (newLink && newLink != "" && newLink != "http://") {
+                //         this.execCommand("createlink", newLink);
+                //     }
+                // },
             },
             insertImage: {
                 shortcut: "Ctrl+g",
@@ -291,56 +291,41 @@ export class TextEditorToolbar extends LitElement {
                 execCommandValue: ["<P>"],
                 toolbarHtml: "<span title='Paragraph'>P</span>"
             },
-            para: {
-                icon: "title",
-                execCommand: "formatBlock",
-                values: [
-                    {name: "Normal Text", value: "--"},
-                    {name: "Heading 1", value: "h1"},
-                    {name: "Heading 2", value: "h2"},
-                    {name: "Heading 3", value: "h3"},
-                    {name: "Heading 4", value: "h4"},
-                    {name: "Heading 5", value: "h5"},
-                    {name: "Heading 6", value: "h6"},
-                    {name: "Paragraph", value: "p"},
-                    {name: "Pre-Formatted", value: "pre"},
-                ],
-            },
             h1: {
                 shortcut: "Ctrl+Alt+1",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H1>"],
-                toolbarHtml: "<span>H1</span>"
+                toolbarHtml: "<span title='Section heading 1'>H1</span>"
             },
             h2: {
                 shortcut: "Ctrl+Alt+2",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H2>"],
-                toolbarHtml: "<span>H2</span>"
+                toolbarHtml: "<span title='Section heading 2'>H2</span>"
             },
             h3: {
                 shortcut: "Ctrl+Alt+3",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H3>"],
-                toolbarHtml: "<span>H3</span>"
+                toolbarHtml: "<span title='Section heading 3'>H3</span>"
             },
             h4: {
                 shortcut: "Ctrl+Alt+4",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H4>"],
-                toolbarHtml: "<span>H4</span>"
+                toolbarHtml: "<span title='Section heading 4'>H4</span>"
             },
             h5: {
                 shortcut: "Ctrl+Alt+5",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H5>"],
-                toolbarHtml: "<span>H5</span>"
+                toolbarHtml: "<span title='Section heading 5'>H5</span>"
             },
             h6: {
                 shortcut: "Ctrl+Alt+6",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H6>"],
-                toolbarHtml: "<span>H6</span>"
+                toolbarHtml: "<span title='Section heading 6'>H6</span>"
             },
             alignLeft: {
                 shortcut: "Ctrl+Alt+l",
@@ -384,15 +369,13 @@ export class TextEditorToolbar extends LitElement {
 
     renderCommands(commands) {
         const scopedThis = function () { console.debug(this); }
-        const s = new Shortcut();
         let elements = [];
         for (const c in commands) {
             const n = commands[c];
 
-            s.add(n.shortcut, scopedThis, { 'type': 'keydown', 'propagate': false });
+            Shortcut.add(n.shortcut, scopedThis, { 'type': 'keydown', 'propagate': false });
 
             if (n.icon == "add_image") elements.push(this.renderImageUpload(n));
-            else if (n.values) elements.push(this.renderSelect(n));
             else elements.push(this.renderButton(n));
         }
         return html`${elements.map(n => html`${n}`)}`
@@ -402,11 +385,16 @@ export class TextEditorToolbar extends LitElement {
         return html`
             <button class=${classMap({"active": n.active})}
                     @click=${() => {
-                        if (n.values) {
-                        } else if (typeof n.execCommand === "string") {
-                            this.execCommand(n.execCommand, n.command_value);
-                        } else {
-                            n.execCommand();
+                        if (!Array.isArray(n.execCommand)) n.execCommand = [n.execCommand];
+                            
+                        for (const i in n.execCommand) {
+                            const command = n.execCommand[i];
+                            if (typeof command === "string") {
+                                this.execCommand(command, n.command_value);
+                            } else {
+                                console.debug('executing', command);
+                                command();
+                            }
                         }
                     }}>${unsafeHTML(n.toolbarHtml)}
             </button>`;
@@ -426,30 +414,10 @@ export class TextEditorToolbar extends LitElement {
         >`;
     }
 
-    renderSelect(n) {
-        return html`
-            <select id="${n.icon}"
-                    @change=${(e) => {
-                        const val = e.target.value;
-                        if (val === "--") {
-                            this.execCommand("removeFormat", undefined);
-                        } else if (typeof n.execCommand === "string") {
-                            this.execCommand(n.execCommand, val);
-                        } else if (Array.isArray(n.execCommand)) {
-                            for (const i in n.execCommand) {
-                                this.execCommand(n.execCommand[i], val);
-                            }
-                        }
-                    }}>
-                ${n.values.map((v) => html`
-                    <option value=${v.value}>${unsafeHTML(v.name)}</option>`)}
-            </select>
-        `;
-    }
-
     execCommand(command, val) {
         // NOTE(marius): this should be probably be replaced with something
         // based on the ideas from here: https://stackoverflow.com/a/62266439
+        console.debug(`executing document.${command}`);
         document.execCommand(command, true, val);
     }
 }
