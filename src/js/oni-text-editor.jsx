@@ -176,25 +176,22 @@ export class TextEditorToolbar extends LitElement {
         const commands = {
             bold: {
                 shortcut: "Ctrl+b",
-                toolbarHtml: "B",
                 icon: "format_bold",
-                text: "<strong title='Bold'>B</strong>",
+                toolbarHtml: "<strong title='Bold'>B</strong>",
                 execCommand: "bold",
                 active: tags.includes("b"),
             },
             italic: {
                 shortcut: "Ctrl+i",
-                toolbarHtml: "I",
+                toolbarHtml: "<em title='Italic'>I</em>",
                 icon: "format_italic",
-                text: "<em title='Italic'>I</em>",
                 execCommand: "italic",
                 active: tags.includes("i"),
             },
             underline: {
                 shortcut: "Ctrl+u",
-                toolbarHtml: "U",
+                toolbarHtml: "<span title='Underscored' style='text-decoration: underline'>U</span>",
                 icon: "format_underlined",
-                text: "<span title='Underscored' style='text-decoration: underline'>U</span>",
                 execCommand: "underline",
                 active: tags.includes("u"),
             },
@@ -202,24 +199,21 @@ export class TextEditorToolbar extends LitElement {
                 shortcut: "Ctrl+m",
                 execCommand: ["removeFormat", "unlink", "formatBlock"],
                 execCommandValue: [null, null, ["<P>"]],
-                toolbarHtml: "&minus;",
+                toolbarHtml: "<span title='Remove format'>&#11034;</span>",
                 icon: "format_clear",
-                text: "<span title='Remove format'>&#11034;</span>",
             },
             createLink: {
                 shortcut: "Ctrl+l",
                 execCommandValue: function (callback) {
                     callback(prompt("Enter URL:", "https://"));
                 },
-                toolbarHtml: "@",
-
+                toolbarHtml: "<span title='Insert Link'>&#128279;</span>",
                 icon: "add_link",
-                text: "<span title='Insert Link'>&#128279;</span>",
                 //execCommand: "createLink",
                 execCommand: () => {
                     const newLink = prompt("Write the URL here", "http://");
                     if (newLink && newLink != "" && newLink != "http://") {
-                        this.command("createlink", newLink);
+                        this.execCommand("createlink", newLink);
                     }
                 },
             },
@@ -228,30 +222,36 @@ export class TextEditorToolbar extends LitElement {
                 execCommand: "insertImage",
                 execCommandValue: function (callback) {
                     callback(prompt("Enter image URL:", "http://"));
-                }
+                },
+                toolbarHtml: "<span title='Insert Image'>&#128444;</span>",
             },
-            inserthorizontalrule: {shortcut: "Ctrl+Alt+h", execCommand: "inserthorizontalrule"},
+            inserthorizontalrule: {
+                shortcut: "Ctrl+Alt+h",
+                execCommand: "inserthorizontalrule",
+                toolbarHtml: "<span title='Insert horizontal rule'>&#9473;</span>",
+            },
             strikethrough: {
                 shortcut: "Ctrl+Alt+t",
                 icon: "format_strikethrough",
-                text: "<strike title='Strike-through'>S</strike>",
+                toolbarHtml: "<strike title='Strike-through'>S</strike>",
                 execCommand: "strikethrough",
                 active: tags.includes("strike"),
             },
             increaseFontSize: {
                 shortcut: "Ctrl+Alt+=",
                 execCommand: "increasefontsize",
+                toolbarHtml: "<sup>&plus;</sup>",
             },
             decreaseFontSize: {
                 shortcut: "Ctrl+Alt+m",
-                execCommand: "decreasefontsize"
+                execCommand: "decreasefontsize",
+                toolbarHtml: "<sup>&minus;</sup>",
             }, // keyCode for - seems to be interpreted as M
             blockquote: {
                 shortcut: "Ctrl+q",
                 execCommandValue: ["<BLOCKQUOTE>"],
-                toolbarHtml: "&ldquo;&bdquo;",
+                toolbarHtml: "<span title='Quote'>&rdquor;</span>",//"&ldquo;&bdquo;",
                 icon: "format_quote",
-                text: "<span title='Quote'>&rdquor;</span>",
                 execCommand: "formatblock",
                 command_value: "blockquote",
             },
@@ -259,37 +259,37 @@ export class TextEditorToolbar extends LitElement {
                 shortcut: "Ctrl+Alt+c",
                 execCommand: "formatBlock",
                 execCommandValue: ["<PRE>"],
-                toolbarHtml: "{&nbsp;}"
+                toolbarHtml: "<span title='Code'>{&nbsp;}</span>",
             },
             ol: {
                 shortcut: "Ctrl+Alt+o",
                 icon: "format_list_numbered",
-                text: "<span title='Ordered List'>1.</span>",
+                toolbarHtml: "<span title='Ordered List'>1.</span>",
                 execCommand: "insertorderedlist",
                 active: tags.includes("ol"),
             },
             ul: {
                 shortcut: "Ctrl+Alt+u",
                 icon: "format_list_bulleted",
-                text: "<span title='Unordered List'>&bullet;</span>",
+                toolbarHtml: "<span title='Unordered List'>&bullet;</span>",
                 execCommand: "insertunorderedlist",
                 active: tags.includes("ul"),
             },
             sup: {
                 shortcut: "Ctrl+.",
                 execCommand: "superscript",
-                toolbarHtml: "x<sup>2</sup>",
+                toolbarHtml: "<span title='Superscript'>x<sup>2</sup></span>",
             },
             sub: {
                 shortcut: "Ctrl+Shift+.",
                 execCommand: "subscript",
-                toolbarHtml: "x<sub>2</sub>"
+                toolbarHtml: "<span title='Subscript'>x<sub>2</sub></span>"
             },
             p: {
                 shortcut: "Ctrl+Alt+0",
                 execCommand: "formatBlock",
                 execCommandValue: ["<P>"],
-                toolbarHtml: "P"
+                toolbarHtml: "<span title='Paragraph'>P</span>"
             },
             para: {
                 icon: "title",
@@ -310,73 +310,68 @@ export class TextEditorToolbar extends LitElement {
                 shortcut: "Ctrl+Alt+1",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H1>"],
-                toolbarHtml: "H<sub>1</sub>"
+                toolbarHtml: "<span>H1</span>"
             },
             h2: {
                 shortcut: "Ctrl+Alt+2",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H2>"],
-                toolbarHtml: "H<sub>2</sub>"
+                toolbarHtml: "<span>H2</span>"
             },
             h3: {
                 shortcut: "Ctrl+Alt+3",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H3>"],
-                toolbarHtml: "H<sub>3</sub>"
+                toolbarHtml: "<span>H3</span>"
             },
             h4: {
                 shortcut: "Ctrl+Alt+4",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H4>"],
-                toolbarHtml: "H<sub>4</sub>"
+                toolbarHtml: "<span>H4</span>"
             },
             h5: {
                 shortcut: "Ctrl+Alt+5",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H5>"],
-                toolbarHtml: "H<sub>5</sub>"
+                toolbarHtml: "<span>H5</span>"
             },
             h6: {
                 shortcut: "Ctrl+Alt+6",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H6>"],
-                toolbarHtml: "H<sub>6</sub>"
+                toolbarHtml: "<span>H6</span>"
             },
             alignLeft: {
                 shortcut: "Ctrl+Alt+l",
                 toolbarHtml: "<span title='Align Left'>&#8612;</span>",
                 icon: "format_align_left",
-                text: "<span title='Align Left'>&#8612;</span>",
                 execCommand: "justifyleft",
             },
             alignRight: {
                 shortcut: "Ctrl+Alt+r",
                 toolbarHtml: "<span title='Align Right'>&#8614;</span>",
                 icon: "format_align_right",
-                text: "<span title='Align Right'>&#8614;</span>",
                 execCommand: "justifyright",
             },
             alignCenter: {
                 shortcut: "Ctrl+Alt+c",
                 toolbarHtml: "<span title='Align Center'>&#8633;</span>",
                 icon: "format_align_right",
-                text: "<span title='Align Center'>&#8633;</span>",
                 execCommand: "justifycenter",
             },
             indent: {
                 shortcut: "Tab",
-                toolbarHtml: "&rArr;",
+                toolbarHtml: "<span title='Indent'>&#8677;</span>",//"&rArr;",
 
                 icon: "format_indent_increase",
-                text: "<span title='Indent'>&#8677;</span>",
                 execCommand: "indent",
             },
             outdent: {
                 shortcut: ["Ctrl+Tab", "Shift+Tab"],
-                toolbarHtml: "&lArr;",
+                toolbarHtml: "<span title='Decrease Indent'>&#8676;</span>",//"&lArr;",
 
                 icon: "format_indent_decrease",
-                text: "<span title='Decrease Indent'>&#8676;</span>",
                 execCommand: "outdent",
             }
         };
@@ -388,14 +383,19 @@ export class TextEditorToolbar extends LitElement {
     }
 
     renderCommands(commands) {
+        const scopedThis = function () { console.debug(this); }
+        const s = new Shortcut();
         let elements = [];
         for (const c in commands) {
             const n = commands[c];
+
+            s.add(n.shortcut, scopedThis, { 'type': 'keydown', 'propagate': false });
+
             if (n.icon == "add_image") elements.push(this.renderImageUpload(n));
             else if (n.values) elements.push(this.renderSelect(n));
             else elements.push(this.renderButton(n));
         }
-        return html`${elements.map()}`
+        return html`${elements.map(n => html`${n}`)}`
     }
 
     renderButton(n) {
@@ -404,11 +404,11 @@ export class TextEditorToolbar extends LitElement {
                     @click=${() => {
                         if (n.values) {
                         } else if (typeof n.execCommand === "string") {
-                            this.command(n.execCommand, n.command_value);
+                            this.execCommand(n.execCommand, n.command_value);
                         } else {
                             n.execCommand();
                         }
-                    }}>${unsafeHTML(n.text)}
+                    }}>${unsafeHTML(n.toolbarHtml)}
             </button>`;
     }
 
