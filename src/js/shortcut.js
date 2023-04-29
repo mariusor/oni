@@ -109,7 +109,6 @@ export const Shortcut = {
             }
         }
     },
-
 };
 
 function shortcutMatches(shortcut_combinations, code, modifiers) {
@@ -202,7 +201,7 @@ function shortcutMatches(shortcut_combinations, code, modifiers) {
         let kp = 0;
 
         for (let i = 0, k; k = keys[i], i < keys.length; i++) {
-            //Modifiers
+            // Modifiers
             if (k == 'ctrl' || k == 'control') {
                 kp++;
                 modifiers.ctrl.wanted = true;
@@ -217,11 +216,12 @@ function shortcutMatches(shortcut_combinations, code, modifiers) {
                 modifiers.meta.wanted = true;
             } else if (k.length > 1) { //If it is a special key
                 if (special_keys[k] == code) kp++;
-            } else { //The special keys did not match
+            } else { // The special keys did not match
                 if (character == k) {
                     kp++;
                 } else {
-                    if (shift_nums[character] || modifiers.shift?.pressed) { // Stupid Shift key bug created by using lowercase
+                    if (shift_nums[character] || modifiers.shift?.pressed) {
+                        // Stupid Shift key bug created by using lowercase
                         character = shift_nums[character];
                         if (character == k) kp++;
                     }
@@ -229,7 +229,6 @@ function shortcutMatches(shortcut_combinations, code, modifiers) {
             }
         }
 
-        console.debug(`given ${shortcut_combinations}, expected ${code.toString()}, shift ${modifiers.shift.wanted}, alt ${modifiers.alt.wanted}, ctrl ${modifiers.ctrl.wanted}, meta ${modifiers.meta.wanted},`)
         return kp == keys.length && modifiers.ctrl.pressed == modifiers.ctrl.wanted &&
             modifiers.shift.pressed == modifiers.shift.wanted && modifiers.alt.pressed == modifiers.alt.wanted &&
             modifiers.meta.pressed == modifiers.meta.wanted;
