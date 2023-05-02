@@ -1,11 +1,35 @@
-import {css, html, LitElement} from "lit";
+import {css, html, LitElement, render} from "lit";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {classMap} from "lit-html/directives/class-map.js";
 import {showError} from "./utils";
 import {Shortcut} from "./shortcut";
+import {SimpleTooltip} from "./simple-tooltip";
 
 export class TextEditor extends LitElement {
-    static styles = [css`
+    static styles = [
+        css`
+        :host simple-tooltip {
+          --toolbar-width: max-content;
+          --toolbar-height: min-content;
+          --toolbar-background-top: white;
+          --toolbar-background-bottom: silver;
+          --toolbar-on-background: white;
+          --toolbar-on-active-background: #a4a4a4;
+        }
+        :host simple-tooltip {
+          height: var(--toolbar-height);
+          max-width: var(--toolbar-width);
+          overscroll-behavior: contain;
+          overflow-y: auto;
+          scrollbar-width: none;
+          color: var(--toolbar-on-active-background);
+          background: linear-gradient(var(--toolbar-background-top), var(--toolbar-background-bottom));
+          border: 1px solid var(--toolbar-on-background);
+          pointer-events: auto;
+        }
+        simple-tooltip button { font-family: serif; font-size: 1.2em; }
+    `,
+        css`
         :host {
           --editor-width: 100%;
           --editor-height: 100vh;
@@ -82,7 +106,7 @@ export class TextEditor extends LitElement {
             // NOTE(marius): replacing the selection with the image doesn't seem to work very well.
             // I need to research more. For now, appending the images at the end of the editable block
             // seems OK.
-            console.debug(document.getSelection());
+            //console.debug(document.getSelection());
 
             const img = document.createElement("img");
             img.src = f.result;
@@ -119,54 +143,26 @@ export class TextEditor extends LitElement {
                 <div @drop="${this.handleDrop}"
                      @dragenter="${this.dragAllowed}"
                      @dragover="${this.dragAllowed}"
-                >${this.root}
+                >
+                    ${this.root}
                 </div>
-                <simple-tooltip><oni-text-editor-toolbar></oni-text-editor-toolbar></simple-tooltip>
             </main>`;
     }
-}
 
-export class TextEditorToolbar extends LitElement {
-    static styles = [css`
-    :host {
-      --toolbar-width: max-content;
-      --toolbar-height: min-content;
-      --toolbar-background-top: white;
-      --toolbar-background-bottom: silver;
-      --toolbar-on-background: white;
-      --toolbar-on-active-background: #a4a4a4;
-    }
-    :host {
-      height: var(--toolbar-height);
-      max-width: var(--toolbar-width);
-      overscroll-behavior: contain;
-      display: inline-block;
-      overflow-y: auto;
-      scrollbar-width: none;
-      color: var(--toolbar-on-active-background);
-      background: linear-gradient(var(--toolbar-background-top), var(--toolbar-background-bottom));
-      border: 1px solid var(--toolbar-on-background);
-    }
-    button { font-family: serif; font-size: 1.2em; }
-    `];
-
-    constructor() {
-        super();
-    }
-
-    render() {
+    renderToolbar() {
+        console.debug(`rendering toolbar`)
         const tags = [];
         const selection = document.getSelection();
         if (selection?.type === "Range") {
-            let parentNode = selection?.baseNode;
-            if (parentNode) {
+            this.root = selection?.baseNode;
+            if (this.root) {
                 const checkNode = () => {
-                    const parentTagName = parentNode?.tagName?.toLowerCase()?.trim();
+                    const parentTagName = this.root?.tagName?.toLowerCase()?.trim();
                     if (parentTagName) tags.push(parentTagName);
                 };
-                while (parentNode != null) {
+                while (this.root != null) {
                     checkNode();
-                    parentNode = parentNode?.parentNode;
+                    this.root = this.root?.parentNode;
                 }
             }
         }
@@ -199,9 +195,9 @@ export class TextEditorToolbar extends LitElement {
             createLink: {
                 shortcut: "Ctrl+l",
                 toolbarHtml: "<span title='Insert Link'>&#128279;</span>",
-                execCommand: "createLink",
+                execCommand: "createlink",
                 execCommandValue: function () {
-                    prompt("Enter URL:", "https://");
+                    return prompt("Enter URL:", "https://");
                 },
             },
             inserthorizontalrule: {
@@ -215,16 +211,18 @@ export class TextEditorToolbar extends LitElement {
                 execCommand: "strikethrough",
                 active: tags.includes("strike"),
             },
-            increaseFontSize: {
-                shortcut: "Ctrl+Alt+=",
-                execCommand: "increasefontsize",
-                toolbarHtml: "<sup>&plus;</sup>",
-            },
-            decreaseFontSize: {
-                shortcut: "Ctrl+Alt+m",
-                execCommand: "decreasefontsize",
-                toolbarHtml: "<sup>&minus;</sup>",
-            }, // keyCode for - seems to be interpreted as M
+            // increaseFontSize: {
+            //     // NOTE(marius): not working
+            //     shortcut: "Ctrl+Alt+=",
+            //     execCommand: "increaseFontSize",
+            //     toolbarHtml: "<span title='Increase font size' style='font-size:.7em'>&plus;</span>",
+            // },
+            // decreaseFontSize: {
+            //     // NOTE(marius): not working
+            //     shortcut: "Ctrl+Alt+m",
+            //     execCommand: "decreaseFontSize",
+            //     toolbarHtml: "<span title='Decrease font size' style='font-size:.7em'>&minus;</span>",
+            // },
             blockquote: {
                 shortcut: "Ctrl+q",
                 execCommandValue: ["<BLOCKQUOTE>"],
@@ -236,7 +234,7 @@ export class TextEditorToolbar extends LitElement {
                 shortcut: "Ctrl+Alt+c",
                 execCommand: "formatBlock",
                 execCommandValue: ["<PRE>"],
-                toolbarHtml: "<code title='Code'>{&nbsp;}</code>",
+                toolbarHtml: "<code title='Code' style='font-size:.8em'>{&nbsp;}</code>",
             },
             ol: {
                 shortcut: "Ctrl+Alt+o",
@@ -253,12 +251,12 @@ export class TextEditorToolbar extends LitElement {
             sup: {
                 shortcut: "Ctrl+.",
                 execCommand: "superscript",
-                toolbarHtml: "<span title='Superscript'>x<sup>2</sup></span>",
+                toolbarHtml: "<span title='Superscript' style='font-size:.7em'>x<sup>2</sup></span>",
             },
             sub: {
                 shortcut: "Ctrl+Shift+.",
                 execCommand: "subscript",
-                toolbarHtml: "<span title='Subscript'>x<sub>2</sub></span>"
+                toolbarHtml: "<span title='Subscript' style='font-size:.7em'>x<sub style='font-size:.6em'>2</sub></span>"
             },
             p: {
                 shortcut: "Ctrl+Alt+0",
@@ -302,21 +300,21 @@ export class TextEditorToolbar extends LitElement {
                 execCommandValue: ["<H6>"],
                 toolbarHtml: "<span title='Section heading 6'>H6</span>"
             },
-            alignLeft: {
-                shortcut: "Ctrl+Alt+l",
-                toolbarHtml: "<span title='Align Left'>&#8612;</span>",
-                execCommand: "justifyleft",
-            },
-            alignRight: {
-                shortcut: "Ctrl+Alt+r",
-                toolbarHtml: "<span title='Align Right'>&#8614;</span>",
-                execCommand: "justifyright",
-            },
-            alignCenter: {
-                shortcut: "Ctrl+Alt+c",
-                toolbarHtml: "<span title='Align Center'>&#8633;</span>",
-                execCommand: "justifycenter",
-            },
+            // alignLeft: {
+            //     shortcut: "Ctrl+Alt+l",
+            //     toolbarHtml: "<span title='Align Left'>&#8612;</span>",
+            //     execCommand: "justifyleft",
+            // },
+            // alignRight: {
+            //     shortcut: "Ctrl+Alt+r",
+            //     toolbarHtml: "<span title='Align Right'>&#8614;</span>",
+            //     execCommand: "justifyright",
+            // },
+            // alignCenter: {
+            //     shortcut: "Ctrl+Alt+c",
+            //     toolbarHtml: "<span title='Align Center'>&#8633;</span>",
+            //     execCommand: "justifycenter",
+            // },
             indent: {
                 shortcut: "Tab",
                 toolbarHtml: "<span title='Indent'>&#8677;</span>",//"&rArr;",
@@ -328,26 +326,28 @@ export class TextEditorToolbar extends LitElement {
                 execCommand: "outdent",
             },
             insertImage: {
-                shortcut: "Ctrl+g",
+                shortcut: "Ctrl+Shift+i",
                 execCommand: () => this.shadowRoot.querySelector('input[type=file]')?.click(),
                 toolbarHtml: "<span title='Insert Image'>&#128444;</span>",
             },
         };
 
-        return html`
-            <div>
-                ${this.renderCommands(commands)}
-            </div>`;
+        const toolbar = this.renderCommands(commands);
+        return SimpleTooltip.lazy(this.root, (tooltip) => {
+            render(toolbar, tooltip);
+        });
     }
 
     renderCommands(commands) {
         let elements = [];
-        const editable = this.parentElement.lastElementChild;
+        const editable = this.root;
+
+        if (!editable) return;
 
         for (const c in commands) {
             const n = commands[c];
 
-            console.debug(`Adding shortcut ${n.shortcut} for action ${n.execCommand}`);
+            console.debug(`Adding shortcut ${n.shortcut} for action ${n.execCommand} on `, editable);
             Shortcut.add(
                 n.shortcut,
                 function() { execCommand(n) },
@@ -368,7 +368,7 @@ export class TextEditorToolbar extends LitElement {
     }
 
     renderImageUpload (n) {
-        return html`<input type=file multiple
+        return html`<input type=file multiple style="display: none"
                            @change="${(e) => {
                                document.dispatchEvent(
                                        new CustomEvent("image.upload", {
@@ -378,7 +378,9 @@ export class TextEditorToolbar extends LitElement {
                                        })
                                );
                            }}"
-        >`;
+        >
+        <button @click=${n.execCommand}>${unsafeHTML(n.toolbarHtml)}</button>
+        `;
     }
 }
 
@@ -394,6 +396,7 @@ function execCommand (n) {
             // NOTE(marius): this should be probably be replaced with something
             // based on the ideas from here: https://stackoverflow.com/a/62266439
             if (typeof val == 'function') val = val();
+            console.debug(`executing command ${command}: ${val}`)
             document.execCommand(command, true, val);
         } else {
             command(val);

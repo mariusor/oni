@@ -12,6 +12,9 @@ export const Shortcut = {
         if (!Array.isArray(shortcutCombinations)) shortcutCombinations = [shortcutCombinations];
         if (!Array.isArray(callbacks)) callbacks = [callbacks];
 
+        let ele = opt.target;
+        if (!ele) return;
+
         // Provide a set of default options
         const default_options = {
             'type': 'keydown',
@@ -27,8 +30,7 @@ export const Shortcut = {
             }
         }
 
-        let ele = opt.target;
-        if (typeof opt.target == 'string') ele = document.getElementById(opt.target);
+
         for (const i in shortcutCombinations) shortcutCombinations[i] = shortcutCombinations[i].toLowerCase();
 
         // The function to be called at keypress
@@ -51,22 +53,16 @@ export const Shortcut = {
             if (e.metaKey) modifiers.meta.pressed = true;
 
             if (shortcutMatches(shortcutCombinations, code, modifiers)) {
-                console.debug(`found shortcut ${shortcutCombinations}`, callbacks);
-                for (const i in callbacks) {
-                    callbacks[i](e);
-                }
-
                 if (!opt['propagate']) { // Stop the event
-                    // e.cancelBubble is supported by IE - this will kill the bubbling process.
-                    e.cancelBubble = true;
-                    e.returnValue = false;
-
-                    // e.stopPropagation works in Firefox.
                     if (e.stopPropagation) {
                         e.stopPropagation();
                         e.preventDefault();
                     }
-                    // return false;
+                }
+
+                console.debug(`found shortcut ${shortcutCombinations}`, callbacks);
+                for (const i in callbacks) {
+                    callbacks[i](e);
                 }
             }
         };
