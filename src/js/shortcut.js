@@ -60,12 +60,13 @@ export const Shortcut = {
                     }
                 }
 
-                console.debug(`found shortcut ${shortcutCombinations}`, callbacks);
+                console.debug(`Executing command for shortcut ${shortcutCombinations}`, callbacks);
                 for (const i in callbacks) {
                     callbacks[i](e);
                 }
             }
         };
+
         for (const i in shortcutCombinations) {
             const shortcut = shortcutCombinations[i];
             this.allShortcuts[shortcut] = {
@@ -77,6 +78,7 @@ export const Shortcut = {
         // Attach the function with the event
         if (ele.addEventListener) {
             ele.addEventListener(opt['type'], bindFn);
+            //console.debug(`Bound ${opt['type']} event for shortcut ${shortcutCombinations}`);
         } else {
             console.error(`Unable to bind ${opt['type']} event`);
         }

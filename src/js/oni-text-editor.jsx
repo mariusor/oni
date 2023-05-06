@@ -138,7 +138,7 @@ export class TextEditor extends LitElement {
     }
 
     render() {
-        return html`
+        const editable =  html`
             <main>
                 <div @drop="${this.handleDrop}"
                      @dragenter="${this.dragAllowed}"
@@ -146,11 +146,14 @@ export class TextEditor extends LitElement {
                 >
                     ${this.root}
                 </div>
+                <simple-tooltip>${html`${this.renderToolbar()}`}</simple-tooltip>
             </main>`;
+        return editable;
     }
 
     renderToolbar() {
-        console.debug(`rendering toolbar`)
+        if (!this.root) return;
+
         const tags = [];
         const selection = document.getSelection();
         if (selection?.type === "Range") {
@@ -332,10 +335,7 @@ export class TextEditor extends LitElement {
             },
         };
 
-        const toolbar = this.renderCommands(commands);
-        return SimpleTooltip.lazy(this.root, (tooltip) => {
-            render(toolbar, tooltip);
-        });
+        return this.renderCommands(commands);
     }
 
     renderCommands(commands) {
@@ -347,7 +347,6 @@ export class TextEditor extends LitElement {
         for (const c in commands) {
             const n = commands[c];
 
-            console.debug(`Adding shortcut ${n.shortcut} for action ${n.execCommand} on `, editable);
             Shortcut.add(
                 n.shortcut,
                 function() { execCommand(n) },

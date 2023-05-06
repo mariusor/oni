@@ -16,18 +16,19 @@ export class SimpleTooltip extends LitElement {
 
     // Lazy creation
     static lazy(target, callback) {
-
+        console.debug('target received', target)
         const createTooltip = () => {
             const tooltip = document.createElement('simple-tooltip');
             if (typeof callback === 'function') callback(tooltip);
+            console.debug('showing tooltip')
             tooltip.target = target;
-            target.parentNode.insertBefore(tooltip, target.nextSibling);
+            target.insertBefore(tooltip, target.nextSibling);
             tooltip.show();
-            console.debug()
 
             // We only need to create the tooltip once, so ignore all future events.
             //enterEvents.forEach((eventName) => target.removeEventListener(eventName, createTooltip));
         };
+        //enterEvents.forEach((eventName) => target.addEventListener(eventName, createTooltip));
 
         createTooltip();
     }
@@ -88,7 +89,7 @@ export class SimpleTooltip extends LitElement {
     }
 
     set target(target) {
-        console.debug('setting target', this.target, target)
+        console.debug(`received target`, target)
         // Remove events from existing target
         if (this.target) {
             enterEvents.forEach((name) => this.target.removeEventListener(name, this.show));
@@ -106,6 +107,8 @@ export class SimpleTooltip extends LitElement {
         this.style.cssText = '';
 
         this.showing = true;
+
+        console.debug(`showing tooltip`, this)
     };
 
     hide = () => {
@@ -132,8 +135,7 @@ export class SimpleTooltip extends LitElement {
             this.style.left = `${x}px`;
             this.style.top = `${y}px`;
         });
-        return html`
-            <slot></slot>`;
+        return html`<slot></slot>`;
     }
 }
 
