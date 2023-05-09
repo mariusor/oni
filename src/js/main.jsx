@@ -17,6 +17,7 @@ import {ActivityPubTag} from "./activity-pub-tag";
 import {OniErrors} from "./oni-errors";
 import {TextEditor} from "./oni-text-editor";
 import {SimpleTooltip} from "./simple-tooltip";
+import {ActivityPubEvent} from "./activity-pub-event";
 
 customElements.define('oni-main', OniMainActor);
 customElements.define('oni-object', ActivityPubObject);
@@ -29,6 +30,7 @@ customElements.define('oni-collection', ActivityPubCollection);
 customElements.define('oni-tombstone', ActivityPubTombstone);
 customElements.define('oni-activity', ActivityPubActivity);
 customElements.define('oni-tag', ActivityPubTag);
+customElements.define('oni-event', ActivityPubEvent);
 
 customElements.define('oni-natural-language-values', NaturalLanguageValues);
 customElements.define('oni-collection-link', CollectionLink);

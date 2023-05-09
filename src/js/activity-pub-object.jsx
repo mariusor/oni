@@ -322,6 +322,8 @@ ActivityPubObject.renderByType = function (it) {
             return html`<oni-tombstone it=${JSON.stringify(it)}></oni-tombstone>`;
         case 'Mention':
             return html`<oni-tag it=${JSON.stringify(it)}></oni-tag>`;
+        case 'Event':
+            return html`<oni-event it=${JSON.stringify(it)}></oni-event>`;
     }
     return html`<oni-object it=${JSON.stringify(it)}></oni-object>`
 }
