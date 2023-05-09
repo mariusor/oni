@@ -60,7 +60,7 @@ func Oni(initFns ...optionFn) *oni {
 			continue
 		}
 
-		if err := saveOauth2Client(o.s, actor.ID); err != nil {
+		if err := SaveOauth2Client(o.s, actor.ID, DefaultOAuth2ClientPw); err != nil {
 			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save OAuth2 Client")
 		}
 
@@ -101,7 +101,7 @@ func LoadActor(items ...vocab.Item) optionFn {
 	a := make([]vocab.Actor, 0)
 	for _, it := range items {
 		if vocab.IsIRI(it) {
-			a = append(a, defaultActor(it.GetLink()))
+			a = append(a, DefaultActor(it.GetLink()))
 		}
 	}
 	return Actor(a...)

@@ -56,6 +56,88 @@ var fixCollectionsCmd = &cli.Command{
 	Action: fixCollectionsAct(&ctl),
 }
 
+var ActorCmd = &cli.Command{
+	Name:        "actor",
+	Usage:       "Actor helper",
+	Subcommands: []*cli.Command{actorAddCmd},
+}
+
+var actorAddCmd = &cli.Command{
+	Name:  "add",
+	Usage: "Add a new root actor",
+	Flags: []cli.Flag{
+		&cli.BoolFlag{
+			Name:  "with-token",
+			Value: true,
+		},
+		&cli.StringSliceFlag{Name: "pw"},
+	},
+	Action: addActorAct(&ctl),
+}
+
+func addActorAct(ctl *Control) cli.ActionFunc {
+	return func(context *cli.Context) error {
+		urls := context.Args()
+		pws := context.StringSlice("pw")
+
+		for i, maybeURL := range urls.Slice() {
+			u, err := url.ParseRequestURI(maybeURL)
+			if err != nil {
+				ctl.Logger.Errorf("Received invalid URL %s: %s", maybeURL, err)
+				continue
+			}
+
+			iri := vocab.IRI(maybeURL)
+			pw := oni.DefaultOAuth2ClientPw
+			if i < len(pws)-1 {
+				pw = pws[i]
+			}
+
+			it, err := ctl.Storage.Load(iri)
+			if err == nil || (!vocab.IsNil(it) && it.GetLink().Equals(iri, true)) {
+				if err != nil && !errors.IsNotFound(err) {
+					ctl.Logger.Warnf("Actor already exists at URL %s: %s", iri, err)
+				} else {
+					ctl.Logger.Warnf("Actor already exists at URL %s", iri)
+				}
+				continue
+			}
+
+			o := oni.DefaultActor(iri)
+			o.Outbox = vocab.Outbox.Of(iri)
+
+			if it, err = ctl.Storage.Save(o); err != nil {
+				ctl.Logger.Errorf("Unable to save main actor %s: %s", maybeURL, err)
+				continue
+			} else {
+				ctl.Logger.Infof("Created root actor: %s", it.GetID())
+			}
+
+			actor, err := vocab.ToActor(it)
+			if err != nil {
+				ctl.Logger.Errorf("Invalid actor type saved for %s: %s", maybeURL, err)
+				continue
+			}
+
+			if err = oni.SaveOauth2Client(ctl.Storage, actor.ID, pw); err != nil {
+				ctl.Logger.Errorf("Unable to save OAuth2 Client %s: %s", u.Hostname(), err)
+				continue
+			} else {
+				ctl.Logger.Infof("Created OAuth2 Client: %s", actor.ID)
+			}
+
+			if context.Bool("with-token") {
+				clientID := u.Hostname()
+				tok, err := ctl.GenAccessToken(clientID, actor.ID.String(), nil)
+				if err == nil {
+					ctl.Logger.Infof("\tAuthorization: Bearer %s\n", tok)
+				}
+			}
+		}
+		return nil
+	}
+}
+
 func dataPath() string {
 	dh := os.Getenv("XDG_DATA_HOME")
 	if dh == "" {
@@ -76,6 +158,7 @@ func newOrderedCollection(id vocab.IRI) *vocab.OrderedCollection {
 		Published: time.Now().UTC(),
 	}
 }
+
 func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
 	var collection *vocab.OrderedCollection
 	items, err := ctl.Storage.Load(colIRI.GetLink())
@@ -310,7 +393,7 @@ func main() {
 			Value: dataPath(),
 		},
 	}
-	app.Commands = []*cli.Command{OAuth2Cmd, fixCollectionsCmd}
+	app.Commands = []*cli.Command{ActorCmd, OAuth2Cmd, fixCollectionsCmd}
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)

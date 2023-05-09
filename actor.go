@@ -21,7 +21,7 @@ func PublicKey(iri vocab.IRI, prvKey *rsa.PrivateKey) vocab.PublicKey {
 	}
 }
 
-func defaultActor(iri vocab.IRI) vocab.Actor {
+func DefaultActor(iri vocab.IRI) vocab.Actor {
 	actor := vocab.Actor{
 		ID:                iri,
 		Type:              vocab.ApplicationType,
