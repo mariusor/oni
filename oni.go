@@ -60,11 +60,11 @@ func Oni(initFns ...optionFn) *oni {
 			continue
 		}
 
-		if err := SaveOauth2Client(o.s, actor.ID, DefaultOAuth2ClientPw); err != nil {
+		if err := CreateOauth2ClientIfMissing(o.s, actor.ID, DefaultOAuth2ClientPw); err != nil {
 			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save OAuth2 Client")
 		}
 
-		if actor.PublicKey.PublicKeyPem != "" {
+		if actor.PublicKey.PublicKeyPem == "" {
 			// NOTE(marius): this generates a new key pair for every run of the service
 			prvKey, err := rsa.GenerateKey(rand.Reader, 2048)
 			if err != nil {

@@ -119,7 +119,7 @@ func addActorAct(ctl *Control) cli.ActionFunc {
 				continue
 			}
 
-			if err = oni.SaveOauth2Client(ctl.Storage, actor.ID, pw); err != nil {
+			if err = oni.CreateOauth2ClientIfMissing(ctl.Storage, actor.ID, pw); err != nil {
 				ctl.Logger.Errorf("Unable to save OAuth2 Client %s: %s", u.Hostname(), err)
 				continue
 			} else {

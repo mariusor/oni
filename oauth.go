@@ -249,7 +249,7 @@ func redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http.Request)
 
 const DefaultOAuth2ClientPw = "NotSoSecretPassword"
 
-func SaveOauth2Client(s FullStorage, i vocab.IRI, pw string) error {
+func CreateOauth2ClientIfMissing(s FullStorage, i vocab.IRI, pw string) error {
 	u, _ := i.URL()
 	c, err := s.GetClient(u.Host)
 	if err == nil {
