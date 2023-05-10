@@ -46,6 +46,7 @@ func (o *oni) Error(err error) http.HandlerFunc {
 		errs := errors.HttpErrors(err)
 		oniFn := template.FuncMap{
 			"ONI":   func() vocab.Actor { return o.oniActor(r) },
+			"URLS":  actorURLs(o.oniActor(r)),
 			"Title": func() string { return http.StatusText(errors.HttpStatus(err)) },
 		}
 		templatePath := "components/errors"
