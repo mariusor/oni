@@ -2,6 +2,7 @@ package oni
 
 import (
 	"html/template"
+	"strings"
 
 	vocab "github.com/go-ap/activitypub"
 	json "github.com/go-ap/jsonld"
@@ -34,8 +35,10 @@ var (
 						return "activity"
 					case vocab.CollectionTypes.Contains(t):
 						return "collection"
+					case t == "":
+						return "tag"
 					default:
-						return "object"
+						return template.HTML(strings.ToLower(string(t)))
 					}
 				case vocab.IRI:
 					return "iri"
