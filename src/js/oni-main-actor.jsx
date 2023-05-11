@@ -142,11 +142,12 @@ export class OniMainActor extends ActivityPubActor {
         if (!url) {
             return nothing;
         }
+        const palette = loadPalette(this.it);
         if (!Array.isArray(url)) {
             url = [url];
         }
         return html`
-            <ul style="background-color: ${tinycolor(this.palette.bgColor).setAlpha(0.8).toRgbString()};">
+            <ul style="background-color: ${tinycolor(palette.bgColor).setAlpha(0.8).toRgbString()};">
                 ${url.map((u) => html`
                     <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}>
                         ${u}
