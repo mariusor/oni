@@ -181,16 +181,6 @@ export class ActivityPubObject extends LitElement {
         return html`<div class="attachment">${ActivityPubObject.renderByType(attachment)}</div>`
     }
 
-    renderPublished() {
-        const published = this.it.getPublished();
-        if (!published) {
-            return nothing;
-        }
-        return html` <time datetime=${published.toUTCString()} title=${published.toUTCString()}>
-            <oni-icon name="clock"></oni-icon> ${relativeDate(published)}
-        </time>`;
-    }
-
     renderBookmark() {
         const hasName = this.it.getName().length > 0;
         return !hasName ? html`<a href="${this.it.iri() ?? nothing}"><oni-icon name="bookmark"></oni-icon></a>` : nothing
@@ -201,9 +191,16 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
         const auth = this.renderAttributedTo();
+        let action = 'Published';
+        let published = this.it.getPublished();
+        const updated = this.it.getUpdated();
+        if (updated) {
+            action = 'Updated';
+            published = updated;
+        }
         return html`<aside>
-            Published ${until(auth)}
-            ${this.renderPublished()}
+            ${action} ${until(auth)}
+            ${renderTimestamp(published)}
             ${until(this.renderReplyCount())}
             ${this.renderBookmark()}
         </aside>`;
@@ -326,4 +323,13 @@ ActivityPubObject.renderByType = function (it) {
             return html`<oni-event it=${JSON.stringify(it)}></oni-event>`;
     }
     return html`<oni-object it=${JSON.stringify(it)}></oni-object>`
+}
+
+function renderTimestamp(published) {
+    if (!published) {
+        return nothing;
+    }
+    return html`<time datetime=${published.toUTCString()} title=${published.toUTCString()}>
+            <oni-icon name="clock"></oni-icon> ${relativeDate(published)}
+        </time>`;
 }

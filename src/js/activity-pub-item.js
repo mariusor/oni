@@ -81,6 +81,15 @@ export class ActivityPubItem {
         return d || null;
     }
 
+    getUpdated() {
+        if (!this.hasOwnProperty('updated')) {
+            return null;
+        }
+        const d = new Date();
+        d.setTime(Date.parse(this.updated));
+        return d || null;
+    }
+
     getName() {
         if (!this.hasOwnProperty('name')) {
             this.name = [];
