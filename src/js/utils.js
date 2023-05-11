@@ -1,4 +1,6 @@
 import tinycolor from "tinycolor2";
+import {average, prominent} from "color.js";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export const contrast = tinycolor.readability;
 
@@ -200,3 +202,83 @@ export function showError(e) {
     alert(e);
 }
 
+
+export async function loadPalette(it) {
+    const imageURL = apURL(it.getImage());
+    const iconURL = apURL(it.getIcon());
+
+    if (localStorage.getItem('palette')) {
+        const palette = JSON.parse(localStorage.getItem('palette'));
+        console.debug('refreshing palette?', !(palette.bgImageURL == imageURL && palette.iconURL == iconURL))
+        if (palette.bgImageURL == imageURL && palette.iconURL == iconURL) {
+            return palette;
+        }
+    }
+
+    const root = document.documentElement;
+    const style = getComputedStyle(root);
+    const palette = {
+        bgColor: style.getPropertyValue('--bg-color').trim(),
+        fgColor: style.getPropertyValue('--fg-color').trim(),
+        shadowColor: style.getPropertyValue('--shadow-color').trim(),
+        linkColor: style.getPropertyValue('--link-color').trim(),
+        linkActiveColor: style.getPropertyValue('--link-active-color').trim(),
+        linkVisitedColor: style.getPropertyValue('--link-visited-color').trim(),
+        colorScheme: prefersDarkTheme() ? 'dark' : 'light',
+    };
+
+    const strongerColor = (col) => tinycolor(palette.bgColor).isDark() ?
+        tinycolor(col).lighten(10).saturate(15)
+        : tinycolor(col).darken(20).saturate(10)
+
+    if (imageURL) {
+        const avgColor = await average(imageURL, {format: 'hex'});
+        if (avgColor !== null) {
+            palette.bgColor = avgColor;
+            palette.colorScheme = tinycolor(avgColor).isDark() ? 'dark' : 'light';
+            palette.bgImageURL = imageURL;
+            root.style.setProperty('--bg-color', avgColor.trim());
+            root.style.setProperty('backgroundImage', `linear-gradient(${tinycolor(avgColor).setAlpha(0).toRgb()}, ${tinycolor(avgColor).setAlpha(1).toRgb()}), url(${imageURL});`)
+        }
+    }
+
+    if (iconURL) {
+        let iconColors = await prominent(iconURL, {amount: 20, group: 30, format: 'hex', sample: 5});
+        palette.colors = iconColors;
+        palette.iconURL = iconURL;
+
+        iconColors = iconColors.filter(col => {
+            return tinycolor(col).toHsl().s > 0.18 && tinycolor(col).toHsl().s < 0.84
+        })
+
+        const shadowColor = tinycolor.mostReadable(palette.bgColor, iconColors);
+        if (shadowColor !== null) {
+            palette.shadowColor = shadowColor.toHexString();
+            palette.linkVisitedColor = shadowColor.toHexString();
+            palette.linkActiveColor = palette.linkVisitedColor;
+            palette.linkColor = strongerColor(palette.linkVisitedColor)?.toHexString();
+        }
+        iconColors = iconColors
+            .filter((value, index, array) => array.at(index) !== palette.shadowColor);
+
+        let linkVisitedColor = tinycolor.mostReadable(palette.bgColor, iconColors, {level: "AAA", size: "small"});
+        if (linkVisitedColor !== null && tinycolor.isReadable(linkVisitedColor, palette.bgColor, {
+            level: "AAA",
+            size: "small"
+        })) {
+            palette.linkVisitedColor = linkVisitedColor.toHexString();
+            palette.linkActiveColor = palette.linkVisitedColor;
+            palette.linkColor = strongerColor(palette.linkVisitedColor)?.toHexString();
+        }
+    }
+
+    localStorage.setItem('palette', JSON.stringify(palette));
+    return palette;
+}
+
+function apURL(ob) {
+    if (typeof ob === 'object' && ob !== null) {
+        return new ActivityPubItem(ob).iri();
+    }
+    return ob
+}
