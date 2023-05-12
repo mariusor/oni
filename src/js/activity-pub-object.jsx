@@ -322,7 +322,7 @@ ActivityPubObject.renderByType = function (it) {
         case 'Event':
             return html`<oni-event it=${JSON.stringify(it)}></oni-event>`;
     }
-    return html`<oni-object it=${JSON.stringify(it)}></oni-object>`
+    return nothing;
 }
 
 function renderTimestamp(published) {

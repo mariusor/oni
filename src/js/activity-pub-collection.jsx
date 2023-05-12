@@ -60,6 +60,9 @@ export class ActivityPubCollection extends ActivityPubObject {
                 renderedItem = html`<oni-actor it=${JSON.stringify(it)} simplified=true></oni-actor>`
             } else {
                 renderedItem = ActivityPubObject.renderByType(it);
+                if (renderedItem === nothing) {
+                    return renderedItem;
+                }
             }
 
             return html` <li>${renderedItem}</li>`

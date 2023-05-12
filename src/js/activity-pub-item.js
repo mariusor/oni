@@ -1,5 +1,5 @@
 
-export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', ''];
+export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event'];
 export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
 export const ActivityTypes = [ 'Create', 'Update', 'Delete', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore' ];
 export const CollectionTypes = [ 'Collection', 'CollectionPage', 'OrderedCollection', 'OrderedCollectionPage'];
