@@ -233,17 +233,8 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vocab.OnObject(it, func(o *vocab.Object) error {
-			updatedAt := o.Published
-			if !o.Updated.IsZero() {
-				updatedAt = o.Updated
-			}
-			if !updatedAt.IsZero() {
-				w.Header().Set("Last-Modified", updatedAt.Format(time.RFC1123))
-			}
 			if vocab.ActivityTypes.Contains(o.Type) {
 				w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(8766*time.Hour.Seconds())))
-			} else {
-				w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(24*time.Hour.Seconds())))
 			}
 			return nil
 		})
@@ -438,6 +429,17 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	vocab.OnObject(it, func(o *vocab.Object) error {
+		updatedAt := o.Published
+		if !o.Updated.IsZero() {
+			updatedAt = o.Updated
+		}
+		if !updatedAt.IsZero() {
+			w.Header().Set("Last-Modified", updatedAt.Format(time.RFC1123))
+		}
+		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(24*time.Hour.Seconds())))
+		return nil
+	})
 	accepts := getItemAcceptedContentType(it, r)
 	switch {
 	case accepts(jsonLD, activityJson, applicationJson):
