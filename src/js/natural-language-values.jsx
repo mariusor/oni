@@ -7,7 +7,6 @@ export class NaturalLanguageValues extends LitElement {
     static styles = [css`
         :host { display: inline-block; }
         :host div { display: inline-block; }
-        :host::before { margin-right: -.4rem; }
         :host p { line-height: 1.8em; }
     `, ActivityPubObject.styles];
 
@@ -62,9 +61,9 @@ export class NaturalLanguageValues extends LitElement {
         if (!this.it) { return nothing; }
 
         return html`
-            <div ?contenteditable=${this.editable} @blur="${this.checkChanged}">
+            <span ?contenteditable=${this.editable} @blur="${this.checkChanged}">
                 ${unsafeHTML(this.value()) ?? nothing}
                 <slot></slot>
-            </div>`;
+            </span>`;
     }
 }

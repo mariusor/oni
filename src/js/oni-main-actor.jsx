@@ -67,9 +67,6 @@ export class OniMainActor extends ActivityPubActor {
         :host aside small::after {
             content: ")";
         }
-        oni-natural-language-values[name=preferredUsername]::before {
-            content: "~";
-        }
         a[target=external] {
             font-size: .9rem;
             font-weight: light;

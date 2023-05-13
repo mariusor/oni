@@ -57,7 +57,11 @@ export class ActivityPubObject extends LitElement {
             align-self: end;
         }
         footer aside {
-            font-size: 0.8rem;
+            font-size: 0.8em;
+        }
+        oni-natural-language-values[name=preferredUsername]::before {
+            content: "~";
+            margin-right: -.3em;
         }
     `;
 
@@ -170,7 +174,7 @@ export class ActivityPubObject extends LitElement {
             if (!isLocalIRI(act.id)) {
                 username = `${username}@${new URL(act.id).hostname}`
             }
-            return html`<a href=${act.id}><oni-natural-language-values it=${JSON.stringify(username)}></oni-natural-language-values></a>`
+            return html`<a href=${act.id}><oni-natural-language-values name="preferredUsername" it=${JSON.stringify(username)}></oni-natural-language-values></a>`
         })}`;
     }
 
