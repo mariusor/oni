@@ -171,13 +171,10 @@ export function pluralize(d, unit) {
 }
 
 function isCons(c) {
-    const cons = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's', 't', 'v', 'w', 'y', 'z'];
-    for (const i in cons) {
-        if (c == cons[i]) {
-            return true;
-        }
+    function isVowel(v) {
+        return ['a', 'e', 'i', 'o', 'u'].indexOf(v) >= 0;
     }
-    return false;
+    return !isVowel(c);
 }
 
 export function authorization() {
