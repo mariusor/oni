@@ -10,7 +10,7 @@ import {
 } from "./utils";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
-import {ActivityPubItem} from "./activity-pub-item";
+import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -332,4 +332,8 @@ function renderTimestamp(published) {
     return html`<time datetime=${published.toUTCString()} title=${published.toUTCString()}>
             <oni-icon name="clock"></oni-icon> ${relativeDate(published)}
         </time>`;
+}
+
+ActivityPubObject.validForRender = function (it) {
+    return ObjectTypes.indexOf(it.type) > 0;
 }
