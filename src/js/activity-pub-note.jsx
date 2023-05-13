@@ -29,10 +29,11 @@ export class ActivityPubNote extends ActivityPubObject {
         const header = this.it.getName().length+this.it.getSummary().length > 0 ? html`<header>${name}${summary}</header>` : nothing;
 
         return html`<article>
-        ${header}
-        ${this.renderContent()}
-        <aside>${this.renderAttachment()}</aside>
-        <footer>${this.renderMetadata()}</footer>
-        </article>`;
+            ${header}
+            ${this.renderContent()}
+            <aside>${this.renderAttachment()}</aside>
+            <footer>${this.renderMetadata()}</footer>
+        </article>
+        `;
     }
 }

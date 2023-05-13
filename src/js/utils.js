@@ -278,7 +278,8 @@ export async function loadPalette(it) {
 
 function apURL(ob) {
     if (typeof ob === 'object' && ob !== null) {
-        return new ActivityPubItem(ob).iri();
+        ob = new ActivityPubItem(ob);
+        ob = ob.iri() || ob.getUrl();
     }
     return ob
 }

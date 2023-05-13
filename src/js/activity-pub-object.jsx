@@ -33,13 +33,6 @@ export class ActivityPubObject extends LitElement {
             font-size: .9rem;
             font-weight: bold;
         }
-        article footer aside {
-            font-size: 0.8rem;
-        }
-        article {
-            display: flex;
-            flex-direction: column;
-        }
         article > * {
             margin: .1rem;
         }
@@ -53,11 +46,18 @@ export class ActivityPubObject extends LitElement {
         article header h1 {
             font-size: 1.2rem;
         }
+        article {
+            display: flex;
+            flex-direction: column;
+        }
         article header {
             align-self: start;
         }
-        article footer {
+        footer {
             align-self: end;
+        }
+        footer aside {
+            font-size: 0.8rem;
         }
     `;
 
@@ -73,6 +73,7 @@ export class ActivityPubObject extends LitElement {
                 },
             },
         },
+        showMetadata: {type: Boolean}
     };
 
     constructor(it) {
@@ -82,7 +83,7 @@ export class ActivityPubObject extends LitElement {
         } else {
             this.it = it;
         }
-
+        this.showMetadata = false;
         this.addEventListener('content.change', this.updateActivityPubActor)
     }
 
@@ -150,11 +151,16 @@ export class ActivityPubObject extends LitElement {
         return it;
     }
 
-    async renderAttributedTo() {
-        let act = await this.load('attributedTo');
-        if (!act) {
-            return nothing;
+    async renderAuthor() {
+        let act;
+        if (this.it.hasOwnProperty('attributedTo')) {
+            act = await this.load('attributedTo');
+        } else if (this.it.hasOwnProperty('actor')) {
+            act = await this.load('actor');
         }
+
+        if (!act) return nothing;
+
         if (!Array.isArray(act)) {
             act = [act];
         }
@@ -187,14 +193,15 @@ export class ActivityPubObject extends LitElement {
     }
 
     renderMetadata() {
-        if (!this.it.hasOwnProperty("attributedTo")){
-            return nothing;
-        }
-        const auth = this.renderAttributedTo();
+        if (!this.showMetadata) return nothing;
+        if (!this.it.hasOwnProperty("attributedTo") && !this.it.hasOwnProperty('actor'))  return nothing;
+
+        const auth = this.renderAuthor();
         let action = 'Published';
+
         let published = this.it.getPublished();
         const updated = this.it.getUpdated();
-        if (updated) {
+        if (updated && updated > published) {
             action = 'Updated';
             published = updated;
         }
@@ -280,7 +287,7 @@ export class ActivityPubObject extends LitElement {
     }
 }
 
-ActivityPubObject.renderByMediaType = function (it) {
+ActivityPubObject.renderByMediaType = function (it, showMetadata) {
     if (it == null || !it.hasOwnProperty('mediaType')) {
         return nothing;
     }
@@ -288,39 +295,39 @@ ActivityPubObject.renderByMediaType = function (it) {
     switch (it.mediaType) {
         case 'image/png':
         case 'image/jpeg':
-            return html`<oni-image it=${JSON.stringify(it)}></oni-image>`;
+            return html`<oni-image it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-image>`;
         default:
             return html`<a href=${it.url}>${it.name}</a>`;
     }
 }
 
-ActivityPubObject.renderByType = function (it) {
+ActivityPubObject.renderByType = function (it, showMetadata) {
     if (it == null ) {
         return nothing;
     }
 
     if (!it.hasOwnProperty('type')) {
-        return html`<oni-tag it=${JSON.stringify(it)}></oni-tag>`;
+        return html`<oni-tag it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-tag>`;
     }
 
     switch (it.type) {
         case 'Document':
             return ActivityPubObject.renderByMediaType(it);
         case 'Video':
-            return html`<oni-video it=${JSON.stringify(it)}></oni-video>`;
+            return html`<oni-video it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-video>`;
         case 'Audio':
-            return html`<oni-audio it=${JSON.stringify(it)}></oni-audio>`;
+            return html`<oni-audio it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-audio>`;
         case 'Image':
-            return html`<oni-image it=${JSON.stringify(it)}></oni-image>`;
+            return html`<oni-image it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-image>`;
         case 'Note':
         case 'Article':
-            return html`<oni-note it=${JSON.stringify(it)}></oni-note>`;
+            return html`<oni-note it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-note>`;
         case 'Tombstone':
-            return html`<oni-tombstone it=${JSON.stringify(it)}></oni-tombstone>`;
+            return html`<oni-tombstone it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-tombstone>`;
         case 'Mention':
-            return html`<oni-tag it=${JSON.stringify(it)}></oni-tag>`;
+            return html`<oni-tag it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-tag>`;
         case 'Event':
-            return html`<oni-event it=${JSON.stringify(it)}></oni-event>`;
+            return html`<oni-event it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-event>`;
     }
     return nothing;
 }
