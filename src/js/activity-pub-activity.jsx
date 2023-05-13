@@ -7,13 +7,11 @@ import {map} from "lit-html/directives/map.js";
 
 export class ActivityPubActivity extends ActivityPubObject {
     static styles = [
-        css`
-        `,
         ActivityPubObject.styles,
     ];
 
-    constructor() {
-        super();
+    constructor(it) {
+        super(it);
         this.showMetadata = true;
     }
 
