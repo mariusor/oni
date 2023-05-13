@@ -159,14 +159,15 @@ export function relativeDate(old) {
 }
 
 export function pluralize(d, unit) {
-    let l = unit.length;
-    if (Math.round(d) == 1) {
-        return unit;
-    }
+    d = Math.round(d);
+    const l = unit.length;
     if (l > 2 && unit[l - 1] == 'y' && isCons(unit[l - 2])) {
         unit = `${unit.substring(0, l - 1)}ie`;
     }
-    return `${Math.round(d)} ${unit}s`;
+    if (d > 1) {
+        unit = `${unit}s`
+    }
+    return `${d} ${unit}`;
 }
 
 function isCons(c) {
