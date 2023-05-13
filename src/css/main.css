@@ -151,3 +151,8 @@ oni-main > * {
     margin: 0 1rem;
 }
 
+oni-activity {
+    display: flex;
+    flex-direction: column;
+}
+

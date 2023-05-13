@@ -6,7 +6,14 @@ import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {map} from "lit-html/directives/map.js";
 
 export class ActivityPubActivity extends ActivityPubObject {
-    static styles = ActivityPubObject.styles;
+    static styles = [
+        css`
+        :host footer {
+            align-self: end;
+        }
+        `,
+        ActivityPubObject.styles,
+    ];
 
     constructor() {
         super();

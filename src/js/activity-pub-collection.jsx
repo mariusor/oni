@@ -18,7 +18,7 @@ export class ActivityPubCollection extends ActivityPubObject {
             overflow: hidden;
             border-bottom: 1px solid var(--fg-color);
         }
-        :host li * {
+        oni-activity {
             display: flex;
             flex-direction: column;
         }
