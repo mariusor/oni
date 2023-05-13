@@ -1,6 +1,7 @@
 import tinycolor from "tinycolor2";
 import {average, prominent} from "color.js";
 import {ActivityPubItem} from "./activity-pub-item";
+import {html, nothing} from "lit";
 
 export const contrast = tinycolor.readability;
 
@@ -102,22 +103,12 @@ export function editableContent(root) {
     return root.innerHTML.trim();
 };
 
-export function relativeDate(old) {
-    const seconds = (Date.now() - Date.parse(old)) / 1000;
+export function relativeDuration(seconds) {
     const minutes = Math.abs(seconds / 60);
     const hours = Math.abs(minutes / 60);
 
     let val = 0.0;
     let unit = "";
-    let when = "ago";
-
-    if (seconds < 0) {
-        // we're in the future
-        when = "in the future";
-    }
-    if (seconds < 30) {
-        return "now";
-    }
     if (hours < 1) {
         if (minutes < 1) {
             val = seconds;
@@ -148,6 +139,22 @@ export function relativeDate(old) {
         val = hours / 876000;
         unit = "century";
     }
+    return [val, unit];
+}
+
+export function relativeDate(old) {
+    const seconds = (Date.now() - Date.parse(old)) / 1000;
+    if (seconds >= 0 && seconds < 30) {
+        return "now";
+    }
+
+    let when = "ago";
+    if (seconds < 0) {
+        // we're in the future
+        when = "in the future";
+    }
+    const [val, unit] = relativeDuration(seconds);
+
     return `${pluralize(val, unit)} ${when}`;
 }
 
@@ -282,4 +289,21 @@ function apURL(ob) {
         ob = ob.iri() || ob.getUrl();
     }
     return ob
+}
+
+export function renderTimestamp(published, relative = true) {
+    if (!published) {
+        return nothing;
+    }
+    return html`<time datetime=${published.toUTCString()} title=${published.toUTCString()}>
+            <oni-icon name="clock"></oni-icon> ${relative ? relativeDate(published) : published.toLocaleString()}
+        </time>`;
+}
+
+export function renderDuration(seconds) {
+    if (!seconds) {
+        return nothing;
+    }
+    const [val, unit] = relativeDuration(seconds)
+    return html`<span>${pluralize(val, unit)}</span>`;
 }

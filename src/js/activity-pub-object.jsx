@@ -5,8 +5,7 @@ import {
     isAuthorized,
     isLocalIRI,
     mainActorOutbox,
-    pluralize,
-    relativeDate
+    pluralize, renderTimestamp,
 } from "./utils";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
@@ -331,15 +330,6 @@ ActivityPubObject.renderByType = function (it, showMetadata) {
             return html`<oni-event it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-event>`;
     }
     return nothing;
-}
-
-function renderTimestamp(published) {
-    if (!published) {
-        return nothing;
-    }
-    return html`<time datetime=${published.toUTCString()} title=${published.toUTCString()}>
-            <oni-icon name="clock"></oni-icon> ${relativeDate(published)}
-        </time>`;
 }
 
 ActivityPubObject.validForRender = function (it) {

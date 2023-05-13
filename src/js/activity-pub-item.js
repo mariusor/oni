@@ -71,6 +71,23 @@ export class ActivityPubItem {
             .filter((value, index, array) => array.indexOf(value) === index);
     }
 
+    getStartTime() {
+        if (!this.hasOwnProperty('startTime')) {
+            return null;
+        }
+        const d = new Date();
+        d.setTime(Date.parse(this.startTime));
+        return d || null;
+    }
+
+    getEndTime() {
+        if (!this.hasOwnProperty('endTime')) {
+            return null;
+        }
+        const d = new Date();
+        d.setTime(Date.parse(this.endTime));
+        return d || null;
+    }
 
     getPublished() {
         if (!this.hasOwnProperty('published')) {
