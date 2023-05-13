@@ -21,7 +21,8 @@ export class ActivityPubImage extends ActivityPubObject {
             src = this.it.getUrl();
         }
         return html`<article>
-            <img src=${src ?? nothing} title="${this.it.getName()}"/> <footer>${this.renderMetadata()}</footer>
-        </article>`;
+            <img src=${src ?? nothing} title="${this.it.getName()}"/>
+        </article>
+        <footer>${this.renderMetadata()}</footer>`;
     }
 }

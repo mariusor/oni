@@ -32,8 +32,7 @@ export class ActivityPubNote extends ActivityPubObject {
             ${header}
             ${this.renderContent()}
             <aside>${this.renderAttachment()}</aside>
-            <footer>${this.renderMetadata()}</footer>
         </article>
-        `;
+        <footer>${this.renderMetadata()}</footer>`;
     }
 }

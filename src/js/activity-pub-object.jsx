@@ -52,6 +52,9 @@ export class ActivityPubObject extends LitElement {
         article header {
             align-self: start;
         }
+        :host footer {
+            align-self: end;
+        }
         footer aside {
             font-size: 0.8em;
         }

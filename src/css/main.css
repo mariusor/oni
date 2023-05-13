@@ -151,7 +151,7 @@ oni-main > * {
     margin: 0 1rem;
 }
 
-oni-activity {
+oni-activity, oni-note, oni-event, oni-image, oni-video, oni-audio {
     display: flex;
     flex-direction: column;
 }

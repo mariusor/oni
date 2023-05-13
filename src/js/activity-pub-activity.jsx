@@ -8,9 +8,6 @@ import {map} from "lit-html/directives/map.js";
 export class ActivityPubActivity extends ActivityPubObject {
     static styles = [
         css`
-        :host footer {
-            align-self: end;
-        }
         `,
         ActivityPubObject.styles,
     ];

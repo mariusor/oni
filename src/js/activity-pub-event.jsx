@@ -40,8 +40,7 @@ export class ActivityPubEvent extends ActivityPubNote {
             <!-- <aside>Duration <strong>${renderDuration(duration)}</strong></aside> -->
             ${this.renderContent()}
             <aside>${this.renderAttachment()}</aside>
-            <footer>${this.renderMetadata()}</footer>
         </article>
-        `;
+        <footer>${this.renderMetadata()}</footer>`;
     }
 }
