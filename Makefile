@@ -7,7 +7,7 @@ PROJECT_NAME := $(shell basename $(PWD))
 ENV ?= dev
 STORAGE ?= fs
 LDFLAGS =
-BUILDFLAGS ?= -trimpath -a -ldflags '$(LDFLAGS)'
+BUILDFLAGS ?= -a -ldflags '$(LDFLAGS)'
 TEST_FLAGS ?= -count=1 -v
 
 APPSOURCES := $(wildcard ./*.go)
@@ -25,6 +25,7 @@ TAGS := $(ENV) storage_$(STORAGE)
 
 ifneq ($(ENV), dev)
 	LDFLAGS += -s -w -extldflags "-static"
+	BUILDFLAGS += -trimpath
 endif
 
 BUILD := $(GO) build $(BUILDFLAGS)
