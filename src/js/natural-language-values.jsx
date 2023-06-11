@@ -1,7 +1,8 @@
 import {css, html, LitElement, nothing} from "lit";
-import {editableContent, isAuthorized} from "./utils";
+import {editableContent} from "./utils";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {ActivityPubObject} from "./activity-pub-object";
+import {when} from "lit-html/directives/when.js";
 
 export class NaturalLanguageValues extends LitElement {
     static styles = [css`
@@ -21,6 +22,7 @@ export class NaturalLanguageValues extends LitElement {
         this.it = '';
         this.name = '';
         this.editable = false;
+        this.active = false;
     }
 
     checkChanged(e) {
@@ -33,7 +35,7 @@ export class NaturalLanguageValues extends LitElement {
         const content = editableContent(e.target);
 
         if (content === old.trim()) {
-            console.debug(`no change for ${this.name}`)
+            console.debug(`no change for "${this.name}"`)
             return;
         }
         this.dispatchEvent(new CustomEvent('content.change', {
@@ -61,9 +63,15 @@ export class NaturalLanguageValues extends LitElement {
         if (!this.it) { return nothing; }
 
         return html`
-            <span ?contenteditable=${this.editable} @blur="${this.checkChanged}">
-                ${unsafeHTML(this.value()) ?? nothing}
-                <slot></slot>
-            </span>`;
+            ${when(this.editable,
+                    () => html`<oni-text-editor
+                            @blur="${this.checkChanged}"
+                            ?contenteditable=${this.editable}
+                    >
+                        <slot>${unsafeHTML(this.value()) ?? nothing}</slot>
+                    </oni-text-editor>`,
+                    () => html`${unsafeHTML(this.value()) ?? nothing}`
+            )}
+            `;
     }
 }

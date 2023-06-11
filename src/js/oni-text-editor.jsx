@@ -1,12 +1,14 @@
-import {css, html, LitElement, render} from "lit";
+import {css, html, LitElement, nothing} from "lit";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {classMap} from "lit-html/directives/class-map.js";
 import {showError} from "./utils";
 import {Shortcut} from "./shortcut";
-import {SimpleTooltip} from "./simple-tooltip";
+import {when} from "lit-html/directives/when.js";
+import {ActivityPubObject} from "./activity-pub-object";
 
 export class TextEditor extends LitElement {
     static styles = [
+        ActivityPubObject.styles,
         css`
         :host simple-tooltip {
           --toolbar-width: max-content;
@@ -27,13 +29,9 @@ export class TextEditor extends LitElement {
           border: 1px solid var(--toolbar-on-background);
           pointer-events: auto;
         }
-        simple-tooltip button { font-family: serif; font-size: 1.2em; }
-    `,
-        css`
         :host {
-          --editor-width: 100%;
-          --editor-height: 100vh;
           --editor-background: transparent;
+          display: inline-block;
         }
         main {
           width: var(--editor-width);
@@ -43,14 +41,20 @@ export class TextEditor extends LitElement {
           grid-template-rows: min-content auto;
           grid-template-columns: auto auto;
         }
+        simple-tooltip button { font-family: serif; font-size: 1.2em; }
         :host oni-text-editor-toolbar {
           grid-area: toolbar;
+        }
+        :host body {
+            margin: 0;
+            padding: 0;
         }
     `];
 
     static properties = {
         root: {type: Element},
-        content: {type: String}
+        content: {type: String},
+        active: {type: Boolean},
     };
 
     constructor() {
@@ -60,7 +64,7 @@ export class TextEditor extends LitElement {
     }
 
     async firstUpdated(props) {
-        const elem = this.parentElement.querySelector("oni-text-editor slot");
+        const elem = this.getRootNode().querySelector("oni-text-editor slot");
         this.content = elem?.innerHTML ?? "";
         this.reset();
     }
@@ -69,8 +73,15 @@ export class TextEditor extends LitElement {
         const parser = new DOMParser();
         const doc = parser.parseFromString(this.content, "text/html");
         document.execCommand("defaultParagraphSeparator", true, "br");
+
         const root = doc.querySelector("body");
-        root.setAttribute("contenteditable", "");
+        if (this.isContentEditable) {
+            root.setAttribute("contenteditable", "");
+            root.addEventListener('focusin', () => this.active = true);
+            root.addEventListener('drop', this.handleDrop);
+            root.addEventListener('dragenter', this.dragAllowed);
+            root.addEventListener('dragover', this.dragAllowed);
+        }
 
         this.root = root;
     }
@@ -138,21 +149,15 @@ export class TextEditor extends LitElement {
     }
 
     render() {
-        const editable =  html`
-            <main>
-                <div @drop="${this.handleDrop}"
-                     @dragenter="${this.dragAllowed}"
-                     @dragover="${this.dragAllowed}"
-                >
-                    ${this.root}
-                </div>
-                <simple-tooltip>${html`${this.renderToolbar()}`}</simple-tooltip>
-            </main>`;
-        return editable;
+        return html`${this.root}${when(this.active,
+                () => html`<simple-tooltip>${html`${this.renderToolbar()}`}</simple-tooltip> `,
+                () => nothing
+        )} `;
     }
 
     renderToolbar() {
-        if (!this.root) return;
+        if (!this.root) return nothing;
+        if (!this.isContentEditable) return nothing;
 
         const tags = [];
         const selection = document.getSelection();
@@ -339,6 +344,7 @@ export class TextEditor extends LitElement {
     }
 
     renderCommands(commands) {
+        if (!this.isContentEditable) return nothing;
         let elements = [];
         const editable = this.root;
 
@@ -349,7 +355,7 @@ export class TextEditor extends LitElement {
 
             Shortcut.add(
                 n.shortcut,
-                function() { execCommand(n) },
+                function() { this.execCommand(n) },
                 { type: 'keydown', propagate: false, target: editable}
             );
 
@@ -361,7 +367,7 @@ export class TextEditor extends LitElement {
 
     renderButton(n) {
         return html`
-            <button class=${classMap({"active": n.active})} @click=${() => { execCommand(n)}}>
+            <button class=${classMap({"active": n.active})} @click=${() => { this.execCommand(n)}}>
                 ${unsafeHTML(n.toolbarHtml)}
             </button>`;
     }
@@ -378,27 +384,28 @@ export class TextEditor extends LitElement {
                                );
                            }}"
         >
-        <button @click=${n.execCommand}>${unsafeHTML(n.toolbarHtml)}</button>
-        `;
+        <button @click=${n.execCommand}>${unsafeHTML(n.toolbarHtml)}</button>`;
+    }
+
+    execCommand (n) {
+        if (!Array.isArray(n.execCommand)) n.execCommand = [n.execCommand];
+        if (!Array.isArray(n.execCommandValue)) n.execCommandValue = [n.execCommandValue];
+
+        for (const i in n.execCommand) {
+            const command = n.execCommand[i];
+            let val = n.execCommandValue[i];
+
+            if (typeof command === "string") {
+                // NOTE(marius): this should be probably be replaced with something
+                // based on the ideas from here: https://stackoverflow.com/a/62266439
+                if (typeof val == 'function') val = val();
+                console.debug(`executing command ${command}: ${val}`)
+                document.execCommand(command, true, val);
+            } else {
+                command(val);
+            }
+        }
+        this.content = this.root.innerHTML;
     }
 }
 
-function execCommand (n) {
-    if (!Array.isArray(n.execCommand)) n.execCommand = [n.execCommand];
-    if (!Array.isArray(n.execCommandValue)) n.execCommandValue = [n.execCommandValue];
-
-    for (const i in n.execCommand) {
-        const command = n.execCommand[i];
-        let val = n.execCommandValue[i];
-
-        if (typeof command === "string") {
-            // NOTE(marius): this should be probably be replaced with something
-            // based on the ideas from here: https://stackoverflow.com/a/62266439
-            if (typeof val == 'function') val = val();
-            console.debug(`executing command ${command}: ${val}`)
-            document.execCommand(command, true, val);
-        } else {
-            command(val);
-        }
-    }
-};

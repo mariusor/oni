@@ -146,7 +146,6 @@ export class LoginDialog extends LitElement {
                     }
                 }).catch(console.error);
             }).catch(console.error);
-        console.debug(accessResponse);
     }
 
     loginSuccessful() {

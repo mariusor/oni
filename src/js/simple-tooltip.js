@@ -14,25 +14,6 @@ export class SimpleTooltip extends LitElement {
         offset: {type: Number},
     };
 
-    // Lazy creation
-    static lazy(target, callback) {
-        console.debug('target received', target)
-        const createTooltip = () => {
-            const tooltip = document.createElement('simple-tooltip');
-            if (typeof callback === 'function') callback(tooltip);
-            console.debug('showing tooltip')
-            tooltip.target = target;
-            target.insertBefore(tooltip, target.nextSibling);
-            tooltip.show();
-
-            // We only need to create the tooltip once, so ignore all future events.
-            //enterEvents.forEach((eventName) => target.removeEventListener(eventName, createTooltip));
-        };
-        //enterEvents.forEach((eventName) => target.addEventListener(eventName, createTooltip));
-
-        createTooltip();
-    }
-
     static styles = css`
     :host {
       /* Position fixed to help ensure the tooltip is "on top" */
@@ -59,7 +40,7 @@ export class SimpleTooltip extends LitElement {
         // Finish hiding at end of animation
         this.addEventListener('transitionend', this.finishHide);
         // Attribute for styling "showing"
-        this.showing = false;
+        this.showing = true;
         // Position offset
         this.offset = 4;
     }
@@ -131,45 +112,10 @@ export class SimpleTooltip extends LitElement {
                 autoPlacement({allowedPlacements: ['top', 'bottom']}),
             ],
         }).then(({x, y}) => {
-            console.debug(`pos ${x}x${y}`)
+            //console.debug(`pos ${x}x${y}`)
             this.style.left = `${x}px`;
             this.style.top = `${y}px`;
         });
         return html`<slot></slot>`;
     }
 }
-
-class TooltipDirective extends Directive {
-    didSetupLazy = false;
-    tooltipContent;
-    part;
-    tooltip;
-
-    render(tooltipContent = '') {
-    }
-
-    update(part, [tooltipContent]) {
-        this.tooltipContent = tooltipContent;
-        this.part = part;
-        if (!this.didSetupLazy) {
-            this.setupLazy();
-        }
-        if (this.tooltip) {
-            this.renderTooltipContent();
-        }
-    }
-
-    setupLazy() {
-        this.didSetupLazy = true;
-        SimpleTooltip.lazy(this.part.element, (tooltip) => {
-            this.tooltip = tooltip;
-            this.renderTooltipContent();
-        });
-    }
-
-    renderTooltipContent() {
-        render(this.tooltipContent, this.tooltip, this.part.options);
-    }
-}
-
-//export const tooltip = directive(TooltipDirective);

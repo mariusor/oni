@@ -85,10 +85,7 @@ export function isAuthorized() {
 }
 
 export function editableContent(root) {
-    if (root.innerHTML.length === 0) {
-        // Nothing slotted, load content from the shadow DOM.
-        root = root.renderRoot.querySelector('div[contenteditable]');
-    }
+    root = root.renderRoot.querySelector('body[contenteditable]');
     root.childNodes.forEach(node => {
         if (node.nodeName.toLowerCase() === 'slot') {
             // the slot should be removed if empty, otherwise it overwrites the value
@@ -214,7 +211,7 @@ export async function loadPalette(it) {
 
     if (localStorage.getItem('palette')) {
         const palette = JSON.parse(localStorage.getItem('palette'));
-        console.debug('refreshing palette?', !(palette.bgImageURL == imageURL && palette.iconURL == iconURL))
+        //console.debug('refreshing palette?', !(palette.bgImageURL == imageURL && palette.iconURL == iconURL))
         if (palette.bgImageURL == imageURL && palette.iconURL == iconURL) {
             return palette;
         }

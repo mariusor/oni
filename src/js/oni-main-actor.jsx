@@ -139,10 +139,10 @@ export class OniMainActor extends ActivityPubActor {
         if (!url) {
             return nothing;
         }
-        const palette = loadPalette(this.it);
         if (!Array.isArray(url)) {
             url = [url];
         }
+        const palette = loadPalette(this.it);
         return html`
             <ul style="background-color: ${tinycolor(palette.bgColor).setAlpha(0.8).toRgbString()};">
                 ${url.map((u) => html`

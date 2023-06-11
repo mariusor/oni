@@ -87,17 +87,18 @@ export class ActivityPubObject extends LitElement {
             this.it = it;
         }
         this.showMetadata = false;
-        this.addEventListener('content.change', this.updateActivityPubActor)
+        this.addEventListener('content.change', this.updateActivityPubObject)
     }
 
-    async updateActivityPubActor(e) {
+    async updateActivityPubObject(e) {
+        e.stopPropagation();
+
+        const outbox = mainActorOutbox();
+        if (!outbox || !isAuthorized()) return;
+
         const it = this.it;
         const prop = e.detail.name;
         const val = e.detail.content;
-        const outbox = mainActorOutbox();
-
-        e.stopPropagation();
-        e.stopPropagation();
 
         it[prop] = val;
 
@@ -109,8 +110,8 @@ export class ActivityPubObject extends LitElement {
         const headers = {
             'Content-Type': 'application/activity+json',
         }
-        const auth = authorization();
         if (isAuthorized()) {
+            const auth = authorization();
             headers.Authorization = `${auth.token_type} ${auth.access_token}`;
         }
         const req = {
@@ -122,7 +123,7 @@ export class ActivityPubObject extends LitElement {
         fetch(outbox, req)
             .then(response => {
                 response.json().then( it => {
-                    console.debug('updating', it)
+                    console.debug('updated', it)
                     this.it = new ActivityPubItem(it);
                 });
             })
