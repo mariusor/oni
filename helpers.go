@@ -8,6 +8,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	vocab "github.com/go-ap/activitypub"
@@ -182,4 +183,13 @@ func isData(nlVal vocab.NaturalLanguageValues) bool {
 
 func irif(r *http.Request) vocab.IRI {
 	return vocab.IRI(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
+}
+
+func logRequest(o *oni, h http.Header, body []byte) {
+	fn := fmt.Sprintf("%s/%s.req", o.StoragePath, time.Now().UTC().Format(time.RFC3339))
+	all := bytes.Buffer{}
+	h.Write(&all)
+	all.Write([]byte{'\n', '\n'})
+	all.Write(body)
+	os.WriteFile(fn, all.Bytes(), 0660)
 }

@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -806,14 +805,9 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
-		defer func() {
-			fn := fmt.Sprintf("%s/%s.req", o.StoragePath, time.Now().UTC().Format(time.RFC3339))
-			all := bytes.Buffer{}
-			r.Header.Write(&all)
-			all.Write([]byte{'\n', '\n'})
-			all.Write(body)
-			os.WriteFile(fn, all.Bytes(), 0660)
-		}()
+
+		defer logRequest(o, r.Header, body)
+
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed unmarshalling jsonld body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
@@ -851,6 +845,22 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 					}
 				}()
 			}()
+		}
+		if it.GetType() == vocab.UpdateType {
+			// NOTE(marius): if we updated one of the main actors, we replace it in the array
+			vocab.OnActivity(it, func(upd *vocab.Activity) error {
+				ob := upd.Object
+				for i, a := range o.a {
+					if !a.ID.Equals(ob.GetID(), true) {
+						continue
+					}
+					vocab.OnActor(ob, func(actor *vocab.Actor) error {
+						o.a[i] = *actor
+						return nil
+					})
+				}
+				return nil
+			})
 		}
 
 		status := http.StatusCreated
