@@ -59,8 +59,6 @@ export class TextEditor extends LitElement {
 
     constructor() {
         super();
-        document.addEventListener("image.upload", (e) => this.handleFiles(e.detail));
-        document.addEventListener("selectionchange", this.reset);
     }
 
     async firstUpdated(props) {
@@ -81,6 +79,7 @@ export class TextEditor extends LitElement {
             root.addEventListener('drop', this.handleDrop);
             root.addEventListener('dragenter', this.dragAllowed);
             root.addEventListener('dragover', this.dragAllowed);
+            root.addEventListener('image.upload', (e) => this.handleFiles(e.detail));
         }
 
         this.root = root;
@@ -128,6 +127,7 @@ export class TextEditor extends LitElement {
 
             this.root.append(img);
         }
+
         for (let i = 0, f; f = files[i]; i++) {
             if (!f.type.match('image.*')) {
                 showError(`Files of type ${f.type} are not supported for upload.`);
@@ -143,7 +143,6 @@ export class TextEditor extends LitElement {
             reader.addEventListener("load", appendImage);
             reader.readAsDataURL(f);
 
-            console.debug(reader);
             console.debug(f);
         }
     }
@@ -375,7 +374,7 @@ export class TextEditor extends LitElement {
     renderImageUpload (n) {
         return html`<input type=file multiple style="display: none"
                            @change="${(e) => {
-                               document.dispatchEvent(
+                               this.root.dispatchEvent(
                                        new CustomEvent("image.upload", {
                                            trusted: true,
                                            bubbles: true,
