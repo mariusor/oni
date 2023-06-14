@@ -3,7 +3,7 @@ SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 .DELETE_ON_ERROR:
 
-PROJECT_NAME := $(shell basename $(PWD))
+PROJECT_NAME := oni
 ENV ?= dev
 LDFLAGS =
 BUILDFLAGS ?= -a -ldflags '$(LDFLAGS)'
@@ -18,7 +18,7 @@ GO ?= go
 YARN ?= yarn
 
 export CGO_ENABLED=0
-export VERSION=(unknown)
+export VERSION=HEAD
 
 TAGS := $(ENV)
 
