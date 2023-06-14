@@ -21,6 +21,6 @@ buildah config --env GOWORK=off "${_builder}"
 buildah copy --ignorefile "${_context}/.containerignore" --contextdir "${_context}" "${_builder}" "${_context}" /go/src/app
 buildah config --workingdir /go/src/app "${_builder}"
 
-buildah run "${_builder}" make download && go get oni && go mod vendor
+buildah run "${_builder}" make download fdeps && go get oni && go mod vendor
 
 buildah commit "${_builder}" "${_image_name}"
