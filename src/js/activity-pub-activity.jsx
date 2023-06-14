@@ -1,4 +1,4 @@
-import {css, html, nothing} from "lit";
+import {html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
 import {ObjectTypes, ActorTypes} from "./activity-pub-item";
@@ -16,10 +16,12 @@ export class ActivityPubActivity extends ActivityPubObject {
     }
 
     async renderActor() {
+        if (!this.it.hasOwnProperty('actor')) return nothing;
         return this.it.actor.getName();
     }
 
     async renderObject(showMetadata) {
+        if (!this.it.hasOwnProperty('object')) return nothing;
         let raw = await this.load('object');
         if (raw === null) {
             return nothing;
