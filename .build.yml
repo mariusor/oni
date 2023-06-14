@@ -43,7 +43,7 @@ tasks:
       _branch=$(git branch --points-at=${_sha} | tail -n1 | tr -d '* ')
       _version=$(printf "%s-%s" "${_branch}" "${_sha}")
 
-      make -C images cert builder
+      make VERSION=${_version} -C images cert builder
 
       _push() {
         make -C images ENV=dev VERSION="${_version}" push
