@@ -8,19 +8,12 @@ MAKEFLAGS += --no-builtin-rules
 ENV ?= prod
 APP_HOSTNAME ?= oni
 PORT ?= 4000
-STORAGE ?= all
-STORAGE_PATH ?= $(shell realpath .cache)
-STORAGE_OBJECTS = $(STORAGE_PATH)/objects
 TAG ?= $(ENV)
 
 BUILD_CMD=buildah bud
 RUN_CMD=podman run
 TAG_CMD=podman tag
 PUSH_CMD=podman push
-
-ifneq ($(STORAGE),all)
-	TAG=$(ENV)-$(STORAGE)
-endif
 
 .PHONY: clean build builder run push cert
 
@@ -36,7 +29,7 @@ builder:
 	./build.sh .. oni/builder
 
 build:
-	ENV=$(ENV) VERSION=$(VERSION) STORAGE=$(STORAGE) PORT=$(PORT) HOSTNAME=$(APP_HOSTNAME) ./image.sh $(APP_HOSTNAME)/app:$(TAG)
+	ENV=$(ENV) VERSION=$(VERSION) PORT=$(PORT) HOSTNAME=$(APP_HOSTNAME) ./image.sh $(APP_HOSTNAME)/app:$(TAG)
 
 push: build
 	$(TAG_CMD) $(APP_HOSTNAME)/app:$(TAG) quay.io/go-ap/oni:$(TAG)

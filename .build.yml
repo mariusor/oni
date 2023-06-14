@@ -1,5 +1,7 @@
 image: archlinux
 secrets:
+- 53ebbaf9-664b-4241-9d07-f2f12feee80c
+- a577db26-c95a-4b2a-ac71-cea3a71088ea
 - 3f30fd61-e33d-4198-aafb-0ff341e9db1c
 packages:
   - go
@@ -43,18 +45,23 @@ tasks:
       _version=$(printf "%s-%s" "${_branch}" "${_sha}")
 
       make -C images cert builder
-      _push() {
-        _storage=${1:-all}
 
-        make -C images STORAGE="${_storage}" ENV=dev VERSION="${_version}" push
+      _push() {
+        make -C images ENV=dev VERSION="${_version}" push
         if [ "${_branch}" = "master" ]; then
-            make -C images STORAGE="${_storage}" ENV=qa VERSION="${_version}" push
+            make -C images ENV=qa VERSION="${_version}" push
         fi
 
         _tag=$(git describe --long --tags || true)
         if [ -n "${_tag}" ]; then
-            make -C images STORAGE="${_storage}" ENV=prod VERSION="${_tag}" push
+            make -C images ENV=prod VERSION="${_tag}" push
         fi
       }
       _push
-      _push fs
+  - push_to_github: |
+      test ${BUILD_SUBMITTER} = "git.sr.ht" && complete-build
+      set -a +x
+      ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+      cd oni
+      git remote add hub git@github.com:mariusor/oni
+      git push hub --force --all
