@@ -5,7 +5,6 @@ SHELL := bash
 
 PROJECT_NAME := $(shell basename $(PWD))
 ENV ?= dev
-STORAGE ?= fs
 LDFLAGS =
 BUILDFLAGS ?= -a -ldflags '$(LDFLAGS)'
 TEST_FLAGS ?= -count=1 -v
@@ -21,7 +20,7 @@ YARN ?= yarn
 export CGO_ENABLED=0
 export VERSION=(unknown)
 
-TAGS := $(ENV) storage_$(STORAGE)
+TAGS := $(ENV)
 
 ifneq ($(ENV), dev)
 	LDFLAGS += -s -w -extldflags "-static"
@@ -33,7 +32,7 @@ TEST := $(GO) test $(BUILDFLAGS)
 
 .PHONY: all assets test coverage download clean
 
-all: test
+all: oni ctl
 
 download:
 	$(GO) mod download all
