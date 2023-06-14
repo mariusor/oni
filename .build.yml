@@ -1,8 +1,7 @@
 image: archlinux
 secrets:
-- 53ebbaf9-664b-4241-9d07-f2f12feee80c
-- a577db26-c95a-4b2a-ac71-cea3a71088ea
 - 3f30fd61-e33d-4198-aafb-0ff341e9db1c
+- 3dcea276-38d6-4a7e-85e5-20cbc903e1ea
 packages:
   - go
   - yarn
@@ -59,9 +58,10 @@ tasks:
       }
       _push
   - push_to_github: |
-      test ${BUILD_SUBMITTER} = "git.sr.ht" && complete-build
+      test ${BUILD_SUBMITTER} != "git.sr.ht" && complete-build
       set -a +x
       ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
       cd oni
       git remote add hub git@github.com:mariusor/oni
       git push hub --force --all
