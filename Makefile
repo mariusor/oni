@@ -37,6 +37,7 @@ all: oni ctl
 download:
 	$(GO) mod download all
 	$(GO) mod tidy
+	$(GO) get oni
 
 oni: go.mod bin/oni
 bin/oni: cmd/oni/main.go $(APPSOURCES) go.mod static/main.css static/main.js

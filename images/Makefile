@@ -29,7 +29,7 @@ builder:
 	./build.sh .. oni/builder
 
 build:
-	ENV=$(ENV) VERSION=$(VERSION) PORT=$(PORT) HOSTNAME=$(APP_HOSTNAME) YARN=yarnpkg ./image.sh $(APP_HOSTNAME)/app:$(TAG)
+	ENV=$(ENV) VERSION=$(VERSION) PORT=$(PORT) HOSTNAME=$(APP_HOSTNAME) ./image.sh $(APP_HOSTNAME)/app:$(TAG)
 
 push: build
 	$(TAG_CMD) $(APP_HOSTNAME)/app:$(TAG) quay.io/go-ap/oni:$(TAG)
