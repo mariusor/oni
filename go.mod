@@ -7,21 +7,21 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20230104101555-9bfc303f6588
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.17.18
-	github.com/go-ap/activitypub v0.0.0-20230514141345-45936cc2f768
-	github.com/go-ap/auth v0.0.0-20230514142948-a451fde2a871
-	github.com/go-ap/client v0.0.0-20230514142616-d54d23930714
+	github.com/go-ap/activitypub v0.0.0-20230623140027-da408bbcc578
+	github.com/go-ap/auth v0.0.0-20230623141119-f4b6096796e8
+	github.com/go-ap/client v0.0.0-20230623140942-8775194a9f6a
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
-	github.com/go-ap/filters v0.0.0-20230514151440-04a9ef75e199
+	github.com/go-ap/filters v0.0.0-20230623142330-e72de5cd7aee
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20230514143008-e4fefa491f6a
-	github.com/go-ap/storage-fs v0.0.0-20230514151539-92c3adb7d8cf
+	github.com/go-ap/processing v0.0.0-20230623142209-5caf9281ae62
+	github.com/go-ap/storage-fs v0.0.0-20230623142436-3ceee4bb283f
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/openshift/osin v1.0.1
 	github.com/urfave/cli/v2 v2.3.0
-	golang.org/x/oauth2 v0.8.0
+	golang.org/x/oauth2 v0.9.0
 )
 
 require (
@@ -32,15 +32,15 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.18 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/rs/zerolog v1.29.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/crypto v0.10.0 // indirect
+	golang.org/x/net v0.11.0 // indirect
+	golang.org/x/sys v0.9.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 )
