@@ -23,11 +23,11 @@ export class ActivityPubItem {
         const setPropIfExists = (p) => {
             if (!it.hasOwnProperty(p)) return;
 
-            // if (itemProperties.indexOf(p) <= 0) {
-                this[p] = it[p];
-            // } else {
-            //     this[p] = new ActivityPubItem(it[p]);
-            // }
+            if (p === "actor") {
+                 this[p] = new ActivityPubItem(it[p]);
+                 return;
+            }
+            this[p] = it[p];
         };
         objectProperties.forEach(setPropIfExists);
         if (ActorTypes.indexOf(this.type) >= 0) {
