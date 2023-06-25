@@ -69,7 +69,7 @@ export class ActivityPubObject extends LitElement {
             type: ActivityPubItem,
             converter: {
                 toAttribute : (value, type) => {
-                    return JSON.toString(value);
+                    return JSON.stringify(value);
                 },
                 fromAttribute : (value, type)  => {
                     return new ActivityPubItem(JSON.parse(value));
@@ -88,6 +88,11 @@ export class ActivityPubObject extends LitElement {
         }
         this.showMetadata = false;
         this.addEventListener('content.change', this.updateActivityPubObject)
+
+        const json = this.querySelector('script')?.text;
+        if (json && this.it === null) {
+            this.it = new ActivityPubItem(JSON.parse(json));
+        }
     }
 
     async updateActivityPubObject(e) {

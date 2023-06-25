@@ -4,6 +4,8 @@ export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
 export const ActivityTypes = [ 'Create', 'Update', 'Delete', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore' ];
 export const CollectionTypes = [ 'Collection', 'CollectionPage', 'OrderedCollection', 'OrderedCollectionPage'];
 
+//const itemProperties = ['icon', 'image', 'actor', 'attachment', 'audience', 'attributedTo', 'context', 'generator', 'inReplyTo', 'location', 'preview', 'target', 'result', 'origin', 'instrument', 'object'];
+
 const objectProperties = ['id', 'type', 'icon', 'image', 'summary', 'name', 'content', 'attachment', 'audience', 'attributedTo', 'context', 'mediaType', 'endTime', 'generator', 'inReplyTo', 'location', 'preview', 'published', 'updated', 'startTime', 'tag', 'to', 'bto', 'cc', 'bcc', 'duration', 'source', 'url', 'replies', 'likes', 'shares'];
 const actorProperties = ['preferredUsername', 'publicKey', 'endpoints', 'streams', 'inbox', 'outbox', 'liked', 'shared', 'followers', 'following'];
 const activityProperties = ['actor', 'target', 'result', 'origin', 'instrument', 'object'];
@@ -18,7 +20,15 @@ export class ActivityPubItem {
             this.id = it;
             return;
         }
-        const setPropIfExists = (p) => { if (it.hasOwnProperty(p)) this[p] = it[p]; };
+        const setPropIfExists = (p) => {
+            if (!it.hasOwnProperty(p)) return;
+
+            // if (itemProperties.indexOf(p) <= 0) {
+                this[p] = it[p];
+            // } else {
+            //     this[p] = new ActivityPubItem(it[p]);
+            // }
+        };
         objectProperties.forEach(setPropIfExists);
         if (ActorTypes.indexOf(this.type) >= 0) {
             actorProperties.forEach(setPropIfExists);
