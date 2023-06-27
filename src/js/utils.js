@@ -245,32 +245,42 @@ export async function loadPalette(it) {
     }
 
     if (iconURL) {
-        let iconColors = await prominent(iconURL, {amount: 20, group: 30, format: 'hex', sample: 5});
-        palette.colors = iconColors;
+        let iconColors = await prominent(iconURL, {amount: 100, group: 30, format: 'hex', sample: 3});
+
+        //const goodSaturation = (c) => tinycolor(c).toHsl().s > 0.18 && tinycolor(c).toHsl().s < 0.84;
+        //const skipColor = (c) => (n) => tinycolor(c).toHexString() != tinycolor(n).toHexString();
+        const highSaturation = (c) => tinycolor(c).toHsl().s > 0.40;
+        const lowSaturation = (c) => tinycolor(c).toHsl().s < 0.20;
+
         palette.iconURL = iconURL;
 
-        iconColors = iconColors.filter(col => {
-            return tinycolor(col).toHsl().s > 0.18 && tinycolor(col).toHsl().s < 0.84
-        })
+        const highSaturationColors = iconColors.filter(highSaturation);
+        const lowSaturationColors = iconColors.filter(lowSaturation);
 
-        const shadowColor = tinycolor.mostReadable(palette.bgColor, iconColors);
+        palette.colors = highSaturationColors.concat(lowSaturationColors);
+
+        const fgColor = tinycolor.mostReadable(palette.bgColor, lowSaturationColors,{level:"AAA", size:"small"});
+        if (fgColor !== null) {
+            palette.fgColor = fgColor.toHexString();
+        }
+
+        const shadowColor = tinycolor.mostReadable(palette.bgColor, highSaturationColors,{level:"AA", size:"large"});
         if (shadowColor !== null) {
             palette.shadowColor = shadowColor.toHexString();
             palette.linkVisitedColor = shadowColor.toHexString();
             palette.linkActiveColor = palette.linkVisitedColor;
-            palette.linkColor = strongerColor(palette.linkVisitedColor)?.toHexString();
+            palette.linkColor = strongerColor(shadowColor)?.toHexString();
         }
-        iconColors = iconColors
-            .filter((value, index, array) => array.at(index) !== palette.shadowColor);
 
-        let linkVisitedColor = tinycolor.mostReadable(palette.bgColor, iconColors, {level: "AAA", size: "small"});
-        if (linkVisitedColor !== null && tinycolor.isReadable(linkVisitedColor, palette.bgColor, {
-            level: "AAA",
-            size: "small"
-        })) {
+        const linkVisitedColor = tinycolor.mostReadable(palette.bgColor, highSaturationColors, {level: "AA", size: "small"});
+        if (linkVisitedColor !== null) {
             palette.linkVisitedColor = linkVisitedColor.toHexString();
-            palette.linkActiveColor = palette.linkVisitedColor;
-            palette.linkColor = strongerColor(palette.linkVisitedColor)?.toHexString();
+            palette.linkColor = strongerColor(linkVisitedColor)?.toHexString();
+        }
+        const linkColor = tinycolor.mostReadable(palette.bgColor, highSaturationColors, {level: "AAA", size: "small"});
+        if (linkColor !== null) {
+            palette.linkColor = linkColor.toHexString();
+            palette.linkActiveColor = strongerColor(linkColor)?.toHexString();
         }
     }
 

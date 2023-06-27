@@ -228,13 +228,16 @@ export class OniMainActor extends ActivityPubActor {
         if (!window.location.hostname.endsWith('local')) return nothing;
 
         const colors = palette.colors;
-        let ordered = colors.sort((a, b) => contrast(b, palette.bgColor) - contrast(a, palette.bgColor))
+        let ordered = colors.sort((a, b) => contrast(b, palette.bgColor) - contrast(a, palette.bgColor));
         return html`
             ${map(ordered, value => {
+                const color = tinycolor.mostReadable(value, [palette.bgColor, palette.fgColor]);
                 return html`
-                    <span style="padding: .2rem 1rem; display: inline-block; width: 9vw; background-color: ${value}; color: ${palette.bgColor}">
-                ${tinycolor(value).toHsl().s}
-            </span>
+                    <span style="padding: .2rem 1rem; display: inline-block; width: 9vw; background-color: ${value}; color: ${color}">
+                        <data value="${contrast(value, palette.bgColor)}" title="contrast">${contrast(value, palette.bgColor).toFixed(2)}</data> :
+                        <data value="${tinycolor(value).toHsl().s}" title="saturation">${tinycolor(value).toHsl().s.toFixed(2)}</data> :
+                        <data value="${tinycolor(value).toHsl().l}" title="luminance">${tinycolor(value).toHsl().l.toFixed(2)}</data>
+                    </span>
                 `
             })}`
     }
