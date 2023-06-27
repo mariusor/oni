@@ -141,6 +141,7 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(raw)))
+		w.Header().Set("Vary", "Accept")
 		w.Write(raw)
 	}
 }
@@ -242,6 +243,7 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 			status = http.StatusGone
 		}
 		w.Header().Set("Content-Type", json.ContentType)
+		w.Header().Set("Vary", "Accept")
 		w.WriteHeader(status)
 		if r.Method == http.MethodGet {
 			w.Write(dat)
@@ -463,6 +465,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}
+		w.Header().Set("Vary", "Accept")
 		io.Copy(w, &wrt)
 	}
 }
