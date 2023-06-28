@@ -3,7 +3,9 @@ import {average, prominent} from "color.js";
 import {ActivityPubItem} from "./activity-pub-item";
 import {html, nothing} from "lit";
 
-export const contrast = tinycolor.readability;
+const tc = tinycolor;
+export const contrast = tc.readability;
+export const mostReadable = tc.mostReadable;
 
 export function prefersDarkTheme() {
     return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -229,60 +231,68 @@ export async function loadPalette(it) {
         colorScheme: prefersDarkTheme() ? 'dark' : 'light',
     };
 
-    const strongerColor = (col) => tinycolor(palette.bgColor).isDark() ?
-        tinycolor(col).lighten(10).saturate(15)
-        : tinycolor(col).darken(20).saturate(10)
+    const strongerColor = (col) => tc(palette.bgColor).isDark() ?
+        col.lighten(10).saturate(15)
+        : col.darken(20).saturate(10)
+    const goodContrast = (c) => contrast(tc(c), tc(palette.bgColor)) > 2;
+    const goodSaturation = (c) => tc(c).toHsl().s > 60;
+    const not = (c) => (n) => {
+        return Math.abs(contrast(tc(c), tc(palette.bgColor)) - contrast(tc(n) - tc(palette.bgColor))) > 1
+    }
 
+    let colors;
     if (imageURL) {
         const avgColor = await average(imageURL, {format: 'hex'});
         if (avgColor !== null) {
             palette.bgColor = avgColor;
-            palette.colorScheme = tinycolor(avgColor).isDark() ? 'dark' : 'light';
+            palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
             palette.bgImageURL = imageURL;
             root.style.setProperty('--bg-color', avgColor.trim());
-            root.style.setProperty('backgroundImage', `linear-gradient(${tinycolor(avgColor).setAlpha(0).toRgb()}, ${tinycolor(avgColor).setAlpha(1).toRgb()}), url(${imageURL});`)
+            root.style.setProperty('backgroundImage', `linear-gradient(${tc(avgColor).setAlpha(0).toRgb()}, ${tc(avgColor).setAlpha(1).toRgb()}), url(${imageURL});`)
         }
+        palette.colors = await prominent(imageURL, {amount: 20, group: 5, format: 'hex', sample: 4});
     }
 
     if (iconURL) {
-        let iconColors = await prominent(iconURL, {amount: 100, group: 30, format: 'hex', sample: 3});
+        let iconColors = await prominent(iconURL, {amount: 20, group: 5, format: 'hex', sample: 4});
 
-        //const goodSaturation = (c) => tinycolor(c).toHsl().s > 0.18 && tinycolor(c).toHsl().s < 0.84;
-        //const skipColor = (c) => (n) => tinycolor(c).toHexString() != tinycolor(n).toHexString();
-        const highSaturation = (c) => tinycolor(c).toHsl().s > 0.40;
-        const lowSaturation = (c) => tinycolor(c).toHsl().s < 0.20;
-
+        palette.colors = iconColors?.concat(palette.colors).filter(arrayUnique);
         palette.iconURL = iconURL;
 
-        const highSaturationColors = iconColors.filter(highSaturation);
-        const lowSaturationColors = iconColors.filter(lowSaturation);
+        colors = palette.colors;
 
-        palette.colors = highSaturationColors.concat(lowSaturationColors);
-
-        const fgColor = tinycolor.mostReadable(palette.bgColor, lowSaturationColors,{level:"AAA", size:"small"});
-        if (fgColor !== null) {
-            palette.fgColor = fgColor.toHexString();
-        }
-
-        const shadowColor = tinycolor.mostReadable(palette.bgColor, highSaturationColors,{level:"AA", size:"large"});
+        const accentColors = colors.filter(goodSaturation).filter(goodContrast);
+        console.debug(accentColors);
+        const shadowColor = mostReadable(palette.bgColor, accentColors,{level:"AA", size:"large"});
         if (shadowColor !== null) {
             palette.shadowColor = shadowColor.toHexString();
             palette.linkVisitedColor = shadowColor.toHexString();
             palette.linkActiveColor = palette.linkVisitedColor;
-            palette.linkColor = strongerColor(shadowColor)?.toHexString();
+            //palette.linkColor = strongerColor(shadowColor)?.toHexString();
+
+            colors = colors.filter(not(shadowColor));
         }
 
-        const linkVisitedColor = tinycolor.mostReadable(palette.bgColor, highSaturationColors, {level: "AA", size: "small"});
+        const fgColor = mostReadable(palette.bgColor, colors,{level:"AAA", size:"small"});
+        if (fgColor !== null) {
+            palette.fgColor = fgColor.toHexString();
+            colors = colors.filter(not(fgColor));
+        }
+
+
+        const linkVisitedColor = mostReadable(palette.bgColor, colors, {level: "AA", size: "small"});
         if (linkVisitedColor !== null) {
             palette.linkVisitedColor = linkVisitedColor.toHexString();
-            palette.linkColor = strongerColor(linkVisitedColor)?.toHexString();
+            //palette.linkColor = strongerColor(linkVisitedColor)?.toHexString();
+            colors = colors.filter(not(linkVisitedColor));
         }
-        const linkColor = tinycolor.mostReadable(palette.bgColor, highSaturationColors, {level: "AAA", size: "small"});
+        const linkColor = mostReadable(palette.bgColor, colors, {level: "AAA", size: "small"});
         if (linkColor !== null) {
             palette.linkColor = linkColor.toHexString();
             palette.linkActiveColor = strongerColor(linkColor)?.toHexString();
         }
     }
+    palette.colors = colors;
 
     localStorage.setItem('palette', JSON.stringify(palette));
     return palette;
@@ -311,4 +321,8 @@ export function renderDuration(seconds) {
     }
     const [val, unit] = relativeDuration(seconds)
     return html`<span>${pluralize(val, unit)}</span>`;
+}
+
+function arrayUnique(value, index, array) {
+    return (value !== null) && array.indexOf(value) === index;
 }

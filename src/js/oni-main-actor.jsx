@@ -234,9 +234,12 @@ export class OniMainActor extends ActivityPubActor {
                 const color = tinycolor.mostReadable(value, [palette.bgColor, palette.fgColor]);
                 return html`
                     <span style="padding: .2rem 1rem; display: inline-block; width: 9vw; background-color: ${value}; color: ${color}">
+                        ${value}
+                        <small>
                         <data value="${contrast(value, palette.bgColor)}" title="contrast">${contrast(value, palette.bgColor).toFixed(2)}</data> :
                         <data value="${tinycolor(value).toHsl().s}" title="saturation">${tinycolor(value).toHsl().s.toFixed(2)}</data> :
                         <data value="${tinycolor(value).toHsl().l}" title="luminance">${tinycolor(value).toHsl().l.toFixed(2)}</data>
+                        </small>
                     </span>
                 `
             })}`
