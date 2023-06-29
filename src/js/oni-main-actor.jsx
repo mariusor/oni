@@ -3,8 +3,7 @@ import {until} from "lit-html/directives/until.js";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
-import {contrast, isAuthorized, loadPalette, prefersDarkTheme} from "./utils";
-import {map} from "lit-html/directives/map.js";
+import {isAuthorized, loadPalette, renderColors} from "./utils";
 import tinycolor from "tinycolor2";
 
 export class OniMainActor extends ActivityPubActor {
@@ -222,32 +221,9 @@ export class OniMainActor extends ActivityPubActor {
         `;
     }
 
-    async renderColors() {
-        const palette = await loadPalette(this.it);
-        if (!palette || !palette.colors)  return nothing;
-        if (!window.location.hostname.endsWith('local')) return nothing;
-
-        const colors = palette.colors;
-        let ordered = colors.sort((a, b) => contrast(b, palette.bgColor) - contrast(a, palette.bgColor));
-        return html`
-            ${map(ordered, value => {
-                const color = tinycolor.mostReadable(value, [palette.bgColor, palette.fgColor]);
-                return html`
-                    <span style="padding: .2rem 1rem; display: inline-block; width: 9vw; background-color: ${value}; color: ${color}">
-                        ${value}
-                        <small>
-                        <data value="${contrast(value, palette.bgColor)}" title="contrast">${contrast(value, palette.bgColor).toFixed(2)}</data> :
-                        <data value="${tinycolor(value).toHsl().s}" title="saturation">${tinycolor(value).toHsl().s.toFixed(2)}</data> :
-                        <data value="${tinycolor(value).toHsl().l}" title="luminance">${tinycolor(value).toHsl().l.toFixed(2)}</data>
-                        </small>
-                    </span>
-                `
-            })}`
-    }
-
     render() {
         const style = html`${until(this.renderPalette())}`;
-        const colors = html`${until(this.renderColors())}`
+        const colors = html`${until(renderColors(this.it))}`
 
         const iri = this.it.iri();
         return html`${this.renderOAuth()}

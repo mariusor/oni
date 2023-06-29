@@ -2,6 +2,7 @@ import tinycolor from "tinycolor2";
 import {average, prominent} from "color.js";
 import {ActivityPubItem} from "./activity-pub-item";
 import {html, nothing} from "lit";
+import {map} from "lit-html/directives/map.js";
 
 const tc = tinycolor;
 export const contrast = tc.readability;
@@ -229,73 +230,98 @@ export async function loadPalette(it) {
         linkActiveColor: style.getPropertyValue('--link-active-color').trim(),
         linkVisitedColor: style.getPropertyValue('--link-visited-color').trim(),
         colorScheme: prefersDarkTheme() ? 'dark' : 'light',
+        colors: [],
     };
 
-    const strongerColor = (col) => tc(palette.bgColor).isDark() ?
-        col.lighten(10).saturate(15)
-        : col.darken(20).saturate(10)
-    const goodContrast = (c) => contrast(tc(c), tc(palette.bgColor)) > 2;
-    const goodSaturation = (c) => tc(c).toHsl().s > 60;
+    const strongerColor = (col) => tc(palette.bgColor).isDark() ? col.lighten(20).saturate(25) : col.darken(20).saturate(25);
     const not = (c) => (n) => {
         return Math.abs(contrast(tc(c), tc(palette.bgColor)) - contrast(tc(n) - tc(palette.bgColor))) > 1
     }
 
-    let colors;
     if (imageURL) {
+        const imageColors = await prominent(imageURL, {amount: 20, group: 10, format: 'hex', sample: 4});
+
+        palette.colors = imageColors?.concat(palette.colors);
+        palette.bgImageURL = imageURL;
+
         const avgColor = await average(imageURL, {format: 'hex'});
-        if (avgColor !== null) {
+
+        if (avgColor) {
             palette.bgColor = avgColor;
             palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
-            palette.bgImageURL = imageURL;
+
             root.style.setProperty('--bg-color', avgColor.trim());
             root.style.setProperty('backgroundImage', `linear-gradient(${tc(avgColor).setAlpha(0).toRgb()}, ${tc(avgColor).setAlpha(1).toRgb()}), url(${imageURL});`)
         }
-        palette.colors = await prominent(imageURL, {amount: 20, group: 5, format: 'hex', sample: 4});
     }
 
     if (iconURL) {
-        let iconColors = await prominent(iconURL, {amount: 20, group: 5, format: 'hex', sample: 4});
+        const iconColors = await prominent(iconURL, {amount: 20, group: 10, format: 'hex', sample: 4});
 
-        palette.colors = iconColors?.concat(palette.colors).filter(arrayUnique);
+        palette.colors = iconColors?.concat(palette.colors).filter(validColors);
         palette.iconURL = iconURL;
-
-        colors = palette.colors;
-
-        const accentColors = colors.filter(goodSaturation).filter(goodContrast);
-        console.debug(accentColors);
-        const shadowColor = mostReadable(palette.bgColor, accentColors,{level:"AA", size:"large"});
-        if (shadowColor !== null) {
-            palette.shadowColor = shadowColor.toHexString();
-            palette.linkVisitedColor = shadowColor.toHexString();
-            palette.linkActiveColor = palette.linkVisitedColor;
-            //palette.linkColor = strongerColor(shadowColor)?.toHexString();
-
-            colors = colors.filter(not(shadowColor));
-        }
-
-        const fgColor = mostReadable(palette.bgColor, colors,{level:"AAA", size:"small"});
-        if (fgColor !== null) {
-            palette.fgColor = fgColor.toHexString();
-            colors = colors.filter(not(fgColor));
-        }
-
-
-        const linkVisitedColor = mostReadable(palette.bgColor, colors, {level: "AA", size: "small"});
-        if (linkVisitedColor !== null) {
-            palette.linkVisitedColor = linkVisitedColor.toHexString();
-            //palette.linkColor = strongerColor(linkVisitedColor)?.toHexString();
-            colors = colors.filter(not(linkVisitedColor));
-        }
-        const linkColor = mostReadable(palette.bgColor, colors, {level: "AAA", size: "small"});
-        if (linkColor !== null) {
-            palette.linkColor = linkColor.toHexString();
-            palette.linkActiveColor = strongerColor(linkColor)?.toHexString();
-        }
     }
-    palette.colors = colors;
+
+    let colors = palette.colors;
+
+    const shadowColor = mostReadable(palette.bgColor, colors,{level:"AA", size:"large"});
+    if (shadowColor !== null) {
+        palette.shadowColor = shadowColor.toHexString();
+        palette.linkVisitedColor = shadowColor.toHexString();
+        palette.linkActiveColor = palette.linkVisitedColor;
+        palette.linkColor = strongerColor(shadowColor)?.toHexString();
+
+        colors = colors.filter(not(shadowColor));
+    }
+
+    const fgColor = mostReadable(palette.bgColor, colors,{level:"AAA", size:"small"});
+    if (fgColor !== null) {
+        palette.fgColor = fgColor.toHexString();
+        colors = colors.filter(not(fgColor));
+    }
+
+    const linkColor = mostReadable(palette.bgColor, colors, {level: "AAA", size: "small"});
+    if (linkColor !== null) {
+        palette.linkColor = linkColor.toHexString();
+        palette.linkVisitedColor = strongerColor(linkColor)?.toHexString();
+        palette.linkActiveColor = strongerColor(linkColor)?.toHexString();
+        colors = colors.filter(not(linkColor));
+    }
+
+    const linkVisitedColor = mostReadable(palette.bgColor, colors, {level: "AAA", size: "small"});
+    if (linkVisitedColor !== null) {
+        palette.linkVisitedColor = linkVisitedColor.toHexString();
+        palette.linkColor = strongerColor(linkVisitedColor)?.toHexString();
+    }
 
     localStorage.setItem('palette', JSON.stringify(palette));
     return palette;
+}
+
+export async function renderColors(it) {
+    it = it || new ActivityPubItem({});
+
+    const palette = await loadPalette(it);
+    if (!palette || !palette.colors)  return nothing;
+    if (!window.location.hostname.endsWith('local')) return nothing;
+
+    const ordered = palette.colors.sort((a, b) => contrast(b, palette.bgColor) - contrast(a, palette.bgColor));
+    return html`
+            ${map(ordered, value => {
+        const color = mostReadable(value, [palette.bgColor, palette.fgColor]);
+        return html`
+                    <span style="padding: .2rem 1rem; display: inline-block; width: 9vw; background-color: ${value}; color: ${color}; font-size:.8em;">
+                        ${value}<br/>
+                        <small>
+                        <data value="${contrast(value, palette.bgColor)}" title="contrast bg">${contrast(value, palette.bgColor).toFixed(2)}</data> :
+                        <data value="${contrast(value, palette.fgColor)}" title="contrast fg">${contrast(value, palette.fgColor).toFixed(2)}</data> :
+                        <data value="${tc(value).toHsl().h}" title="hue">${tc(value).toHsl().h.toFixed(2)}</data> :
+                        <data value="${tc(value).toHsl().s}" title="saturation">${tc(value).toHsl().s.toFixed(2)}</data> :
+                        <data value="${tc(value).toHsl().l}" title="luminance">${tc(value).toHsl().l.toFixed(2)}</data>
+                        </small>
+                    </span>
+                `
+    })}`
 }
 
 function apURL(ob) {
@@ -323,6 +349,6 @@ export function renderDuration(seconds) {
     return html`<span>${pluralize(val, unit)}</span>`;
 }
 
-function arrayUnique(value, index, array) {
-    return (value !== null) && array.indexOf(value) === index;
+function validColors(value, index, array) {
+    return (value !== null) && array.indexOf(value) === index && value != '#000000' && value != '#ffffff';
 }
