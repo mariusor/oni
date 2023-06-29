@@ -233,7 +233,7 @@ export async function loadPalette(it) {
         colors: [],
     };
 
-    const strongerColor = (col) => tc(palette.bgColor).isDark() ? col.lighten(20).saturate(25) : col.darken(20).saturate(25);
+    const strongerColor = (col) => tc(palette.bgColor).isDark() ? col.lighten().saturate() : col.darken().saturate();
     const not = (c) => (n) => {
         return Math.abs(contrast(tc(c), tc(palette.bgColor)) - contrast(tc(n) - tc(palette.bgColor))) > 1
     }
@@ -258,18 +258,19 @@ export async function loadPalette(it) {
     if (iconURL) {
         const iconColors = await prominent(iconURL, {amount: 20, group: 10, format: 'hex', sample: 4});
 
-        palette.colors = iconColors?.concat(palette.colors).filter(validColors);
+        palette.colors = iconColors?.concat(palette.colors);
         palette.iconURL = iconURL;
     }
 
+    palette.colors = palette.colors.filter(validColors);
     let colors = palette.colors;
 
     const shadowColor = mostReadable(palette.bgColor, colors,{level:"AA", size:"large"});
     if (shadowColor !== null) {
         palette.shadowColor = shadowColor.toHexString();
-        palette.linkVisitedColor = shadowColor.toHexString();
-        palette.linkActiveColor = palette.linkVisitedColor;
-        palette.linkColor = strongerColor(shadowColor)?.toHexString();
+        palette.linkColor = shadowColor.toHexString();
+        palette.linkVisitedColor = strongerColor(shadowColor).toHexString();
+        palette.linkActiveColor = strongerColor(shadowColor).toHexString();
 
         colors = colors.filter(not(shadowColor));
     }
