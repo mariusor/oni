@@ -7,7 +7,7 @@ export class CollectionLinks extends LitElement {
         :host {
             display: flex;
             justify-content: flex-end;
-            border-bottom: 3px inset var(--accent-color);
+            border-bottom: 3px solid var(--accent-color);
             margin: .4rem -1rem 0 -1rem;
             clear: both;
         }

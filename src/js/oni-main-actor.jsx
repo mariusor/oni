@@ -54,6 +54,11 @@ export class OniMainActor extends ActivityPubActor {
             margin: 0;
             padding: .8rem;
             border-radius: 1.6em;
+            background-color: var(--accent-color);
+        }
+        header ul a, header ul a:visited, header ul a:active {
+            color: var(--bg-color);
+            text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
         }
         header ul li {
             list-style: none;
@@ -141,9 +146,9 @@ export class OniMainActor extends ActivityPubActor {
         if (!Array.isArray(url)) {
             url = [url];
         }
-        const palette = loadPalette(this.it);
+
         return html`
-            <ul style="background-color: ${tinycolor(palette.bgColor).setAlpha(0.8).toRgbString()};">
+            <ul>
                 ${url.map((u) => html`
                     <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}>
                         ${u}
@@ -215,7 +220,7 @@ export class OniMainActor extends ActivityPubActor {
             }
             ${when(haveBgImg, () => html`
                 :host main {
-                    background-image: linear-gradient(${col.setAlpha(0).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
+                    background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
                 }`
             )}
         `;
