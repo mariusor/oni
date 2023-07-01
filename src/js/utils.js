@@ -6,6 +6,7 @@ import {map} from "lit-html/directives/map.js";
 
 const tc = tinycolor;
 export const contrast = tc.readability;
+export const isReadable = tc.isReadable;
 export const mostReadable = tc.mostReadable;
 
 export function prefersDarkTheme() {
@@ -220,38 +221,45 @@ export async function loadPalette(it) {
         }
     }
 
+
     const root = document.documentElement;
     const style = getComputedStyle(root);
     const palette = {
         bgColor: style.getPropertyValue('--bg-color').trim(),
         fgColor: style.getPropertyValue('--fg-color').trim(),
-        shadowColor: style.getPropertyValue('--shadow-color').trim(),
+        accentColor: style.getPropertyValue('--accent-color').trim(),
         linkColor: style.getPropertyValue('--link-color').trim(),
         linkActiveColor: style.getPropertyValue('--link-active-color').trim(),
         linkVisitedColor: style.getPropertyValue('--link-visited-color').trim(),
         colorScheme: prefersDarkTheme() ? 'dark' : 'light',
         colors: [],
+        imageColors: [],
+        iconColors: [],
     };
 
-    const strongerColor = (col) => { col = tc(col).saturate(); return tc(palette.bgColor).isDark() ? tc(col).lighten() : tc(col).darken()};
-    const goodSaturation = (col) => tc(col).toHsl().s >= 0.4 ;
+    const colorsFromImage = (url) => prominent(url, {amount: 20, group: 40, format: 'hex', sample: 8})
+    const goodSaturation = (col) => tc(col).toHsv().s >= 0.25 && tc(col).toHsv().v > 0.8;
     const goodContrast = (a, b) => contrast(b, palette.bgColor) - contrast(a, palette.bgColor);
     const not = (c) => (n) => {
         return tc.equals(c, n)
     }
 
+    let colors = [];
     if (imageURL) {
-        const imageColors = await prominent(imageURL, {amount: 20, group: 5, format: 'hex', sample: 10});
+        const imageColors = await colorsFromImage(imageURL);
+        if (imageColors) {
+            palette.imageColors = imageColors;
+            colors = colors.concat(imageColors);
+        }
 
-        palette.colors = imageColors?.concat(palette.colors);
         palette.bgImageURL = imageURL;
 
         const avgColor = await average(imageURL, {format: 'hex'});
-
         if (avgColor) {
-            console.debug(`Using bg color ${avgColor}`)
+            console.debug(`bgColor: ${avgColor}`)
             palette.bgColor = avgColor;
             palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
+            console.debug(`color scheme: ${palette.colorScheme}`)
 
             root.style.setProperty('--bg-color', avgColor.trim());
             root.style.setProperty('backgroundImage', `linear-gradient(${tc(avgColor).setAlpha(0).toRgb()}, ${tc(avgColor).setAlpha(1).toRgb()}), url(${imageURL});`)
@@ -259,37 +267,41 @@ export async function loadPalette(it) {
     }
 
     if (iconURL) {
-        const iconColors = await prominent(iconURL, {amount: 20, group: 10, format: 'hex', sample: 4});
-        const avgColor = await average(iconURL, {format: 'hex'});
-
-        if (avgColor && tc.isReadable(avgColor, palette.bgColor)) {
-            console.debug(`Using fg color ${avgColor}`)
-            palette.fgColor = avgColor;
+        const iconColors = await colorsFromImage(iconURL);
+        if (iconColors) {
+            palette.iconColors = iconColors;
+            colors = colors.concat(iconColors);
         }
 
-        palette.colors = iconColors?.concat(palette.colors);
+        const avgColor = await average(iconURL, {format: 'hex'});
+        if (avgColor && isReadable(avgColor, palette.bgColor)) {
+            palette.fgColor = avgColor;
+            console.debug(`fgColor: ${avgColor}`)
+        }
+
         palette.iconURL = iconURL;
     }
 
-    palette.colors = palette.colors.filter(validColors);
-    let colors = palette.colors;
+    colors = colors.filter(validColors);
+    console.debug(`all colors: ${colors}`);
 
-    let shadowColors = colors.filter(goodSaturation).sort(goodContrast);
-    for(let i = 0; i < shadowColors.length; i++) {
-        let shadowColor = shadowColors[i];
-        console.debug(`trying hint color ${shadowColor}, is readable: ${tc.isReadable(shadowColor, palette.bgColor, {level: "AA", size: "large"})}`)
-        palette.shadowColor = shadowColor;
-        palette.linkColor = shadowColor;
-        palette.linkVisitedColor = strongerColor(shadowColor).toHexString();
-        palette.linkActiveColor = strongerColor(shadowColor).toHexString();
-        shadowColors = shadowColors.filter(not(shadowColor));
-        break;
+    let accentColor = mostReadable(
+        palette.bgColor,
+        colors.filter(goodSaturation).sort(goodContrast),
+        {level: "AA", size: "large"}
+    );
+    if (accentColor) {
+        palette.accentColor = accentColor.toHexString();
+        console.debug(`accentColor: ${palette.accentColor}`)
+        palette.linkColor = accentColor.toHexString();
+        colors = colors.filter(not(accentColor));
     }
 
     if (!palette.fgColor) {
         const fgColor = mostReadable(palette.bgColor, colors,{level:"AAA", size:"small"});
         if (fgColor !== null) {
             palette.fgColor = fgColor.toHexString();
+            console.debug(`fgColor: ${palette.accentColor}`)
             colors = colors.filter(not(fgColor));
         }
     }

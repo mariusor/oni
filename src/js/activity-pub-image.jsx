@@ -8,7 +8,7 @@ export class ActivityPubImage extends ActivityPubObject {
             max-height: 12vw;
             align-self: start;
             border-radius: .4rem;
-            border: 1px solid var(--shadow-color);
+            border: 1px solid var(--accent-color);
         }`, ActivityPubObject.styles];
 
     constructor(it) {

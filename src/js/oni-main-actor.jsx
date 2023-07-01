@@ -39,16 +39,16 @@ export class OniMainActor extends ActivityPubActor {
             font-size: .9rem;
         }
         header h1 a oni-natural-language-values {
-            color: var(--shadow-color);
-            text-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
+            color: var(--accent-color);
+            text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
         }
         header img {
-            border: .1vw solid var(--shadow-color);
+            border: .1vw solid var(--accent-color);
             border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
             max-height: 12vw;
             min-width: 12hw;
-            box-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
+            box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
         }
         header ul {
             margin: 0;
@@ -211,7 +211,7 @@ export class OniMainActor extends ActivityPubActor {
                 --link-color: ${palette.linkColor};
                 --link-visited-color: ${palette.linkVisitedColor};
                 --link-active-color: ${palette.linkActiveColor};
-                --shadow-color: ${palette.shadowColor};
+                --accent-color: ${palette.accentColor};
             }
             ${when(haveBgImg, () => html`
                 :host main {

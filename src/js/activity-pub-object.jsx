@@ -20,7 +20,7 @@ export class ActivityPubObject extends LitElement {
             color: var(--link-color);
         }
         a:hover {
-            text-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
+            text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
         }
         a:visited {
             color: var(--link-visited-color);

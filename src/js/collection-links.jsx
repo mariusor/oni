@@ -7,7 +7,7 @@ export class CollectionLinks extends LitElement {
         :host {
             display: flex;
             justify-content: flex-end;
-            border-bottom: 3px inset var(--shadow-color);
+            border-bottom: 3px inset var(--accent-color);
             margin: .4rem -1rem 0 -1rem;
             clear: both;
         }
@@ -18,7 +18,7 @@ export class CollectionLinks extends LitElement {
         :host li {
             border-width: 1px;
             border-style: solid; 
-            border-color: var(--shadow-color);
+            border-color: var(--accent-color);
             border-bottom-width: 0;
             min-width: 8vw;
             text-align: center;
@@ -29,7 +29,7 @@ export class CollectionLinks extends LitElement {
             margin: 0 .2rem;
         }
         :host li.active {
-            background-color: var(--shadow-color);
+            background-color: var(--accent-color);
         }
     `
 
@@ -61,7 +61,7 @@ export class CollectionLink extends ActivityPubCollection {
     static styles = css`
         :host a {
             text-transform: capitalize;
-            color: var(--shadow-color);
+            color: var(--accent-color);
             text-decoration: none;
         }
         :host a.active, :host a:visited.active {

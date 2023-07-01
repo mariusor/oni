@@ -56,7 +56,7 @@ OnReady(function () {
         root.style.setProperty('--link-color', palette.linkColor);
         root.style.setProperty('--link-visited-color', palette.linkVisitedColor);
         root.style.setProperty('--link-active-color', palette.linkActiveColor);
-        root.style.setProperty('--shadow-color', palette.shadowColor);
+        root.style.setProperty('--accent-color', palette.accentColor);
     }
 
     // use the window event listener to set the editable status of the slotted content (if exists)

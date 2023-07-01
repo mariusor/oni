@@ -5,7 +5,7 @@
     --link-color: #1e90ff; /* dodgerblue */
     --link-visited-color: #9370db; /* mediumpurple */
     --link-active-color: #9370db;
-    --shadow-color: #EFF0F1;
+    --accent-color: #EFF0F1;
 }
 
 @media (prefers-color-scheme: light) {
@@ -109,7 +109,7 @@ a {
 }
 
 a:hover {
-    text-shadow: 0 0 1rem var(--shadow-color), 0 0 .3rem var(--bg-color);
+    text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
 }
 
 a:visited {
