@@ -68,7 +68,7 @@ export class NaturalLanguageValues extends LitElement {
                             @blur="${this.checkChanged}"
                             ?contenteditable=${this.editable}
                     >
-                        <slot>${unsafeHTML(this.value()) ?? nothing}</slot>
+                        <slot>${unsafeHTML(this.value().trim()) ?? nothing}</slot>
                     </oni-text-editor>`,
                     () => html`${unsafeHTML(this.value()) ?? nothing}`
             )}

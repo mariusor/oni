@@ -287,13 +287,12 @@ export async function loadPalette(it) {
     palette.linkColor = getAccentColor(palette, iconColors) || palette.linkColor;
     iconColors = iconColors.filter(not(palette.linkColor, 1));
 
-
     palette.linkVisitedColor = getClosestColor(palette, iconColors, palette.linkColor) || palette.linkVisitedColor;
     iconColors = iconColors.filter(not(palette.linkVisitedColor, 1));
 
     palette.linkActiveColor = getClosestColor(palette, iconColors, palette.linkColor) || palette.linkActiveColor;
 
-    palette.fgColor = getFgColor(palette, imageColors.filter(validColors)) || palette.fgColor;
+    palette.fgColor = getFgColor(palette, imageColors) || palette.fgColor;
 
     localStorage.setItem('palette', JSON.stringify(palette));
     return palette;

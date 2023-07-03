@@ -15,13 +15,14 @@ export class OniMainActor extends ActivityPubActor {
         }
         main header {
             display: grid;
+            gap: .4rem .8rem;
+            grid-template-columns: minmax(0.8fr, min-content) 1.2fr; 
+            grid-template-rows: 3rem auto;
+            grid-template-areas: "icon name"
+            "icon description";
             place-content: space-evenly start;
+            justify-items: stretch;
             place-items: start;
-            grid-template-areas: "icon name" "icon description";
-            grid-template-rows: minmax(3rem, min-content) auto;
-            grid-template-columns: minmax(1fr, min-content) auto;
-            column-gap: .8rem;
-            row-gap: .4rem;
         }
         header h1 {
             grid-area: name;
@@ -30,12 +31,13 @@ export class OniMainActor extends ActivityPubActor {
         header > a {
             grid-area: icon;
             text-decoration: none;
+            display: block;
         }
         header aside {
             grid-area: description;
         }
         header aside oni-natural-language-values {
-            margin: 0 0 .8rem 1rem;
+            margin: 0 0 0 1rem;
             font-size: .9rem;
         }
         header h1 a oni-natural-language-values {
@@ -46,16 +48,14 @@ export class OniMainActor extends ActivityPubActor {
             border: .1vw solid var(--accent-color);
             border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
-            max-height: 12vw;
-            min-width: 12hw;
             box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
+            width: 100%;
         }
         header ul {
             margin: 0;
             padding: 0.6rem 1.4rem;
             border-radius: 1.6em;
             background-color: color-mix(in srgb, var(--accent-color), transparent 20%);
-
         }
         header ul a, header ul a:visited, header ul a:active {
             color: var(--bg-color);
