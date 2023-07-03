@@ -50,6 +50,8 @@ export class OniMainActor extends ActivityPubActor {
             shape-outside: margin-box;
             box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
             width: 100%;
+            max-height: 14em;
+            margin-bottom: -1.4rem;
         }
         header ul {
             margin: 0;
