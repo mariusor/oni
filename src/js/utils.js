@@ -209,16 +209,15 @@ export function showError(e) {
 }
 
 function colorsFromImage (url) {
-    return prominent(url, {amount: 20, group: 40, format: 'hex', sample: 8})
+    return prominent(url, {amount: 30, group: 40, format: 'hex', sample: 8})
 }
-const /* filter */ onIntensity = (min) => (col) => onLightness(min)(col) && onSaturation(min)(col)
-const /* filter */ onLightness = (min) => (col) => tc(col).toHsl().l >= (min || 0.5);
-const /* filter */ onSaturation = (min) => (col) => tc(col).toHsv().s >= (min || 0.5);
-const /* filter */ onContrastTo = (base, min) => function (col) {
-    min = min || 4.5;
-    const con = contrast(col, base);
-    return (min <= con) && (con <= 10);
-}
+
+const /* filter */ onLightness = (min, max) => (col) => tc(col)?.toHsl()?.l >= (min || 0)
+    && tc(col)?.toHsl()?.l <= (max || 1);
+const /* filter */ onSaturation = (min, max) => (col) => tc(col)?.toHsl()?.s >= (min || 0)
+    && tc(col)?.toHsl()?.s <= (max || 1);
+const /* filter */ onContrastTo = (base, min, max) => (col) => contrast(col, base) >= (min || 0)
+    && contrast(col, base) <= (max || 21);
 const /* filter */ not = (c) => (n) => Math.abs(colorDiff(c, n)) >= 2;
 const /* sort */ byContrastTo = (base) => (a, b) => contrast(b, base) - contrast(a, base);
 const /* sort */ bySaturation = (a, b) => tc(b).toHsv().s - tc(a).toHsv().s;
@@ -314,7 +313,7 @@ function getFgColor(palette, colors) {
 function getClosestColor(palette, colors, color) {
     colors = colors || palette.colors;
 
-    colors = colors.filter(onContrastTo(palette.bgColor)).sort(byDiff(color)).reverse();
+    colors = colors.filter(onContrastTo(palette.bgColor, 3, 7)).sort(byDiff(color)).reverse();
     return colors.at(0);
 }
 
@@ -322,9 +321,9 @@ function getAccentColor(palette, colors) {
     colors = colors || palette.colors;
 
     const filterColors = (colors) => colors
-        .filter(onContrastTo(palette.bgColor, 3))
-        .filter(onIntensity(0.5))
-        .filter(onSaturation(0.4));
+        .filter(onContrastTo(palette.bgColor, 2, 6))
+        .filter(onSaturation(0.4))
+        .filter(onLightness(0.4, 0.6));
 
     let accentColors = colors;
     for (let i = 0; i < 10; i++) {
@@ -362,7 +361,7 @@ export function renderColors() {
             `
         })}
     `;
-    return html`${colorMap(palette.colors)}`;
+    return html`${colorMap(palette.iconColors)}<br/>${colorMap(palette.imageColors)}`;
 }
 
 function apURL(ob) {
@@ -397,7 +396,7 @@ function validColors(value, index, array) {
 
 // formulas from : https://www.easyrgb.com/en/math.php
 function toXYZ(col) {
-    col = tc(col).toRgb();
+    col = tc(col)?.toRgb();
     col = {
         r: col.r / 255,
         g: col.g / 255,
@@ -406,23 +405,24 @@ function toXYZ(col) {
 
     const convVal = (v) => 100*(v > 0.04045 ? Math.pow((v + 0.055) / 1.055, 2.4) : v / 12.92);
 
-    let x= convVal(col.r) * 0.4124 + convVal(col.g) * 0.3576 + convVal(col.b) * 0.1805;
-    let y= convVal(col.r) * 0.2126 + convVal(col.g) * 0.7152 + convVal(col.b) * 0.0722;
-    let z= convVal(col.r) * 0.0193 + convVal(col.g) * 0.1192 + convVal(col.b) * 0.9505;
-
-    return {x, y, z};
+    return {
+        x: convVal(col.r) * 0.4124 + convVal(col.g) * 0.3576 + convVal(col.b) * 0.1805,
+        y: convVal(col.r) * 0.2126 + convVal(col.g) * 0.7152 + convVal(col.b) * 0.0722,
+        z: convVal(col.r) * 0.0193 + convVal(col.g) * 0.1192 + convVal(col.b) * 0.9505,
+    }
 }
 
 function xyzToLab(col) {
-    const refX = 95.4212;
+    // Data from https://en.wikipedia.org/wiki/Illuminant_D65#Definition using a standard 2° observer
+    const refX = 95.04;
     const refY = 100;
-    const refZ = 108.8840;
+    const refZ = 108.88;
 
-    const compVal = (v) => (v > 0.008856) ? Math.pow(v , 1/3) : (7.787 * v) + (16 / 116);
+    const convVal = (v) => (v > 0.008856) ? Math.pow(v , 1/3) : (7.787 * v) + (16 / 116);
 
-    let x = compVal(col.x / refX);
-    let y = compVal(col.y / refY);
-    let z = compVal(col.z / refZ);
+    let x = convVal(col.x / refX);
+    let y = convVal(col.y / refY);
+    let z = convVal(col.z / refZ);
 
     return {
         L: (116 * y) - 16,
@@ -432,8 +432,8 @@ function xyzToLab(col) {
 }
 
 export function colorDiff(c1, c2) {
-    c1 = xyzToLab(toXYZ(tc(c1).toRgb()));
-    c2 = xyzToLab(toXYZ(tc(c2).toRgb()));
+    c1 = xyzToLab(toXYZ(tc(c1)?.toRgb()));
+    c2 = xyzToLab(toXYZ(tc(c2)?.toRgb()));
     return Math.sqrt(Math.pow(c2.a , 2) + Math.pow(c2.b , 2)) -
         Math.sqrt(Math.pow(c1.a , 2) + Math.pow(c1.b , 2))
 }
