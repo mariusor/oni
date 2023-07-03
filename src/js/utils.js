@@ -211,7 +211,9 @@ export function showError(e) {
 function colorsFromImage (url) {
     return prominent(url, {amount: 20, group: 40, format: 'hex', sample: 8})
 }
-const /* filter */ onSaturation = (min) => (col) => tc(col).toHsv().s >= (min || 0.3);
+const /* filter */ onIntensity = (min) => (col) => onLightness(min)(col) && onSaturation(min)(col)
+const /* filter */ onLightness = (min) => (col) => tc(col).toHsl().l >= (min || 0.5);
+const /* filter */ onSaturation = (min) => (col) => tc(col).toHsv().s >= (min || 0.5);
 const /* filter */ onContrastTo = (base, min) => function (col) {
     min = min || 4.5;
     const con = contrast(col, base);
@@ -250,8 +252,10 @@ export async function loadPalette(it) {
     };
 
     let colors = [];
+    let iconColors = [];
+    let imageColors = [];
     if (imageURL) {
-        const imageColors = await colorsFromImage(imageURL);
+        imageColors = await colorsFromImage(imageURL);
         if (imageColors) {
             palette.imageColors = imageColors;
             colors = colors.concat(imageColors);
@@ -272,7 +276,7 @@ export async function loadPalette(it) {
     }
 
     if (iconURL) {
-        const iconColors = await colorsFromImage(iconURL);
+        iconColors = await colorsFromImage(iconURL);
         if (iconColors) {
             palette.iconColors = iconColors;
             colors = colors.concat(iconColors);
@@ -281,55 +285,30 @@ export async function loadPalette(it) {
     }
 
     colors = colors.filter(validColors);
-    palette.colors = colors.sort(byDiff(palette.bgColor));
+    palette.colors = colors.sort(byContrastTo(palette.bgColor));
 
-    palette.accentColor = getAccentColor(palette, colors)
-    colors = colors.filter(not(palette.accentColor));
+    iconColors = palette.iconColors.filter(validColors)
+    palette.accentColor = getAccentColor(palette, iconColors)
+    iconColors = iconColors.filter(not(palette.accentColor));
 
-    palette.fgColor = getFgColor(palette, colors)
-    colors = colors.filter(not(palette.fgColor));
+    palette.linkColor = getAccentColor(palette, iconColors) || palette.accentColor;
+    iconColors = iconColors.filter(not(palette.linkColor));
 
-    palette.linkColor = getAccentColor(palette, colors) || palette.accentColor;
-    colors = colors.filter(not(palette.linkColor));
+    palette.linkVisitedColor = getClosestColor(palette, iconColors, palette.linkColor);
+    iconColors = iconColors.filter(not(palette.linkVisitedColor));
 
-    palette.linkVisitedColor = getClosestColor(palette, colors, palette.linkColor);
-    colors = colors.filter(not(palette.linkVisitedColor));
+    palette.linkActiveColor = getClosestColor(palette, iconColors, palette.linkColor);
+    iconColors = iconColors.filter(not(palette.linkActiveColor));
 
-    palette.linkActiveColor = getClosestColor(palette, colors, palette.linkColor);
-    colors = colors.filter(not(palette.linkActiveColor));
+    palette.fgColor = getFgColor(palette, imageColors.filter(validColors))
+    imageColors = imageColors.filter(not(palette.fgColor));
 
     localStorage.setItem('palette', JSON.stringify(palette));
     return palette;
 }
 
 function getFgColor(palette, colors) {
-    colors = colors || palette.colors;
-    const filterColors = (colors) => colors.filter(onSaturation(0.166));
-
-    let fgColors = colors;
-    for (let i = 0; i < 10; i++) {
-        fgColors = filterColors(fgColors);
-        if (fgColors.length > 0) break;
-
-        colors.forEach((value, index) => {
-            fgColors[index] = tc(palette.bgColor).isDark()
-                ? tc(value).lighten().toHexString()
-                : tc(value).darken().toHexString()
-        });
-    }
-    return mostReadable(palette.bgColor, fgColors).toHexString();
-}
-
-function getLinkColors(palette, colors) {
-    colors = colors || palette.colors;
-    let linkColor = palette.accentColor;
-
-    const filterColors = (colors) => colors
-        .sort(byContrastTo(palette.bgColor))
-        .filter(onSaturation(0.4));
-
-    linkColor = filterColors(colors).at(0) || linkColor;
-    return [linkColor, linkColor, linkColor];
+    return mostReadable(palette.bgColor, colors)?.toHexString();
 }
 
 function getClosestColor(palette, colors, color) {
@@ -343,7 +322,8 @@ function getAccentColor(palette, colors) {
     colors = colors || palette.colors;
 
     const filterColors = (colors) => colors
-        .filter(onContrastTo(palette.bgColor, 2))
+        .filter(onContrastTo(palette.bgColor, 3))
+        .filter(onIntensity(0.5))
         .filter(onSaturation(0.4));
 
     let accentColors = colors;
@@ -355,47 +335,34 @@ function getAccentColor(palette, colors) {
             accentColors[index] = tc(value).saturate().toHexString()
         });
     }
-    return mostReadable(palette.bgColor, accentColors).toHexString();
+    return mostReadable(palette.bgColor, accentColors)?.toHexString();
 }
 
-export async function renderColors() {
-    const palette = localStorage.getItem('palette');
-    console.debug(`trying to render colors:`, palette);
+export function renderColors() {
+    const palette = JSON.parse(localStorage.getItem('palette'));
 
     if (!palette || !palette.colors) return nothing;
     if (!window.location.hostname.endsWith('local')) return nothing;
 
-    const renderColors = (ordered) => html`
+    const colorMap = (ordered) => html`
         ${map(ordered, value => {
             const color = mostReadable(value, [palette.bgColor, palette.fgColor]);
-            /*
-            let newordered = ordered.sort(byDiff(value));
-            ${html`
-                ${map(newordered, newval => {
-                    const color = mostReadable(newval, [palette.bgColor, palette.fgColor]);
-                    return html`<span style="padding: .2rem 1rem; display: inline-block; width: 1rem; background-color: ${newval}; color: ${color}; font-size:.8em;">
-                        ${newval}
-                        <data title="yuv">${colorDiff(value, newval)}</data> 
-                    </span>`
-                })}
-            `}
-             */
             return html`
-                <span style="padding: .2rem 1rem; display:inline-block; width: 4rem; background-color: ${value}; color: ${color}; font-size:.8em;">
+                <div style="padding: .2rem 1rem; background-color: ${value}; color: ${color}; font-size:.8em;">
                         <small>
                         ${value}
-                        : <data value="${contrast(value, palette.bgColor)}" title="contrast bg">${contrast(value, palette.bgColor).toFixed(2)}</data>
                         : <data value="${colorDiff(value, palette.bgColor)}" title="diff">${colorDiff(value, palette.bgColor).toFixed(2)}</data>
-                        : <data value="${tc(value).toHsv().s}" title="saturation">${tc(value).toHsv().s.toFixed(2)}</data>
-                        <!--<data value="${contrast(value, palette.fgColor)}" title="contrast fg">${contrast(value, palette.fgColor).toFixed(2)}</data>
-                        <data value="${tc(value).toHsv().h}" title="hue">${tc(value).toHsv().h.toFixed(2)}</data>
-                        <data value="${tc(value).toHsv().v}" title="luminance">${tc(value).toHsv().v.toFixed(2)} </data>-->
+                        : <data value="${contrast(value, palette.bgColor)}" title="contrast bg">${contrast(value, palette.bgColor).toFixed(2)}</data>
+                        : <data value="${contrast(value, palette.fgColor)}" title="contrast fg">${contrast(value, palette.fgColor).toFixed(2)}</data>
+                        : <data value="${tc(value).toHsl().h}" title="hue">${tc(value).toHsl().h.toFixed(2)}</data>
+                        : <data value="${tc(value).toHsl().s}" title="saturation">${tc(value).toHsl().s.toFixed(2)}</data>
+                        : <data value="${tc(value).toHsl().l}" title="luminance">${tc(value).toHsl().l.toFixed(2)} </data>
                         </small>
-                    </span>
+                    </div>
             `
         })}
     `;
-    return html`${renderColors(palette.colors)}`;
+    return html`${colorMap(palette.colors)}`;
 }
 
 function apURL(ob) {
