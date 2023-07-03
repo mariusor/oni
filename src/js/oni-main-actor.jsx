@@ -52,7 +52,7 @@ export class OniMainActor extends ActivityPubActor {
         }
         header ul {
             margin: 0;
-            padding: .8rem;
+            padding: 0.6rem 1.4rem;
             border-radius: 1.6em;
             background-color: color-mix(in srgb, var(--accent-color), transparent 20%);
 
