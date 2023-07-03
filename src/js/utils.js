@@ -218,7 +218,7 @@ const /* filter */ onSaturation = (min, max) => (col) => tc(col)?.toHsl()?.s >= 
     && tc(col)?.toHsl()?.s <= (max || 1);
 const /* filter */ onContrastTo = (base, min, max) => (col) => contrast(col, base) >= (min || 0)
     && contrast(col, base) <= (max || 21);
-const /* filter */ not = (c) => (n) => Math.abs(colorDiff(c, n)) >= 2;
+const /* filter */ not = (c, diff) => (n) => Math.abs(colorDiff(c, n)) >= (diff || 2);
 const /* sort */ byContrastTo = (base) => (a, b) => contrast(b, base) - contrast(a, base);
 const /* sort */ bySaturation = (a, b) => tc(b).toHsv().s - tc(a).toHsv().s;
 const /* sort */ byDiff = (base) => (a, b) => Math.abs(colorDiff(a, base)) - Math.abs(colorDiff(b, base));
@@ -245,19 +245,17 @@ export async function loadPalette(it) {
         linkActiveColor: style.getPropertyValue('--link-active-color').trim(),
         linkVisitedColor: style.getPropertyValue('--link-visited-color').trim(),
         colorScheme: prefersDarkTheme() ? 'dark' : 'light',
-        colors: [],
         imageColors: [],
         iconColors: [],
     };
 
-    let colors = [];
     let iconColors = [];
     let imageColors = [];
     if (imageURL) {
         imageColors = await colorsFromImage(imageURL);
         if (imageColors) {
-            palette.imageColors = imageColors;
-            colors = colors.concat(imageColors);
+            imageColors = imageColors.filter(validColors);
+            palette.imageColors = palette.imageColors;
         }
 
         palette.bgImageURL = imageURL;
@@ -277,51 +275,50 @@ export async function loadPalette(it) {
     if (iconURL) {
         iconColors = await colorsFromImage(iconURL);
         if (iconColors) {
-            palette.iconColors = iconColors;
-            colors = colors.concat(iconColors);
+            iconColors = iconColors.filter(validColors);
+            palette.iconColors = palette.iconColors;
         }
         palette.iconURL = iconURL;
     }
 
-    colors = colors.filter(validColors);
-    palette.colors = colors.sort(byContrastTo(palette.bgColor));
+    palette.accentColor = getAccentColor(palette, iconColors) || palette.accentColor;
+    iconColors = iconColors.filter(not(palette.accentColor, 1));
 
-    iconColors = palette.iconColors.filter(validColors)
-    palette.accentColor = getAccentColor(palette, iconColors)
-    iconColors = iconColors.filter(not(palette.accentColor));
+    palette.linkColor = getAccentColor(palette, iconColors) || palette.linkColor;
+    iconColors = iconColors.filter(not(palette.linkColor, 1));
 
-    palette.linkColor = getAccentColor(palette, iconColors) || palette.accentColor;
-    iconColors = iconColors.filter(not(palette.linkColor));
 
-    palette.linkVisitedColor = getClosestColor(palette, iconColors, palette.linkColor);
-    iconColors = iconColors.filter(not(palette.linkVisitedColor));
+    palette.linkVisitedColor = getClosestColor(palette, iconColors, palette.linkColor) || palette.linkVisitedColor;
+    iconColors = iconColors.filter(not(palette.linkVisitedColor, 1));
 
-    palette.linkActiveColor = getClosestColor(palette, iconColors, palette.linkColor);
-    iconColors = iconColors.filter(not(palette.linkActiveColor));
+    palette.linkActiveColor = getClosestColor(palette, iconColors, palette.linkColor) || palette.linkActiveColor;
 
-    palette.fgColor = getFgColor(palette, imageColors.filter(validColors))
-    imageColors = imageColors.filter(not(palette.fgColor));
+    palette.fgColor = getFgColor(palette, imageColors.filter(validColors)) || palette.fgColor;
 
     localStorage.setItem('palette', JSON.stringify(palette));
     return palette;
 }
 
 function getFgColor(palette, colors) {
+    colors = colors || [];
+
     return mostReadable(palette.bgColor, colors)?.toHexString();
 }
 
 function getClosestColor(palette, colors, color) {
-    colors = colors || palette.colors;
+    colors = colors || [];
 
-    colors = colors.filter(onContrastTo(palette.bgColor, 3, 7)).sort(byDiff(color)).reverse();
+    colors = colors
+        .filter(onContrastTo(palette.bgColor, 3, 7))
+        .sort(byDiff(color))
+        .reverse();
     return colors.at(0);
 }
 
 function getAccentColor(palette, colors) {
-    colors = colors || palette.colors;
+    colors = colors || [];
 
     const filterColors = (colors) => colors
-        .filter(onContrastTo(palette.bgColor, 2, 6))
         .filter(onSaturation(0.4))
         .filter(onLightness(0.4, 0.6));
 
@@ -340,7 +337,7 @@ function getAccentColor(palette, colors) {
 export function renderColors() {
     const palette = JSON.parse(localStorage.getItem('palette'));
 
-    if (!palette || !palette.colors) return nothing;
+    if (!palette) return nothing;
     if (!window.location.hostname.endsWith('local')) return nothing;
 
     const colorMap = (ordered) => html`
@@ -390,8 +387,7 @@ export function renderDuration(seconds) {
 }
 
 function validColors(value, index, array) {
-    return array.indexOf(value) === index &&
-        !(tc.equals(value, '#000000') || tc.equals(value, '#ffffff'));
+    return array.indexOf(value) === index && not('#000000', 0.2)(value) && not('#ffffff', 0.2)(value);
 }
 
 // formulas from : https://www.easyrgb.com/en/math.php
