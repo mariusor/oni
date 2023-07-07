@@ -32,7 +32,6 @@ export class CollectionLinks extends LitElement {
         }
         :host li.active {
             background-color: var(--accent-color);
-            text-shadow: 0 0 1rem var(--fg-color), 0 0 .3rem var(--bg-color);
         }
     `
 
@@ -64,11 +63,13 @@ export class CollectionLink extends ActivityPubCollection {
     static styles = css`
         :host a {
             text-transform: capitalize;
-            color: var(--accent-color);
             text-decoration: none;
+            color: var(--accent-color);
+            text-shadow: 0 0 1em var(--accent-color), 0 0 .4em var(--bg-color);
         }
         :host a.active, :host a:visited.active {
             color: var(--bg-color);
+            text-shadow: 0 0 1em var(--accent-color), 0 0 .4rem var(--bg-color);
         }
     `;
 
