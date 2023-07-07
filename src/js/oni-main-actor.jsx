@@ -49,6 +49,7 @@ export class OniMainActor extends ActivityPubActor {
             border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
             box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
+            background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
             width: 100%;
             max-height: 14em;
             margin-bottom: -1.4rem;
