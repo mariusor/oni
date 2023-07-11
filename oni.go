@@ -157,7 +157,7 @@ func (o *oni) Run(c context.Context) error {
 	sockType := ""
 	setters := []w.SetFn{w.Handler(o.m)}
 
-	if o.Listen == "systemd" {
+	if os.Getenv("LISTEN_FDS") != "" {
 		sockType = "Systemd"
 		setters = append(setters, w.OnSystemd())
 	} else if filepath.IsAbs(o.Listen) {
