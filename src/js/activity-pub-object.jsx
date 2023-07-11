@@ -76,7 +76,7 @@ export class ActivityPubObject extends LitElement {
                 },
             },
         },
-        showMetadata: {type: Boolean}
+        inline: {type: Boolean},
     };
 
     constructor(it) {
@@ -296,7 +296,7 @@ export class ActivityPubObject extends LitElement {
     }
 }
 
-ActivityPubObject.renderByMediaType = function (it, showMetadata) {
+ActivityPubObject.renderByMediaType = function (it, inline) {
     if (it == null || !it.hasOwnProperty('mediaType')) {
         return nothing;
     }
@@ -304,7 +304,7 @@ ActivityPubObject.renderByMediaType = function (it, showMetadata) {
     switch (it.mediaType) {
         case 'image/png':
         case 'image/jpeg':
-            return html`<oni-image it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-image>`;
+            return html`<oni-image it=${JSON.stringify(it)} ?inline=${inline}></oni-image>`;
         default:
             return html`<a href=${it.url}>${it.name}</a>`;
     }

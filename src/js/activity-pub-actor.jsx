@@ -17,7 +17,7 @@ export class ActivityPubActor extends ActivityPubObject {
         if (typeof icon == 'string') {
             return html`<img src=${icon}/>`;
         } else {
-            return ActivityPubObject.renderByMediaType(icon);
+            return ActivityPubObject.renderByMediaType(icon, this.inline);
         }
     }
 
@@ -54,6 +54,6 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     render() {
-        return html`<div>${this.renderIconName()}</div>`;
+        return html`${this.renderIconName()}`;
     }
 }
