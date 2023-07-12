@@ -28,6 +28,7 @@ export class SimpleTooltip extends LitElement {
       transform: scale(0.75);
       transition: opacity, transform;
       transition-duration:  0.33s;
+      font-size: 60%;
     }
     :host([showing]) {
       opacity: 1;
