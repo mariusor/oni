@@ -252,14 +252,9 @@ export async function loadPalette(it) {
     let iconColors = [];
     let imageColors = [];
     if (imageURL) {
-        imageColors = await colorsFromImage(imageURL);
-        if (imageColors) {
-            imageColors = imageColors.filter(validColors);
-            palette.imageColors = palette.imageColors;
-        }
-
         palette.bgImageURL = imageURL;
 
+        imageColors = (await colorsFromImage(imageURL))?.filter(validColors);
         const avgColor = await average(imageURL, {format: 'hex'});
         if (avgColor) {
             console.debug(`bgColor: ${avgColor}`)
@@ -273,13 +268,12 @@ export async function loadPalette(it) {
     }
 
     if (iconURL) {
-        iconColors = await colorsFromImage(iconURL);
-        if (iconColors) {
-            iconColors = iconColors.filter(validColors);
-            palette.iconColors = palette.iconColors;
-        }
         palette.iconURL = iconURL;
+        iconColors = (await colorsFromImage(iconURL))?.filter(validColors);
     }
+
+    palette.imageColors = imageColors;
+    palette.iconColors = iconColors;
 
     palette.accentColor = getAccentColor(palette, iconColors) || palette.accentColor;
     iconColors = iconColors.filter(not(palette.accentColor, 1));
