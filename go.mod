@@ -7,14 +7,14 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20230104101555-9bfc303f6588
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.17.18
-	github.com/go-ap/activitypub v0.0.0-20230719093539-2b6a6f3a25ee
-	github.com/go-ap/auth v0.0.0-20230719093711-df0da9a506f2
-	github.com/go-ap/client v0.0.0-20230719093625-24a71df51b10
+	github.com/go-ap/activitypub v0.0.0-20230730144252-88f76b2af358
+	github.com/go-ap/auth v0.0.0-20230730144654-a53c5d5a2c9e
+	github.com/go-ap/client v0.0.0-20230730144342-64d59bd2e88c
 	github.com/go-ap/errors v0.0.0-20221205040414-01c1adfc98ea
-	github.com/go-ap/filters v0.0.0-20230722082550-7a514f680c7a
+	github.com/go-ap/filters v0.0.0-20230730144750-aacdd7be149b
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20230719093825-2cf84c8f55ff
-	github.com/go-ap/storage-fs v0.0.0-20230722082624-086d24d7afc6
+	github.com/go-ap/processing v0.0.0-20230730144722-0ae13a5ff5f5
+	github.com/go-ap/storage-fs v0.0.0-20230730144859-63daec84dc92
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
@@ -35,7 +35,7 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/rs/xid v1.5.0 // indirect
-	github.com/rs/zerolog v1.29.1 // indirect
+	github.com/rs/zerolog v1.30.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
