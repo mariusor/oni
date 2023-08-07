@@ -17,10 +17,6 @@ type handler struct {
 	l lw.Logger
 }
 
-func webFingerHandler(l lw.Logger, db ...processing.ReadStore) handler {
-	return handler{s: db, l: l}
-}
-
 var actors = vocab.CollectionPath("actors")
 
 func ValueMatchesLangRefs(val vocab.Content, toCheck ...vocab.NaturalLanguageValues) bool {
