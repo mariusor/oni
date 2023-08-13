@@ -76,17 +76,18 @@ export class ActivityPubObject extends LitElement {
                 },
             },
         },
+        showMetadata: {type: Boolean},
         inline: {type: Boolean},
     };
 
-    constructor(it) {
+    constructor(it, showMetadata) {
         super();
         if (typeof it === 'string') {
             fetchActivityPubIRI(it).then(value => this.it = value);
         } else {
             this.it = it;
         }
-        this.showMetadata = false;
+        this.showMetadata = showMetadata;
         this.addEventListener('content.change', this.updateActivityPubObject)
 
         const json = this.querySelector('script')?.text;
