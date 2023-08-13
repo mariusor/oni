@@ -90,7 +90,7 @@ export function isAuthorized() {
 
 export function editableContent(root) {
     root = root.renderRoot.querySelector('body[contenteditable]');
-    root.childNodes.forEach(node => {
+    root?.childNodes?.forEach(node => {
         if (node.nodeName.toLowerCase() === 'slot') {
             // the slot should be removed if empty, otherwise it overwrites the value
             root.removeChild(node);
@@ -101,7 +101,7 @@ export function editableContent(root) {
         }
     });
 
-    return root.innerHTML.trim();
+    return root?.innerHTML.trim();
 };
 
 export function relativeDuration(seconds) {
