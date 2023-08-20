@@ -298,17 +298,14 @@ export class ActivityPubObject extends LitElement {
 }
 
 ActivityPubObject.renderByMediaType = function (it, inline) {
-    if (it == null || !it.hasOwnProperty('mediaType')) {
+    if (!it?.hasOwnProperty('mediaType')) {
         return nothing;
     }
 
-    switch (it.mediaType) {
-        case 'image/png':
-        case 'image/jpeg':
-            return html`<oni-image it=${JSON.stringify(it)} ?inline=${inline}></oni-image>`;
-        default:
-            return html`<a href=${it.url}>${it.name}</a>`;
+    if (it.mediaType.indexOf('image/') === 0) {
+        return html`<oni-image it=${JSON.stringify(it)} ?inline=${inline}></oni-image>`;
     }
+    return html`<a href=${it.url}>${it.name}</a>`;
 }
 
 ActivityPubObject.renderByType = function (it, showMetadata) {
