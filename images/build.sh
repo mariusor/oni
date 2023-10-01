@@ -7,7 +7,7 @@ _image_name=${2:-oni/builder}
 
 _context=$(realpath "${_workdir}")
 
-_builder=$(buildah from docker.io/library/golang:1.20)
+_builder=$(buildah from docker.io/library/golang:1.21)
 
 buildah config --env DEBIAN_FRONTEND=noninteractive "${_builder}"
 buildah run "${_builder}" /usr/bin/apt-get update -q
