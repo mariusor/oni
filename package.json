@@ -2,8 +2,8 @@
   "dependencies": {
     "@floating-ui/dom": "^1.2.7",
     "color.js": "^1.2.0",
-    "lit": "^2.7.6",
-    "lit-html": "^2.7.5",
+    "lit": "^2.8.0",
+    "lit-html": "^2.8.0",
     "tinycolor2": "^1.6.0"
   }
 }
