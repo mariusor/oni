@@ -6,8 +6,6 @@ SHELL := bash
 PROJECT_NAME := oni
 ENV ?= dev
 LDFLAGS =
-BUILDFLAGS ?= -a -ldflags '$(LDFLAGS)'
-TEST_FLAGS ?= -count=1 -v
 
 APPSOURCES := $(wildcard ./*.go)
 TS_SOURCES := $(wildcard src/js/*)
@@ -22,9 +20,12 @@ export VERSION=HEAD
 
 TAGS := $(ENV)
 
+BUILDFLAGS ?= -tags "$(TAGS)"
+TEST_FLAGS ?= -count=1 -v
+
 ifneq ($(ENV), dev)
 	LDFLAGS += -s -w -extldflags "-static"
-	BUILDFLAGS += -trimpath
+	BUILDFLAGS += -ldflags '$(LDFLAGS)' -trimpath
 endif
 
 BUILD := $(GO) build $(BUILDFLAGS)
@@ -41,11 +42,11 @@ download:
 
 oni: go.mod bin/oni
 bin/oni: cmd/oni/main.go $(APPSOURCES) go.mod static/main.css static/main.js
-	$(BUILD) -tags "$(TAGS)" -o $@ cmd/oni/main.go
+	$(BUILD) -o $@ cmd/oni/main.go
 
 ctl: go.mod bin/ctl
 bin/ctl: cmd/ctl/main.go $(APPSOURCES) go.mod
-	$(BUILD) -tags "$(TAGS)" -o $@ cmd/ctl/main.go
+	$(BUILD) -o $@ cmd/ctl/main.go
 
 fdeps:
 	$(YARN) install
@@ -70,4 +71,4 @@ coverage: TEST_FLAGS += -covermode=count -coverprofile $(PROJECT_NAME).coverprof
 coverage: test
 
 clean:
-	rm -f static/*.js static/*.css static/*.map static/*.svg
+	rm -f bin/* static/*.js static/*.css static/*.map static/*.svg
