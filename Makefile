@@ -71,4 +71,8 @@ coverage: TEST_FLAGS += -covermode=count -coverprofile $(PROJECT_NAME).coverprof
 coverage: test
 
 clean:
-	rm -f bin/* static/*.js static/*.css static/*.map static/*.svg
+	rm bin/{oni,ctl}
+	rm static/*.js
+	rm static/*.css
+	rm static/*.map
+	rm static/*.svg
