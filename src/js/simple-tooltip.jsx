@@ -1,5 +1,4 @@
-import {css, html, LitElement, render} from 'lit';
-import {Directive, directive} from 'lit/directive.js';
+import {css, html, LitElement} from 'lit';
 
 // Positioning library
 import {autoPlacement, computePosition, flip, offset, shift} from '@floating-ui/dom';
