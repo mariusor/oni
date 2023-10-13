@@ -6,7 +6,6 @@ import {map} from "lit-html/directives/map.js";
 
 const tc = tinycolor;
 export const contrast = tc.readability;
-export const isReadable = tc.isReadable;
 export const mostReadable = tc.mostReadable;
 
 export function prefersDarkTheme() {

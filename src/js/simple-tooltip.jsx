@@ -1,11 +1,13 @@
 import {css, html, LitElement} from 'lit';
 
 // Positioning library
-import {autoPlacement, computePosition, flip, offset, shift} from '@floating-ui/dom';
+import {autoPlacement, computePosition, flip, inline, offset, shift} from '@floating-ui/dom';
 
 // Events to turn on/off the tooltip
-const enterEvents = ['selectionchange'];
-const leaveEvents = ['blur'];
+const enterEvents = ['selectionchange', 'click', 'pointerenter'];
+const leaveEvents = ['pointerleave'];
+// const enterEvents = ['pointerenter', 'focus'];
+// const leaveEvents = ['pointerleave', 'blur', 'keydown', 'click'];
 
 export class SimpleTooltip extends LitElement {
     static properties = {
@@ -42,24 +44,16 @@ export class SimpleTooltip extends LitElement {
         // Attribute for styling "showing"
         this.showing = true;
         // Position offset
-        this.offset = 4;
+        this.offset = -10;
     }
 
     connectedCallback() {
         super.connectedCallback();
+        console.debug('setting up connected callback', this.previousElementSibling)
         // Setup target if needed
         this.target ??= this.previousElementSibling;
         // Ensure hidden at start
         this.finishHide();
-    }
-
-    getSelectionTarget() {
-        const selection = document.getSelection();
-        console.debug(selection);
-        if (selection?.type === "Range") {
-            this.target = selection?.baseNode;
-        }
-        this.show();
     }
 
     // Target for which to show tooltip
@@ -70,7 +64,6 @@ export class SimpleTooltip extends LitElement {
     }
 
     set target(target) {
-        console.debug(`received target`, target)
         // Remove events from existing target
         if (this.target) {
             enterEvents.forEach((name) => this.target.removeEventListener(name, this.show));
@@ -86,14 +79,15 @@ export class SimpleTooltip extends LitElement {
 
     show = () => {
         this.style.cssText = '';
-
         this.showing = true;
-
         console.debug(`showing tooltip`, this)
     };
 
     hide = () => {
-        this.showing = false;
+        setTimeout(() => {
+            this.showing = false;
+            console.debug(`hiding tooltip`, this)
+        }, 2000);
     };
 
     finishHide = () => {
@@ -104,15 +98,12 @@ export class SimpleTooltip extends LitElement {
 
     render() {
         computePosition(this.target, this, {
-            placement: "right-start",
+            placement: "top",
             middleware: [
-                offset(this.offset),
-                flip(),
-                shift(),
-                autoPlacement({allowedPlacements: ['top', 'bottom']}),
+                inline()
             ],
         }).then(({x, y}) => {
-            //console.debug(`pos ${x}x${y}`)
+            console.debug(`pos ${x}x${y}y`)
             this.style.left = `${x}px`;
             this.style.top = `${y}px`;
         });

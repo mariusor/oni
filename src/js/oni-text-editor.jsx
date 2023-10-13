@@ -28,6 +28,7 @@ export class TextEditor extends LitElement {
           background: linear-gradient(var(--toolbar-background-top), var(--toolbar-background-bottom));
           border: 1px solid var(--toolbar-on-background);
           pointer-events: auto;
+          font-size: .6rem;
         }
         :host {
           --editor-background: transparent;
@@ -41,13 +42,17 @@ export class TextEditor extends LitElement {
           grid-template-rows: min-content auto;
           grid-template-columns: auto auto;
         }
-        simple-tooltip button { font-family: serif; font-size: 1.2em; }
+        simple-tooltip button { font-family: serif; font-size: 1em; }
         :host oni-text-editor-toolbar {
           grid-area: toolbar;
         }
         :host body {
-            margin: 0;
-            padding: 0;
+          margin: 0;
+          padding: 0;
+          outline: dashed 2px var(--accent-color);
+          outline-offset: 4px;
+          width: 100%;
+          position: relative;
         }
     `];
 
@@ -68,20 +73,19 @@ export class TextEditor extends LitElement {
     }
 
     reset() {
+        if (!this.isContentEditable) return;
+
         const parser = new DOMParser();
         const doc = parser.parseFromString(this.content, "text/html");
         document.execCommand("defaultParagraphSeparator", true, "br");
 
         const root = doc.querySelector("body");
-        if (this.isContentEditable) {
-            root.setAttribute("contenteditable", "");
-            root.addEventListener('focusin', () => this.active = true);
-            root.addEventListener('drop', this.handleDrop);
-            root.addEventListener('dragenter', this.dragAllowed);
-            root.addEventListener('dragover', this.dragAllowed);
-            root.addEventListener('image.upload', (e) => this.handleFiles(e.detail));
-        }
-
+        root.setAttribute("contenteditable", "");
+        root.addEventListener('focusin', () => this.active = true);
+        root.addEventListener('drop', this.handleDrop);
+        root.addEventListener('dragenter', this.dragAllowed);
+        root.addEventListener('dragover', this.dragAllowed);
+        root.addEventListener('image.upload', (e) => this.handleFiles(e.detail));
         this.root = root;
     }
 
@@ -148,6 +152,7 @@ export class TextEditor extends LitElement {
     }
 
     render() {
+        this.root?.setAttribute("title", "Editable.");
         return html`${this.root}${when(this.active,
                 () => html`<simple-tooltip>${html`${this.renderToolbar()}`}</simple-tooltip> `,
                 () => nothing
@@ -160,16 +165,17 @@ export class TextEditor extends LitElement {
 
         const tags = [];
         const selection = document.getSelection();
+        let root;
         if (selection?.type === "Range") {
-            this.root = selection?.baseNode;
-            if (this.root) {
+            root = selection?.baseNode;
+            if (root) {
                 const checkNode = () => {
-                    const parentTagName = this.root?.tagName?.toLowerCase()?.trim();
+                    const parentTagName = root?.tagName?.toLowerCase()?.trim();
                     if (parentTagName) tags.push(parentTagName);
                 };
-                while (this.root != null) {
+                while (root != null) {
                     checkNode();
-                    this.root = this.root?.parentNode;
+                    root = root?.parentNode;
                 }
             }
         }
@@ -335,19 +341,16 @@ export class TextEditor extends LitElement {
             insertImage: {
                 shortcut: "Ctrl+Shift+i",
                 execCommand: () => this.shadowRoot.querySelector('input[type=file]')?.click(),
-                toolbarHtml: "<span title='Insert Image'>&#128444;</span>",
+                toolbarHtml: "<span title='Insert Image' style='height: 90%'>&#128443;</span>",
             },
         };
 
-        return this.renderCommands(commands);
+        return this.renderCommands(commands, root);
     }
 
-    renderCommands(commands) {
+    renderCommands(commands, editable) {
         if (!this.isContentEditable) return nothing;
         let elements = [];
-        const editable = this.root;
-
-        if (!editable) return;
 
         for (const c in commands) {
             const n = commands[c];

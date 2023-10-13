@@ -58,10 +58,6 @@ export class ActivityPubObject extends LitElement {
         footer aside {
             font-size: 0.8em;
         }
-        oni-natural-language-values[name=preferredUsername]::before {
-            content: "~";
-            margin-right: -.3em;
-        }
     `;
 
     static properties = {
