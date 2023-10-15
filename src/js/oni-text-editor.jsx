@@ -73,6 +73,7 @@ export class TextEditor extends LitElement {
         document.execCommand("defaultParagraphSeparator", true, "br");
 
         const root = doc.querySelector("body");
+        root.setAttribute("title", "Editable.");
         root.setAttribute("contenteditable", "");
         this.addEventListener('focusin', () => this.active = true);
         this.addEventListener('blur', () => this.active = false);
@@ -146,7 +147,6 @@ export class TextEditor extends LitElement {
     }
 
     render() {
-        this.root?.setAttribute("title", "Editable.");
         return html`${this.root}${when(this.active,
                 () => html`<simple-tooltip>${html`${this.renderToolbar()}`}</simple-tooltip> `,
                 () => nothing
