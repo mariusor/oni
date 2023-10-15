@@ -33,27 +33,20 @@ export class TextEditor extends LitElement {
         :host {
           --editor-background: transparent;
           display: inline-block;
+          width: 100%;
         }
-        main {
-          width: var(--editor-width);
-          height: var(--editor-height);
-          display: grid;
-          grid-template-areas: "toolbar toolbar" "editor editor";
-          grid-template-rows: min-content auto;
-          grid-template-columns: auto auto;
+        :host body:hover, :host body:focus {
+          outline: dashed 2px var(--accent-color);
+          outline-offset: 4px;
         }
         simple-tooltip button { font-family: serif; font-size: 1em; }
-        :host oni-text-editor-toolbar {
-          grid-area: toolbar;
-        }
         :host body {
           margin: 0;
           padding: 0;
-          outline: dashed 2px var(--accent-color);
-          outline-offset: 4px;
           width: 100%;
           position: relative;
         }
+        simple-tooltip button { font-family: serif; font-size: 1.2em; }
     `];
 
     static properties = {
@@ -81,11 +74,12 @@ export class TextEditor extends LitElement {
 
         const root = doc.querySelector("body");
         root.setAttribute("contenteditable", "");
-        root.addEventListener('focusin', () => this.active = true);
-        root.addEventListener('drop', this.handleDrop);
-        root.addEventListener('dragenter', this.dragAllowed);
-        root.addEventListener('dragover', this.dragAllowed);
-        root.addEventListener('image.upload', (e) => this.handleFiles(e.detail));
+        this.addEventListener('focusin', () => this.active = true);
+        this.addEventListener('blur', () => this.active = false);
+        this.addEventListener('drop', this.handleDrop);
+        this.addEventListener('dragenter', this.dragAllowed);
+        this.addEventListener('dragover', this.dragAllowed);
+        this.addEventListener('image.upload', (e) => { console.debug(e); this.handleFiles(e.detail)});
         this.root = root;
     }
 
@@ -132,7 +126,7 @@ export class TextEditor extends LitElement {
             this.root.append(img);
         }
 
-        for (let i = 0, f; f = files[i]; i++) {
+        for (let i = 0, f; f = files[i], f; i++) {
             if (!f.type.match('image.*')) {
                 showError(`Files of type ${f.type} are not supported for upload.`);
                 continue;
@@ -341,7 +335,7 @@ export class TextEditor extends LitElement {
             insertImage: {
                 shortcut: "Ctrl+Shift+i",
                 execCommand: () => this.shadowRoot.querySelector('input[type=file]')?.click(),
-                toolbarHtml: "<span title='Insert Image' style='height: 90%'>&#128443;</span>",
+                toolbarHtml: "<span title='Insert Image'>&#128444;</span>",
             },
         };
 
@@ -361,7 +355,7 @@ export class TextEditor extends LitElement {
                 { type: 'keydown', propagate: false, target: editable}
             );
 
-            if (c == "insertImage") elements.push(this.renderImageUpload(n));
+            if (c === "insertImage") elements.push(this.renderImageUpload(n));
             else elements.push(this.renderButton(n));
         }
         return html`${elements.map(n => html`${n}`)}`
@@ -377,7 +371,7 @@ export class TextEditor extends LitElement {
     renderImageUpload (n) {
         return html`<input type=file multiple style="display: none"
                            @change="${(e) => {
-                               this.root.dispatchEvent(
+                               this.dispatchEvent(
                                        new CustomEvent("image.upload", {
                                            trusted: true,
                                            bubbles: true,

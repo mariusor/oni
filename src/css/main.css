@@ -102,6 +102,7 @@ body {
     min-width: 80%;
     align-items: start;
     display: grid;
+    font-family: sans-serif;
 }
 
 a {

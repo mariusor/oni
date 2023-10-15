@@ -1,11 +1,12 @@
-import {css, html, LitElement} from 'lit';
+import {css, html, LitElement, render} from 'lit';
+import {Directive, directive} from 'lit/directive.js';
 
 // Positioning library
-import {autoPlacement, computePosition, flip, inline, offset, shift} from '@floating-ui/dom';
+import {autoPlacement, computePosition, flip, offset, shift} from '@floating-ui/dom';
 
 // Events to turn on/off the tooltip
-const enterEvents = ['selectionchange', 'click', 'pointerenter'];
-const leaveEvents = ['pointerleave'];
+const enterEvents = ['focusin'];
+const leaveEvents = ['focusout'];
 // const enterEvents = ['pointerenter', 'focus'];
 // const leaveEvents = ['pointerleave', 'blur', 'keydown', 'click'];
 
@@ -44,12 +45,11 @@ export class SimpleTooltip extends LitElement {
         // Attribute for styling "showing"
         this.showing = true;
         // Position offset
-        this.offset = -10;
+        this.offset = 4;
     }
 
     connectedCallback() {
         super.connectedCallback();
-        console.debug('setting up connected callback', this.previousElementSibling)
         // Setup target if needed
         this.target ??= this.previousElementSibling;
         // Ensure hidden at start
@@ -80,13 +80,11 @@ export class SimpleTooltip extends LitElement {
     show = () => {
         this.style.cssText = '';
         this.showing = true;
-        console.debug(`showing tooltip`, this)
     };
 
     hide = () => {
         setTimeout(() => {
             this.showing = false;
-            console.debug(`hiding tooltip`, this)
         }, 2000);
     };
 
@@ -98,12 +96,14 @@ export class SimpleTooltip extends LitElement {
 
     render() {
         computePosition(this.target, this, {
-            placement: "top",
+            placement: "top-start",
             middleware: [
-                inline()
+                offset(this.offset),
+                shift(),
+                autoPlacement({alignment: 'start', allowedPlacements: ['top', 'bottom']}),
             ],
         }).then(({x, y}) => {
-            console.debug(`pos ${x}x${y}y`)
+            //console.debug(`pos ${x}x${y}`)
             this.style.left = `${x}px`;
             this.style.top = `${y}px`;
         });
