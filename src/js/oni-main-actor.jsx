@@ -3,7 +3,7 @@ import {until} from "lit-html/directives/until.js";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
-import {isAuthorized, loadPalette, renderColors} from "./utils";
+import {isAuthorized, isMainPage, loadPalette, renderColors} from "./utils";
 import tc from "tinycolor2";
 
 export class OniMainActor extends ActivityPubActor {
@@ -167,7 +167,7 @@ export class OniMainActor extends ActivityPubActor {
                 <oni-natural-language-values
                         name="preferredUsername"
                         it=${JSON.stringify(this.it.getPreferredUsername())}
-                        ?editable=${this.authenticated}
+                        ?editable=${this.authenticated && isMainPage()}
                 ></oni-natural-language-values>
             `;
         }

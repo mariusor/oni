@@ -3,7 +3,7 @@ import {
     authorization,
     fetchActivityPubIRI,
     isAuthorized,
-    isLocalIRI,
+    isLocalIRI, isMainPage,
     mainActorOutbox,
     pluralize, renderTimestamp,
 } from "./utils";
@@ -246,7 +246,7 @@ export class ActivityPubObject extends LitElement {
         return html`<oni-natural-language-values
                 name="summary"
                 it=${JSON.stringify(summary)}
-                ?editable=${this.authenticated}
+                ?editable=${this.authenticated && isMainPage()}
         ></oni-natural-language-values>`;
     }
 

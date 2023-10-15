@@ -64,16 +64,16 @@ export class SimpleTooltip extends LitElement {
     }
 
     set target(target) {
-        // Remove events from existing target
-        if (this.target) {
-            enterEvents.forEach((name) => this.target.removeEventListener(name, this.show));
-            leaveEvents.forEach((name) => this.target.removeEventListener(name, this.hide));
+        if (!target) return;
+
+        if (this._target) {
+            // Remove events from existing target
+            enterEvents.forEach((name) => this._target.removeEventListener(name, this.show));
+            leaveEvents.forEach((name) => this._target.removeEventListener(name, this.hide));
         }
-        if (target) {
-            // Add events to new target
-            enterEvents.forEach((name) => target.addEventListener(name, this.show));
-            leaveEvents.forEach((name) => target.addEventListener(name, this.hide));
-        }
+        // Add events to new target
+        enterEvents.forEach((name) => target.addEventListener(name, this.show));
+        leaveEvents.forEach((name) => target.addEventListener(name, this.hide));
         this._target = target;
     }
 

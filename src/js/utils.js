@@ -13,8 +13,8 @@ export function prefersDarkTheme() {
 };
 
 export function OnReady(a) {
-    'loading' == document.readyState ? document.addEventListener && document.addEventListener('DOMContentLoaded', a) : a.call()
-};
+    'loading' === document.readyState ? document.addEventListener && document.addEventListener('DOMContentLoaded', a) : a.call()
+}
 
 const fetchHeaders = {Accept: 'application/activity+json', 'Cache-Control': 'no-store'};
 
@@ -40,7 +40,7 @@ export function isLocalIRI(iri) {
         return false;
     }
     return iri.indexOf(window.location.hostname) > 0;
-};
+}
 
 export function hostFromIRI(iri) {
     try {
@@ -48,7 +48,7 @@ export function hostFromIRI(iri) {
     } catch (err) {
         return '';
     }
-};
+}
 
 export function baseIRI(iri) {
     try {
@@ -58,19 +58,19 @@ export function baseIRI(iri) {
     } catch (err) {
         return '';
     }
-};
+}
 
 export function pastensify(verb) {
     if (typeof verb !== 'string') return verb;
-    if (verb == 'Undo') {
+    if (verb === 'Undo') {
         return 'Reverted';
     }
-    if (verb == 'Create') {
+    if (verb === 'Create') {
         return 'Published';
     }
     if (verb[verb.length - 1] === 'e') return `${verb}d`;
     return `${verb}ed`;
-};
+}
 
 function splitCollectionIRI(iri) {
     const u = new URL(iri);
@@ -85,6 +85,10 @@ export function isAuthorized() {
     const auth = authorization();
     return auth.hasOwnProperty('access_token') && auth.hasOwnProperty('token_type') &&
         auth.access_token.length > 0 && auth.token_type.length > 0;
+}
+
+export function isMainPage() {
+    return window.location.pathname === '/';
 }
 
 export function editableContent(root) {
