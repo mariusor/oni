@@ -4,7 +4,7 @@ import {when} from "lit-html/directives/when.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
 import {isAuthorized, loadPalette, renderColors} from "./utils";
-import tinycolor from "tinycolor2";
+import tc from "tinycolor2";
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
@@ -37,7 +37,7 @@ export class OniMainActor extends ActivityPubActor {
             grid-area: description;
         }
         header aside oni-natural-language-values {
-            margin: 0 0 0 1rem;
+            /*margin: 0 0 0 1rem;*/
             font-size: .9rem;
         }
         header h1 a oni-natural-language-values {
@@ -119,7 +119,7 @@ export class OniMainActor extends ActivityPubActor {
 
     renderCollections() {
         const c = this.collections();
-        if (c.length == 0) {
+        if (c.length === 0) {
             return nothing;
         }
         return html`
@@ -132,11 +132,11 @@ export class OniMainActor extends ActivityPubActor {
             return nothing;
         }
         if (typeof icon == 'string') {
-            return html`<img src=${icon}/>`;
+            return html`<img src="${icon}" alt="icon"/>`;
         } else {
             const url = icon.id || icon.url;
             if (url) {
-                return html`<img src=${url}/>`;
+                return html`<img src="${url}" alt="icon"/>`;
             }
         }
         return nothing;
@@ -210,7 +210,7 @@ export class OniMainActor extends ActivityPubActor {
         const palette = await loadPalette(this.it);
         if (!palette) return nothing;
 
-        const col = tinycolor(palette.bgColor);
+        const col = tc(palette.bgColor);
         const haveBgImg = palette.hasOwnProperty('bgImageURL') && palette.bgImageURL.length > 0 && col;
         const img = palette.bgImageURL;
         return html`
