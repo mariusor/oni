@@ -16,7 +16,7 @@ export class OniMainActor extends ActivityPubActor {
         main header {
             display: grid;
             gap: .4rem .8rem;
-            grid-template-columns: minmax(0.8fr, min-content) 1.2fr; 
+            grid-template-columns: minmax(0.8fr, min-content) 1.2fr;
             grid-template-rows: 3rem auto;
             grid-template-areas: "icon name"
             "icon description";
@@ -174,12 +174,12 @@ export class OniMainActor extends ActivityPubActor {
         return nothing;
     }
 
-    loggedIn(e) {
+    loggedIn() {
         this.authenticated = true;
         localStorage.setItem("outbox", this.outbox());
     }
 
-    loggedOut(e) {
+    loggedOut() {
         this.authenticated = false;
     }
 
