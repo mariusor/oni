@@ -110,6 +110,7 @@ export class TextEditor extends LitElement {
     handleFiles(files) {
         if (!files) return;
 
+        let images  = [];
         const appendImage = (progress) => {
             const f = progress.target
 
@@ -134,7 +135,7 @@ export class TextEditor extends LitElement {
                 continue;
             }
             if (f.size > 256000) {
-                showError("Image attachment is too large.")
+                showError("Image attachment is too large (max. 256Kb). ")
                 continue;
             }
 
@@ -145,6 +146,8 @@ export class TextEditor extends LitElement {
 
             console.debug(f);
         }
+        console.debug(images);
+        replaceSelection(this, images)
     }
 
     render() {
@@ -489,5 +492,27 @@ export class TextEditorToolbar extends LitElement {
             this.style.top = `${y}px`;
         });
         return html`<slot></slot>`;
+    }
+}
+
+function replaceSelection(root, ) {
+    let selection = document.getSelection();
+    if (typeof root.shadowRoot?.getSelection == 'function') {
+        selection = root.shadowRoot?.getSelection();
+    }
+    if (selection?.type === "Range") {
+        for (let i = 0; i < selection.rangeCount; i++) {
+            const range = selection.getRangeAt(i);
+
+            let parent = range.commonAncestorContainer;
+            while (parent.nodeType == Node.TEXT_NODE) {
+                parent = parent.parentNode;
+            }
+            range.deleteContents();
+            const n = nodes[i];
+            if (n) {
+                parent.appendChild(n);
+            }
+        }
     }
 }
