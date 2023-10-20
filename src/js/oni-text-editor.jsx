@@ -6,11 +6,14 @@ import {Shortcut} from "./shortcut";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubObject} from "./activity-pub-object";
 
+// Positioning library
+import {autoPlacement, computePosition, offset, shift} from '@floating-ui/dom';
+
 export class TextEditor extends LitElement {
     static styles = [
         ActivityPubObject.styles,
         css`
-        :host simple-tooltip {
+        :host oni-text-editor-toolbar {
           --toolbar-width: max-content;
           --toolbar-height: min-content;
           --toolbar-background-top: white;
@@ -18,7 +21,7 @@ export class TextEditor extends LitElement {
           --toolbar-on-background: white;
           --toolbar-on-active-background: #a4a4a4;
         }
-        :host simple-tooltip {
+        :host oni-text-editor-toolbar {
           height: var(--toolbar-height);
           max-width: var(--toolbar-width);
           overscroll-behavior: contain;
@@ -39,14 +42,12 @@ export class TextEditor extends LitElement {
           outline: dashed 2px var(--accent-color);
           outline-offset: 4px;
         }
-        simple-tooltip button { font-family: serif; font-size: 1em; }
         :host body {
           margin: 0;
           padding: 0;
           width: 100%;
           position: relative;
         }
-        simple-tooltip button { font-family: serif; font-size: 1.2em; }
     `];
 
     static properties = {
@@ -148,7 +149,7 @@ export class TextEditor extends LitElement {
 
     render() {
         return html`${this.root}${when(this.active,
-                () => html`<simple-tooltip>${html`${this.renderToolbar()}`}</simple-tooltip> `,
+                () => html`<oni-text-editor-toolbar>${html`${this.renderToolbar()}`}</oni-text-editor-toolbar> `,
                 () => nothing
         )} `;
     }
@@ -402,3 +403,107 @@ export class TextEditor extends LitElement {
     }
 }
 
+// Events to turn on/off the tooltip
+const enterEvents = ['focusin'];
+const leaveEvents = ['focusout'];
+
+export class TextEditorToolbar extends LitElement {
+    static properties = {
+        showing: {reflect: true, type: Boolean},
+        offset: {type: Number},
+    };
+
+    static styles = css`
+    :host {
+      /* Position fixed to help ensure the tooltip is "on top" */
+      position: fixed;
+      padding: 4px;
+      border-radius: 4px;
+      display: inline-block;
+      pointer-events: none;
+
+      /* Animate in */
+      opacity: 0;
+      transform: scale(0.75);
+      transition: opacity, transform;
+      transition-duration:  0.33s;
+      font-size: 60%;
+    }
+    :host([showing]) {
+      opacity: 1;
+      transform: scale(1);
+    }
+  `;
+
+    constructor() {
+        super();
+        // Finish hiding at end of animation
+        this.addEventListener('transitionend', this.finishHide);
+        // Attribute for styling "showing"
+        this.showing = true;
+        // Position offset
+        this.offset = 4;
+    }
+
+    connectedCallback() {
+        super.connectedCallback();
+        // Setup target if needed
+        this.target ??= this.previousElementSibling;
+        // Ensure hidden at start
+        this.finishHide();
+    }
+
+    // Target for which to show tooltip
+    _target = null;
+
+    get target() {
+        return this._target;
+    }
+
+    set target(target) {
+        if (!target) return;
+
+        if (this._target) {
+            // Remove events from existing target
+            enterEvents.forEach((name) => this._target.removeEventListener(name, this.show));
+            leaveEvents.forEach((name) => this._target.removeEventListener(name, this.hide));
+        }
+        // Add events to new target
+        enterEvents.forEach((name) => target.addEventListener(name, this.show));
+        leaveEvents.forEach((name) => target.addEventListener(name, this.hide));
+        this._target = target;
+    }
+
+    show = () => {
+        this.style.cssText = '';
+        this.showing = true;
+    };
+
+    hide = () => {
+        setTimeout(() => {
+            this.showing = false;
+        }, 2000);
+    };
+
+    finishHide = () => {
+        if (!this.showing) {
+            this.style.display = 'none';
+        }
+    };
+
+    render() {
+        computePosition(this.target, this, {
+            placement: "top-start",
+            middleware: [
+                offset(this.offset),
+                shift(),
+                autoPlacement({alignment: 'start', allowedPlacements: ['top', 'bottom']}),
+            ],
+        }).then(({x, y}) => {
+            //console.debug(`pos ${x}x${y}`)
+            this.style.left = `${x}px`;
+            this.style.top = `${y}px`;
+        });
+        return html`<slot></slot>`;
+    }
+}

@@ -15,8 +15,7 @@ import {LoginDialog, LoginLink} from "./login-elements";
 import {ActivityPubTombstone} from "./activity-pub-tombstone";
 import {ActivityPubTag} from "./activity-pub-tag";
 import {OniErrors} from "./oni-errors";
-import {TextEditor} from "./oni-text-editor";
-import {SimpleTooltip} from "./simple-tooltip";
+import {TextEditor, TextEditorToolbar} from "./oni-text-editor";
 import {ActivityPubEvent} from "./activity-pub-event";
 
 customElements.define('oni-main', OniMainActor);
@@ -43,8 +42,7 @@ customElements.define('oni-login-dialog', LoginDialog);
 
 customElements.define('oni-errors', OniErrors);
 customElements.define('oni-text-editor', TextEditor);
-
-customElements.define('simple-tooltip', SimpleTooltip);
+customElements.define('oni-text-editor-toolbar', TextEditorToolbar);
 
 OnReady(function () {
     console.debug(`Loading ${window.location}`);
