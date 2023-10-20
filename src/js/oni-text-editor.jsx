@@ -159,22 +159,6 @@ export class TextEditor extends LitElement {
         if (!this.isContentEditable) return nothing;
 
         const tags = [];
-        const selection = document.getSelection();
-        let root;
-        if (selection?.type === "Range") {
-            root = selection?.baseNode;
-            if (root) {
-                const checkNode = () => {
-                    const parentTagName = root?.tagName?.toLowerCase()?.trim();
-                    if (parentTagName) tags.push(parentTagName);
-                };
-                while (root != null) {
-                    checkNode();
-                    root = root?.parentNode;
-                }
-            }
-        }
-
         const commands = {
             bold: {
                 shortcut: "Ctrl+b",
@@ -335,7 +319,7 @@ export class TextEditor extends LitElement {
             },
         };
 
-        return this.renderCommands(commands, root);
+        return this.renderCommands(commands, this.root);
     }
 
     renderCommands(commands, editable) {
