@@ -164,7 +164,7 @@ export class TextEditor extends LitElement {
                 shortcut: "Ctrl+b",
                 toolbarHtml: "<strong>B</strong>",
                 execCommand: "bold",
-                desc: "Toggles bold on/off for the selection or at the insertion point. (Internet Explorer uses the STRONG tag instead of B.)",
+                desc: "Toggles bold on/off for the selection or at the insertion point.",
                 active: tags.includes("b"),
             },
             italic: {
@@ -172,7 +172,7 @@ export class TextEditor extends LitElement {
                 toolbarHtml: "<em>I</em>",
                 execCommand: "italic",
                 active: tags.includes("i"),
-                desc: "Toggles italics on/off for the selection or at the insertion point. (Internet Explorer uses the EM tag instead of I.)",
+                desc: "Toggles italics on/off for the selection or at the insertion point.",
             },
             underline: {
                 shortcut: "Ctrl+u",
@@ -195,7 +195,7 @@ export class TextEditor extends LitElement {
                 execCommandValue: function () {
                     return prompt("Enter URL:", "https://");
                 },
-                desc: "Creates an anchor link from the selection, only if there is a selection. This requires the HREF URI string to be passed in as a value argument. The URI must contain at least a single character, which may be a white space. (Internet Explorer will create a link with a null URI value.)",
+                desc: "Creates an anchor link from the selection, only if there is a selection. This requires the HREF URI string to be passed in as a value argument. The URI must contain at least a single character, which may be a white space.",
             },
             insertHorizontalRule: {
                 shortcut: "Ctrl+Alt+h",
@@ -215,14 +215,14 @@ export class TextEditor extends LitElement {
                 execCommandValue: ["<BLOCKQUOTE>"],
                 toolbarHtml: "<span title='Quote'>&rdquor;</span>",//"&ldquo;&bdquo;",
                 execCommand: "formatBlock",
-                //desc: "Adds an HTML block-style tag around the line containing the current selection, replacing the block element containing the line if one exists (in Firefox, BLOCKQUOTE is the exception - it will wrap any containing block element). Requires a tag-name string to be passed in as a value argument. Virtually all block style tags can be used (eg. \"H1\", \"P\", \"DL\", \"BLOCKQUOTE\"). (Internet Explorer supports only heading tags H1 - H6, ADDRESS, and PRE, which must also include the tag delimiters &lt; &gt;, such as \"&lt;H1&gt;\".)",
+                desc: "Adds a blockquote tag around the line containing the current selection, replacing the block element containing the line if one exists.",
             },
             code: {
                 shortcut: "Ctrl+Alt+c",
                 execCommand: "formatBlock",
                 execCommandValue: ["<PRE>"],
                 toolbarHtml: "<code title='Code' style='font-size:.8em'>{&nbsp;}</code>",
-                //desc: "Adds an HTML block-style tag around the line containing the current selection, replacing the block element containing the line if one exists (in Firefox, BLOCKQUOTE is the exception - it will wrap any containing block element). Requires a tag-name string to be passed in as a value argument. Virtually all block style tags can be used (eg. \"H1\", \"P\", \"DL\", \"BLOCKQUOTE\"). (Internet Explorer supports only heading tags H1 - H6, ADDRESS, and PRE, which must also include the tag delimiters &lt; &gt;, such as \"&lt;H1&gt;\".)",
+                desc: "Adds an HTML preformatted tag around the line containing the current selection, replacing the block element containing the line if one exists.",
             },
             ol: {
                 shortcut: "Ctrl+Alt+o",
@@ -254,50 +254,50 @@ export class TextEditor extends LitElement {
                 shortcut: "Ctrl+Alt+0",
                 execCommand: "formatBlock",
                 execCommandValue: ["<P>"],
-                toolbarHtml: "<span title='Paragraph'>P</span>"
-                //desc: "Adds an HTML block-style tag around the line containing the current selection, replacing the block element containing the line if one exists (in Firefox, BLOCKQUOTE is the exception - it will wrap any containing block element). Requires a tag-name string to be passed in as a value argument. Virtually all block style tags can be used (eg. \"H1\", \"P\", \"DL\", \"BLOCKQUOTE\"). (Internet Explorer supports only heading tags H1 - H6, ADDRESS, and PRE, which must also include the tag delimiters &lt; &gt;, such as \"&lt;H1&gt;\".)",
+                toolbarHtml: "<span title='Paragraph'>P</span>",
+                desc: "Adds an paragraph tag around the line containing the current selection, replacing the block element containing the line if one exists.",
             },
             h1: {
                 shortcut: "Ctrl+Alt+1",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H1>"],
                 toolbarHtml: "<span>H1</span>",
-                desc: "Adds a heading tag around a selection or insertion point line. Requires the tag-name string to be passed in as a value argument (i.e. \"H1\", \"H6\"). (Not supported by Internet Explorer and Safari.)",
+                desc: "Adds a level 1 heading tag around a selection or insertion point line.",
             },
             h2: {
                 shortcut: "Ctrl+Alt+2",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H2>"],
                 toolbarHtml: "<span>H2</span>",
-                desc: "Adds a heading tag around a selection or insertion point line. Requires the tag-name string to be passed in as a value argument (i.e. \"H1\", \"H6\"). (Not supported by Internet Explorer and Safari.)",
+                desc: "Adds a level 2 heading tag around a selection or insertion point line.",
             },
             h3: {
                 shortcut: "Ctrl+Alt+3",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H3>"],
                 toolbarHtml: "<span>H3</span>",
-                desc: "Adds a heading tag around a selection or insertion point line. Requires the tag-name string to be passed in as a value argument (i.e. \"H1\", \"H6\"). (Not supported by Internet Explorer and Safari.)",
+                desc: "Adds a level 3 heading tag around a selection or insertion point line.",
             },
             h4: {
                 shortcut: "Ctrl+Alt+4",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H4>"],
                 toolbarHtml: "<span>H4</span>",
-                desc: "Adds a heading tag around a selection or insertion point line. Requires the tag-name string to be passed in as a value argument (i.e. \"H1\", \"H6\"). (Not supported by Internet Explorer and Safari.)",
+                desc: "Adds a level 4 heading tag around a selection or insertion point line.",
             },
             h5: {
                 shortcut: "Ctrl+Alt+5",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H5>"],
                 toolbarHtml: "<span>H5</span>",
-                desc: "Adds a heading tag around a selection or insertion point line. Requires the tag-name string to be passed in as a value argument (i.e. \"H1\", \"H6\"). (Not supported by Internet Explorer and Safari.)",
+                desc: "Adds a level 5 heading tag around a selection or insertion point line",
             },
             h6: {
                 shortcut: "Ctrl+Alt+6",
                 execCommand: "formatBlock",
                 execCommandValue: ["<H6>"],
                 toolbarHtml: "<span>H6</span>",
-                desc: "Adds a heading tag around a selection or insertion point line. Requires the tag-name string to be passed in as a value argument (i.e. \"H1\", \"H6\"). (Not supported by Internet Explorer and Safari.)",
+                desc: "Adds a level 6 heading tag around a selection or insertion point line.",
             },
             indent: {
                 shortcut: "Tab",
@@ -315,7 +315,7 @@ export class TextEditor extends LitElement {
                 shortcut: "Ctrl+Shift+i",
                 execCommand: () => this.shadowRoot.querySelector('input[type=file]')?.click(),
                 toolbarHtml: "<span>&#128444;</span>",
-                desc: "Inserts an image at the insertion point (deletes selection). Requires the image SRC URI string to be passed in as a value argument. The URI must contain at least a single character, which may be a white space. (Internet Explorer will create a link with a null URI value.)",
+                desc: "Inserts an image at the insertion point (deletes selection). Requires the image SRC URI string to be passed in as a value argument. The URI must contain at least a single character, which may be a white space.",
             },
         };
 
