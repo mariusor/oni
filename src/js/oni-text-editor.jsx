@@ -74,7 +74,7 @@ export class TextEditor extends LitElement {
         document.execCommand("defaultParagraphSeparator", true, "br");
 
         const root = doc.querySelector("body");
-        root.setAttribute("title", "Editable.");
+        //root.setAttribute("title", "Editable.");
         root.setAttribute("contenteditable", "");
         this.addEventListener('focusin', () => this.active = true);
         this.addEventListener('blur', () => this.active = false);
@@ -86,7 +86,7 @@ export class TextEditor extends LitElement {
 
         for (const i in commands) {
             const c = commands[i];
-            if (!isValidCommand(n.execCommand)) continue;
+            if (!isValidCommand(c.execCommand)) continue;
 
             Shortcut.add(
                 c.shortcut,
@@ -96,6 +96,7 @@ export class TextEditor extends LitElement {
                 },
                 {type: 'keydown', propagate: false, target: this.root}
             );
+            console.debug(`Added shortcut ${c.shortcut} for element ${this.root.innerText.substring(0, 32)}...`);
         }
     }
 
@@ -188,19 +189,19 @@ export class TextEditor extends LitElement {
         if (!this.isContentEditable) return nothing;
         let elements = [];
 
-        for (const c in commands) {
-            const n = commands[c];
-            if (!isValidCommand(n.execCommand)) continue;
+        for (const i in commands) {
+            const c = commands[i];
+            if (!isValidCommand(c.execCommand)) continue;
 
-            if (c === "insertImage") elements.push(this.renderImageUpload(n));
-            else elements.push(this.renderButton(n));
+            if (i === "insertImage") elements.push(this.renderImageUpload(c));
+            else elements.push(this.renderButton(c));
         }
         return html`${elements.map(n => html`${n}`)}`
     }
 
     renderButton(n) {
         return html`
-            <button title=${n.desc} class=${classMap({"active": isActiveTag(n.active)})} @click=${() => {
+            <button title="${n.desc}\nShortcut: ${n.shortcut}" class=${classMap({"active": isActiveTag(n.active)})} @click=${() => {
                 execCommand(n);
                 this.content = this.root.innerHTML;
             }}>
@@ -509,4 +510,4 @@ function isActiveTag(t) {
     return tags.includes(t)
 }
 
-const isValidCommand = (cmdName) => typeof cmdName != 'string' || !document.queryCommandSupported(cmdName);
+const isValidCommand = (cmdName) => typeof cmdName === 'string' && document.queryCommandSupported(cmdName);
