@@ -1,7 +1,7 @@
 import {css, html, LitElement, nothing} from "lit";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {classMap} from "lit-html/directives/class-map.js";
-import {showError} from "./utils";
+import {getSelection, showError} from "./utils";
 import {Shortcut} from "./shortcut";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubObject} from "./activity-pub-object";
@@ -495,11 +495,8 @@ export class TextEditorToolbar extends LitElement {
     }
 }
 
-function replaceSelection(root, ) {
-    let selection = document.getSelection();
-    if (typeof root.shadowRoot?.getSelection == 'function') {
-        selection = root.shadowRoot?.getSelection();
-    }
+function replaceSelection(root) {
+    const selection = getSelection(root);
     if (selection?.type === "Range") {
         for (let i = 0; i < selection.rangeCount; i++) {
             const range = selection.getRangeAt(i);

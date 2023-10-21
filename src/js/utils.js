@@ -429,3 +429,12 @@ export function colorDiff(c1, c2) {
     return Math.sqrt(Math.pow(c2.a , 2) + Math.pow(c2.b , 2)) -
         Math.sqrt(Math.pow(c1.a , 2) + Math.pow(c1.b , 2))
 }
+
+export function getSelection(root) {
+    let selection = document.getSelection();
+    if (root && typeof root.shadowRoot?.getSelection == 'function') {
+        selection = root.shadowRoot?.getSelection();
+    }
+    return selection;
+}
+
