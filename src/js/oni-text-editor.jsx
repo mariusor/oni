@@ -1,7 +1,7 @@
 import {css, html, LitElement, nothing} from "lit";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {classMap} from "lit-html/directives/class-map.js";
-import {getSelection, showError} from "./utils";
+import {execCommand, getSelection, showError} from "./utils";
 import {Shortcut} from "./shortcut";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubObject} from "./activity-pub-object";
@@ -83,6 +83,20 @@ export class TextEditor extends LitElement {
         this.addEventListener('dragover', this.dragAllowed);
         this.addEventListener('image.upload', (e) => { console.debug(e); this.handleFiles(e.detail)});
         this.root = root;
+
+        for (const i in commands) {
+            const c = commands[i];
+            if (!isValidCommand(n.execCommand)) continue;
+
+            Shortcut.add(
+                c.shortcut,
+                (e) => {
+                    execCommand(c);
+                    this.content = this.root.innerHTML;
+                },
+                {type: 'keydown', propagate: false, target: this.root}
+            );
+        }
     }
 
     handleDrop(e) {
@@ -110,14 +124,13 @@ export class TextEditor extends LitElement {
     handleFiles(files) {
         if (!files) return;
 
-        let images  = [];
+        const selection = getSelection(this)
         const appendImage = (progress) => {
             const f = progress.target
 
             // NOTE(marius): replacing the selection with the image doesn't seem to work very well.
             // I need to research more. For now, appending the images at the end of the editable block
             // seems OK.
-            //console.debug(document.getSelection());
 
             const img = document.createElement("img");
             img.src = f.result;
@@ -126,7 +139,19 @@ export class TextEditor extends LitElement {
             img.dataName = f.name;
             img.style.maxWidth = '100%';
 
-            this.root.append(img);
+            if (selection?.type === "Range") {
+                for (let i = 0; i < selection.rangeCount; i++) {
+                    const range = selection.getRangeAt(i);
+
+                    let parent = range.commonAncestorContainer;
+                    if (parent.nodeType === Node.TEXT_NODE) {
+                        parent = parent.parentNode;
+                    }
+                    parent.appendChild(img);
+                }
+            } else {
+                this.root.append(img);
+            }
         }
 
         for (let i = 0, f; f = files[i], f; i++) {
@@ -143,11 +168,7 @@ export class TextEditor extends LitElement {
             const reader = new FileReader();
             reader.addEventListener("load", appendImage);
             reader.readAsDataURL(f);
-
-            console.debug(f);
         }
-        console.debug(images);
-        replaceSelection(this, images)
     }
 
     render() {
@@ -160,185 +181,16 @@ export class TextEditor extends LitElement {
     renderToolbar() {
         if (!this.root) return nothing;
         if (!this.isContentEditable) return nothing;
-
-        const tags = [];
-        const commands = {
-            bold: {
-                shortcut: "Ctrl+b",
-                toolbarHtml: "<strong>B</strong>",
-                execCommand: "bold",
-                desc: "Toggles bold on/off for the selection or at the insertion point.",
-                active: tags.includes("b"),
-            },
-            italic: {
-                shortcut: "Ctrl+i",
-                toolbarHtml: "<em>I</em>",
-                execCommand: "italic",
-                active: tags.includes("i"),
-                desc: "Toggles italics on/off for the selection or at the insertion point.",
-            },
-            underline: {
-                shortcut: "Ctrl+u",
-                toolbarHtml: "<span style='text-decoration: underline'>U</span>",
-                execCommand: "underline",
-                active: tags.includes("u"),
-                desc: "Toggles underline on/off for the selection or at the insertion point.",
-            },
-            removeFormat: {
-                shortcut: "Ctrl+m",
-                execCommand: ["removeFormat", "unlink", "formatBlock"],
-                execCommandValue: [null, null, ["<P>"]],
-                toolbarHtml: "<span>&#11034;</span>",
-                desc: "Removes the formatting from the selection.",
-            },
-            createLink: {
-                shortcut: "Ctrl+l",
-                toolbarHtml: "<span>&#128279;</span>",
-                execCommand: "createlink",
-                execCommandValue: function () {
-                    return prompt("Enter URL:", "https://");
-                },
-                desc: "Creates an anchor link from the selection, only if there is a selection. This requires the HREF URI string to be passed in as a value argument. The URI must contain at least a single character, which may be a white space.",
-            },
-            insertHorizontalRule: {
-                shortcut: "Ctrl+Alt+h",
-                execCommand: "inserthorizontalrule",
-                toolbarHtml: "<span>&#9473;</span>",
-                desc: "Inserts a horizontal rule at the insertion point (deletes selection).",
-            },
-            strikethrough: {
-                shortcut: "Ctrl+Alt+t",
-                toolbarHtml: "<strike>S</strike>",
-                execCommand: "strikethrough",
-                active: tags.includes("strike"),
-                desc: "Toggles strikethrough on/off for the selection or at the insertion point.",
-            },
-            blockquote: {
-                shortcut: "Ctrl+q",
-                execCommandValue: ["<BLOCKQUOTE>"],
-                toolbarHtml: "<span title='Quote'>&rdquor;</span>",//"&ldquo;&bdquo;",
-                execCommand: "formatBlock",
-                desc: "Adds a blockquote tag around the line containing the current selection, replacing the block element containing the line if one exists.",
-            },
-            code: {
-                shortcut: "Ctrl+Alt+c",
-                execCommand: "formatBlock",
-                execCommandValue: ["<PRE>"],
-                toolbarHtml: "<code title='Code' style='font-size:.8em'>{&nbsp;}</code>",
-                desc: "Adds an HTML preformatted tag around the line containing the current selection, replacing the block element containing the line if one exists.",
-            },
-            ol: {
-                shortcut: "Ctrl+Alt+o",
-                toolbarHtml: "<span>1.</span>",
-                execCommand: "insertorderedlist",
-                active: tags.includes("ol"),
-                desc: "Creates a numbered ordered list for the selection or at the insertion point.",
-            },
-            ul: {
-                shortcut: "Ctrl+Alt+u",
-                toolbarHtml: "<span>&bullet;</span>",
-                execCommand: "insertUnorderedList",
-                active: tags.includes("ul"),
-                desc: "Creates a bulleted unordered list for the selection or at the insertion point.",
-            },
-            sup: {
-                shortcut: "Ctrl+.",
-                execCommand: "superscript",
-                toolbarHtml: "<span style='font-size:.7em'>x<sup>2</sup></span>",
-                desc: "Toggles superscript on/off for the selection or at the insertion point.",
-            },
-            sub: {
-                shortcut: "Ctrl+Shift+.",
-                execCommand: "subscript",
-                toolbarHtml: "<span style='font-size:.7em'>x<sub style='font-size:.6em'>2</sub></span>",
-                desc: "Toggles subscript on/off for the selection or at the insertion point.",
-            },
-            p: {
-                shortcut: "Ctrl+Alt+0",
-                execCommand: "formatBlock",
-                execCommandValue: ["<P>"],
-                toolbarHtml: "<span title='Paragraph'>P</span>",
-                desc: "Adds an paragraph tag around the line containing the current selection, replacing the block element containing the line if one exists.",
-            },
-            h1: {
-                shortcut: "Ctrl+Alt+1",
-                execCommand: "formatBlock",
-                execCommandValue: ["<H1>"],
-                toolbarHtml: "<span>H1</span>",
-                desc: "Adds a level 1 heading tag around a selection or insertion point line.",
-            },
-            h2: {
-                shortcut: "Ctrl+Alt+2",
-                execCommand: "formatBlock",
-                execCommandValue: ["<H2>"],
-                toolbarHtml: "<span>H2</span>",
-                desc: "Adds a level 2 heading tag around a selection or insertion point line.",
-            },
-            h3: {
-                shortcut: "Ctrl+Alt+3",
-                execCommand: "formatBlock",
-                execCommandValue: ["<H3>"],
-                toolbarHtml: "<span>H3</span>",
-                desc: "Adds a level 3 heading tag around a selection or insertion point line.",
-            },
-            h4: {
-                shortcut: "Ctrl+Alt+4",
-                execCommand: "formatBlock",
-                execCommandValue: ["<H4>"],
-                toolbarHtml: "<span>H4</span>",
-                desc: "Adds a level 4 heading tag around a selection or insertion point line.",
-            },
-            h5: {
-                shortcut: "Ctrl+Alt+5",
-                execCommand: "formatBlock",
-                execCommandValue: ["<H5>"],
-                toolbarHtml: "<span>H5</span>",
-                desc: "Adds a level 5 heading tag around a selection or insertion point line",
-            },
-            h6: {
-                shortcut: "Ctrl+Alt+6",
-                execCommand: "formatBlock",
-                execCommandValue: ["<H6>"],
-                toolbarHtml: "<span>H6</span>",
-                desc: "Adds a level 6 heading tag around a selection or insertion point line.",
-            },
-            indent: {
-                shortcut: "Tab",
-                toolbarHtml: "<span>&#8677;</span>",//"&rArr;",
-                execCommand: "indent",
-                desc: "Indents the line containing the selection or insertion point. In Firefox, if the selection spans multiple lines at different levels of indentation, only the least indented lines in the selection will be indented.",
-            },
-            outdent: {
-                shortcut: ["Ctrl+Tab", "Shift+Tab"],
-                toolbarHtml: "<span>&#8676;</span>",//"&lArr;",
-                execCommand: "outdent",
-                desc: "Outdents the line containing the selection or insertion point.",
-            },
-            insertImage: {
-                shortcut: "Ctrl+Shift+i",
-                execCommand: () => this.shadowRoot.querySelector('input[type=file]')?.click(),
-                toolbarHtml: "<span>&#128444;</span>",
-                desc: "Inserts an image at the insertion point (deletes selection). Requires the image SRC URI string to be passed in as a value argument. The URI must contain at least a single character, which may be a white space.",
-            },
-        };
-
-        return this.renderCommands(commands, this.root);
+        return this.renderCommands(commands);
     }
 
-    renderCommands(commands, editable) {
+    renderCommands(commands) {
         if (!this.isContentEditable) return nothing;
         let elements = [];
 
         for (const c in commands) {
             const n = commands[c];
-            const cmdName = n.execCommand;
-            if (typeof cmdName == 'string' && !document.queryCommandSupported(cmdName)) continue;
-
-            Shortcut.add(
-                n.shortcut,
-                function() { this.exec(n) },
-                { type: 'keydown', propagate: false, target: editable}
-            );
+            if (!isValidCommand(n.execCommand)) continue;
 
             if (c === "insertImage") elements.push(this.renderImageUpload(n));
             else elements.push(this.renderButton(n));
@@ -348,7 +200,10 @@ export class TextEditor extends LitElement {
 
     renderButton(n) {
         return html`
-            <button title=${n.desc} class=${classMap({"active": n.active})} @click=${() => { this.exec(n)}}>
+            <button title=${n.desc} class=${classMap({"active": isActiveTag(n.active)})} @click=${() => {
+                execCommand(n);
+                this.content = this.root.innerHTML;
+            }}>
                 ${unsafeHTML(n.toolbarHtml)}
             </button>`;
     }
@@ -366,27 +221,6 @@ export class TextEditor extends LitElement {
                            }}"
         >
         <button @click=${n.execCommand}>${unsafeHTML(n.toolbarHtml)}</button>`;
-    }
-
-    exec (n) {
-        if (!Array.isArray(n.execCommand)) n.execCommand = [n.execCommand];
-        if (!Array.isArray(n.execCommandValue)) n.execCommandValue = [n.execCommandValue];
-
-        for (const i in n.execCommand) {
-            const command = n.execCommand[i];
-            let val = n.execCommandValue[i];
-
-            if (typeof command === "string") {
-                // NOTE(marius): this should be probably be replaced with something
-                // based on the ideas from here: https://stackoverflow.com/a/62266439
-                if (typeof val == 'function') val = val();
-                console.debug(`executing command ${command}: ${val}`)
-                document.execCommand(command, false, val || '');
-            } else {
-                command(val);
-            }
-        }
-        this.content = this.root.innerHTML;
     }
 }
 
@@ -495,21 +329,184 @@ export class TextEditorToolbar extends LitElement {
     }
 }
 
-function replaceSelection(root) {
-    const selection = getSelection(root);
-    if (selection?.type === "Range") {
-        for (let i = 0; i < selection.rangeCount; i++) {
-            const range = selection.getRangeAt(i);
+const commands = {
+    bold: {
+        shortcut: "Ctrl+b",
+        toolbarHtml: "<strong>B</strong>",
+        execCommand: "bold",
+        desc: "Toggles bold on/off for the selection or at the insertion point.",
+        active: "b",
+    },
+    italic: {
+        shortcut: "Ctrl+i",
+        toolbarHtml: "<em>I</em>",
+        execCommand: "italic",
+        active: "i",
+        desc: "Toggles italics on/off for the selection or at the insertion point.",
+    },
+    underline: {
+        shortcut: "Ctrl+u",
+        toolbarHtml: "<span style='text-decoration: underline'>U</span>",
+        execCommand: "underline",
+        active: "u",
+        desc: "Toggles underline on/off for the selection or at the insertion point.",
+    },
+    removeFormat: {
+        shortcut: "Ctrl+m",
+        execCommand: ["removeFormat", "unlink", "formatBlock"],
+        execCommandValue: [null, null, ["<P>"]],
+        toolbarHtml: "<span>&#11034;</span>",
+        desc: "Removes the formatting from the selection.",
+    },
+    createLink: {
+        shortcut: "Ctrl+l",
+        toolbarHtml: "<span>&#128279;</span>",
+        execCommand: "createlink",
+        execCommandValue: function () {
+            return prompt("Enter URL:", "https://");
+        },
+        desc: "Creates an anchor link from the selection, only if there is a selection. This requires the HREF URI string to be passed in as a value argument. The URI must contain at least a single character, which may be a white space.",
+    },
+    insertHorizontalRule: {
+        shortcut: "Ctrl+Alt+h",
+        execCommand: "inserthorizontalrule",
+        toolbarHtml: "<span>&#9473;</span>",
+        active: "hr",
+        desc: "Inserts a horizontal rule at the insertion point (deletes selection).",
+    },
+    strikethrough: {
+        shortcut: "Ctrl+Alt+t",
+        toolbarHtml: "<strike>S</strike>",
+        execCommand: "strikethrough",
+        active: "strike",
+        desc: "Toggles strikethrough on/off for the selection or at the insertion point.",
+    },
+    blockquote: {
+        shortcut: "Ctrl+q",
+        execCommandValue: ["<BLOCKQUOTE>"],
+        toolbarHtml: "<span title='Quote'>&rdquor;</span>",//"&ldquo;&bdquo;",
+        execCommand: "formatBlock",
+        desc: "Adds a blockquote tag around the line containing the current selection, replacing the block element containing the line if one exists.",
+    },
+    code: {
+        shortcut: "Ctrl+Alt+c",
+        execCommand: "formatBlock",
+        execCommandValue: ["<PRE>"],
+        toolbarHtml: "<code title='Code' style='font-size:.8em'>{&nbsp;}</code>",
+        desc: "Adds an HTML preformatted tag around the line containing the current selection, replacing the block element containing the line if one exists.",
+    },
+    ol: {
+        shortcut: "Ctrl+Alt+o",
+        toolbarHtml: "<span>1.</span>",
+        execCommand: "insertorderedlist",
+        active: "ol",
+        desc: "Creates a numbered ordered list for the selection or at the insertion point.",
+    },
+    ul: {
+        shortcut: "Ctrl+Alt+u",
+        toolbarHtml: "<span>&bullet;</span>",
+        execCommand: "insertUnorderedList",
+        active: "ul",
+        desc: "Creates a bulleted unordered list for the selection or at the insertion point.",
+    },
+    sup: {
+        shortcut: "Ctrl+.",
+        execCommand: "superscript",
+        toolbarHtml: "<span style='font-size:.7em'>x<sup>2</sup></span>",
+        desc: "Toggles superscript on/off for the selection or at the insertion point.",
+    },
+    sub: {
+        shortcut: "Ctrl+Shift+.",
+        execCommand: "subscript",
+        toolbarHtml: "<span style='font-size:.7em'>x<sub style='font-size:.6em'>2</sub></span>",
+        desc: "Toggles subscript on/off for the selection or at the insertion point.",
+    },
+    p: {
+        shortcut: "Ctrl+Alt+0",
+        execCommand: "formatBlock",
+        execCommandValue: ["<P>"],
+        toolbarHtml: "<span title='Paragraph'>P</span>",
+        desc: "Adds an paragraph tag around the line containing the current selection, replacing the block element containing the line if one exists.",
+    },
+    h1: {
+        shortcut: "Ctrl+Alt+1",
+        execCommand: "formatBlock",
+        execCommandValue: ["<H1>"],
+        toolbarHtml: "<span>H1</span>",
+        desc: "Adds a level 1 heading tag around a selection or insertion point line.",
+    },
+    h2: {
+        shortcut: "Ctrl+Alt+2",
+        execCommand: "formatBlock",
+        execCommandValue: ["<H2>"],
+        toolbarHtml: "<span>H2</span>",
+        desc: "Adds a level 2 heading tag around a selection or insertion point line.",
+    },
+    h3: {
+        shortcut: "Ctrl+Alt+3",
+        execCommand: "formatBlock",
+        execCommandValue: ["<H3>"],
+        toolbarHtml: "<span>H3</span>",
+        desc: "Adds a level 3 heading tag around a selection or insertion point line.",
+    },
+    h4: {
+        shortcut: "Ctrl+Alt+4",
+        execCommand: "formatBlock",
+        execCommandValue: ["<H4>"],
+        toolbarHtml: "<span>H4</span>",
+        desc: "Adds a level 4 heading tag around a selection or insertion point line.",
+    },
+    h5: {
+        shortcut: "Ctrl+Alt+5",
+        execCommand: "formatBlock",
+        execCommandValue: ["<H5>"],
+        toolbarHtml: "<span>H5</span>",
+        desc: "Adds a level 5 heading tag around a selection or insertion point line",
+    },
+    h6: {
+        shortcut: "Ctrl+Alt+6",
+        execCommand: "formatBlock",
+        execCommandValue: ["<H6>"],
+        toolbarHtml: "<span>H6</span>",
+        desc: "Adds a level 6 heading tag around a selection or insertion point line.",
+    },
+    indent: {
+        shortcut: "Tab",
+        toolbarHtml: "<span>&#8677;</span>",//"&rArr;",
+        execCommand: "indent",
+        desc: "Indents the line containing the selection or insertion point. In Firefox, if the selection spans multiple lines at different levels of indentation, only the least indented lines in the selection will be indented.",
+    },
+    outdent: {
+        shortcut: ["Ctrl+Tab", "Shift+Tab"],
+        toolbarHtml: "<span>&#8676;</span>",//"&lArr;",
+        execCommand: "outdent",
+        desc: "Outdents the line containing the selection or insertion point.",
+    },
+    insertImage: {
+        shortcut: "Ctrl+Shift+i",
+        execCommand: () => this.shadowRoot.querySelector('input[type=file]')?.click(),
+        toolbarHtml: "<span>&#128444;</span>",
+        desc: "Inserts an image at the insertion point (deletes selection). Requires the image SRC URI string to be passed in as a value argument. The URI must contain at least a single character, which may be a white space.",
+    },
+};
 
-            let parent = range.commonAncestorContainer;
-            while (parent.nodeType == Node.TEXT_NODE) {
-                parent = parent.parentNode;
-            }
-            range.deleteContents();
-            const n = nodes[i];
-            if (n) {
-                parent.appendChild(n);
+function isActiveTag(t) {
+    let tags = [], root;
+    const selection = getSelection(this);
+    if (selection?.type === "Range") {
+        root = selection?.baseNode;
+        if (root) {
+            const checkNode = () => {
+                const parentTagName = root?.tagName?.toLowerCase()?.trim();
+                if (parentTagName) tags.push(parentTagName);
+            };
+            while (root != null) {
+                checkNode();
+                root = root?.parentNode;
             }
         }
     }
+    return tags.includes(t)
 }
+
+const isValidCommand = (cmdName) => typeof cmdName != 'string' || !document.queryCommandSupported(cmdName);

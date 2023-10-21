@@ -30,7 +30,6 @@ export const Shortcut = {
             }
         }
 
-
         for (const i in shortcutCombinations) shortcutCombinations[i] = shortcutCombinations[i].toLowerCase();
 
         // The function to be called at keypress
@@ -59,6 +58,8 @@ export const Shortcut = {
                         e.preventDefault();
                     }
                 }
+
+                if (!callbacks) return;
 
                 console.debug(`Executing command for shortcut ${shortcutCombinations}`, callbacks);
                 for (const i in callbacks) {

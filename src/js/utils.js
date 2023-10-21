@@ -438,3 +438,22 @@ export function getSelection(root) {
     return selection;
 }
 
+export function execCommand (n) {
+    if (!Array.isArray(n.execCommand)) n.execCommand = [n.execCommand];
+    if (!Array.isArray(n.execCommandValue)) n.execCommandValue = [n.execCommandValue];
+
+    for (const i in n.execCommand) {
+        const command = n.execCommand[i];
+        let val = n.execCommandValue[i];
+
+        if (typeof command === "string") {
+            // NOTE(marius): this should be probably be replaced with something
+            // based on the ideas from here: https://stackoverflow.com/a/62266439
+            if (typeof val == 'function') val = val();
+            console.debug(`executing command ${command}: ${val}`)
+            document.execCommand(command, false, val || '');
+        } else {
+            command(val);
+        }
+    }
+}
