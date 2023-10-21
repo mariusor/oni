@@ -37,11 +37,7 @@ export class TextEditor extends LitElement {
         :host {
           --editor-background: transparent;
           display: inline-block;
-          /*width: 100%;*/
-        }
-        :host body:hover, :host body:focus {
-          outline: dashed 2px var(--accent-color);
-          outline-offset: 4px;
+          width: 100%;
         }
         :host body {
           margin: 0;

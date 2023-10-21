@@ -6,7 +6,30 @@ import {when} from "lit-html/directives/when.js";
 
 export class NaturalLanguageValues extends LitElement {
     static styles = [css`
-        :host { display: inline-block; }
+        :host {
+          display: inline-block;
+          position: relative;
+        }
+        :host([editable]:hover), :host([editable]:focus) {
+          outline: dashed 2px var(--accent-color);
+          outline-offset: 2px;
+          padding-right: 2em;
+        }
+        :host([editable]) oni-icon[name=edit] svg {
+          max-height: .7em;
+          max-width: .7em;
+        } 
+        :host([editable]) oni-icon[name=edit] {
+          display: none;
+          color: var(--accent-color);
+          position: absolute;
+          top: -.2em;
+          right: -.2em;
+        }
+        :host([editable]:hover) oni-icon[name=edit], 
+        :host([editable]:focus) oni-icon[name=edit] {
+          display: inline-block;
+        }
         :host div { display: inline-block; }
         :host p { line-height: 1.8em; }
     `, ActivityPubObject.styles];
@@ -22,7 +45,16 @@ export class NaturalLanguageValues extends LitElement {
         this.it = '';
         this.name = '';
         this.editable = false;
-        this.active = false;
+    }
+
+    _ditable = false;
+
+    set ditable(status) {
+        this._ditable = status;
+    }
+
+    get ditable() {
+        return this._ditable;
     }
 
     checkChanged(e) {
@@ -45,6 +77,15 @@ export class NaturalLanguageValues extends LitElement {
         }));
     }
 
+    makeEditable (e) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        this.ditable = true;
+        this.focus({"focusVisible": true})
+        //alert(`${this.name} editable`);
+    }
+
     value() {
         let value;
         if (typeof this.it == 'string') {
@@ -63,15 +104,15 @@ export class NaturalLanguageValues extends LitElement {
         if (!this.it) { return nothing; }
 
         return html`
-            ${when(this.editable,
+            ${when(this.ditable || this.editable,
                     () => html`<oni-text-editor
                             @blur="${this.checkChanged}"
-                            ?contenteditable=${this.editable}
+                            ?contenteditable=${this.ditable || this.editable}
                     >
                         <slot>${unsafeHTML(this.value().trim()) ?? nothing}</slot>
                     </oni-text-editor>`,
                     () => html`${unsafeHTML(this.value()) ?? nothing}`
             )}
-            `;
+            <oni-icon name="edit" @click=${this.makeEditable}></oni-icon>`;
     }
 }

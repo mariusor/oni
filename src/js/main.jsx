@@ -67,5 +67,6 @@ OnReady(function () {
         window.addEventListener('logged.in', (e) => {
             content.editable = isAuthorized();
         });
+        content.setAttribute("editable", "true");
     }
 });
