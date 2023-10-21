@@ -444,14 +444,14 @@ export function execCommand (n) {
 
     for (const i in n.execCommand) {
         const command = n.execCommand[i];
-        let val = n.execCommandValue[i];
+        let val = n.execCommandValue[i] || '';
 
+        if (typeof val == 'function') val = val();
+        console.debug(`Executing command ${command}: ${val}`);
         if (typeof command === "string") {
             // NOTE(marius): this should be probably be replaced with something
             // based on the ideas from here: https://stackoverflow.com/a/62266439
-            if (typeof val == 'function') val = val();
-            console.debug(`executing command ${command}: ${val}`)
-            document.execCommand(command, false, val || '');
+            document.execCommand(command, false, val);
         } else {
             command(val);
         }

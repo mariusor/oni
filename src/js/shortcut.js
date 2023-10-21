@@ -61,7 +61,7 @@ export const Shortcut = {
 
                 if (!callbacks) return;
 
-                console.debug(`Executing command for shortcut ${shortcutCombinations}`, callbacks);
+                console.debug(`Shortcut ${shortcutCombinations} activated`);
                 for (const i in callbacks) {
                     callbacks[i](e);
                 }
