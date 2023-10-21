@@ -8,7 +8,7 @@ export const Shortcut = {
     allShortcuts: {},
 
     add: function (shortcutCombinations, callbacks, opt) {
-        if (typeof shortcutCombinations == 'undefined') return;
+        if (typeof shortcutCombinations === 'undefined') return;
         if (!Array.isArray(shortcutCombinations)) shortcutCombinations = [shortcutCombinations];
         if (!Array.isArray(callbacks)) callbacks = [callbacks];
 
@@ -26,7 +26,7 @@ export const Shortcut = {
             opt = default_options;
         } else {
             for (const dfo in default_options) {
-                if (typeof opt[dfo] == 'undefined') opt[dfo] = default_options[dfo];
+                if (typeof opt[dfo] === 'undefined') opt[dfo] = default_options[dfo];
             }
         }
 
@@ -86,7 +86,7 @@ export const Shortcut = {
 
     // Remove the shortcut - just specify the shortcut and I will remove the binding
     remove: function (shortcut_combinations) {
-        if (typeof shortcut_combinations == 'undefined') return;
+        if (typeof shortcut_combinations === 'undefined') return;
         if (!Array.isArray(shortcut_combinations)) shortcut_combinations = [shortcut_combinations];
 
         for(const i in shortcut_combinations) {
@@ -110,8 +110,8 @@ export const Shortcut = {
 function shortcutMatches(shortcutCombinations, code, modifiers) {
     let character = String.fromCharCode(code).toLowerCase();
 
-    if (code == 188) character = ","; // If the user presses , when the type is onkeydown
-    if (code == 190) character = "."; // If the user presses . when the type is onkeydown
+    if (code === 188) character = ","; // If the user presses , when the type is onkeydown
+    if (code === 190) character = "."; // If the user presses . when the type is onkeydown
 
     // Work around for stupid Shift key bug created by using lowercase - as a result the shift+num combination was broken
     const shiftNums = {
@@ -198,36 +198,36 @@ function shortcutMatches(shortcutCombinations, code, modifiers) {
 
         for (let i = 0, k; k = keys[i], i < keys.length; i++) {
             // Modifiers
-            if (k == 'ctrl' || k == 'control') {
+            if (k === 'ctrl' || k === 'control') {
                 kp++;
                 modifiers.ctrl.wanted = true;
-            } else if (k == 'shift') {
+            } else if (k === 'shift') {
                 kp++;
                 modifiers.shift.wanted = true;
-            } else if (k == 'alt') {
+            } else if (k === 'alt') {
                 kp++;
                 modifiers.alt.wanted = true;
-            } else if (k == 'meta') {
+            } else if (k === 'meta') {
                 kp++;
                 modifiers.meta.wanted = true;
             } else if (k.length > 1) { //If it is a special key
-                if (specialKeys[k] == code) kp++;
+                if (specialKeys[k] === code) kp++;
             } else { // The special keys did not match
-                if (character == k) {
+                if (character === k) {
                     kp++;
                 } else {
                     if (shiftNums[character] || modifiers.shift?.pressed) {
                         // Stupid Shift key bug created by using lowercase
                         character = shiftNums[character];
-                        if (character == k) kp++;
+                        if (character === k) kp++;
                     }
                 }
             }
         }
 
-        return kp == keys.length && modifiers.ctrl.pressed == modifiers.ctrl.wanted &&
-            modifiers.shift.pressed == modifiers.shift.wanted && modifiers.alt.pressed == modifiers.alt.wanted &&
-            modifiers.meta.pressed == modifiers.meta.wanted;
+        return kp === keys.length && modifiers.ctrl.pressed === modifiers.ctrl.wanted &&
+            modifiers.shift.pressed === modifiers.shift.wanted && modifiers.alt.pressed === modifiers.alt.wanted &&
+            modifiers.meta.pressed === modifiers.meta.wanted;
     }
     return false;
 }
