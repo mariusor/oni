@@ -8,7 +8,7 @@ packages:
   - podman
   - buildah
 environment:
-  GONOPROXY: 'git.sr.ht'
+  GOPROXY: direct
 sources:
   - https://git.sr.ht/~mariusor/oni
 tasks:
