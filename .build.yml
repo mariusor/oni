@@ -7,8 +7,6 @@ packages:
   - yarn
   - podman
   - buildah
-environment:
-  GOPROXY: direct
 sources:
   - https://git.sr.ht/~mariusor/oni
 tasks:
