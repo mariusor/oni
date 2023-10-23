@@ -60,13 +60,18 @@ OnReady(function () {
     // use the window event listener to set the editable status of the slotted content (if exists)
     const content = document.querySelector('oni-main oni-natural-language-values[name=content]');
     if (content) {
-        content.editable = isAuthorized();
-        window.addEventListener('logged.out', (e) => {
-            content.editable = false;
-        });
-        window.addEventListener('logged.in', (e) => {
-            content.editable = isAuthorized();
-        });
-        content.setAttribute("editable", "true");
+        setEditable(content);
+        window.addEventListener('logged.out', (e) => setEditable(content));
+        window.addEventListener('logged.in', (e) => setEditable(content));
     }
 });
+
+function setEditable(content) {
+    const authorized = isAuthorized();
+    content.editable = authorized;
+    if (authorized) {
+        content.setAttribute("editable", "true");
+    } else {
+        content.removeAttribute("editable");
+    }
+}

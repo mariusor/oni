@@ -1,5 +1,5 @@
 import {css, html, LitElement, nothing} from "lit";
-import {editableContent} from "./utils";
+import {editableContent, isAuthorized} from "./utils";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {ActivityPubObject} from "./activity-pub-object";
 import {when} from "lit-html/directives/when.js";
@@ -104,15 +104,20 @@ export class NaturalLanguageValues extends LitElement {
         if (!this.it) { return nothing; }
 
         return html`
-            ${when(this.ditable || this.editable,
-                    () => html`<oni-text-editor
+            ${when(
+                this.ditable || this.editable,
+                () => html`<oni-text-editor
                             @blur="${this.checkChanged}"
                             ?contenteditable=${this.ditable || this.editable}
                     >
                         <slot>${unsafeHTML(this.value().trim()) ?? nothing}</slot>
                     </oni-text-editor>`,
-                    () => html`${unsafeHTML(this.value()) ?? nothing}`
+                () => html`${unsafeHTML(this.value()) ?? nothing}`
             )}
-            <oni-icon name="edit" @click=${this.makeEditable}></oni-icon>`;
+            ${when(
+                isAuthorized() && this.hasAttribute("editable"),
+                    () => html`<oni-icon name="edit" @click=${this.makeEditable}></oni-icon>`,
+                    () => nothing
+            )}`;
     }
 }
