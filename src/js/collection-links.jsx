@@ -1,6 +1,7 @@
-import {css, html, LitElement} from "lit";
+import {css, html, LitElement, nothing} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {ActivityPubCollection} from "./activity-pub-collection";
+import {isAuthorized, newPost} from "./utils";
 
 export class CollectionLinks extends LitElement {
     static styles = css`
@@ -45,10 +46,16 @@ export class CollectionLinks extends LitElement {
     }
 
     render() {
+        const newPostLink = isAuthorized()
+            ? html`<li>
+                    <oni-new-post @click=${newPost} label="Add" icon="edit"></oni-new-post>
+                </li>`
+            : nothing;
         return html`
             <nav>
                 <ul>
                     <slot></slot>
+                    ${newPostLink}
                     ${this.it.map(value => html`
                         <li class=${classMap({'active': (value === window.location.href)})}>
                             <oni-collection-link it=${JSON.stringify(value)}></oni-collection-link>
@@ -59,8 +66,7 @@ export class CollectionLinks extends LitElement {
     }
 }
 
-export class CollectionLink extends ActivityPubCollection {
-    static styles = css`
+const LinkStyle = css`
         :host a {
             text-transform: capitalize;
             text-decoration: none;
@@ -72,6 +78,9 @@ export class CollectionLink extends ActivityPubCollection {
             text-shadow: 0 0 1em var(--accent-color), 0 0 .4rem var(--bg-color);
         }
     `;
+
+export class CollectionLink extends ActivityPubCollection {
+    static styles = LinkStyle;
 
     constructor(it) {
         super(it);
@@ -86,9 +95,30 @@ export class CollectionLink extends ActivityPubCollection {
         return pieces[pieces.length -1];
     }
 
+    renderIcon () {
+        const icon = this.it.getIcon();
+        if (icon) {
+            return html`<oni-image it=${JSON.stringify(icon)}></oni-image>`;
+        }
+        return html`<oni-icon name=${this.label()}></oni-icon>`;
+    }
+
     render() {
         const iri = this.it.iri();
         const label = this.label();
-        return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}><oni-icon name=${label}></oni-icon> ${label}</a>`;
+        return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${this.renderIcon()} ${label}</a>`;
+    }
+}
+
+export class NewPost extends LitElement {
+    static styles = LinkStyle;
+
+    static properties = {
+        label: {type: String},
+        icon: {type: String},
+    }
+
+    render() {
+        return html`<a href="#new"><oni-icon name=${this.icon}></oni-icon> ${this.label}</a>`;
     }
 }

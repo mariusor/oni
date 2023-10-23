@@ -122,8 +122,7 @@ export class OniMainActor extends ActivityPubActor {
         if (c.length === 0) {
             return nothing;
         }
-        return html`
-            <oni-collection-links it=${JSON.stringify(c)}></oni-collection-links>`;
+        return html`<oni-collection-links it=${JSON.stringify(c)}></oni-collection-links>`;
     };
 
     renderIcon() {

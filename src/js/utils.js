@@ -457,3 +457,11 @@ export function execCommand (n) {
         }
     }
 }
+
+export function newPost(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    alert("New post");
+}
+
