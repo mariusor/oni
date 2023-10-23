@@ -1,7 +1,7 @@
 import {isAuthorized, OnReady} from "./utils";
 import {OniMainActor} from "./oni-main-actor";
 import {ActivityPubActor} from "./activity-pub-actor";
-import {CollectionLink, CollectionLinks, NewPost} from "./collection-links";
+import {CollectionLink, CollectionLinks, NewPostLink} from "./collection-links";
 import {NaturalLanguageValues} from "./natural-language-values";
 import {ActivityPubActivity} from "./activity-pub-activity";
 import {ActivityPubCollection} from "./activity-pub-collection";
@@ -17,6 +17,7 @@ import {ActivityPubTag} from "./activity-pub-tag";
 import {OniErrors} from "./oni-errors";
 import {TextEditor, TextEditorToolbar} from "./oni-text-editor";
 import {ActivityPubEvent} from "./activity-pub-event";
+import {NewPost} from "./oni-new-post";
 
 customElements.define('oni-main', OniMainActor);
 customElements.define('oni-object', ActivityPubObject);
@@ -35,7 +36,7 @@ customElements.define('oni-natural-language-values', NaturalLanguageValues);
 
 customElements.define('oni-collection-links', CollectionLinks);
 customElements.define('oni-collection-link', CollectionLink);
-customElements.define('oni-new-post', NewPost);
+customElements.define('oni-new-post-link', NewPostLink);
 
 customElements.define('oni-icon', OniIcon);
 
@@ -45,6 +46,7 @@ customElements.define('oni-login-dialog', LoginDialog);
 customElements.define('oni-errors', OniErrors);
 customElements.define('oni-text-editor', TextEditor);
 customElements.define('oni-text-editor-toolbar', TextEditorToolbar);
+customElements.define('oni-new-post', NewPost);
 
 OnReady(function () {
     console.debug(`Loading ${window.location}`);

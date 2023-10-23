@@ -48,7 +48,7 @@ export class CollectionLinks extends LitElement {
     render() {
         const newPostLink = isAuthorized()
             ? html`<li>
-                    <oni-new-post @click=${newPost} label="Add" icon="edit"></oni-new-post>
+                    <oni-new-post-link @click=${newPost} label="Add" icon="edit"></oni-new-post-link>
                 </li>`
             : nothing;
         return html`
@@ -110,7 +110,7 @@ export class CollectionLink extends ActivityPubCollection {
     }
 }
 
-export class NewPost extends LitElement {
+export class NewPostLink extends LitElement {
     static styles = LinkStyle;
 
     static properties = {

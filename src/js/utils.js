@@ -3,6 +3,7 @@ import {average, prominent} from "color.js";
 import {ActivityPubItem} from "./activity-pub-item";
 import {html, nothing} from "lit";
 import {map} from "lit-html/directives/map.js";
+import {NewPost} from "./oni-new-post";
 
 const tc = tinycolor;
 export const contrast = tc.readability;
@@ -462,6 +463,9 @@ export function newPost(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    alert("New post");
+    const main = document.querySelector("oni-main");
+    console.debug("trying to open modal under", main);
+
+    NewPost.lazy(main, (modal) => {})();
 }
 
