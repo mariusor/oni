@@ -3,49 +3,62 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/evanw/esbuild/pkg/api"
 )
 
 func main() {
-	buildJS()
-	buildCSS()
+	env := os.Getenv("ENV")
+	prod := strings.HasPrefix(strings.ToLower(env), "prod")
+
+	buildJS(prod)
+	buildCSS(prod)
 	copySVG()
 }
 
-func buildJS() {
+func buildJS(prod bool) {
+	opt := api.BuildOptions{
+		LogLevel:    api.LogLevelDebug,
+		EntryPoints: []string{"src/js/main.jsx"},
+		Bundle:      true,
+		Platform:    api.PlatformBrowser,
+		Write:       true,
+		Outfile:     "static/main.js",
+	}
+	if prod {
+		opt.LogLevel = api.LogLevelInfo
+		opt.MinifyWhitespace = true
+		opt.MinifyIdentifiers = true
+		opt.MinifySyntax = true
+		opt.Sourcemap = api.SourceMapLinked
+	}
 	// JS
-	result := api.Build(api.BuildOptions{
-		LogLevel:          api.LogLevelInfo,
-		EntryPoints:       []string{"src/js/main.jsx"},
-		Bundle:            true,
-		MinifyWhitespace:  true,
-		MinifyIdentifiers: true,
-		MinifySyntax:      true,
-		Platform:          api.PlatformBrowser,
-		Write:             true,
-		Sourcemap:         api.SourceMapExternal,
-		Outfile:           "static/main.js",
-	})
+	result := api.Build(opt)
 
 	if len(result.Errors) > 0 {
 		fmt.Fprintf(os.Stderr, "%v", result.Errors)
 	}
 }
 
-func buildCSS() {
+func buildCSS(prod bool) {
+	opt := api.BuildOptions{
+		LogLevel:    api.LogLevelDebug,
+		EntryPoints: []string{"src/css/main.css"},
+		Bundle:      true,
+		Platform:    api.PlatformBrowser,
+		Write:       true,
+		Outfile:     "static/main.css",
+	}
+	if prod {
+		opt.LogLevel = api.LogLevelInfo
+		opt.MinifyWhitespace = true
+		opt.MinifyIdentifiers = true
+		opt.MinifySyntax = true
+		opt.Sourcemap = api.SourceMapLinked
+	}
 	// CSS
-	result := api.Build(api.BuildOptions{
-		LogLevel:          api.LogLevelInfo,
-		EntryPoints:       []string{"src/css/main.css"},
-		Bundle:            true,
-		MinifyWhitespace:  true,
-		MinifyIdentifiers: true,
-		MinifySyntax:      true,
-		Platform:          api.PlatformBrowser,
-		Write:             true,
-		Outfile:           "static/main.css",
-	})
+	result := api.Build(opt)
 
 	if len(result.Errors) > 0 {
 		fmt.Fprintf(os.Stderr, "%v", result.Errors)
