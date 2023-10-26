@@ -439,13 +439,13 @@ export function getSelection(root) {
     return selection;
 }
 
-export function execCommand (n) {
+export function execCommand (n, node) {
     if (!Array.isArray(n.execCommand)) n.execCommand = [n.execCommand];
     if (!Array.isArray(n.execCommandValue)) n.execCommandValue = [n.execCommandValue];
 
     for (const i in n.execCommand) {
         const command = n.execCommand[i];
-        let val = n.execCommandValue[i] || '';
+        let val = n.execCommandValue[i] || node;
 
         if (typeof val == 'function') val = val();
         console.debug(`Executing command ${command}: ${val}`);
@@ -466,6 +466,8 @@ export function newPost(e) {
     const main = document.querySelector("oni-main");
     console.debug("trying to open modal under", main);
 
-    NewPost.lazy(main, (modal) => {})();
+    NewPost.lazy(main, (modal) => {
+        console.debug(main, modal);
+    })();
 }
 
