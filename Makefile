@@ -53,14 +53,14 @@ fdeps:
 
 assets: static/main.css static/main.js static/icons.svg
 
-static/main.js: fdeps $(TS_SOURCES)
-	go generate -v frontend.go
+generate:
+	go generate -v assets.go
 
-static/main.css: $(CSS_SOURCES)
-	go generate -v frontend.go
+static/main.js: fdeps $(TS_SOURCES) generate
 
-static/icons.svg: $(SVG_SOURCES)
-	go generate -v frontend.go
+static/main.css: $(CSS_SOURCES) generate
+
+static/icons.svg: $(SVG_SOURCES) generate
 
 test: TEST_TARGET := ./...
 test:
