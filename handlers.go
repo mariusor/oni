@@ -454,7 +454,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		oniFn := template.FuncMap{
 			"ONI":   func() vocab.Actor { return oniActor },
 			"URLS":  actorURLs(oniActor),
-			"Title": titleFromActor(oniActor),
+			"Title": titleFromActor(oniActor, r),
 		}
 		templatePath := "components/person"
 		if !vocab.ActorTypes.Contains(it.GetType()) {
@@ -480,9 +480,17 @@ func (o *oni) oniActor(r *http.Request) vocab.Actor {
 	return auth.AnonymousActor
 }
 
-func titleFromActor(o vocab.Actor) func() template.HTML {
+func titleFromActor(o vocab.Actor, r *http.Request) func() template.HTML {
+	username := o.PreferredUsername.First()
+	details := "page"
+	switch r.URL.Path {
+	case "/":
+		details = "profile page"
+	case "/inbox", "/outbox", "/followers", "/following":
+		details = strings.TrimPrefix(r.URL.Path, "/")
+	}
 	return func() template.HTML {
-		return template.HTML(o.PreferredUsername.First().String())
+		return template.HTML(fmt.Sprintf("%s :: fediverse %s", username, details))
 	}
 }
 
