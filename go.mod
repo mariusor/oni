@@ -14,7 +14,7 @@ require (
 	github.com/go-ap/filters v0.0.0-20231027164309-3a17bd085c06
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-ap/processing v0.0.0-20231027184038-0fb5186333ec
-	github.com/go-ap/storage-fs v0.0.0-20231027184111-6beecfaf0226
+	github.com/go-ap/storage-fs v0.0.0-20231028144402-047a257ebf0b
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
@@ -27,7 +27,7 @@ require (
 require (
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
-	github.com/go-ap/cache v0.0.0-20231027104534-41760c05fbc7 // indirect
+	github.com/go-ap/cache v0.0.0-20231028144217-f2be2836e1be // indirect
 	github.com/go-chi/chi v4.1.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.4.0 // indirect
