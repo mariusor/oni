@@ -154,8 +154,8 @@ func sameishIRI(check, colIRI vocab.IRI) bool {
 	return strings.EqualFold(uc.String(), ui.String())
 }
 
-func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI) (vocab.Item, error) {
-	it, err := s.Load(iri)
+func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Fn) (vocab.Item, error) {
+	it, err := s.Load(iri, f...)
 	if err != nil {
 		return nil, err
 	}
@@ -407,10 +407,10 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 
 		if u, err := iri.URL(); err == nil {
 			if after := u.Query().Get("after"); after != "" {
-				colFilters = append(colFilters, filters.After(vocab.IRI(after)))
+				colFilters = append(colFilters, filters.After(filters.ID(vocab.IRI(after))))
 			}
 			if after := u.Query().Get("before"); after != "" {
-				colFilters = append(colFilters, filters.Before(vocab.IRI(after)))
+				colFilters = append(colFilters, filters.Before(filters.ID(vocab.IRI(after))))
 			}
 		}
 

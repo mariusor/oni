@@ -11,10 +11,10 @@ require (
 	github.com/go-ap/auth v0.0.0-20231029155638-b31b321056ae
 	github.com/go-ap/client v0.0.0-20231029155419-dda847baeedb
 	github.com/go-ap/errors v0.0.0-20231003111023-183eef4b31b7
-	github.com/go-ap/filters v0.0.0-20231029155518-76b548dfcd36
+	github.com/go-ap/filters v0.0.0-20231029171902-c68bd9d0aff0
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20231029162418-88d08e4c5468
-	github.com/go-ap/storage-fs v0.0.0-20231029162457-540f4d5922cc
+	github.com/go-ap/processing v0.0.0-20231029172037-ad55c91da590
+	github.com/go-ap/storage-fs v0.0.0-20231029172118-5a708236b337
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
