@@ -103,6 +103,7 @@ body {
     align-items: start;
     display: grid;
     font-family: sans-serif;
+    line-height: 1.8em;
 }
 
 a {
@@ -157,3 +158,6 @@ oni-activity, oni-note, oni-event, oni-image, oni-video, oni-audio {
     flex-direction: column;
 }
 
+p {
+    margin: unset;
+}

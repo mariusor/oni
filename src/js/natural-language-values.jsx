@@ -31,7 +31,6 @@ export class NaturalLanguageValues extends LitElement {
           display: inline-block;
         }
         :host div { display: inline-block; }
-        :host p { line-height: 1.8em; }
     `, ActivityPubObject.styles];
 
     static properties = {
