@@ -13,10 +13,6 @@ export class OniIcon extends LitElement {
         vertical-align: text-bottom;
         margin: 0 .2rem;
     }
-    svg[name=icon-external-href] {
-        width: .6em;
-        vertical-align: bottom;
-    }
     `;
     static properties = {name: {type: String}};
 
