@@ -394,6 +394,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		}
 		_, whichCollection := vocab.Split(iri)
 
+		colFilters = filters.FromValues(r.URL.Query())
 		if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
 			if !iriHasTypeFilter(iri) {
 				colFilters = append(colFilters, filters.HasType(validActivityTypes...))
