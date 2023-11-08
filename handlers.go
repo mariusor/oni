@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -375,7 +374,7 @@ func iriHasTypeFilter(iri vocab.IRI) bool {
 	return u.Query().Has("type")
 }
 
-func iriHasObjectFilter(iri vocab.IRI) bool {
+func iriHasObjectTypeFilter(iri vocab.IRI) bool {
 	u, err := iri.URL()
 	if err != nil {
 		return false
@@ -395,15 +394,22 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		_, whichCollection := vocab.Split(iri)
 
 		colFilters = filters.FromValues(r.URL.Query())
-		if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
-			if !iriHasTypeFilter(iri) {
-				colFilters = append(colFilters, filters.HasType(validActivityTypes...))
+		if vocab.ValidActivityCollection(whichCollection) {
+			obFilters := make(filters.Checks, 0)
+			obFilters = append(obFilters, filters.Not(filters.NilID))
+			if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
+				if !iriHasTypeFilter(iri) {
+					colFilters = append(colFilters, filters.HasType(validActivityTypes...))
+				}
+				if !iriHasObjectTypeFilter(iri) {
+					obFilters = append(obFilters, filters.HasType(validObjectTypes...))
+				}
 			}
-			if !iriHasObjectFilter(iri) {
-				colFilters = append(colFilters, filters.Object(filters.HasType(validObjectTypes...)))
+			if len(obFilters) > 0 {
+				colFilters = append(colFilters, filters.Object(obFilters...))
 			}
+			colFilters = append(colFilters, filters.Actor(filters.Not(filters.NilID)))
 		}
-		iri = colIRI(r)
 
 		if u, err := iri.URL(); err == nil {
 			if after := u.Query().Get("after"); after != "" {
@@ -417,7 +423,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		colFilters = append(colFilters, filters.WithMaxCount(MaxItems))
 	}
 
-	it, err := loadItemFromStorage(o.s, iri, filters.All(colFilters...))
+	it, err := loadItemFromStorage(o.s, iri, colFilters...)
 	if err != nil {
 		o.Error(err).ServeHTTP(w, r)
 		return
@@ -507,30 +513,7 @@ func col(r *http.Request) vocab.CollectionPath {
 	return col
 }
 
-func colIRI(r *http.Request) vocab.IRI {
-	colURL := url.URL{Scheme: "https", Host: r.Host, Path: r.URL.Path}
-	c := col(r)
-	if vocab.ValidActivityCollection(c) {
-		q := r.URL.Query()
-		q.Set("object.iri", "!")
-		q.Set("actor.iri", "!")
-		colURL.RawQuery = q.Encode()
-	}
-	return vocab.IRI(colURL.String())
-}
-
 const MaxItems = 20
-
-func getURL(i vocab.IRI, f url.Values) vocab.IRI {
-	if f == nil {
-		return i
-	}
-	if u, err := i.URL(); err == nil {
-		u.RawQuery = f.Encode()
-		i = vocab.IRI(u.String())
-	}
-	return i
-}
 
 func acceptFollows(o oni, f vocab.Follow, p *processing.P) error {
 	accept := new(vocab.Accept)
