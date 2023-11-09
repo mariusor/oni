@@ -600,6 +600,9 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed unmarshalling jsonld body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
 		}
+		if vocab.IsNil(it) {
+			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
+		}
 
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed initializing the Activity processor")
