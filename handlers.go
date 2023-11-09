@@ -579,6 +579,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
 
+		o.c.SignFn(s2sSignFn(o.oniActor(r), *o))
 		act, err := auth.LoadActorFromAuthHeader(r)
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")

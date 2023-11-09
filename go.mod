@@ -8,20 +8,20 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.17.18
 	github.com/go-ap/activitypub v0.0.0-20231105151936-af32623a589b
-	github.com/go-ap/auth v0.0.0-20231107131459-781df4c41c82
+	github.com/go-ap/auth v0.0.0-20231109092853-20145afe5380
 	github.com/go-ap/client v0.0.0-20231105152939-03833203c71e
 	github.com/go-ap/errors v0.0.0-20231003111023-183eef4b31b7
 	github.com/go-ap/filters v0.0.0-20231107130326-22dda75c2686
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20231107131550-c149686af441
-	github.com/go-ap/storage-fs v0.0.0-20231108095401-be384a26508d
+	github.com/go-ap/processing v0.0.0-20231109093041-be9a48bc4b8b
+	github.com/go-ap/storage-fs v0.0.0-20231109093139-1126bbfd0f52
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/openshift/osin v1.0.2-0.20220317075346-0f4d38c6e53f
 	github.com/urfave/cli/v2 v2.3.0
-	golang.org/x/oauth2 v0.13.0
+	golang.org/x/oauth2 v0.14.0
 )
 
 require (
@@ -39,7 +39,7 @@ require (
 	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
+	golang.org/x/crypto v0.15.0 // indirect
 	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
