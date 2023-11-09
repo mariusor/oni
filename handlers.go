@@ -525,7 +525,7 @@ func acceptFollows(o oni, f vocab.Follow, p *processing.P) error {
 	for _, act := range o.a {
 		if act.ID.Equals(f.Object.GetID(), true) {
 			accept.Actor = act
-			o.c.SignFn(s2sSignFn(act, o))
+			o.c.SignFn(s2sSignFn(act, o.s, o.l))
 		}
 	}
 
@@ -579,7 +579,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
 
-		o.c.SignFn(s2sSignFn(o.oniActor(r), *o))
+		o.c.SignFn(s2sSignFn(o.oniActor(r), o.s, o.l))
 		act, err := auth.LoadActorFromAuthHeader(r)
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")

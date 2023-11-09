@@ -13,6 +13,7 @@ import (
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
+	"github.com/go-ap/processing"
 	"github.com/go-fed/httpsig"
 )
 
@@ -62,8 +63,8 @@ func newSigner(pubKey crypto.PrivateKey, headers []string, l lw.Logger) (signer,
 	return s, nil
 }
 
-func s2sSignFn(a vocab.Actor, o oni) func(r *http.Request) error {
-	key, err := o.s.LoadKey(a.ID)
+func s2sSignFn(a vocab.Actor, keyLoader processing.KeyLoader, l lw.Logger) func(r *http.Request) error {
+	key, err := keyLoader.LoadKey(a.ID)
 	if err != nil {
 		return func(r *http.Request) error {
 			return err
@@ -75,7 +76,7 @@ func s2sSignFn(a vocab.Actor, o oni) func(r *http.Request) error {
 			headers = append(headers, "Digest")
 		}
 
-		s, err := newSigner(key, headers, o.l)
+		s, err := newSigner(key, headers, l)
 		if err != nil {
 			return errors.Annotatef(err, "unable to initialize HTTP signer")
 		}
