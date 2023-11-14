@@ -7,14 +7,14 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20230710102058-fc38877da4fe
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.17.18
-	github.com/go-ap/activitypub v0.0.0-20231105151936-af32623a589b
-	github.com/go-ap/auth v0.0.0-20231109092853-20145afe5380
-	github.com/go-ap/client v0.0.0-20231105152939-03833203c71e
+	github.com/go-ap/activitypub v0.0.0-20231114162308-e219254dc5c9
+	github.com/go-ap/auth v0.0.0-20231114164013-a1640365bf33
+	github.com/go-ap/client v0.0.0-20231114162455-f09cf9766e95
 	github.com/go-ap/errors v0.0.0-20231003111023-183eef4b31b7
-	github.com/go-ap/filters v0.0.0-20231107130326-22dda75c2686
+	github.com/go-ap/filters v0.0.0-20231114163756-0a70c1a4a942
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20231109160655-60ddaae159d3
-	github.com/go-ap/storage-fs v0.0.0-20231109160744-11d497d4a5b5
+	github.com/go-ap/processing v0.0.0-20231114164044-596105c0aac5
+	github.com/go-ap/storage-fs v0.0.0-20231114164216-ebc6b6d920df
 	github.com/go-chi/chi/v5 v5.0.10
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
@@ -27,7 +27,7 @@ require (
 require (
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
-	github.com/go-ap/cache v0.0.0-20231105152008-59d105ac1717 // indirect
+	github.com/go-ap/cache v0.0.0-20231114162417-36177bcbd4a9 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.4.0 // indirect
