@@ -1,8 +1,7 @@
-import {css, html, LitElement, nothing} from "lit";
+import {css, html, nothing} from "lit";
 import {
     authorization,
-    fetchActivityPubIRI,
-    isAuthorized,
+    fetchActivityPubIRI, isAuthorized,
     isLocalIRI, isMainPage,
     mainActorOutbox,
     pluralize, renderTimestamp,
@@ -10,8 +9,9 @@ import {
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
+import {MobxLitElement} from "@adobe/lit-mobx";
 
-export class ActivityPubObject extends LitElement {
+export class ActivityPubObject extends MobxLitElement {
     static styles = css`
         :host {
             color: var(--fg-color);
@@ -114,7 +114,7 @@ export class ActivityPubObject extends LitElement {
         }
         if (isAuthorized()) {
             const auth = authorization();
-            headers.Authorization = `${auth.token_type} ${auth.access_token}`;
+            headers.Authorization = `${auth?.token_type} ${auth?.access_token}`;
         }
         const req = {
             headers: headers,
@@ -243,11 +243,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        return html`<oni-natural-language-values
-                name="summary"
-                it=${JSON.stringify(summary)}
-                ?editable=${this.authenticated && isMainPage()}
-        ></oni-natural-language-values>`;
+        return html`<oni-natural-language-values name="summary" it=${JSON.stringify(summary)}></oni-natural-language-values>`;
     }
 
     async renderReplyCount() {

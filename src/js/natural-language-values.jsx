@@ -49,11 +49,15 @@ export class NaturalLanguageValues extends LitElement {
     _ditable = false;
 
     set ditable(status) {
-        this._ditable = status;
+        if (status) {
+            this.setAttribute("editable", "on");
+        } else {
+            this.removeAttribute("editable");
+        }
     }
 
     get ditable() {
-        return this._ditable;
+        return this.hasAttribute("editable");
     }
 
     checkChanged(e) {
@@ -81,7 +85,7 @@ export class NaturalLanguageValues extends LitElement {
         e.preventDefault();
 
         this.ditable = true;
-        this.focus({"focusVisible": true})
+        this.focus(); // {"focusVisible": true}
         //alert(`${this.name} editable`);
     }
 
@@ -104,17 +108,17 @@ export class NaturalLanguageValues extends LitElement {
 
         return html`
             ${when(
-                this.ditable || this.editable,
+                this.ditable,
                 () => html`<oni-text-editor
                             @blur="${this.checkChanged}"
-                            ?contenteditable=${this.ditable || this.editable}
+                            ?contenteditable=${this.ditable}
                     >
                         <slot>${unsafeHTML(this.value().trim()) ?? nothing}</slot>
                     </oni-text-editor>`,
                 () => html`${unsafeHTML(this.value()) ?? nothing}`
             )}
             ${when(
-                isAuthorized() && this.hasAttribute("editable"),
+                this.ditable,
                     () => html`<oni-icon name="edit" @click=${this.makeEditable}></oni-icon>`,
                     () => nothing
             )}`;

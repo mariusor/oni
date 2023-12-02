@@ -1,10 +1,12 @@
 import {css, html, LitElement} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {when} from "lit-html/directives/when.js";
-import {authorization, handleServerError, isAuthorized} from "./utils";
+import {handleServerError, isAuthorized} from "./utils";
 import {ref} from "lit-html/directives/ref.js";
+import {auth} from "./authorization-controller";
+import {MobxLitElement} from "@adobe/lit-mobx";
 
-export class LoginDialog extends LitElement {
+export class LoginDialog extends MobxLitElement {
     static styles = css`
         dialog[opened] {
             display: flex;
@@ -60,6 +62,8 @@ export class LoginDialog extends LitElement {
         error: {type: String},
     }
 
+    _auth = auth;
+
     constructor() {
         super()
         this.opened = false;
@@ -89,7 +93,7 @@ export class LoginDialog extends LitElement {
         const pw = form._pw.value
         form._pw.value = "";
 
-        this.authorizationToken(form.action, pw)
+        this.authorizationToken(form.action, pw).then(console.info("success authorization"));
     }
 
     async authorizationToken(targetURI, pw) {
@@ -125,23 +129,24 @@ export class LoginDialog extends LitElement {
             client_id: client,
         });
 
-        const auth = btoa(`${client}:NotSoSecretPassword`);
+        const basicAuth = btoa(`${client}:NotSoSecretPassword`);
         const req = {
             method: 'POST',
             body: l.toString(),
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
-                Authorization: `Basic ${auth}`
+                Authorization: `Basic ${basicAuth}`
             }
         };
 
-        const accessResponse = await fetch(tokenURL, req)
+        fetch(tokenURL, req)
             .then(response => {
                 response.json().then(value => {
                     if (response.status === 200) {
-                        localStorage.setItem('authorization', JSON.stringify(value));
+                        this._auth.authorization = value;
                         this.loginSuccessful();
                     } else {
+                        this._auth.authorization = {};
                         this.error = handleServerError(value)
                     }
                 }).catch(console.error);
@@ -191,7 +196,7 @@ export class LoginDialog extends LitElement {
     }
 }
 
-export class LoginLink extends LitElement {
+export class LoginLink extends MobxLitElement {
     static styles = css`
         :host {
             position: absolute;
@@ -206,6 +211,8 @@ export class LoginLink extends LitElement {
         dialogVisible: {type: Boolean},
         loginVisible: {type: Boolean},
     }
+
+    _auth = auth;
 
     constructor() {
         super()
@@ -226,7 +233,8 @@ export class LoginLink extends LitElement {
     }
 
     logout() {
-        localStorage.removeItem('authorization');
+        //localStorage.removeItem('authorization');
+        this._auth.authorization = {};
 
         this.loginVisible = true;
         this.dispatchEvent(new CustomEvent('logged.out', {

@@ -3,8 +3,9 @@ import {until} from "lit-html/directives/until.js";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
-import {isAuthorized, isMainPage, loadPalette, renderColors} from "./utils";
+import {loadPalette, renderColors} from "./utils";
 import tc from "tinycolor2";
+import {auth} from "./authorization-controller";
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
@@ -82,12 +83,20 @@ export class OniMainActor extends ActivityPubActor {
     `, ActivityPubObject.styles];
     static properties = {
         colors: {type: Array},
-        authenticated: {type: Boolean},
     };
+
+    _auth = auth;
 
     constructor(it) {
         super(it);
-        this.authenticated = isAuthorized();
+    }
+
+    get authorized() {
+        return this._auth.authorized;
+    }
+
+    get authorization() {
+        return this._auth.authorization;
     }
 
     outbox() {
@@ -99,7 +108,7 @@ export class OniMainActor extends ActivityPubActor {
 
     collections() {
         let collections = super.collections();
-        if (this.it.hasOwnProperty('inbox') && this.authenticated) {
+        if (this.it.hasOwnProperty('inbox') && this.authorized) {
             collections.push(this.it.inbox);
         }
         if (this.it.hasOwnProperty('outbox')) {
@@ -166,20 +175,25 @@ export class OniMainActor extends ActivityPubActor {
                 <oni-natural-language-values
                         name="preferredUsername"
                         it=${JSON.stringify(this.it.getPreferredUsername())}
-                        ?editable=${this.authenticated && isMainPage()}
+                        ?editable=${this.authorized}
                 ></oni-natural-language-values>
             `;
         }
         return nothing;
     }
 
-    loggedIn() {
-        this.authenticated = true;
-        localStorage.setItem("outbox", this.outbox());
-    }
+    renderSummary() {
+        const summary = this.it.getSummary();
+        if (summary.length === 0) {
+            return nothing;
+        }
 
-    loggedOut() {
-        this.authenticated = false;
+        console.info(`summary auth check:`, this.authorization);
+        return html`<oni-natural-language-values
+                name="summary"
+                it=${JSON.stringify(summary)}
+                ?editable=${this.authorized}
+        ></oni-natural-language-values>`;
     }
 
     renderOAuth() {
@@ -234,6 +248,9 @@ export class OniMainActor extends ActivityPubActor {
         const colors = html`${until(renderColors(this.it))}`
 
         const iri = this.it.iri();
+
+        console.log(this._auth);
+
         return html`${this.renderOAuth()}
         <style>${style}</style>
         <main>
