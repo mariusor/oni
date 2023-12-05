@@ -6,7 +6,7 @@ require (
 	git.sr.ht/~mariusor/lw v0.0.0-20230317075520-07e173563bf8
 	git.sr.ht/~mariusor/wrapper v0.0.0-20230710102058-fc38877da4fe
 	github.com/elnormous/contenttype v1.0.4
-	github.com/evanw/esbuild v0.17.18
+	github.com/evanw/esbuild v0.19.8
 	github.com/go-ap/activitypub v0.0.0-20231114162308-e219254dc5c9
 	github.com/go-ap/auth v0.0.0-20231114164013-a1640365bf33
 	github.com/go-ap/client v0.0.0-20231114162455-f09cf9766e95
@@ -21,7 +21,7 @@ require (
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/openshift/osin v1.0.2-0.20220317075346-0f4d38c6e53f
 	github.com/urfave/cli/v2 v2.3.0
-	golang.org/x/oauth2 v0.14.0
+	golang.org/x/oauth2 v0.15.0
 )
 
 require (
@@ -39,8 +39,8 @@ require (
 	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
-	golang.org/x/crypto v0.15.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
