@@ -3,10 +3,9 @@ import {classMap} from "lit-html/directives/class-map.js";
 import {when} from "lit-html/directives/when.js";
 import {handleServerError, isAuthorized} from "./utils";
 import {ref} from "lit-html/directives/ref.js";
-import {auth} from "./authorization-controller";
-import {MobxLitElement} from "@adobe/lit-mobx";
+import {AuthController} from "./auth-controller";
 
-export class LoginDialog extends MobxLitElement {
+export class LoginDialog extends LitElement {
     static styles = css`
         dialog[opened] {
             display: flex;
@@ -62,19 +61,13 @@ export class LoginDialog extends MobxLitElement {
         error: {type: String},
     }
 
-    _auth = auth;
+    _auth = new AuthController(this);
 
     constructor() {
         super()
         this.opened = false;
         this.fetched = false;
         this.error = "";
-    }
-
-    static get properties() {
-        return {
-            opened: {type: Boolean}
-        }
     }
 
     close() {
@@ -196,7 +189,7 @@ export class LoginDialog extends MobxLitElement {
     }
 }
 
-export class LoginLink extends MobxLitElement {
+export class LoginLink extends LitElement {
     static styles = css`
         :host {
             position: absolute;
@@ -212,7 +205,7 @@ export class LoginLink extends MobxLitElement {
         loginVisible: {type: Boolean},
     }
 
-    _auth = auth;
+    _auth = new AuthController(this);
 
     constructor() {
         super()
@@ -233,8 +226,7 @@ export class LoginLink extends MobxLitElement {
     }
 
     logout() {
-        //localStorage.removeItem('authorization');
-        this._auth.authorization = {};
+        this._auth.authorization = null;
 
         this.loginVisible = true;
         this.dispatchEvent(new CustomEvent('logged.out', {

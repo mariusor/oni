@@ -1,4 +1,4 @@
-import {css, html, nothing} from "lit";
+import {css, html, LitElement, nothing} from "lit";
 import {
     authorization,
     fetchActivityPubIRI, isAuthorized,
@@ -9,9 +9,8 @@ import {
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
-import {MobxLitElement} from "@adobe/lit-mobx";
 
-export class ActivityPubObject extends MobxLitElement {
+export class ActivityPubObject extends LitElement {
     static styles = css`
         :host {
             color: var(--fg-color);

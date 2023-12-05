@@ -1,4 +1,4 @@
-import {isAuthorized, OnReady} from "./utils";
+import {isAuthorized, isMainPage, OnReady} from "./utils";
 import {OniMainActor} from "./oni-main-actor";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {CollectionLink, CollectionLinks, NewPostLink} from "./collection-links";
@@ -60,22 +60,4 @@ OnReady(function () {
         root.style.setProperty('--link-active-color', palette.linkActiveColor);
         root.style.setProperty('--accent-color', palette.accentColor);
     }
-
-    // use the window event listener to set the editable status of the slotted content (if exists)
-    const content = document.querySelector('oni-main oni-natural-language-values[name=content]');
-    if (content) {
-        setEditable(content);
-        window.addEventListener('logged.out', (e) => setEditable(content));
-        window.addEventListener('logged.in', (e) => setEditable(content));
-    }
 });
-
-function setEditable(content) {
-    const authorized = isAuthorized();
-    content.editable = authorized;
-    if (authorized) {
-        content.setAttribute("editable", "true");
-    } else {
-        content.removeAttribute("editable");
-    }
-}

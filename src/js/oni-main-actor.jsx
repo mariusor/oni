@@ -3,9 +3,9 @@ import {until} from "lit-html/directives/until.js";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
-import {loadPalette, renderColors} from "./utils";
+import {isMainPage, loadPalette, renderColors} from "./utils";
 import tc from "tinycolor2";
-import {auth} from "./authorization-controller";
+import {AuthController} from "./auth-controller";
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
@@ -80,23 +80,23 @@ export class OniMainActor extends ActivityPubActor {
             font-size: .9rem;
             font-weight: light;
         }
+        :host oni-natural-language-values[name=content] {
+            display: block;
+            margin: 0 1rem;
+        }
     `, ActivityPubObject.styles];
     static properties = {
         colors: {type: Array},
     };
 
-    _auth = auth;
+    _auth = new AuthController(this);
 
     constructor(it) {
         super(it);
     }
 
     get authorized() {
-        return this._auth.authorized;
-    }
-
-    get authorization() {
-        return this._auth.authorization;
+        return this._auth.authorized && isMainPage();
     }
 
     outbox() {
@@ -188,13 +188,25 @@ export class OniMainActor extends ActivityPubActor {
             return nothing;
         }
 
-        console.info(`summary auth check:`, this.authorization);
         return html`<oni-natural-language-values
                 name="summary"
                 it=${JSON.stringify(summary)}
                 ?editable=${this.authorized}
         ></oni-natural-language-values>`;
     }
+
+    renderContent() {
+        const content = this.it.getContent();
+        if (content.length === 0) {
+            return nothing;
+        }
+        return html`<oni-natural-language-values
+                name="content"
+                it=${JSON.stringify(content)}
+                ?editable=${this.authorized}
+        ></oni-natural-language-values>`;
+    }
+
 
     renderOAuth() {
         if (!this.it.hasOwnProperty('endpoints')) {
@@ -214,8 +226,6 @@ export class OniMainActor extends ActivityPubActor {
             <oni-login-link
                     authorizeURL=${authURL}
                     tokenURL=${tokenURL}
-                    @logged.in=${this.loggedIn}
-                    @logged.out=${this.loggedOut}
             ></oni-login-link>`;
     }
 
@@ -249,8 +259,9 @@ export class OniMainActor extends ActivityPubActor {
 
         const iri = this.it.iri();
 
-        console.log(this._auth);
+        console.info(`rendering and checking authorized: ${this.authorized}`, );
 
+        const hasSlot = this.querySelectorAll('*').length > 0;
         return html`${this.renderOAuth()}
         <style>${style}</style>
         <main>
@@ -264,7 +275,11 @@ export class OniMainActor extends ActivityPubActor {
             </header>
             <nav>${this.renderCollections()}</nav>
         </main>
-        <slot></slot>
+        ${when(
+            hasSlot,
+                () => html`<slot></slot>`,
+                () => this.renderContent()
+        )}
         ${colors}
         `;
     }
