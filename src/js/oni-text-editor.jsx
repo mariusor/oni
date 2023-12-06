@@ -63,24 +63,27 @@ export class TextEditor extends LitElement {
         this.reset();
     }
 
-    reset() {
-        if (!this.isContentEditable) return;
+    makeEditable() {
+        this.active = true;
+        this.setAttribute("contenteditable", "");
+        this.contentUpdate();
+        this.root.setAttribute("contenteditable", "");
+    }
 
+    makeReadOnly() {
+        this.active = false;
+        this.removeAttribute("contenteditable");
+        this.contentUpdate();
+        this.root.removeAttribute("contenteditable");
+    }
+
+    contentUpdate() {
         const parser = new DOMParser();
         const doc = parser.parseFromString(this.content, "text/html");
-        document.execCommand("defaultParagraphSeparator", true, "br");
+        this.root = doc.querySelector("body");
+    }
 
-        const root = doc.querySelector("body");
-        //root.setAttribute("title", "Editable.");
-        root.setAttribute("contenteditable", "");
-        this.addEventListener('focusin', () => this.active = true);
-        this.addEventListener('blur', () => this.active = false);
-        this.addEventListener('drop', this.handleDrop);
-        this.addEventListener('dragenter', this.dragAllowed);
-        this.addEventListener('dragover', this.dragAllowed);
-        this.addEventListener('image.upload', (e) => { console.debug(e); this.handleFiles(e.detail)});
-        this.root = root;
-
+    commandsInit() {
         for (const i in commands) {
             const c = commands[i];
             if (!isValidCommand(c.execCommand)) continue;
@@ -93,8 +96,25 @@ export class TextEditor extends LitElement {
                 },
                 {type: 'keydown', propagate: false, target: this.root}
             );
-            console.debug(`Added shortcut ${c.shortcut} for element ${this.root.innerText.substring(0, 32)}...`);
+            //console.debug(`Added shortcut ${c.shortcut} for element ${this.root.innerText.substring(0, 32)}...`);
         }
+    }
+
+    reset() {
+        this.contentUpdate();
+
+        if (!this.isContentEditable) return;
+
+        this.commandsInit();
+
+        document.execCommand("defaultParagraphSeparator", true, "br");
+        //root.setAttribute("contenteditable", "");
+        //this.addEventListener('focusin', () => this.active = true);
+        this.addEventListener('blur', this.makeReadOnly);
+        this.addEventListener('drop', this.handleDrop);
+        this.addEventListener('dragenter', this.dragAllowed);
+        this.addEventListener('dragover', this.dragAllowed);
+        this.addEventListener('image.upload', (e) => this.handleFiles(e.detail));
     }
 
     handleDrop(e) {

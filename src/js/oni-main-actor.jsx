@@ -201,16 +201,15 @@ export class OniMainActor extends ActivityPubActor {
     }
 
     renderPreferredUsername() {
-        if (this.it.getPreferredUsername().length > 0) {
-            return html`
-                <oni-natural-language-values
-                        name="preferredUsername"
-                        it=${JSON.stringify(this.it.getPreferredUsername())}
-                        ?contenteditable=${this.authorized}
-                ></oni-natural-language-values>
-            `;
+        const name = this.it.getPreferredUsername();
+        if (name.length === 0) {
+            return nothing;
         }
-        return nothing;
+        return html`<oni-natural-language-values
+                    name="preferredUsername"
+                    it=${JSON.stringify(name)}
+                    ?editable="${this.authorized}"
+        ></oni-natural-language-values>`;
     }
 
     renderSummary() {
@@ -222,7 +221,7 @@ export class OniMainActor extends ActivityPubActor {
         return html`<oni-natural-language-values
                 name="summary"
                 it=${JSON.stringify(summary)}
-                ?contenteditable=${this.authorized}
+                ?editable="${this.authorized}"
         ></oni-natural-language-values>`;
     }
 
@@ -234,7 +233,7 @@ export class OniMainActor extends ActivityPubActor {
         return html`<oni-natural-language-values
                 name="content"
                 it=${JSON.stringify(content)}
-                ?contenteditable=${this.authorized}
+                ?editable="${this.authorized}"
         ></oni-natural-language-values>`;
     }
 

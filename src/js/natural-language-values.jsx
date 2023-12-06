@@ -10,51 +10,42 @@ export class NaturalLanguageValues extends LitElement {
           display: inline-block;
           position: relative;
         }
-        :host([contenteditable]:hover), :host([contenteditable]:focus) {
+        :host([editable]:hover), :host([editable]:focus) {
           outline: dashed 2px var(--accent-color);
           outline-offset: 2px;
           padding-right: 2em;
         }
-        :host([contenteditable]) oni-icon[name=edit] svg {
+        :host([editable]) oni-icon[name=edit] svg {
           max-height: .7em;
           max-width: .7em;
         } 
-        :host([contenteditable]) oni-icon[name=edit] {
+        :host([editable]) oni-icon[name=edit] {
           display: none;
           color: var(--accent-color);
           position: absolute;
           top: -.2em;
           right: -.2em;
         }
-        :host([contenteditable]:hover) oni-icon[name=edit], 
-        :host([contenteditable]:focus) oni-icon[name=edit] {
+        :host([editable]:hover) oni-icon[name=edit], 
+        :host([editable]:focus) oni-icon[name=edit] {
           display: inline-block;
         }
         :host div { display: inline-block; }
     `, ActivityPubObject.styles];
 
+    editableEditor = false;
+
     static properties = {
         it: {type: Object},
         name: {type: String},
-        contentEditable: {type: Boolean},
+        editable: {type: Boolean},
     };
 
     constructor() {
         super();
         this.it = '';
         this.name = '';
-    }
-
-    set editable(status) {
-        if (status) {
-            this.setAttribute("contenteditable", "on");
-        } else {
-            this.removeAttribute("contenteditable");
-        }
-    }
-
-    get editable() {
-        return this.hasAttribute("contenteditable");
+        this.editable = false;
     }
 
     checkChanged(e) {
@@ -74,6 +65,7 @@ export class NaturalLanguageValues extends LitElement {
         if (this.parentNode.nodeName.toLowerCase() == "a") {
             this.parentNode.removeEventListener('click', noClick);
         }
+
         this.dispatchEvent(new CustomEvent('content.change', {
             detail: {name: this.name, content: content},
             bubbles: true,
@@ -85,11 +77,10 @@ export class NaturalLanguageValues extends LitElement {
         e.stopPropagation();
         e.preventDefault();
 
-        this.editable = true;
         if (this.parentNode.nodeName.toLowerCase() == "a") {
             this.parentNode.addEventListener('click', noClick);
         }
-        this.focus();
+        this.shadowRoot.querySelector("oni-text-editor")?.makeEditable();
     }
 
     value() {
@@ -109,12 +100,12 @@ export class NaturalLanguageValues extends LitElement {
     render() {
         if (!this.it) { return nothing; }
 
+        console.info(`${this.name} editable? ${this.editable}`);
         return html`
             ${when(
                 this.editable,
                 () => html`<oni-text-editor
                             @blur="${this.checkChanged}"
-                            ?contenteditable=${this.editable}
                     >
                         <slot>${unsafeHTML(this.value().trim()) ?? nothing}</slot>
                     </oni-text-editor>`,
