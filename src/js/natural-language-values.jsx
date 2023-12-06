@@ -67,10 +67,13 @@ export class NaturalLanguageValues extends LitElement {
         const content = editableContent(e.target);
 
         if (content === old.trim()) {
-            console.debug(`No change for "${this.name}"`)
+            console.debug(`No change for "${this.name}"`);
             return;
         }
 
+        if (this.parentNode.nodeName.toLowerCase() == "a") {
+            this.parentNode.removeEventListener('click', noClick);
+        }
         this.dispatchEvent(new CustomEvent('content.change', {
             detail: {name: this.name, content: content},
             bubbles: true,
@@ -83,6 +86,9 @@ export class NaturalLanguageValues extends LitElement {
         e.preventDefault();
 
         this.editable = true;
+        if (this.parentNode.nodeName.toLowerCase() == "a") {
+            this.parentNode.addEventListener('click', noClick);
+        }
         this.focus();
     }
 
@@ -121,3 +127,5 @@ export class NaturalLanguageValues extends LitElement {
             )}`;
     }
 }
+
+const noClick = (e) => e.preventDefault()
