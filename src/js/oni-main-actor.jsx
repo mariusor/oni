@@ -3,9 +3,10 @@ import {until} from "lit-html/directives/until.js";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
-import {isMainPage, loadPalette, renderColors} from "./utils";
+import {activity, isAuthorized, isMainPage, loadPalette, mainActorOutbox, renderColors} from "./utils";
 import tc from "tinycolor2";
 import {AuthController} from "./auth-controller";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
@@ -93,10 +94,40 @@ export class OniMainActor extends ActivityPubActor {
 
     constructor(it) {
         super(it);
+        this.addEventListener('content.change', this.updateSelf)
     }
 
     get authorized() {
         return this._auth.authorized && isMainPage();
+    }
+
+    async updateSelf(e) {
+        e.stopPropagation();
+
+        const outbox = this.it.outbox;
+        if (!outbox || !this.authorized) return;
+        let headers = {};
+        if (this.authorized) {
+            const auth = this._auth.authorization;
+            headers.Authorization = `${auth?.token_type} ${auth?.access_token}`;
+        }
+
+        const it = this.it;
+        const prop = e.detail.name;
+        const val = e.detail.content;
+
+        it[prop] = val;
+
+        const update = {
+            type: "Update",
+            actor: this.it.iri(),
+            object: it,
+        }
+
+        activity(outbox, update, headers)
+            .then(response => {
+                response.json().then((it) => this.it = new ActivityPubItem(it));
+            }).catch(console.error);
     }
 
     outbox() {
@@ -175,7 +206,7 @@ export class OniMainActor extends ActivityPubActor {
                 <oni-natural-language-values
                         name="preferredUsername"
                         it=${JSON.stringify(this.it.getPreferredUsername())}
-                        ?editable=${this.authorized}
+                        ?contenteditable=${this.authorized}
                 ></oni-natural-language-values>
             `;
         }
@@ -191,7 +222,7 @@ export class OniMainActor extends ActivityPubActor {
         return html`<oni-natural-language-values
                 name="summary"
                 it=${JSON.stringify(summary)}
-                ?editable=${this.authorized}
+                ?contenteditable=${this.authorized}
         ></oni-natural-language-values>`;
     }
 
@@ -203,7 +234,7 @@ export class OniMainActor extends ActivityPubActor {
         return html`<oni-natural-language-values
                 name="content"
                 it=${JSON.stringify(content)}
-                ?editable=${this.authorized}
+                ?contenteditable=${this.authorized}
         ></oni-natural-language-values>`;
     }
 

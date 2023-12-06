@@ -83,7 +83,6 @@ export class ActivityPubObject extends LitElement {
             this.it = it;
         }
         this.showMetadata = showMetadata;
-        this.addEventListener('content.change', this.updateActivityPubObject)
 
         const json = this.querySelector('script')?.text;
         if (json && this.it === null) {
@@ -91,45 +90,6 @@ export class ActivityPubObject extends LitElement {
         }
     }
 
-    async updateActivityPubObject(e) {
-        e.stopPropagation();
-
-        const outbox = mainActorOutbox();
-        if (!outbox || !isAuthorized()) return;
-
-        const it = this.it;
-        const prop = e.detail.name;
-        const val = e.detail.content;
-
-        it[prop] = val;
-
-        const update = {
-            type: "Update",
-            actor: this.it.iri(),
-            object: it,
-        }
-        const headers = {
-            'Content-Type': 'application/activity+json',
-        }
-        if (isAuthorized()) {
-            const auth = authorization();
-            headers.Authorization = `${auth?.token_type} ${auth?.access_token}`;
-        }
-        const req = {
-            headers: headers,
-            method: "POST",
-            body: JSON.stringify(update)
-        };
-        console.debug(`will update to ${outbox}`, update);
-        fetch(outbox, req)
-            .then(response => {
-                response.json().then( it => {
-                    console.debug('updated', it)
-                    this.it = new ActivityPubItem(it);
-                });
-            })
-            .catch(console.error);
-    }
 
     collections() {
         let collections = []

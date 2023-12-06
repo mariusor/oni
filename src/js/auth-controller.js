@@ -8,17 +8,14 @@ export class AuthController {
     }
 
     get authorization() {
-        console.info("getter authorization")
         this._authorization = JSON.parse(localStorage.getItem('authorization')) || {};
         return this._authorization;
     }
 
     set authorization(auth) {
         if (auth === null) {
-            console.info("unset authorization", auth);
             localStorage.removeItem('authorization');
         }
-        console.info("set authorization", auth);
         localStorage.setItem('authorization', JSON.stringify(auth))
         for (const host of AuthController.hosts) {
             host.requestUpdate();

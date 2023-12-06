@@ -203,8 +203,18 @@ export function handleServerError(err) {
     return errMessage;
 }
 
-export function mainActorOutbox() {
-    return localStorage.getItem("outbox");
+export function activity(outbox, update, extraHeaders = {}, success = () => {}) {
+    const headers = {
+        'Content-Type': 'application/activity+json',
+    };
+
+    const req = {
+        headers: {...headers, ...extraHeaders},
+        method: "POST",
+        body: JSON.stringify(update)
+    };
+
+    return fetch(outbox, req)
 }
 
 export function showError(e) {
