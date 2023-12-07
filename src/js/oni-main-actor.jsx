@@ -3,7 +3,7 @@ import {until} from "lit-html/directives/until.js";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
-import {activity, isAuthorized, isMainPage, loadPalette, mainActorOutbox, renderColors} from "./utils";
+import {activity, isMainPage, loadPalette, renderColors} from "./utils";
 import tc from "tinycolor2";
 import {AuthController} from "./auth-controller";
 import {ActivityPubItem} from "./activity-pub-item";

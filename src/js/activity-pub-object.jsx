@@ -1,11 +1,5 @@
 import {css, html, LitElement, nothing} from "lit";
-import {
-    authorization,
-    fetchActivityPubIRI, isAuthorized,
-    isLocalIRI, isMainPage,
-    mainActorOutbox,
-    pluralize, renderTimestamp,
-} from "./utils";
+import {fetchActivityPubIRI, isLocalIRI, pluralize, renderTimestamp} from "./utils";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";

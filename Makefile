@@ -40,7 +40,7 @@ download:
 	$(GO) mod tidy
 	$(GO) get oni
 
-oni: go.mod bin/$(PROJECT_NAME)
+$(PROJECT_NAME): go.mod bin/$(PROJECT_NAME)
 bin/$(PROJECT_NAME): cmd/oni/main.go $(GO_SOURCES) go.mod static/main.css static/main.js
 	$(BUILD) -o $@ cmd/oni/main.go
 
@@ -53,7 +53,7 @@ fdeps:
 
 assets: static/main.css static/main.js static/icons.svg
 
-generate:
+generate: assets
 	go generate -v assets.go
 
 static/main.js: fdeps $(TS_SOURCES) generate
@@ -71,6 +71,7 @@ coverage: TEST_FLAGS += -covermode=count -coverprofile $(PROJECT_NAME).coverprof
 coverage: test
 
 clean:
-	rm -f bin/{$(PROJECT_NAME),ctl} \
+	rm -fr bin/{$(PROJECT_NAME),ctl} \
+	      ./node_modules \
 	      static/*.{js,css,map,svg} \
 	      $(PROJECT_NAME).coverprofile
