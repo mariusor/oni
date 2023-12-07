@@ -48,15 +48,15 @@ ctl: go.mod bin/ctl
 bin/ctl: cmd/ctl/main.go $(GO_SOURCES) go.mod
 	$(BUILD) -o $@ cmd/ctl/main.go
 
-fdeps:
+yarn_install:
 	$(YARN) install
 
 assets: static/main.css static/main.js static/icons.svg
 
-generate: assets
+generate: yarn_install
 	go generate -v assets.go
 
-static/main.js: fdeps $(TS_SOURCES) generate
+static/main.js: $(TS_SOURCES) generate
 
 static/main.css: $(CSS_SOURCES) generate
 
