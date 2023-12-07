@@ -20,7 +20,7 @@ buildah config --env YARN=yarnpkg "${_builder}"
 buildah copy --ignorefile "${_context}/.containerignore" --contextdir "${_context}" "${_builder}" "${_context}" /go/src/app
 buildah config --workingdir /go/src/app "${_builder}"
 
-buildah run "${_builder}" make download fdeps
+buildah run "${_builder}" make download yarn_install
 buildah run "${_builder}" go mod vendor
 
 buildah commit "${_builder}" "${_image_name}"
