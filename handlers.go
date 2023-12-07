@@ -25,6 +25,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/mariusor/render"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 // NotFound is a generic method to return an 404 error HTTP handler that
@@ -492,8 +493,9 @@ func titleFromActor(o vocab.Actor, r *http.Request) func() template.HTML {
 	case "/inbox", "/outbox", "/followers", "/following":
 		details = strings.TrimPrefix(r.URL.Path, "/")
 	}
+	sanitized := bluemonday.StripTagsPolicy().Sanitize(string(username.Value))
 	return func() template.HTML {
-		return template.HTML(fmt.Sprintf("%s :: fediverse %s", username, details))
+		return template.HTML(fmt.Sprintf("%s :: fediverse %s", sanitized, details))
 	}
 }
 
