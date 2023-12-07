@@ -1,4 +1,4 @@
-image: archlinux
+image: alpine/edge
 secrets:
 - 3f30fd61-e33d-4198-aafb-0ff341e9db1c
 - 3dcea276-38d6-4a7e-85e5-20cbc903e1ea
@@ -9,6 +9,8 @@ packages:
   - buildah
 sources:
   - https://git.sr.ht/~mariusor/oni
+environment:
+  BUILDAH_ISOLATION: chroot
 tasks:
   - setup: |
       cd oni && make download && go mod vendor
