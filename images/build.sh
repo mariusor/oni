@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 #set -x
 
@@ -7,13 +7,11 @@ _image_name=${2:-oni/builder}
 
 _context=$(realpath "${_workdir}")
 
-_builder=$(buildah from docker.io/library/golang:1.21)
+_builder=$(buildah from docker.io/library/golang:1.21-alpine3.18)
 
 buildah config --env DEBIAN_FRONTEND=noninteractive "${_builder}"
-buildah run "${_builder}" /usr/bin/apt-get update -q
-buildah run "${_builder}" tee -a /etc/apt/apt.conf.d/99no-recommended-or-optional <<<'APT::Install-Recommends "false";'
-buildah run "${_builder}" tee -a /etc/apt/apt.conf.d/99no-recommended-or-optional <<<'APT::Install-Suggests "false";'
-buildah run "${_builder}" /usr/bin/apt-get install -q -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" yarnpkg
+buildah run "${_builder}" /sbin/apk update
+buildah run "${_builder}" /sbin/apk add yarn make
 
 buildah config --env GO111MODULE=on "${_builder}"
 buildah config --env GOWORK=off "${_builder}"

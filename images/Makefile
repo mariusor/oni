@@ -1,12 +1,13 @@
-SHELL := bash
+SHELL := sh
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
 .DELETE_ON_ERROR:
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 
-ENV ?= prod
 APP_HOSTNAME ?= oni
+VERSION ?= HEAD
+ENV ?= prod
 PORT ?= 4000
 TAG ?= $(ENV)
 

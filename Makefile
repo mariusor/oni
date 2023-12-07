@@ -1,9 +1,10 @@
-SHELL := bash
+SHELL := sh
 .ONESHELL:
 .SHELLFLAGS := -eu -o pipefail -c
 .DELETE_ON_ERROR:
 
 PROJECT_NAME ?= oni
+VERSION ?= HEAD
 ENV ?= dev
 LDFLAGS =
 
@@ -16,7 +17,6 @@ GO ?= go
 YARN ?= yarn
 
 export CGO_ENABLED=0
-export VERSION=HEAD
 
 TAGS := $(ENV)
 
