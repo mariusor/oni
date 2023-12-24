@@ -604,7 +604,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
 		}
 		if vocab.IsNil(it) {
-			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
+			return it, http.StatusInternalServerError, errors.BadRequestf("unable to unmarshal JSON request")
 		}
 
 		if err != nil {
