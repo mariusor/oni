@@ -188,9 +188,10 @@ func (o *oni) Run(c context.Context) error {
 
 	stopFn := func() {
 		if err := srvStop(ctx); err != nil {
-			o.l.WithContext(logCtx).Errorf(err.Error())
+			o.l.WithContext(logCtx).Errorf("%+v", err)
 		}
 	}
+	defer stopFn()
 
 	exit := w.RegisterSignalHandlers(w.SignalHandlers{
 		syscall.SIGHUP: func(_ chan int) {
@@ -219,19 +220,11 @@ func (o *oni) Run(c context.Context) error {
 	}).Exec(func() error {
 		if err := srvRun(); err != nil {
 			if o.l != nil {
-				o.l.Errorf(err.Error())
+				o.l.Errorf("%+v", err)
 			}
 			return err
 		}
-		var err error
-		// Doesn't block if no connections, but will otherwise wait until the timeout deadline.
-		go func(e error) {
-			if o.l != nil {
-				o.l.Errorf(err.Error())
-			}
-			stopFn()
-		}(err)
-		return err
+		return nil
 	})
 	if exit == 0 {
 		if o.l != nil {
