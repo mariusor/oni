@@ -13,8 +13,8 @@ require (
 	github.com/go-ap/errors v0.0.0-20231003111023-183eef4b31b7
 	github.com/go-ap/filters v0.0.0-20240211125015-2de118fbc889
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20240211125256-7af62c2fbb07
-	github.com/go-ap/storage-fs v0.0.0-20240211125336-36ecf4f16ab0
+	github.com/go-ap/processing v0.0.0-20240213082751-856796c34181
+	github.com/go-ap/storage-fs v0.0.0-20240213082822-39deada454d7
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
