@@ -568,24 +568,22 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	for _, act := range o.a {
 		baseIRIs.Append(act.GetID())
 	}
-	processor, err := processing.New(
-		processing.WithIRI(baseIRIs...), processing.WithClient(o.c), processing.WithStorage(o.s),
-		processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})), processing.WithIDGenerator(GenerateID),
-		processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
-	)
-	if err != nil {
-		o.l.WithContext(lw.Ctx{"err": err}).Errorf("invalid processing mw")
-		return notAcceptable(err)
-	}
-
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
 
 		o.c.SignFn(s2sSignFn(o.oniActor(r), o.s, o.l))
+
 		act, err := auth.LoadActorFromAuthHeader(r)
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")
 		}
+
+		processor := processing.New(
+			processing.WithIRI(baseIRIs...), processing.WithClient(o.c), processing.WithStorage(o.s),
+			processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})), processing.WithIDGenerator(GenerateID),
+			processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
+			processing.WithAuthorizedActor(&act),
+		)
 
 		if ok, err := ValidateRequest(r); !ok {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed request validation")
@@ -611,7 +609,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed initializing the Activity processor")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
-		processor.SetActor(&act)
 
 		vocab.OnActivity(it, func(a *vocab.Activity) error {
 			// TODO(marius): this should be handled in the processing package
@@ -632,7 +629,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 					time.Sleep(300 * time.Millisecond)
 
 					err := vocab.OnActivity(it, func(a *vocab.Activity) error {
-						return acceptFollows(*o, *a, processor)
+						return acceptFollows(*o, *a, &processor)
 					})
 					if err != nil {
 						o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to automatically accept follow")
