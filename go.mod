@@ -11,11 +11,11 @@ require (
 	github.com/go-ap/auth v0.0.0-20240211125214-ca6583df9c9c
 	github.com/go-ap/client v0.0.0-20240211124832-961fcce8d438
 	github.com/go-ap/errors v0.0.0-20231003111023-183eef4b31b7
-	github.com/go-ap/filters v0.0.0-20240211125015-2de118fbc889
+	github.com/go-ap/filters v0.0.0-20240219215202-3bb92c250e29
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20240213082751-856796c34181
-	github.com/go-ap/storage-fs v0.0.0-20240213082822-39deada454d7
-	github.com/go-chi/chi/v5 v5.0.11
+	github.com/go-ap/processing v0.0.0-20240219170415-0288cef1f678
+	github.com/go-ap/storage-fs v0.0.0-20240228080909-4ed6853fd0c1
+	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
@@ -42,7 +42,7 @@ require (
 	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
+	golang.org/x/crypto v0.20.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
