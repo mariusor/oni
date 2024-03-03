@@ -5,11 +5,11 @@ SHELL := sh
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 
-APP_HOSTNAME ?= oni
-VERSION ?= HEAD
 ENV ?= prod
+APP_HOSTNAME ?= oni
 PORT ?= 4000
 TAG ?= $(ENV)
+VERSION ?= HEAD
 
 BUILD_CMD=buildah bud
 RUN_CMD=podman run
