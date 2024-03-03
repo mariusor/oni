@@ -517,7 +517,7 @@ func col(r *http.Request) vocab.CollectionPath {
 
 const MaxItems = 20
 
-func acceptFollows(o oni, f vocab.Follow, p *processing.P) error {
+func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
 	accept := new(vocab.Accept)
 	accept.Type = vocab.AcceptType
 	accept.CC = append(accept.CC, vocab.PublicNS)
@@ -537,7 +537,7 @@ func acceptFollows(o oni, f vocab.Follow, p *processing.P) error {
 		o.l.Errorf("Failed saving activity %T[%s]: %+s", accept, accept.Type, err)
 		return err
 	}
-	_, err := processing.AcceptActivity(*p, accept, oniOutbox)
+	_, err := processing.AcceptActivity(p, accept, oniOutbox)
 	if err != nil {
 		o.l.Errorf("Failed processing %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
 		return err
@@ -629,7 +629,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 					time.Sleep(300 * time.Millisecond)
 
 					err := vocab.OnActivity(it, func(a *vocab.Activity) error {
-						return acceptFollows(*o, *a, &processor)
+						return acceptFollows(*o, *a, processor)
 					})
 					if err != nil {
 						o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to automatically accept follow")
