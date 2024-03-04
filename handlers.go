@@ -568,6 +568,14 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	for _, act := range o.a {
 		baseIRIs.Append(act.GetID())
 	}
+
+	processor := processing.New(
+		processing.WithIRI(baseIRIs...), processing.WithStorage(o.s),
+		processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})), processing.WithIDGenerator(GenerateID),
+		processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
+		processing.WithClient(o.c),
+	)
+
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
 
@@ -577,13 +585,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")
 		}
-
-		processor := processing.New(
-			processing.WithIRI(baseIRIs...), processing.WithClient(o.c), processing.WithStorage(o.s),
-			processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})), processing.WithIDGenerator(GenerateID),
-			processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
-			processing.WithAuthorizedActor(&act),
-		)
 
 		if ok, err := ValidateRequest(r); !ok {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed request validation")
@@ -609,7 +610,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed initializing the Activity processor")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
-
 		vocab.OnActivity(it, func(a *vocab.Activity) error {
 			// TODO(marius): this should be handled in the processing package
 			if a.AttributedTo == nil {
@@ -617,7 +617,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			}
 			return nil
 		})
-		if it, err = processor.ProcessActivity(it, receivedIn); err != nil {
+		if it, err = processor.ProcessActivity(it, act, receivedIn); err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed processing activity")
 			err = errors.Annotatef(err, "Can't save %q activity to %s", it.GetType(), receivedIn)
 			return it, errors.HttpStatus(err), err

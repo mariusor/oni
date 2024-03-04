@@ -7,13 +7,13 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240210113306-c862d947a747
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.19.8
-	github.com/go-ap/activitypub v0.0.0-20240211124657-820024a66b78
-	github.com/go-ap/auth v0.0.0-20240211125214-ca6583df9c9c
+	github.com/go-ap/activitypub v0.0.0-20240304122919-ef7a45e2d04a
+	github.com/go-ap/auth v0.0.0-20240304123639-d43a7aff57c6
 	github.com/go-ap/client v0.0.0-20240211124832-961fcce8d438
-	github.com/go-ap/errors v0.0.0-20231003111023-183eef4b31b7
-	github.com/go-ap/filters v0.0.0-20240219215202-3bb92c250e29
+	github.com/go-ap/errors v0.0.0-20240304112515-6077fa9c17b0
+	github.com/go-ap/filters v0.0.0-20240304123324-2c49f9d9a5e3
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20240219170415-0288cef1f678
+	github.com/go-ap/processing v0.0.0-20240304123656-97b0484ccb3c
 	github.com/go-ap/storage-fs v0.0.0-20240228080909-4ed6853fd0c1
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
