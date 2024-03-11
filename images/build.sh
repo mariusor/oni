@@ -7,7 +7,7 @@ _image_name=${2:-oni/builder}
 
 _context=$(realpath "${_workdir}")
 
-_builder=$(buildah from docker.io/library/golang:1.21-alpine3.18)
+_builder=$(buildah from docker.io/library/golang:alpine3.19)
 
 buildah config --env DEBIAN_FRONTEND=noninteractive "${_builder}"
 buildah run "${_builder}" /sbin/apk update

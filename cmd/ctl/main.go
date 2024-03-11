@@ -366,7 +366,7 @@ func Before(c *cli.Context) error {
 	ctl = Control{Logger: lw.Dev().WithContext(fields)}
 
 	storagePath := c.Path("path")
-	conf := storage.Config{CacheEnable: true, Path: storagePath, ErrFn: ctl.Logger.Errorf, LogFn: ctl.Logger.Infof}
+	conf := storage.Config{CacheEnable: true, Path: storagePath, Logger: ctl.Logger}
 	st, err := storage.New(conf)
 	if err != nil {
 		ctl.Logger.Errorf("%s", err.Error())

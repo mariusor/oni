@@ -122,18 +122,17 @@ func ListenOn(listen string) optionFn {
 func emptyLogFn(_ string, _ ...any) {}
 
 func WithStoragePath(st string) optionFn {
-	conf := storage.Config{CacheEnable: true, Path: st, ErrFn: emptyLogFn, LogFn: emptyLogFn}
+	conf := storage.Config{CacheEnable: true, Path: st}
 
 	return func(o *oni) {
 		o.StoragePath = st
 		if o.l != nil {
-			conf.LogFn = o.l.Infof
-			conf.ErrFn = o.l.Errorf
+			conf.Logger = o.l
 		}
-		conf.LogFn("Using storage: %s", st)
+		o.l.Infof("Using storage: %s", st)
 		st, err := storage.New(conf)
 		if err != nil {
-			conf.ErrFn("%s", err.Error())
+			o.l.Errorf("%s", err.Error())
 			return
 		}
 		o.s = st
