@@ -383,9 +383,12 @@ func main() {
 	app := cli.App{}
 	app.Name = "onictl"
 	app.Usage = "helper utility to manage an ONI instance"
-	if build, ok := debug.ReadBuildInfo(); ok && version == "HEAD" {
-		app.Version = build.Main.Version
+	if build, ok := debug.ReadBuildInfo(); ok && version == "HEAD" && build.Main.Version != "(devel)" {
+		version = build.Main.Version
 	}
+
+	app.Version = version
+
 	app.Before = Before
 	app.Flags = []cli.Flag{
 		&cli.PathFlag{

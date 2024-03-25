@@ -64,14 +64,19 @@ func maybeLoadServiceActor(base, path string) (*vocab.Actor, bool) {
 	return nil, false
 }
 
+var version = "HEAD"
+
 func main() {
 	flag.StringVar(&listen, "listen", "127.0.0.1:60123", "Listen socket")
 	flag.StringVar(&path, "path", dataPath, "Path for ActivityPub storage")
 	flag.Parse()
 
-	if build, ok := debug.ReadBuildInfo(); ok && build.Main.Version != "" {
-		oni.Version = build.Main.Version
+	if build, ok := debug.ReadBuildInfo(); ok && version == "HEAD" && build.Main.Version != "(devel)" {
+		version = build.Main.Version
 	}
+
+	oni.Version = version
+
 	log := lw.Dev()
 
 	err := mkDirIfNotExists(path)
