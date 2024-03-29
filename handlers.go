@@ -414,10 +414,10 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 
 		if u, err := iri.URL(); err == nil {
 			if after := u.Query().Get("after"); after != "" {
-				colFilters = append(colFilters, filters.After(filters.ID(vocab.IRI(after))))
+				colFilters = append(colFilters, filters.After(filters.SameID(vocab.IRI(after))))
 			}
 			if after := u.Query().Get("before"); after != "" {
-				colFilters = append(colFilters, filters.Before(filters.ID(vocab.IRI(after))))
+				colFilters = append(colFilters, filters.Before(filters.SameID(vocab.IRI(after))))
 			}
 		}
 
