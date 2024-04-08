@@ -13,7 +13,7 @@ require (
 	github.com/go-ap/errors v0.0.0-20240304112515-6077fa9c17b0
 	github.com/go-ap/filters v0.0.0-20240408093433-6a48bb3dd711
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20240408093907-72bd6bb840b4
+	github.com/go-ap/processing v0.0.0-20240408154734-b62555dbaf98
 	github.com/go-ap/storage-fs v0.0.0-20240408094148-b3bc562af831
 	github.com/go-chi/chi/v5 v5.0.12
 	github.com/go-chi/cors v1.2.1
