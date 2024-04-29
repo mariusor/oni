@@ -6,7 +6,7 @@ require (
 	git.sr.ht/~mariusor/lw v0.0.0-20240323171419-d538df4af052
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240210113306-c862d947a747
 	github.com/elnormous/contenttype v1.0.4
-	github.com/evanw/esbuild v0.19.8
+	github.com/evanw/esbuild v0.20.2
 	github.com/go-ap/activitypub v0.0.0-20240408091739-ba76b44c2594
 	github.com/go-ap/auth v0.0.0-20240408093715-7b70def65ccb
 	github.com/go-ap/client v0.0.0-20240408093509-f0721baa55c2
