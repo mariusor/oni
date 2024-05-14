@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	git.sr.ht/~mariusor/lw v0.0.0-20240323171419-d538df4af052
-	git.sr.ht/~mariusor/wrapper v0.0.0-20240210113306-c862d947a747
+	git.sr.ht/~mariusor/wrapper v0.0.0-20240514112730-225be473fdf4
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.20.2
 	github.com/go-ap/activitypub v0.0.0-20240408091739-ba76b44c2594
@@ -22,7 +22,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/openshift/osin v1.0.2-0.20220317075346-0f4d38c6e53f
 	github.com/urfave/cli/v2 v2.3.0
-	golang.org/x/oauth2 v0.19.0
+	golang.org/x/oauth2 v0.20.0
 )
 
 require (
@@ -41,8 +41,8 @@ require (
 	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 )
