@@ -78,10 +78,10 @@ images:
 
 clean:
 	-$(RM) bin/*
-	-$(RM) ./node_modules yarn.lock
+	-$(RM) -r ./node_modules yarn.lock
 	-$(RM) static/*.{js,css,map,svg}
 	-$(RM) $(PROJECT_NAME).coverprofile
-	$(GO) build clean
+	$(GO) clean
 	$(MAKE) -C images $@
 
 test: TEST_TARGET := ./...
