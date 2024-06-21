@@ -192,35 +192,33 @@ func (o *oni) Run(c context.Context) error {
 	}
 	defer stopFn()
 
-	exit := w.RegisterSignalHandlers(w.SignalHandlers{
-		syscall.SIGHUP: func(_ chan<- int) {
+	err := w.RegisterSignalHandlers(w.SignalHandlers{
+		syscall.SIGHUP: func(_ chan<- error) {
 			if o.l != nil {
 				o.l.Infof("SIGHUP received, reloading configuration")
 			}
 		},
-		syscall.SIGINT: func(exit chan<- int) {
+		syscall.SIGINT: func(exit chan<- error) {
 			if o.l != nil {
 				o.l.Infof("SIGINT received, stopping")
 			}
-			exit <- 0
+			exit <- nil
 		},
-		syscall.SIGTERM: func(exit chan<- int) {
+		syscall.SIGTERM: func(exit chan<- error) {
 			if o.l != nil {
 				o.l.Infof("SIGITERM received, force stopping")
 			}
-			exit <- 0
+			exit <- nil
 		},
-		syscall.SIGQUIT: func(exit chan<- int) {
+		syscall.SIGQUIT: func(exit chan<- error) {
 			if o.l != nil {
 				o.l.Infof("SIGQUIT received, force stopping with core-dump")
 			}
-			exit <- 0
+			exit <- nil
 		},
 	}).Exec(ctx, srvRun)
-	if exit == 0 {
-		if o.l != nil {
-			o.l.Infof("Shutting down")
-		}
+	if o.l != nil {
+		o.l.Infof("Shutting down")
 	}
-	return nil
+	return err
 }
