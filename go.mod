@@ -8,8 +8,8 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.21.5
 	github.com/go-ap/activitypub v0.0.0-20240408091739-ba76b44c2594
-	github.com/go-ap/auth v0.0.0-20240803120634-74fe1bcc062c
-	github.com/go-ap/client v0.0.0-20240801112518-4c25c5a0156a
+	github.com/go-ap/auth v0.0.0-20240803164334-84c5e7cf500d
+	github.com/go-ap/client v0.0.0-20240803164250-72674fd63382
 	github.com/go-ap/errors v0.0.0-20240304112515-6077fa9c17b0
 	github.com/go-ap/filters v0.0.0-20240801112128-c16e26a892c4
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
@@ -26,7 +26,7 @@ require (
 )
 
 require (
-	git.sr.ht/~mariusor/cache v0.0.0-20240710145102-0547ec402138 // indirect
+	git.sr.ht/~mariusor/cache v0.0.0-20240803161421-766939937a58 // indirect
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	git.sr.ht/~mariusor/mask v0.0.0-20240327084502-ef2a9438457e // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
