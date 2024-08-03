@@ -581,7 +581,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 		o.c.SignFn(s2sSignFn(o.oniActor(r), o.s, o.l))
 
-		act, err := auth.LoadActorFromAuthHeader(r)
+		act, err := auth.LoadActorFromRequest(r)
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")
 		}
