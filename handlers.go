@@ -2,6 +2,7 @@ package oni
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
+	"git.sr.ht/~mariusor/ssm"
 	ct "github.com/elnormous/contenttype"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
@@ -552,6 +554,19 @@ func IRIsContain(iris vocab.IRIs) func(i vocab.IRI) bool {
 	}
 }
 
+const (
+	jitterDelay = 50 * time.Millisecond
+
+	baseWaitTime = time.Second
+	multiplier   = 1.4
+
+	retries = 5
+)
+
+func runWithRetry(fn ssm.Fn) ssm.Fn {
+	return ssm.After(300*time.Millisecond, ssm.Retry(retries, ssm.BackOff(ssm.Jitter(jitterDelay, ssm.Linear(baseWaitTime, multiplier)), fn)))
+}
+
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
 func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	auth, err := auth.New(
@@ -625,16 +640,18 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 		if it.GetType() == vocab.FollowType {
 			defer func() {
-				go func() {
-					time.Sleep(300 * time.Millisecond)
-
+				go ssm.Run(context.Background(), runWithRetry(func(ctx context.Context) ssm.Fn {
+					l := lw.Ctx{}
 					err := vocab.OnActivity(it, func(a *vocab.Activity) error {
+						l["from"] = a.Actor.GetLink()
 						return acceptFollows(*o, *a, processor)
 					})
 					if err != nil {
-						o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to automatically accept follow")
+						l["err"] = err.Error()
+						o.l.WithContext(l).Errorf("unable to automatically accept follow")
 					}
-				}()
+					return ssm.End
+				}))
 			}()
 		}
 		if it.GetType() == vocab.UpdateType {
