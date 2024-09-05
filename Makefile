@@ -10,10 +10,10 @@ ENV ?= dev
 
 LDFLAGS ?= -X main.version=$(VERSION)
 BUILDFLAGS ?= -a -ldflags '$(LDFLAGS)' -tags "$(TAGS)"
-TEST_FLAGS ?= -count=1 -v
-GO ?= go
-YARN ?= yarn
+TEST_FLAGS ?= -count=1
 
+YARN ?= yarn
+GO ?= go
 GO_SOURCES := $(wildcard ./*.go)
 TS_SOURCES := $(wildcard src/js/*)
 CSS_SOURCES := $(wildcard src/css/*)
@@ -73,10 +73,7 @@ static/main.css: $(CSS_SOURCES) yarn.lock
 static/icons.svg: $(SVG_SOURCES) yarn.lock
 	go generate -v assets.go
 
-images:
-	$(MAKE) -C images $@
-
-clean:
+clean: ## Cleanup the build workspace.
 	-$(RM) bin/*
 	-$(RM) -r ./node_modules yarn.lock
 	-$(RM) static/*.{js,css,map,svg}
@@ -84,8 +81,11 @@ clean:
 	$(GO) clean
 	$(MAKE) -C images $@
 
+images: ## Build podman images.
+	$(MAKE) -C images $@
+
 test: TEST_TARGET := ./...
-test:
+test: download go.sum ## Run unit tests for the service.
 	$(TEST) $(TEST_FLAGS) $(TEST_TARGET)
 
 coverage: TEST_TARGET := .
