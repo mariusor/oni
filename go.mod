@@ -9,13 +9,13 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.21.5
 	github.com/go-ap/activitypub v0.0.0-20240408091739-ba76b44c2594
-	github.com/go-ap/auth v0.0.0-20240826180029-d35ec068474a
-	github.com/go-ap/client v0.0.0-20240826175954-dd523526a531
+	github.com/go-ap/auth v0.0.0-20240903151613-d09769aa5626
+	github.com/go-ap/client v0.0.0-20240903140120-3e6ae9fe585e
 	github.com/go-ap/errors v0.0.0-20240304112515-6077fa9c17b0
 	github.com/go-ap/filters v0.0.0-20240801112128-c16e26a892c4
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20240826180049-b27f10bcd327
-	github.com/go-ap/storage-fs v0.0.0-20240826180123-7ad9216a15b8
+	github.com/go-ap/processing v0.0.0-20240903151626-7bdcf6662c6c
+	github.com/go-ap/storage-fs v0.0.0-20240903152209-934e0ad92032
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
@@ -23,11 +23,11 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/openshift/osin v1.0.2-0.20220317075346-0f4d38c6e53f
 	github.com/urfave/cli/v2 v2.27.3
-	golang.org/x/oauth2 v0.22.0
+	golang.org/x/oauth2 v0.23.0
 )
 
 require (
-	git.sr.ht/~mariusor/cache v0.0.0-20240826175759-e4d5dbc2aa25 // indirect
+	git.sr.ht/~mariusor/cache v0.0.0-20240904181222-5f2fc965542a // indirect
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	git.sr.ht/~mariusor/mask v0.0.0-20240327084502-ef2a9438457e // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
@@ -46,6 +46,6 @@ require (
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/net v0.28.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/text v0.18.0 // indirect
 )
