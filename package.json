@@ -1,10 +1,10 @@
 {
   "license": "MIT",
   "dependencies": {
-    "@floating-ui/dom": "^1.2.7",
+    "@floating-ui/dom": "1.6.10",
     "color.js": "^1.2.0",
-    "lit": "^3.1.4",
-    "lit-html": "^3.1.4",
+    "lit": "^3.2.0",
+    "lit-html": "^3.2.0",
     "tinycolor2": "^1.6.0"
   }
 }
