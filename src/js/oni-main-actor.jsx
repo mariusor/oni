@@ -4,9 +4,11 @@ import {when} from "lit-html/directives/when.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
 import {activity, isMainPage, loadPalette, renderColors} from "./utils";
-import tc from "tinycolor2";
+import { TinyColor } from "@ctrl/tinycolor";
 import {AuthController} from "./auth-controller";
 import {ActivityPubItem} from "./activity-pub-item";
+
+const tc = (c) => new TinyColor(c)
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`

@@ -1,13 +1,12 @@
-import tinycolor from "tinycolor2";
+import {TinyColor, readability, mostReadable} from "@ctrl/tinycolor";
 import {average, prominent} from "color.js";
 import {ActivityPubItem} from "./activity-pub-item";
 import {html, nothing} from "lit";
 import {map} from "lit-html/directives/map.js";
 import {NewPost} from "./oni-new-post";
 
-const tc = tinycolor;
-export const contrast = tc.readability;
-export const mostReadable = tc.mostReadable;
+const tc = (c) => new TinyColor(c);
+export const contrast = readability;
 
 export function prefersDarkTheme() {
     return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -289,18 +288,22 @@ export async function loadPalette(it) {
     palette.imageColors = imageColors;
     palette.iconColors = iconColors;
 
-    palette.accentColor = getAccentColor(palette, iconColors) || palette.accentColor;
-    iconColors = iconColors.filter(not(palette.accentColor, 1));
+    if (iconColors.length > 0) {
+        palette.accentColor = getAccentColor(palette, iconColors) || palette.accentColor;
+        iconColors = iconColors.filter(not(palette.accentColor, 1));
 
-    palette.linkColor = getAccentColor(palette, iconColors) || palette.linkColor;
-    iconColors = iconColors.filter(not(palette.linkColor, 1));
+        palette.linkColor = getAccentColor(palette, iconColors) || palette.linkColor;
+        iconColors = iconColors.filter(not(palette.linkColor, 1));
 
-    palette.linkVisitedColor = getClosestColor(palette, iconColors, palette.linkColor) || palette.linkVisitedColor;
-    iconColors = iconColors.filter(not(palette.linkVisitedColor, 1));
+        palette.linkVisitedColor = getClosestColor(palette, iconColors, palette.linkColor) || palette.linkVisitedColor;
+        iconColors = iconColors.filter(not(palette.linkVisitedColor, 1));
 
-    palette.linkActiveColor = getClosestColor(palette, iconColors, palette.linkColor) || palette.linkActiveColor;
+        palette.linkActiveColor = getClosestColor(palette, iconColors, palette.linkColor) || palette.linkActiveColor;
+    }
 
-    palette.fgColor = getFgColor(palette, imageColors) || palette.fgColor;
+    if (imageColors.length > 0) {
+        palette.fgColor = getFgColor(palette, imageColors) || palette.fgColor;
+    }
 
     localStorage.setItem('palette', JSON.stringify(palette));
     return palette;
@@ -309,7 +312,7 @@ export async function loadPalette(it) {
 function getFgColor(palette, colors) {
     colors = colors || [];
 
-    return mostReadable(palette.bgColor, colors)?.toHexString();
+    return mostReadable(palette.bgColor, colors, {includeFallbackColors: true})?.toHexString();
 }
 
 function getClosestColor(palette, colors, color) {
