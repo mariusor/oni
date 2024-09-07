@@ -86,7 +86,7 @@ export class LoginDialog extends LitElement {
         const pw = form._pw.value
         form._pw.value = "";
 
-        this.authorizationToken(form.action, pw).then(console.info("success authorization"));
+        this.authorizationToken(form.action, pw).then(() => console.info("success authorization"));
     }
 
     async authorizationToken(targetURI, pw) {
