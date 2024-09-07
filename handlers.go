@@ -569,19 +569,20 @@ func runWithRetry(fn ssm.Fn) ssm.Fn {
 
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
 func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
+	baseIRIs := make(vocab.IRIs, 0)
+	for _, act := range o.a {
+		baseIRIs.Append(act.GetID())
+	}
+
 	auth, err := auth.New(
 		auth.WithStorage(o.s),
 		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "auth"})),
 		auth.WithClient(o.c),
+		auth.WithIRI(baseIRIs...),
 	)
 	if err != nil {
 		o.l.WithContext(lw.Ctx{"err": err}).Errorf("invalid authorization mw")
 		return notAcceptable(err)
-	}
-
-	baseIRIs := make(vocab.IRIs, 0)
-	for _, act := range o.a {
-		baseIRIs.Append(act.GetID())
 	}
 
 	processor := processing.New(
@@ -594,12 +595,12 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
 
-		o.c.SignFn(s2sSignFn(o.oniActor(r), o.s, o.l))
-
 		act, err := auth.LoadActorFromRequest(r)
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")
 		}
+
+		o.c.SignFn(s2sSignFn(o.oniActor(r), o.s, o.l))
 
 		if ok, err := ValidateRequest(r); !ok {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed request validation")

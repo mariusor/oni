@@ -3,13 +3,13 @@ module oni
 go 1.22
 
 require (
-	git.sr.ht/~mariusor/lw v0.0.0-20240323171419-d538df4af052
+	git.sr.ht/~mariusor/lw v0.0.0-20240906100438-00d2184b2120
 	git.sr.ht/~mariusor/ssm v0.0.0-20240811085540-34f24cac52b7
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240519120935-f877e4d97def
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.21.5
 	github.com/go-ap/activitypub v0.0.0-20240408091739-ba76b44c2594
-	github.com/go-ap/auth v0.0.0-20240903151613-d09769aa5626
+	github.com/go-ap/auth v0.0.0-20240907184828-77cd5c05bacb
 	github.com/go-ap/client v0.0.0-20240903140120-3e6ae9fe585e
 	github.com/go-ap/errors v0.0.0-20240304112515-6077fa9c17b0
 	github.com/go-ap/filters v0.0.0-20240801112128-c16e26a892c4
@@ -27,7 +27,7 @@ require (
 )
 
 require (
-	git.sr.ht/~mariusor/cache v0.0.0-20240904181222-5f2fc965542a // indirect
+	git.sr.ht/~mariusor/cache v0.0.0-20240905174905-d68f888f114e // indirect
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	git.sr.ht/~mariusor/mask v0.0.0-20240327084502-ef2a9438457e // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
@@ -44,8 +44,8 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
-	golang.org/x/net v0.28.0 // indirect
+	golang.org/x/crypto v0.27.0 // indirect
+	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect
 	golang.org/x/text v0.18.0 // indirect
 )
