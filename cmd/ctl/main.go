@@ -105,6 +105,8 @@ func addActorAct(ctl *Control) cli.ActionFunc {
 
 			o := oni.DefaultActor(iri)
 			o.Outbox = vocab.Outbox.Of(iri)
+			o.Followers = vocab.Followers.Of(iri)
+			o.Following = vocab.Following.Of(iri)
 
 			if it, err = ctl.Storage.Save(o); err != nil {
 				ctl.Logger.Errorf("Unable to save main actor %s: %s", maybeURL, err)
@@ -268,6 +270,9 @@ func tokenAct(ctl *Control) cli.ActionFunc {
 func (c *Control) GenAccessToken(clientID, actorIdentifier string, dat interface{}) (string, error) {
 	if u, err := url.Parse(clientID); err == nil {
 		clientID = path.Base(u.Path)
+		if clientID == "." {
+			clientID = u.Host
+		}
 	}
 	cl, err := c.Storage.GetClient(clientID)
 	if err != nil {
