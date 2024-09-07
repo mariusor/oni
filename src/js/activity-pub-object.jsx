@@ -29,7 +29,7 @@ export class ActivityPubObject extends LitElement {
             margin: .1rem;
         }
         article header * {
-            padding: 0 .1rem;
+            padding: 0;
             margin: 0;
         }
         article header h2 {

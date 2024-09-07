@@ -15,7 +15,7 @@ export class ActivityPubActor extends ActivityPubObject {
             return nothing;
         }
         if (typeof icon == 'string') {
-            return html`<img src=${icon} alt="icon"/>`;
+            return html`<oni-image it=${JSON.stringify(icon)} ?inline=${this.inline}></oni-image>`;
         } else {
             return ActivityPubObject.renderByMediaType(icon, this.inline);
         }
