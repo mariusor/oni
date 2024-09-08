@@ -28,6 +28,7 @@ export async function fetchActivityPubIRI(iri) {
     } else {
         // generate HTTP-signature for the actor
     }
+    console.log(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI`, iri)
     const response = await fetch(iri, {headers: headers, mode: 'no-cors'}).catch(console.error);
     if (response.status === 200) {
         return await response.json();

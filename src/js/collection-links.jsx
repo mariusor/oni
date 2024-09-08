@@ -45,17 +45,20 @@ export class CollectionLinks extends LitElement {
         this.it = {};
     }
 
-    render() {
-        const newPostLink = isAuthorized()
-            ? html`<li>
-                    <oni-new-post-link @click=${newPost} label="Add" icon="edit"></oni-new-post-link>
-                </li>`
+    renderAddTab() {
+        isAuthorized()
+            ? html`
+                    <li>
+                        <oni-new-post-link @click=${newPost} label="Add" icon="edit"></oni-new-post-link>
+                    </li>`
             : nothing;
+    }
+
+    render() {
         return html`
             <nav>
                 <ul>
                     <slot></slot>
-                    ${newPostLink}
                     ${this.it.map(value => html`
                         <li class=${classMap({'active': (value === window.location.href)})}>
                             <oni-collection-link it=${JSON.stringify(value)}></oni-collection-link>

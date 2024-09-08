@@ -110,14 +110,18 @@ export class ActivityPubObject extends LitElement {
         return it;
     }
 
-    async renderAuthor() {
-        let act;
-        if (this.it.hasOwnProperty('attributedTo')) {
-            act = await this.load('attributedTo');
-        } else if (this.it.hasOwnProperty('actor')) {
-            act = await this.load('actor');
+    async fetchAuthor() {
+        if (this.it.hasOwnProperty('actor')) {
+            return await this.load('actor');
         }
+        if (this.it.hasOwnProperty('attributedTo')) {
+            return await this.load('attributedTo');
+        }
+        return null;
+    }
 
+    async renderAuthor() {
+        let act = await this.fetchAuthor();
         if (!act) return nothing;
 
         if (!Array.isArray(act)) {

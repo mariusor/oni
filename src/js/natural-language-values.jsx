@@ -100,7 +100,7 @@ export class NaturalLanguageValues extends LitElement {
     render() {
         if (!this.it) { return nothing; }
 
-        console.info(`${this.name} editable? ${this.editable}`);
+        // console.info(`${this.name} editable? ${this.editable}`);
         return html`
             ${when(
                 this.editable,
