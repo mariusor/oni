@@ -4,7 +4,7 @@ import {when} from "lit-html/directives/when.js";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {ActivityPubObject} from "./activity-pub-object";
 import {activity, isMainPage, loadPalette, renderColors} from "./utils";
-import { TinyColor } from "@ctrl/tinycolor";
+import {TinyColor} from "@ctrl/tinycolor";
 import {AuthController} from "./auth-controller";
 import {ActivityPubItem} from "./activity-pub-item";
 
@@ -12,43 +12,33 @@ const tc = (c) => new TinyColor(c)
 
 export class OniMainActor extends ActivityPubActor {
     static styles = [css`
-        :host main {
-            background-size: cover;
+        :host section {
             padding: 1rem;
+            background-size: cover;
             background-clip: padding-box;
-        }
-        main header {
             display: grid;
-            gap: .4rem .8rem;
-            grid-template-columns: minmax(0.8fr, min-content) 1.2fr;
-            grid-template-rows: 3rem auto;
-            grid-template-areas: "icon name"
-            "icon description";
-            place-content: space-evenly start;
-            justify-items: stretch;
-            place-items: start;
+            grid-template-columns: 1fr 6fr;
+            gap: 2em;
+            grid-template-areas: "icon description";
+        }
+        section header {
+            grid-area: description;
+            align-self: end;
+            width: 90%;
         }
         header h1 {
-            grid-area: name;
             margin: .2rem 0;
-        }
-        header > a {
-            grid-area: icon;
-            text-decoration: none;
-            display: block;
-        }
-        header aside {
-            grid-area: description;
-        }
-        header aside oni-natural-language-values {
-            /*margin: 0 0 0 1rem;*/
-            font-size: .9rem;
         }
         header h1 a oni-natural-language-values {
             color: var(--accent-color);
             text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
         }
-        header img {
+        section > a {
+            grid-area: "icon";
+            text-decoration: none;
+            align-self: start;
+        }
+        section > a img {
             border: .1vw solid var(--accent-color);
             border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
@@ -59,8 +49,9 @@ export class OniMainActor extends ActivityPubActor {
             margin-bottom: -1.4rem;
         }
         header ul {
-            margin: 0;
-            padding: 0.6rem 1.4rem;
+            display: inline-block;
+            padding: 0.3rem 1.4rem;
+            margin-left: -1.4rem;
             border-radius: 1.6em;
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
         }
@@ -86,6 +77,9 @@ export class OniMainActor extends ActivityPubActor {
         :host oni-natural-language-values[name=content] {
             display: block;
             margin: 0 1rem;
+        }
+        :host oni-natural-language-values[name=summary] {
+            font-size: .8em;
         }
     `, ActivityPubObject.styles];
     static properties = {
@@ -278,7 +272,7 @@ export class OniMainActor extends ActivityPubActor {
                 --accent-color: ${palette.accentColor};
             }
             ${when(haveBgImg, () => html`
-                :host main {
+                :host section {
                     background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
                 }`
             )}
@@ -291,22 +285,20 @@ export class OniMainActor extends ActivityPubActor {
 
         const iri = this.it.iri();
 
-        console.info(`rendering and checking authorized: ${this.authorized}`, );
+        //console.info(`rendering and checking authorized: ${this.authorized}`,);
 
         const hasSlot = this.querySelectorAll('*').length > 0;
         return html`${this.renderOAuth()}
         <style>${style}</style>
-        <main>
+        <section>
+            <a href=${iri}>${this.renderIcon()}</a>
             <header>
-                <a href=${iri}>${this.renderIcon()}</a>
+                ${this.renderUrl()}
                 <h1><a href=${iri}>${this.renderPreferredUsername()}</a></h1>
-                <aside>
-                    ${this.renderSummary()}
-                    ${this.renderUrl()}
-                </aside>
+                ${this.renderSummary()}
             </header>
-            <nav>${this.renderCollections()}</nav>
-        </main>
+        </section>
+        <nav>${this.renderCollections()}</nav>
         ${when(
             hasSlot,
                 () => html`<slot></slot>`,

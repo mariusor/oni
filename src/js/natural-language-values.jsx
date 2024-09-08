@@ -31,6 +31,10 @@ export class NaturalLanguageValues extends LitElement {
           display: inline-block;
         }
         :host div { display: inline-block; }
+        :host([name=summary]) p, :host([name=name]) p, :host([name=preferredUsernam]) p {
+            display: inline-block; 
+            margin: 0;
+        }
     `, ActivityPubObject.styles];
 
     editableEditor = false;

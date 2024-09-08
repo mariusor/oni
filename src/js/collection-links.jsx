@@ -9,7 +9,6 @@ export class CollectionLinks extends LitElement {
             display: flex;
             justify-content: flex-end;
             border-bottom: 3px solid var(--accent-color);
-            margin: .4rem -1rem 0 -1rem;
             clear: both;
         }
         :host ul {
