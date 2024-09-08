@@ -3,15 +3,15 @@ import {ActivityPubObject} from "./activity-pub-object";
 
 export class ActivityPubNote extends ActivityPubObject {
     static styles = [css`
-    main {
+    :host main {
         display: flex;
         flex-direction: column;
         align-items: center;
     }
-    main > * {
+    :host > * {
         margin: .1rem;
     }
-    main aside {
+    :host aside {
         align-self: end;
     }
     p {
@@ -28,11 +28,11 @@ export class ActivityPubNote extends ActivityPubObject {
         const summary = this.it.getSummary().length > 0 ? html`<h2>${this.renderSummary()}</h2>` : nothing;
         const header = this.it.getName().length+this.it.getSummary().length > 0 ? html`<header>${name}${summary}</header>` : nothing;
 
+        const metadata = this.showMetadata ? html`<footer>${this.renderMetadata()}</footer>` : nothing;
         return html`<article>
             ${header}
             ${this.renderContent()}
             <aside>${this.renderAttachment()}</aside>
-        </article>
-        <footer>${this.renderMetadata()}</footer>`;
+        </article>${metadata}`;
     }
 }
