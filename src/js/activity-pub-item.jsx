@@ -7,6 +7,7 @@ export const CollectionTypes = [ 'Collection', 'CollectionPage', 'OrderedCollect
 //const itemProperties = ['icon', 'image', 'actor', 'attachment', 'audience', 'attributedTo', 'context', 'generator', 'inReplyTo', 'location', 'preview', 'target', 'result', 'origin', 'instrument', 'object'];
 
 const objectProperties = ['id', 'type', 'icon', 'image', 'summary', 'name', 'content', 'attachment', 'audience', 'attributedTo', 'context', 'mediaType', 'endTime', 'generator', 'inReplyTo', 'location', 'preview', 'published', 'updated', 'startTime', 'tag', 'to', 'bto', 'cc', 'bcc', 'duration', 'source', 'url', 'replies', 'likes', 'shares'];
+const tombstoneProperties = ['deleted', 'formerType'];
 const actorProperties = ['preferredUsername', 'publicKey', 'endpoints', 'streams', 'inbox', 'outbox', 'liked', 'shared', 'followers', 'following'];
 const activityProperties = ['actor', 'target', 'result', 'origin', 'instrument', 'object'];
 const collectionProperties = ['items', 'orderedItems', 'totalItems', 'first', 'last', 'current', 'partOf', 'next', 'prev'];
@@ -30,6 +31,9 @@ export class ActivityPubItem {
             this[p] = it[p];
         };
         objectProperties.forEach(setPropIfExists);
+        if (this.type == 'Tombstone') {
+            tombstoneProperties.forEach(setPropIfExists);
+        }
         if (ActorTypes.indexOf(this.type) >= 0) {
             actorProperties.forEach(setPropIfExists);
         }
@@ -58,6 +62,17 @@ export class ActivityPubItem {
             this.attachment = null;
         }
         return this.attachment;
+    }
+
+    getDeleted() {
+        if (!this.hasOwnProperty('deleted')) {
+            this.deleted = null;
+        } else {
+            const d = new Date();
+            d.setTime(Date.parse(this.deleted));
+            this.deleted = d;
+        }
+        return this.deleted;
     }
 
     getRecipients() {

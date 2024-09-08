@@ -36,6 +36,7 @@ export class OniMainActor extends ActivityPubActor {
         section > a {
             grid-area: "icon";
             text-decoration: none;
+            display: inline-block;
             align-self: start;
         }
         section > a img {

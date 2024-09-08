@@ -32,7 +32,7 @@ export class ActivityPubNote extends ActivityPubObject {
         return html`<article>
             ${header}
             ${this.renderContent()}
-            <aside>${this.renderAttachment()}</aside>
+            ${this.renderAttachment()}
         </article>${metadata}`;
     }
 }

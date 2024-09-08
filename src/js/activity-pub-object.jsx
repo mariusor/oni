@@ -51,6 +51,14 @@ export class ActivityPubObject extends LitElement {
         footer aside {
             font-size: 0.8em;
         }
+        oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-tag {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .attachments {
+            max-height: 8vw;
+        }
     `;
 
     static properties = {
@@ -138,16 +146,16 @@ export class ActivityPubObject extends LitElement {
     }
 
     renderAttachment() {
-        const attachment = this.it.getAttachment();
+        let attachment = this.it.getAttachment();
         if (!attachment) {
             return nothing;
         }
-        if (Array.isArray(attachment)) {
-            return html`<div class="attachment">${attachment.map(
-                value => ActivityPubObject.renderByType(value)
-            )}</div>`;
+        if (!Array.isArray(attachment)) {
+            attachment = [attachment];
         }
-        return html`<div class="attachment">${ActivityPubObject.renderByType(attachment)}</div>`
+        return html`<details class="attachment"><summary>${pluralize(attachment.length, 'attachment')}</summary>${attachment.map(
+                value => ActivityPubObject.renderByType(value)
+        )}</details>`;
     }
 
     renderBookmark() {

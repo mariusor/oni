@@ -3,29 +3,23 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {relativeDate} from "./utils";
 
 export class ActivityPubTombstone extends ActivityPubObject {
-    static styles = [css``, ActivityPubObject.styles];
+    static styles = ActivityPubObject.styles;
 
     constructor(it) {
         super(it);
     }
 
-    deleted() {
-        if (!this.it || !this.it.hasOwnProperty('deleted')) {
-            return null;
-        }
-        const d = new Date();
-        d.setTime(Date.parse(this.it.deleted));
-        return d || null;
-    }
-
     renderDeleted() {
-        const deleted = this.deleted()
-        if (!deleted) {
+        if (this.it.type !== "Tombstone") {
             return nothing;
         }
-        return html` <time datetime=${deleted.toUTCString()} title=${deleted.toUTCString()}>
-            <oni-icon name="deleted" title="Deleted"></oni-icon> ${relativeDate(deleted)}
-        </time>`;
+        const deleted = this.it.getDeleted();
+        return html`This ${this.it.formerType} has been deleted ${deleted ?
+                html`
+                    <time dateTime=${deleted.toUTCString()} title=${deleted.toUTCString()}>
+                        <oni-icon name="deleted" title="Deleted"></oni-icon>
+                        ${relativeDate(deleted)}
+                    </time>` : nothing}`;
     }
 
     render() {

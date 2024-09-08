@@ -6,9 +6,6 @@ import {when} from "lit-html/directives/when.js";
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`
         img {
-            max-width: 100%; 
-            max-height: 12vw;
-            align-self: start;
             border-radius: .4rem;
             border: 1px solid var(--accent-color);
         }

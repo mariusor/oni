@@ -14,13 +14,8 @@ export class ActivityPubCollection extends ActivityPubObject {
             list-style: none;
         }
         :host li { 
-            margin: 1rem 0;
             overflow: hidden;
             border-bottom: 1px solid var(--fg-color);
-        }
-        oni-activity {
-            display: flex;
-            flex-direction: column;
         }
     `, ActivityPubObject.styles];
 
