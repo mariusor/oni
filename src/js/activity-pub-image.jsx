@@ -23,12 +23,19 @@ export class ActivityPubImage extends ActivityPubObject {
         super(it);
     }
 
+    renderAltText() {
+        const alt = document.createElement('div');
+        alt.innerHTML = this.it.getSummary();
+        return alt.innerText.trim();
+    }
+
     render() {
         let src = this.it.iri();
         if (!src) {
             src = this.it.getUrl();
         }
-        return html`<img src=${src ?? nothing} title="${this.it.getName()}" class="${classMap({"small": this.inline})}"/>
+        const alt = this.renderAltText();
+        return html`<img src=${src ?? nothing} title="${alt}" alt="${alt}" class="${classMap({"small": this.inline})}"/>
         ${when(
             this.inline,
                 () => nothing,
