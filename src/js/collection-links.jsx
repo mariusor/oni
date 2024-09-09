@@ -1,7 +1,6 @@
 import {css, html, LitElement, nothing} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {ActivityPubCollection} from "./activity-pub-collection";
-import {isAuthorized, newPost} from "./utils";
 
 export class CollectionLinks extends LitElement {
     static styles = css`
@@ -42,15 +41,6 @@ export class CollectionLinks extends LitElement {
     constructor() {
         super();
         this.it = {};
-    }
-
-    renderAddTab() {
-        isAuthorized()
-            ? html`
-                    <li>
-                        <oni-new-post-link @click=${newPost} label="Add" icon="edit"></oni-new-post-link>
-                    </li>`
-            : nothing;
     }
 
     render() {
@@ -112,15 +102,3 @@ export class CollectionLink extends ActivityPubCollection {
     }
 }
 
-export class NewPostLink extends LitElement {
-    static styles = LinkStyle;
-
-    static properties = {
-        label: {type: String},
-        icon: {type: String},
-    }
-
-    render() {
-        return html`<a href="#new"><oni-icon name=${this.icon}></oni-icon> ${this.label}</a>`;
-    }
-}

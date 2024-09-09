@@ -3,7 +3,6 @@ import {average, prominent} from "color.js";
 import {ActivityPubItem} from "./activity-pub-item";
 import {html, nothing} from "lit";
 import {map} from "lit-html/directives/map.js";
-import {NewPost} from "./oni-new-post";
 
 const tc = (c) => new TinyColor(c);
 export const contrast = readability;
@@ -92,21 +91,6 @@ export function isMainPage() {
     return window.location.pathname === '/';
 }
 
-export function editableContent(root) {
-    root = root.renderRoot.querySelector('body[contenteditable]');
-    root?.childNodes?.forEach(node => {
-        if (node.nodeName.toLowerCase() === 'slot') {
-            // the slot should be removed if empty, otherwise it overwrites the value
-            root.removeChild(node);
-        }
-        if (node.nodeType === 8) {
-            // Lit introduced comments
-            root.removeChild(node);
-        }
-    });
-
-    return root?.innerHTML.trim();
-};
 
 export function relativeDuration(seconds) {
     const minutes = Math.abs(seconds / 60);
@@ -444,44 +428,3 @@ export function colorDiff(c1, c2) {
     return Math.sqrt(Math.pow(c2.a , 2) + Math.pow(c2.b , 2)) -
         Math.sqrt(Math.pow(c1.a , 2) + Math.pow(c1.b , 2))
 }
-
-export function getSelection(root) {
-    let selection = document.getSelection();
-    if (root && typeof root.shadowRoot?.getSelection == 'function') {
-        selection = root.shadowRoot?.getSelection();
-    }
-    return selection;
-}
-
-export function execCommand (n, node) {
-    if (!Array.isArray(n.execCommand)) n.execCommand = [n.execCommand];
-    if (!Array.isArray(n.execCommandValue)) n.execCommandValue = [n.execCommandValue];
-
-    for (const i in n.execCommand) {
-        const command = n.execCommand[i];
-        let val = n.execCommandValue[i] || node;
-
-        if (typeof val == 'function') val = val();
-        console.debug(`Executing command ${command}: ${val}`);
-        if (typeof command === "string") {
-            // NOTE(marius): this should be probably be replaced with something
-            // based on the ideas from here: https://stackoverflow.com/a/62266439
-            document.execCommand(command, false, val);
-        } else {
-            command(val);
-        }
-    }
-}
-
-export function newPost(e) {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const main = document.querySelector("oni-main");
-    console.debug("trying to open modal under", main);
-
-    NewPost.lazy(main, (modal) => {
-        console.debug(main, modal);
-    })();
-}
-

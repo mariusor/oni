@@ -202,11 +202,7 @@ export class OniMainActor extends ActivityPubActor {
         if (name.length === 0) {
             return nothing;
         }
-        return html`<oni-natural-language-values
-                    name="preferredUsername"
-                    it=${JSON.stringify(name)}
-                    ?editable="${this.authorized}"
-        ></oni-natural-language-values>`;
+        return html`<oni-natural-language-values name="preferredUsername" it=${JSON.stringify(name)}></oni-natural-language-values>`;
     }
 
     renderSummary() {
@@ -215,11 +211,7 @@ export class OniMainActor extends ActivityPubActor {
             return nothing;
         }
 
-        return html`<oni-natural-language-values
-                name="summary"
-                it=${JSON.stringify(summary)}
-                ?editable="${this.authorized}"
-        ></oni-natural-language-values>`;
+        return html`<oni-natural-language-values name="summary" it=${JSON.stringify(summary)}></oni-natural-language-values>`;
     }
 
     renderContent() {
@@ -227,11 +219,7 @@ export class OniMainActor extends ActivityPubActor {
         if (content.length === 0) {
             return nothing;
         }
-        return html`<oni-natural-language-values
-                name="content"
-                it=${JSON.stringify(content)}
-                ?editable="${this.authorized}"
-        ></oni-natural-language-values>`;
+        return html`<oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
     }
 
 
