@@ -1,5 +1,6 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
+import {when} from "lit-html/directives/when.js";
 
 export class ActivityPubAudio extends ActivityPubObject {
     static styles = [css`
@@ -14,8 +15,19 @@ export class ActivityPubAudio extends ActivityPubObject {
     }
 
     render() {
+        const alt = this.it.getSummary();
+        const metadata = this.renderMetadata();
         return html`
-            <article><audio src=${this.it.iri() ?? nothing}></audio></article>
-            <footer>${this.renderMetadata()}</footer>`;
+            <figure>
+                <audio controls preload="metadata" src=${this.it.iri() ?? nothing}></audio>
+                ${when(alt.length > 0,
+                        () => html`<figcaption>
+                                <oni-natural-language-values name="summary" it=${JSON.stringify(alt)}></oni-natural-language-values>
+                            </figcaption>`,
+                        () => nothing
+                )}
+            </figure>
+            ${metadata != nothing ? html`<footer>${metadata}</footer>` : nothing}
+        `;
     }
 }

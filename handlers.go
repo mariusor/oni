@@ -292,6 +292,8 @@ var activityJson, _ = ct.ParseMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTy
 var applicationJson, _ = ct.ParseMediaType("application/json;q=0.8")
 var textHTML, _ = ct.ParseMediaType("text/html;q=1.0")
 var imageAny, _ = ct.ParseMediaType("image/*;q=1.0")
+var audioAny, _ = ct.ParseMediaType("audio/*;q=1.0")
+var videoAny, _ = ct.ParseMediaType("video/*;q=1.0")
 
 func getWeight(m ct.MediaType) int {
 	q, ok := m.Parameters["q"]
@@ -451,7 +453,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case accepts(jsonLD, activityJson, applicationJson):
 		o.ServeActivityPubItem(it).ServeHTTP(w, r)
-	case accepts(imageAny):
+	case accepts(imageAny), accepts(audioAny), accepts(videoAny):
 		o.ServeBinData(it).ServeHTTP(w, r)
 	case accepts(textHTML):
 		fallthrough
