@@ -8,13 +8,19 @@ export class ActivityPubTag extends ActivityPubNote {
         super(it);
     }
 
+    renderNameText() {
+        const name = document.createElement('div');
+        name.innerHTML = this.it.getName();
+        return name.innerText.trim();
+    }
+
     render() {
         if (this.it == null) {
             return nothing;
         }
         const rel = this.it.type === 'Mention' ? 'mention' : 'tag';
 
-        const name = html`<h1><a rel="${rel}" href="${this.it.iri()}">${this.it.getName()}</a></h1>`;
+        const name = html`<h1><a rel="${rel}" href="${this.it.iri()}">${this.renderNameText()}</a></h1>`;
         const summary = this.it.getSummary().length > 0 ? html`<h2>${this.renderSummary()}</h2>` : nothing;
         const header = this.it.getName().length + this.it.getSummary().length > 0 ? html`
             <header>${name}${summary}</header>` : nothing;
