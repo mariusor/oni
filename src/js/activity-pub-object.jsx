@@ -21,7 +21,7 @@ export class ActivityPubObject extends LitElement {
         a:active {
             color: var(--link-active-color);
         }
-        a[rel=mention], a[rel=tag] {
+        p a[rel=mention], p a[rel=tag] {
             font-size: .9rem;
             font-weight: bold;
         }
@@ -56,8 +56,12 @@ export class ActivityPubObject extends LitElement {
             display: flex;
             flex-direction: column;
         }
-        .attachments {
-            max-height: 8vw;
+        .attachment {
+            display: flex;
+        }
+        .attachment > * {
+            display: inline-block;
+            max-width: 30%;
         }
     `;
 
@@ -153,9 +157,14 @@ export class ActivityPubObject extends LitElement {
         if (!Array.isArray(attachment)) {
             attachment = [attachment];
         }
-        return html`<details class="attachment"><summary>${pluralize(attachment.length, 'attachment')}</summary>${attachment.map(
-                value => ActivityPubObject.renderByType(value)
-        )}</details>`;
+        return html`
+            <details>
+                <summary>${pluralize(attachment.length, 'attachment')}</summary>
+                <aside class="attachment">
+                ${attachment.map(
+                        value => ActivityPubObject.renderByType(value)
+                )}</aside>
+            </details>`;
     }
 
     renderBookmark() {

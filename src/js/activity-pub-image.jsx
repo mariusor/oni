@@ -68,6 +68,7 @@ export class ActivityPubImage extends ActivityPubObject {
             return this.renderInline();
         }
         const alt = this.renderAltText();
+        const metadata = this.renderMetadata();
         return html`
                 <figure>
                     ${when(alt.length > 0,
@@ -82,7 +83,7 @@ export class ActivityPubImage extends ActivityPubObject {
                     )}
                     <img src=${src ?? nothing} title="${alt}" alt="${alt}" />
                 </figure>
-                <footer>${this.renderMetadata()}</footer>
+                ${metadata != nothing ? html`<footer>${metadata}</footer>` : nothing}
         `;
     }
 }
