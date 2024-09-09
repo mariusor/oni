@@ -13,6 +13,10 @@ export class OniIcon extends LitElement {
         vertical-align: text-bottom;
         margin: 0 .2rem;
     }
+    svg[name=icon-clock] {
+        margin: 0;
+        margin-right: -.2rem;
+    }
     `;
     static properties = {name: {type: String}};
 

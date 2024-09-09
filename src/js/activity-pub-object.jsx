@@ -186,8 +186,7 @@ export class ActivityPubObject extends LitElement {
             published = updated;
         }
         return html`<aside>
-            ${action} ${until(auth)}
-            ${renderTimestamp(published)}
+            ${action} ${renderTimestamp(published)} ${until(auth)}
             ${until(this.renderReplyCount())}
             ${this.renderBookmark()}
         </aside>`;
