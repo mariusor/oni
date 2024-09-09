@@ -366,7 +366,7 @@ var validActivityTypes = vocab.ActivityVocabularyTypes{
 
 var validObjectTypes = vocab.ActivityVocabularyTypes{
 	vocab.NoteType, vocab.ArticleType, vocab.ImageType, vocab.AudioType, vocab.VideoType, vocab.DocumentType,
-	vocab.EventType, vocab.CollectionOfItems, "",
+	vocab.EventType, vocab.CollectionOfItems,
 }
 
 func iriHasTypeFilter(iri vocab.IRI) bool {
