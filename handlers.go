@@ -39,7 +39,7 @@ func (o *oni) Error(err error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptableMediaTypes := []ct.MediaType{textHTML, applicationJson}
 		accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
-		if !checkAcceptMediaType(accepted)(textHTML) {
+		if !checkAcceptMediaType(accepted)(textHTML) || errors.IsRedirect(err) {
 			errors.HandleError(err).ServeHTTP(w, r)
 			return
 		}
@@ -155,20 +155,32 @@ func sameishIRI(check, colIRI vocab.IRI) bool {
 	ui, _ := colIRI.URL()
 	uc.RawQuery = ""
 	ui.RawQuery = ""
+	if uc.Path == "/" {
+		uc.Path = ""
+	}
+	if ui.Path == "/" {
+		ui.Path = ""
+	}
 	return strings.EqualFold(uc.String(), ui.String())
 }
 
-type removeContent struct{}
-
-func (c removeContent) Apply(it vocab.Item) bool {
-	_ = cleanupMediaObjectFromItem(it)
-	return true
-}
-
 func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.Item, error) {
+	var isObjProperty bool
+	var prop string
+
 	it, err := s.Load(iri, f...)
 	if err != nil {
-		return nil, err
+		if !errors.IsNotFound(err) {
+			return nil, err
+		}
+
+		if isObjProperty, prop = propNameInIRI(iri); isObjProperty {
+			iri = vocab.IRI(strings.TrimSuffix(string(iri), prop))
+		}
+		it, err = s.Load(iri, f...)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if vocab.IsNil(it) {
 		return nil, errors.NotFoundf("not found")
@@ -178,57 +190,54 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 		return it, nil
 	}
 
-	tryInActivity, prop := propNameInIRI(iri)
-	u, _ := iri.URL()
-	if !tryInActivity || u.Path == "/" {
-		return it, err
-	}
-	u.Path = filepath.Clean(filepath.Join(u.Path, "../"))
-	actIRI := vocab.IRI(u.String())
-	if iri.Equals(actIRI, true) {
-		return nil, errors.Errorf("bu %s : %s", iri, actIRI)
-	}
-	act, err := s.Load(actIRI)
-	if err != nil {
-		return nil, err
-	}
-	if vocab.ActivityTypes.Contains(act.GetType()) {
-		err = vocab.OnActivity(act, func(act *vocab.Activity) error {
-			if prop == "object" {
+	if vocab.ActivityTypes.Contains(it.GetType()) {
+		err = vocab.OnActivity(it, func(act *vocab.Activity) error {
+			switch prop {
+			case "object":
 				it = act.Object
-			} else if prop == "actor" {
+			case "actor":
 				it = act.Actor
-			} else {
-				return iriNotFound(actIRI)
+			case "target":
+				it = act.Target
+			default:
+				return iriNotFound(it.GetLink())
 			}
 			return nil
 		})
 	} else {
-		err = vocab.OnObject(act, func(ob *vocab.Object) error {
-			if prop == "icon" {
+		err = vocab.OnObject(it, func(ob *vocab.Object) error {
+			switch prop {
+			case "icon":
 				it = ob.Icon
-			} else if prop == "image" {
+			case "image":
 				it = ob.Image
-			} else {
-				return iriNotFound(actIRI)
+			case "attachment":
+				it = ob.Attachment
+			default:
+				return iriNotFound(it.GetLink())
 			}
-
 			return nil
 		})
 	}
 	if vocab.IsIRI(it) && !it.GetLink().Equals(iri, true) {
-		return loadItemFromStorage(s, it.GetLink())
+		it, err = loadItemFromStorage(s, it.GetLink())
+	}
+	if !vocab.IsItemCollection(it) {
+		if err != nil {
+			return it, errors.NewMovedPermanently(err, it.GetLink().String())
+		}
+		return it, errors.MovedPermanently(it.GetLink().String())
 	}
 	return it, err
 }
 
-var propertiesThatMightBeObjects = []string{"object", "actor", "target", "icon", "image"}
+var propertiesThatMightBeObjects = []string{"object", "actor", "target", "icon", "image", "attachment"}
 
 func propNameInIRI(iri vocab.IRI) (bool, string) {
 	u, _ := iri.URL()
 	base := filepath.Base(u.Path)
 	for _, prop := range propertiesThatMightBeObjects {
-		if strings.ToLower(prop) == strings.ToLower(base) {
+		if strings.EqualFold(prop, base) {
 			return true, prop
 		}
 	}
@@ -261,7 +270,7 @@ func cleanupMediaObjectsFromCollection(col vocab.CollectionInterface) error {
 }
 
 func cleanupMediaObjectFromActivity(act *vocab.Activity) error {
-	return vocab.OnObject(act.Object, cleanupMediaObject)
+	return cleanupMediaObjectFromItem(act.Object)
 }
 
 func cleanupMediaObject(o *vocab.Object) error {
