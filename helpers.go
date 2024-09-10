@@ -178,7 +178,7 @@ func getBinData(nlVal vocab.NaturalLanguageValues) (string, []byte, error) {
 }
 
 func isData(nlVal vocab.NaturalLanguageValues) bool {
-	return nlVal != nil && bytes.Equal(nlVal.First().Value[:4], []byte("data"))
+	return len(nlVal) > 0 && bytes.Equal(nlVal.First().Value[:4], []byte("data"))
 }
 
 func irif(r *http.Request) vocab.IRI {

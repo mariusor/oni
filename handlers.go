@@ -128,7 +128,10 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 	var raw []byte
 	err := vocab.OnObject(it, func(ob *vocab.Object) error {
 		var err error
-		if !isData(ob.Content) {
+		if !mediaTypes.Contains(ob.Type) {
+			return errors.NotSupportedf("invalid object")
+		}
+		if len(ob.Content) == 0 {
 			return errors.NotSupportedf("invalid object")
 		}
 		if contentType, raw, err = getBinData(ob.Content); err != nil {
@@ -153,6 +156,13 @@ func sameishIRI(check, colIRI vocab.IRI) bool {
 	uc.RawQuery = ""
 	ui.RawQuery = ""
 	return strings.EqualFold(uc.String(), ui.String())
+}
+
+type removeContent struct{}
+
+func (c removeContent) Apply(it vocab.Item) bool {
+	_ = cleanupMediaObjectFromItem(it)
+	return true
 }
 
 func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.Item, error) {
@@ -209,7 +219,6 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 	if vocab.IsIRI(it) && !it.GetLink().Equals(iri, true) {
 		return loadItemFromStorage(s, it.GetLink())
 	}
-
 	return it, err
 }
 
@@ -226,11 +235,56 @@ func propNameInIRI(iri vocab.IRI) (bool, string) {
 	return false, ""
 }
 
+var mediaTypes = vocab.ActivityVocabularyTypes{
+	vocab.ImageType, vocab.AudioType, vocab.VideoType,
+}
+
+func cleanupMediaObjectFromItem(it vocab.Item) error {
+	if it.IsCollection() {
+		return vocab.OnCollectionIntf(it, cleanupMediaObjectsFromCollection)
+	}
+	typ := it.GetType()
+	if vocab.ActivityTypes.Contains(typ) {
+		return vocab.OnActivity(it, cleanupMediaObjectFromActivity)
+	}
+	if mediaTypes.Contains(typ) {
+		return vocab.OnObject(it, cleanupMediaObject)
+	}
+	return nil
+}
+
+func cleanupMediaObjectsFromCollection(col vocab.CollectionInterface) error {
+	for _, it := range col.Collection() {
+		_ = cleanupMediaObjectFromItem(it)
+	}
+	return nil
+}
+
+func cleanupMediaObjectFromActivity(act *vocab.Activity) error {
+	return vocab.OnObject(act.Object, cleanupMediaObject)
+}
+
+func cleanupMediaObject(o *vocab.Object) error {
+	// NOTE(marius): remove inline content from media ActivityPub objects
+	// Add an explicit URL if missing.
+	o.Content = o.Content[:0]
+	if o.URL != nil {
+		o.URL = o.ID
+	}
+	if o.Attachment != nil {
+		cleanupMediaObjectFromItem(o.Attachment)
+
+	}
+	return nil
+}
+
 func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 	dat, err := json.WithContext(json.IRI(vocab.ActivityBaseURI), json.IRI(vocab.SecurityContextURI)).Marshal(it)
 	if err != nil {
 		return o.Error(err)
 	}
+
+	_ = cleanupMediaObjectFromItem(it)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vocab.OnObject(it, func(o *vocab.Object) error {
@@ -363,7 +417,7 @@ func actorURLs(act vocab.Actor) func() vocab.IRIs {
 }
 
 var validActivityTypes = vocab.ActivityVocabularyTypes{
-	vocab.CreateType, vocab.UpdateType,
+	vocab.CreateType, /*vocab.UpdateType,*/
 }
 
 var validObjectTypes = vocab.ActivityVocabularyTypes{
@@ -385,6 +439,30 @@ func iriHasObjectTypeFilter(iri vocab.IRI) bool {
 		return false
 	}
 	return u.Query().Has("object.type")
+}
+
+func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
+	templatePath := "components/person"
+	if !vocab.ActorTypes.Contains(it.GetType()) {
+		templatePath = "components/item"
+	}
+
+	_ = cleanupMediaObjectFromItem(it)
+	return func(w http.ResponseWriter, r *http.Request) {
+		oniActor := o.oniActor(r)
+		oniFn := template.FuncMap{
+			"ONI":   func() vocab.Actor { return oniActor },
+			"URLS":  actorURLs(oniActor),
+			"Title": titleFromActor(oniActor, r),
+		}
+		wrt := bytes.Buffer{}
+		if err := ren.HTML(&wrt, http.StatusOK, templatePath, it, render.HTMLOptions{Funcs: oniFn}); err != nil {
+			o.Error(err).ServeHTTP(w, r)
+			return
+		}
+		w.Header().Set("Vary", "Accept")
+		io.Copy(w, &wrt)
+	}
 }
 
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
@@ -458,23 +536,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	case accepts(textHTML):
 		fallthrough
 	default:
-		oniActor := o.oniActor(r)
-		oniFn := template.FuncMap{
-			"ONI":   func() vocab.Actor { return oniActor },
-			"URLS":  actorURLs(oniActor),
-			"Title": titleFromActor(oniActor, r),
-		}
-		templatePath := "components/person"
-		if !vocab.ActorTypes.Contains(it.GetType()) {
-			templatePath = "components/item"
-		}
-		wrt := bytes.Buffer{}
-		if err := ren.HTML(&wrt, http.StatusOK, templatePath, it, render.HTMLOptions{Funcs: oniFn}); err != nil {
-			o.Error(err).ServeHTTP(w, r)
-			return
-		}
-		w.Header().Set("Vary", "Accept")
-		io.Copy(w, &wrt)
+		o.ServeHTML(it).ServeHTTP(w, r)
 	}
 }
 
