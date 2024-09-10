@@ -249,51 +249,57 @@ var mediaTypes = vocab.ActivityVocabularyTypes{
 }
 
 func cleanupMediaObjectFromItem(it vocab.Item) error {
+	if it == nil {
+		return nil
+	}
 	if it.IsCollection() {
 		return vocab.OnCollectionIntf(it, cleanupMediaObjectsFromCollection)
 	}
-	typ := it.GetType()
-	if vocab.ActivityTypes.Contains(typ) {
+	if vocab.ActivityTypes.Contains(it.GetType()) {
 		return vocab.OnActivity(it, cleanupMediaObjectFromActivity)
 	}
-	if mediaTypes.Contains(typ) {
-		return vocab.OnObject(it, cleanupMediaObject)
-	}
-	return nil
+	return vocab.OnObject(it, cleanupMediaObject)
 }
 
 func cleanupMediaObjectsFromCollection(col vocab.CollectionInterface) error {
+	errs := make([]error, 0)
 	for _, it := range col.Collection() {
-		_ = cleanupMediaObjectFromItem(it)
+		if err := cleanupMediaObjectFromItem(it); err != nil {
+			errs = append(errs, err)
+		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func cleanupMediaObjectFromActivity(act *vocab.Activity) error {
-	return cleanupMediaObjectFromItem(act.Object)
-}
-
-func cleanupMediaObject(o *vocab.Object) error {
-	// NOTE(marius): remove inline content from media ActivityPub objects
-	// Add an explicit URL if missing.
-	o.Content = o.Content[:0]
-	if o.URL != nil {
-		o.URL = o.ID
+	if err := cleanupMediaObjectFromItem(act.Object); err != nil {
+		return err
 	}
-	if o.Attachment != nil {
-		cleanupMediaObjectFromItem(o.Attachment)
-
+	if err := cleanupMediaObjectFromItem(act.Target); err != nil {
+		return err
 	}
 	return nil
 }
 
+func cleanupMediaObject(o *vocab.Object) error {
+	if mediaTypes.Contains(o.Type) {
+		// NOTE(marius): remove inline content from media ActivityPub objects
+		o.Content = o.Content[:0]
+		if o.URL == nil {
+			// Add an explicit URL if missing.
+			o.URL = o.ID
+		}
+	}
+	return cleanupMediaObjectFromItem(o.Attachment)
+}
+
 func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
+	_ = cleanupMediaObjectFromItem(it)
+
 	dat, err := json.WithContext(json.IRI(vocab.ActivityBaseURI), json.IRI(vocab.SecurityContextURI)).Marshal(it)
 	if err != nil {
 		return o.Error(err)
 	}
-
-	_ = cleanupMediaObjectFromItem(it)
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vocab.OnObject(it, func(o *vocab.Object) error {
@@ -426,7 +432,7 @@ func actorURLs(act vocab.Actor) func() vocab.IRIs {
 }
 
 var validActivityTypes = vocab.ActivityVocabularyTypes{
-	vocab.CreateType, /*vocab.UpdateType,*/
+	vocab.CreateType, vocab.UpdateType,
 }
 
 var validObjectTypes = vocab.ActivityVocabularyTypes{
