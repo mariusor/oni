@@ -175,11 +175,10 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 		}
 
 		if isObjProperty, prop = propNameInIRI(iri); isObjProperty {
-			iri = vocab.IRI(strings.TrimSuffix(string(iri), prop))
-		}
-		it, err = s.Load(iri, f...)
-		if err != nil {
-			return nil, err
+			it, err = s.Load(vocab.IRI(strings.TrimSuffix(string(iri), prop)), f...)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	if vocab.IsNil(it) {
@@ -218,6 +217,9 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 			}
 			return nil
 		})
+	}
+	if vocab.IsNil(it) {
+		return nil, errors.NotFoundf("not found")
 	}
 	if vocab.IsIRI(it) && !it.GetLink().Equals(iri, true) {
 		it, err = loadItemFromStorage(s, it.GetLink())
