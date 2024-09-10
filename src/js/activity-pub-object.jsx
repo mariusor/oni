@@ -278,6 +278,10 @@ ActivityPubObject.renderByType = function (it, showMetadata) {
         return nothing;
     }
 
+    if (typeof it === 'string') {
+        it = fetchActivityPubIRI(it);
+    }
+
     if (!it.hasOwnProperty('type')) {
         return html`<oni-tag it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-tag>`;
     }
