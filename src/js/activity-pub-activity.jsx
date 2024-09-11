@@ -42,7 +42,7 @@ export class ActivityPubActivity extends ActivityPubObject {
                 return html`<oni-actor it=${JSON.stringify(ob)} ?showMetadata=${showMetadata}></oni-actor>`;
             }
             if (ObjectTypes.indexOf(ob.type) >= 0) {
-                return ActivityPubObject.renderByType(ob, showMetadata);
+                return until(ActivityPubObject.renderByType(ob, showMetadata), html`Loading`);
             }
             return unsafeHTML(`<!-- Unknown activity object ${ob.type} -->`);
         })}`

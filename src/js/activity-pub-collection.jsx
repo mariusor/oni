@@ -4,6 +4,7 @@ import {ifDefined} from "lit-html/directives/if-defined.js";
 import {ActivityTypes, ActorTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {ActivityPubActivity} from "./activity-pub-activity";
+import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = [css`
@@ -66,7 +67,7 @@ export class ActivityPubCollection extends ActivityPubObject {
                 renderedItem = ActivityPubObject.renderByType(it);
             }
 
-            return html` <li>${renderedItem}</li>`
+            return html` <li>${until(renderedItem, html`Loading`)}</li>`
         })}`
     }
 

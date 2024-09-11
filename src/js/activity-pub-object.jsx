@@ -162,7 +162,7 @@ export class ActivityPubObject extends LitElement {
                 <summary>${pluralize(attachment.length, 'attachment')}</summary>
                 <aside class="attachment">
                 ${attachment.map(
-                        value => ActivityPubObject.renderByType(value)
+                        value => until(ActivityPubObject.renderByType(value), html`Loading`)
                 )}</aside>
             </details>`;
     }
@@ -258,7 +258,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        return html`${ActivityPubObject.renderByType(this.it)}${until(this.renderReplies())}`;
+        return html`${until(ActivityPubObject.renderByType(this.it), html`Loading`)}${until(this.renderReplies())}`;
     }
 }
 
@@ -273,13 +273,13 @@ ActivityPubObject.renderByMediaType = function (it, inline) {
     return html`<a href=${it.url}>${it.name}</a>`;
 }
 
-ActivityPubObject.renderByType = function (it, showMetadata) {
+ActivityPubObject.renderByType = async function (it, showMetadata) {
     if (it == null ) {
         return nothing;
     }
 
     if (typeof it === 'string') {
-        it = fetchActivityPubIRI(it);
+        it = await fetchActivityPubIRI(it);
     }
 
     if (!it.hasOwnProperty('type')) {
