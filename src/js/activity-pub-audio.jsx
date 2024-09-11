@@ -27,6 +27,7 @@ export class ActivityPubAudio extends ActivityPubObject {
                         () => nothing
                 )}
             </figure>
+            ${this.renderTag()}
             ${metadata != nothing ? html`<footer>${metadata}</footer>` : nothing}
         `;
     }

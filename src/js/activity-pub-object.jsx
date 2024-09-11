@@ -48,16 +48,36 @@ export class ActivityPubObject extends LitElement {
         :host footer {
             align-self: end;
         }
+        figure {
+            margin-bottom: 0;
+            margin-left: 0;
+            position: relative;
+            max-width: fit-content;
+        }
         footer aside {
             font-size: 0.8em;
         }
         oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-tag {
-            margin-top: 1rem;
             display: flex;
             flex-direction: column;
         }
         .attachment {
             display: flex;
+        } 
+        .tag {
+            display: inline-block;
+            margin: 0;
+            padding: 0;
+            font-size: .8rem;
+        }
+        .tag li {
+            display: inline-block;
+            list-style: none;
+            padding: 0;
+            margin-right: .2rem;
+        }
+        .tag oni-tag {
+            display: inline-block;
         }
         .attachment > * {
             display: inline-block;
@@ -147,6 +167,23 @@ export class ActivityPubObject extends LitElement {
             }
             return html`<a href=${act.id}><oni-natural-language-values name="preferredUsername" it=${JSON.stringify(username)}></oni-natural-language-values></a>`
         })}`;
+    }
+
+    renderTag() {
+        let tags = this.it.getTag();
+        console.debug(`tags tags tags`, tags)
+        if (!tags) {
+            return nothing;
+        }
+        if (!Array.isArray(tags)) {
+            tags = [tags];
+        }
+        return html`
+                <ul class="tag">
+                    ${tags.map(
+                        value => html`<li>${until(ActivityPubObject.renderByType(value, false), html`Loading`)}</li>`
+                    )}
+                </ul>`;
     }
 
     renderAttachment() {

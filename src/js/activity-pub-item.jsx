@@ -57,6 +57,13 @@ export class ActivityPubItem {
         return this.url;
     }
 
+    getTag() {
+        if (!this.hasOwnProperty('tag')) {
+            this.tag = null;
+        }
+        return this.tag;
+    }
+
     getAttachment() {
         if (!this.hasOwnProperty('attachment')) {
             this.attachment = null;

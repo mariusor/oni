@@ -1,6 +1,5 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {classMap} from "lit-html/directives/class-map.js";
 import {when} from "lit-html/directives/when.js";
 
 export class ActivityPubImage extends ActivityPubObject {
@@ -15,10 +14,6 @@ export class ActivityPubImage extends ActivityPubObject {
             max-width: 1rem;
             max-height: 1rem;
             vertical-align: text-top;
-        }
-        figure {
-            position: relative;
-            max-width: fit-content;
         }
         figcaption {
             position: absolute;
@@ -83,6 +78,7 @@ export class ActivityPubImage extends ActivityPubObject {
                     )}
                     <img src=${src ?? nothing} title="${alt}" alt="${alt}" />
                 </figure>
+                ${this.renderTag()}
                 ${metadata != nothing ? html`<footer>${metadata}</footer>` : nothing}
         `;
     }

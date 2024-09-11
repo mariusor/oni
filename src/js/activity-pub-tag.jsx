@@ -20,14 +20,14 @@ export class ActivityPubTag extends ActivityPubNote {
         }
         const rel = this.it.type === 'Mention' ? 'mention' : 'tag';
 
-        const name = html`<h1><a rel="${rel}" href="${this.it.iri()}">${this.renderNameText()}</a></h1>`;
-        const summary = this.it.getSummary().length > 0 ? html`<h2>${this.renderSummary()}</h2>` : nothing;
-        const header = this.it.getName().length + this.it.getSummary().length > 0 ? html`
+        if (this.showMetadata) {
+            const name = html`<h1><a rel="${rel}" href="${this.it.iri()}">${this.renderNameText()}</a></h1>`;
+            const summary = this.it.getSummary().length > 0 ? html`<h2>${this.renderSummary()}</h2>` : nothing;
+            const header = this.it.getName().length + this.it.getSummary().length > 0 ? html`
             <header>${name}${summary}</header>` : nothing;
 
-        const metadata = this.showMetadata ? html`
-            <footer>${this.renderMetadata()}</footer>` : nothing;
-
-        return html`<article>${header} ${this.renderContent()}</article>${metadata}`;
+            return html`<article>${header} ${this.renderContent()}</article><footer>${this.renderMetadata()}</footer>`;
+        }
+        return html`<a rel="${rel}" href="${this.it.iri()}">${this.renderNameText()}</a>`;
     }
 }
