@@ -3,6 +3,7 @@ import {fetchActivityPubIRI, isLocalIRI, pluralize, renderTimestamp} from "./uti
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
+import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -306,6 +307,10 @@ ActivityPubObject.renderByMediaType = function (it, inline) {
 
     if (it.mediaType.indexOf('image/') === 0) {
         return html`<oni-image it=${JSON.stringify(it)} ?inline=${inline}></oni-image>`;
+    }
+    if (it.mediaType.indexOf('text/html') === 0) {
+        return unsafeHTML(it.content);
+        //return html`<oni-note it=${JSON.stringify(it)} ?inline=${inline}></oni-note>`;
     }
     return html`<a href=${it.url}>${it.name}</a>`;
 }
