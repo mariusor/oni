@@ -16,6 +16,7 @@ import {ActivityPubTombstone} from "./activity-pub-tombstone";
 import {ActivityPubTag} from "./activity-pub-tag";
 import {OniErrors} from "./oni-errors";
 import {ActivityPubEvent} from "./activity-pub-event";
+import {BandCampEmbed} from "./bandcamp-embed";
 
 customElements.define('oni-main', OniMainActor);
 customElements.define('oni-object', ActivityPubObject);
@@ -41,6 +42,7 @@ customElements.define('oni-login-link', LoginLink);
 customElements.define('oni-login-dialog', LoginDialog);
 
 customElements.define('oni-errors', OniErrors);
+customElements.define('bandcamp-embed', BandCampEmbed);
 
 OnReady(function () {
     console.debug(`Loading ${window.location}`);
