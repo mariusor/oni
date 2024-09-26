@@ -1,7 +1,15 @@
-import {css, html, LitElement} from "lit";
+import {css, html, LitElement, nothing} from "lit";
 
 export class BandCampEmbed extends LitElement {
-    static styles = [css``]
+    static styles = [css`
+        :host {
+            max-height: 2rlh;
+            margin: 0 .2rem .4rlh 0;
+        }
+        iframe {
+            min-width: 400px;
+        }
+    `]
 
     static properties = {
         url: {type: String},
@@ -14,11 +22,10 @@ export class BandCampEmbed extends LitElement {
     }
 
     render() {
-        console.debug("should we show embeds: ", this.show);
         if (!this.show || this.url === "") {
-            return html`<slot></slot>`
+            return nothing;
         }
-        return html`<iframe style="border: 0; width: 480px; height: 42px; vertical-align: middle" src="${this.url}" seamless>
+        return html`<iframe style="border: 0" src="${this.url}" seamless>
             <slot></slot>
         </iframe>`
     }
