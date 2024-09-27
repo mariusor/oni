@@ -176,7 +176,6 @@ export class ActivityPubObject extends LitElement {
 
     renderTag() {
         let tags = this.it.getTag();
-        console.debug(`tags tags tags`, tags)
         if (!tags) {
             return nothing;
         }
@@ -184,11 +183,11 @@ export class ActivityPubObject extends LitElement {
             tags = [tags];
         }
         return html`
-                <ul class="tag">
+                <aside class="tag"><ul>
                     ${tags.map(
                         value => html`<li>${until(ActivityPubObject.renderByType(value, false), html`Loading`)}</li>`
                     )}
-                </ul>`;
+                </ul></aside>`;
     }
 
     renderAttachment() {
