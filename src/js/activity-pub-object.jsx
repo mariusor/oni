@@ -74,10 +74,15 @@ export class ActivityPubObject extends LitElement {
             padding: 0;
             font-size: .8rem;
         }
+        .tag ul {
+            display: inline-flex;
+            flex-wrap: wrap;
+            padding-left: 0;
+            margin-left: 0;
+        }
         .tag li {
             display: inline-block;
             list-style: none;
-            padding: 0;
             margin-right: .2rem;
         }
         .tag oni-tag {
