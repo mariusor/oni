@@ -11,9 +11,6 @@ export class ActivityPubNote extends ActivityPubObject {
     :host > * {
         margin: .1rem;
     }
-    :host aside {
-        align-self: end;
-    }
     p {
         margin: 0 .2rem;
     }
