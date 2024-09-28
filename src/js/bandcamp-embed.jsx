@@ -5,9 +5,10 @@ export class BandCampEmbed extends LitElement {
         :host {
             max-height: 2rlh;
             margin: 0 .2rem .4rlh 0;
+            min-width: 480px;
         }
         iframe {
-            min-width: 400px;
+            min-width: 480px;
         }
     `]
 
@@ -18,7 +19,7 @@ export class BandCampEmbed extends LitElement {
 
     constructor() {
         super();
-        this.show = !!JSON.parse(localStorage.getItem('embeds'));
+        this.show = false;
     }
 
     render() {

@@ -91,7 +91,6 @@ export function isMainPage() {
     return window.location.pathname === '/';
 }
 
-
 export function relativeDuration(seconds) {
     const minutes = Math.abs(seconds / 60);
     const hours = Math.abs(minutes / 60);

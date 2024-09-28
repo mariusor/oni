@@ -195,6 +195,14 @@ export class ActivityPubObject extends LitElement {
                 </ul></aside>`;
     }
 
+    showChildren(e) {
+        const self =e.target;
+        const show = self.open;
+        self.querySelectorAll('bandcamp-embed').forEach((it) => {
+            it.show = show;
+        });
+    }
+
     renderAttachment() {
         let attachment = this.it.getAttachment();
         if (!attachment) {
@@ -204,7 +212,7 @@ export class ActivityPubObject extends LitElement {
             attachment = [attachment];
         }
         return html`
-            <details>
+            <details @toggle=${this.showChildren}>
                 <summary>${pluralize(attachment.length, 'attachment')}</summary>
                 <aside class="attachment">
                 ${attachment.map(
