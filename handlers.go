@@ -164,6 +164,10 @@ func sameishIRI(check, colIRI vocab.IRI) bool {
 	return strings.EqualFold(uc.String(), ui.String())
 }
 
+var orderedCollectionTypes = vocab.ActivityVocabularyTypes{
+	vocab.OrderedCollectionPageType, vocab.OrderedCollectionType,
+}
+
 func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.Item, error) {
 	var isObjProperty bool
 	var prop string
@@ -181,15 +185,33 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 			}
 		}
 	}
+
 	if vocab.IsNil(it) {
 		return nil, errors.NotFoundf("not found")
+	}
+
+	typ := it.GetType()
+	switch {
+	case orderedCollectionTypes.Contains(typ):
+		_ = vocab.OnOrderedCollection(it, func(col *vocab.OrderedCollection) error {
+			filtered := make(vocab.ItemCollection, 0, len(col.OrderedItems))
+			for _, ob := range col.OrderedItems {
+				if ob = filters.Checks(f).Run(ob); !vocab.IsNil(ob) {
+					filtered = append(filtered, ob)
+				} else {
+					ob = nil
+				}
+			}
+			col.OrderedItems = filtered
+			return nil
+		})
 	}
 
 	if sameishIRI(it.GetLink(), iri) {
 		return it, nil
 	}
 
-	if vocab.ActivityTypes.Contains(it.GetType()) {
+	if vocab.ActivityTypes.Contains(typ) {
 		err = vocab.OnActivity(it, func(act *vocab.Activity) error {
 			switch prop {
 			case "object":
@@ -482,6 +504,11 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 	}
 }
 
+func (o oni) loadAuthorizedActor(r *http.Request) (vocab.Actor, error) {
+	cl := auth.ClientResolver(o.c, auth.SolverWithStorage(o.s), auth.SolverWithLogger(o.l))
+	return cl.LoadActorFromRequest(r)
+}
+
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
 	colFilters := make(filters.Checks, 0)
@@ -519,8 +546,10 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 				colFilters = append(colFilters, filters.Before(filters.SameID(vocab.IRI(after))))
 			}
 		}
-
 		colFilters = append(colFilters, filters.WithMaxCount(MaxItems))
+	}
+	if authActor, _ := o.loadAuthorizedActor(r); authActor.ID != "" {
+		colFilters = append(colFilters, filters.Authorized(authActor.ID))
 	}
 
 	it, err := loadItemFromStorage(o.s, iri, colFilters...)
