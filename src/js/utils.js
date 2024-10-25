@@ -32,7 +32,16 @@ export async function fetchActivityPubIRI(iri) {
     if (response.status === 200) {
         return await response.json();
     }
-    return null;
+    let it = {};
+    const errors = (await response.json()).errors;
+    for (let k in errors) {
+        if (k !== "message") continue;
+        const err = errors[k];
+        it["content"] = err;
+        it["type"] = "Note";
+    }
+    console.debug(`received err`, it)
+    return it;
 }
 
 export function isLocalIRI(iri) {
