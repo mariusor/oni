@@ -114,7 +114,13 @@ export class ActivityPubObject extends LitElement {
     constructor(it, showMetadata) {
         super();
         if (typeof it === 'string') {
-            fetchActivityPubIRI(it).then(value => this.it = value);
+            fetchActivityPubIRI(it).then(value => {
+                if (!value.hasOwnProperty("id") && value.hasOwnProperty("errors")) {
+                    console.debug(value.errors);
+                    return;
+                }
+                this.it = value
+            });
         } else {
             this.it = it;
         }
