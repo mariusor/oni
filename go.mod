@@ -1,6 +1,6 @@
 module oni
 
-go 1.22
+go 1.23
 
 require (
 	git.sr.ht/~mariusor/lw v0.0.0-20240906100438-00d2184b2120
@@ -9,13 +9,13 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.21.5
 	github.com/go-ap/activitypub v0.0.0-20240910141749-b4b8c8aa484c
-	github.com/go-ap/auth v0.0.0-20241018095405-69c0d86d496e
-	github.com/go-ap/client v0.0.0-20241018095317-40afc0dd1456
+	github.com/go-ap/auth v0.0.0-20241027120651-2443d4b41791
+	github.com/go-ap/client v0.0.0-20241026132150-54b112a76f19
 	github.com/go-ap/errors v0.0.0-20240910140019-1e9d33cc1568
-	github.com/go-ap/filters v0.0.0-20240929110425-9d328f7c1fbd
+	github.com/go-ap/filters v0.0.0-20241027120602-54d8e1989499
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20241018095437-e0a1885ab827
-	github.com/go-ap/storage-fs v0.0.0-20241018095627-2e1aa7b0bff8
+	github.com/go-ap/processing v0.0.0-20241027124317-ec1ffe74c70f
+	github.com/go-ap/storage-fs v0.0.0-20241027121232-55b4da767747
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
@@ -27,7 +27,7 @@ require (
 )
 
 require (
-	git.sr.ht/~mariusor/cache v0.0.0-20241023163359-470536270d66 // indirect
+	git.sr.ht/~mariusor/cache v0.0.0-20241026131931-1ae5432a2760 // indirect
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	git.sr.ht/~mariusor/mask v0.0.0-20240327084502-ef2a9438457e // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
