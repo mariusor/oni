@@ -159,8 +159,8 @@ export class LoginDialog extends LitElement {
         if (this.fetched) {
             return;
         }
-        console.debug(`loading: ${this.authorizeURL}`);
-        fetch(this.authorizeURL, { method: "GET", })
+
+        fetch(this.authorizeURL, { method: "GET", headers: {Accept: "application/json"}})
             .then( cont => {
                 cont.json().then(login => {
                     this.authorizeURL = login.authorizeURL;

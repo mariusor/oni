@@ -684,16 +684,14 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		baseIRIs.Append(act.GetID())
 	}
 
-	auth, err := auth.New(
-		auth.WithStorage(o.s),
-		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "auth"})),
-		auth.WithClient(o.c),
-		auth.WithIRI(baseIRIs...),
-	)
-	if err != nil {
-		o.l.WithContext(lw.Ctx{"err": err}).Errorf("invalid authorization mw")
-		return notAcceptable(err)
+	isLocalIRI := func(iri vocab.IRI) bool {
+		return baseIRIs.Contains(iri)
 	}
+
+	auth := auth.ClientResolver(o.c,
+		auth.SolverWithStorage(o.s), auth.SolverWithLogger(o.l.WithContext(lw.Ctx{"log": "auth"})),
+		auth.SolverWithLocalIRIFn(isLocalIRI),
+	)
 
 	processor := processing.New(
 		processing.WithIRI(baseIRIs...), processing.WithStorage(o.s),

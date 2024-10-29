@@ -113,7 +113,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 	}
 	o.o = as
 
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodGet && r.Header.Get("Accept") == "application/json" {
 		state := base64.URLEncoding.EncodeToString(authKey())
 		m := authModel{
 			AuthorizeURL: AuthorizeURL(a, state),
