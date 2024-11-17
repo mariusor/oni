@@ -8,14 +8,14 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240519120935-f877e4d97def
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.21.5
-	github.com/go-ap/activitypub v0.0.0-20241104140659-be99a725f9d5
-	github.com/go-ap/auth v0.0.0-20241110174555-854bbc386708
-	github.com/go-ap/client v0.0.0-20241104140838-929b90e84e8a
+	github.com/go-ap/activitypub v0.0.0-20241114170014-e897df079e3d
+	github.com/go-ap/auth v0.0.0-20241116100958-3bf032f6584a
+	github.com/go-ap/client v0.0.0-20241114180623-d0658a04422c
 	github.com/go-ap/errors v0.0.0-20240910140019-1e9d33cc1568
-	github.com/go-ap/filters v0.0.0-20241110174345-2802456d0c02
+	github.com/go-ap/filters v0.0.0-20241116100812-7fd60f23761e
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20241110174821-a01379c6c51b
-	github.com/go-ap/storage-fs v0.0.0-20241110174856-cf4295473c6e
+	github.com/go-ap/processing v0.0.0-20241116101014-acf5770bece8
+	github.com/go-ap/storage-fs v0.0.0-20241116101240-621ee63b2f4f
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
