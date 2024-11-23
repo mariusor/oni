@@ -3,19 +3,19 @@ module oni
 go 1.23
 
 require (
-	git.sr.ht/~mariusor/lw v0.0.0-20240906100438-00d2184b2120
+	git.sr.ht/~mariusor/lw v0.0.0-20241117105956-4b4009e28502
 	git.sr.ht/~mariusor/ssm v0.0.0-20240811085540-34f24cac52b7
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240519120935-f877e4d97def
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.21.5
-	github.com/go-ap/activitypub v0.0.0-20241114170014-e897df079e3d
-	github.com/go-ap/auth v0.0.0-20241116100958-3bf032f6584a
-	github.com/go-ap/client v0.0.0-20241114180623-d0658a04422c
+	github.com/go-ap/activitypub v0.0.0-20241123145931-b72f8292c65b
+	github.com/go-ap/auth v0.0.0-20241123185744-2de5593b0ca3
+	github.com/go-ap/client v0.0.0-20241123150455-030e6d4f1054
 	github.com/go-ap/errors v0.0.0-20240910140019-1e9d33cc1568
-	github.com/go-ap/filters v0.0.0-20241116100812-7fd60f23761e
+	github.com/go-ap/filters v0.0.0-20241123185521-adc45b30dfb3
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20241116101014-acf5770bece8
-	github.com/go-ap/storage-fs v0.0.0-20241116101240-621ee63b2f4f
+	github.com/go-ap/processing v0.0.0-20241123185921-294fb9c9b985
+	github.com/go-ap/storage-fs v0.0.0-20241123190020-01c4b297b443
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
@@ -32,9 +32,9 @@ require (
 	git.sr.ht/~mariusor/mask v0.0.0-20240327084502-ef2a9438457e // indirect
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/bits-and-blooms/bitset v1.15.0 // indirect
+	github.com/bits-and-blooms/bitset v1.16.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
-	github.com/go-ap/cache v0.0.0-20241104141048-912618952f30 // indirect
+	github.com/go-ap/cache v0.0.0-20241123150045-5ee1d68664a4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
