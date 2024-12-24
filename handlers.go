@@ -557,12 +557,8 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
-	if err != nil {
-		o.Error(err).ServeHTTP(w, r)
-		return
-	}
 
-	vocab.OnObject(it, func(o *vocab.Object) error {
+	_ = vocab.OnObject(it, func(o *vocab.Object) error {
 		updatedAt := o.Published
 		if !o.Updated.IsZero() {
 			updatedAt = o.Updated
