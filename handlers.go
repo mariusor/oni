@@ -505,7 +505,10 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 }
 
 func (o oni) loadAuthorizedActor(r *http.Request) (vocab.Actor, error) {
-	cl := auth.ClientResolver(o.c, auth.SolverWithStorage(o.s), auth.SolverWithLogger(o.l))
+	var logFn auth.LoggerFn = func(ctx lw.Ctx, msg string, p ...interface{}) {
+		o.l.WithContext(ctx).Debugf(msg, p...)
+	}
+	cl := auth.ClientResolver(o.c, auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn))
 	return cl.LoadActorFromRequest(r)
 }
 
@@ -684,8 +687,11 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		return baseIRIs.Contains(iri)
 	}
 
+	var logFn auth.LoggerFn = func(ctx lw.Ctx, msg string, p ...interface{}) {
+		o.l.WithContext(lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
+	}
 	auth := auth.ClientResolver(o.c,
-		auth.SolverWithStorage(o.s), auth.SolverWithLogger(o.l.WithContext(lw.Ctx{"log": "auth"})),
+		auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn),
 		auth.SolverWithLocalIRIFn(isLocalIRI),
 	)
 
