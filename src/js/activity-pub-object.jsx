@@ -332,7 +332,6 @@ ActivityPubObject.renderByMediaType = function (it, inline) {
     }
     if (it.mediaType.indexOf('text/html') === 0) {
         return unsafeHTML(it.content);
-        //return html`<oni-note it=${JSON.stringify(it)} ?inline=${inline}></oni-note>`;
     }
     return html`<a href=${it.url}>${it.name}</a>`;
 }
