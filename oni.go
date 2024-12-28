@@ -122,7 +122,7 @@ func ListenOn(listen string) optionFn {
 func emptyLogFn(_ string, _ ...any) {}
 
 func WithStoragePath(st string) optionFn {
-	conf := storage.Config{Path: st}
+	conf := storage.Config{Path: st, UseIndex: false}
 
 	return func(o *oni) {
 		o.StoragePath = st

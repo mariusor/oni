@@ -505,11 +505,10 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 }
 
 func (o oni) loadAuthorizedActor(r *http.Request) (vocab.Actor, error) {
-	var logFn auth.LoggerFn = func(ctx lw.Ctx, msg string, p ...interface{}) {
-		o.l.WithContext(ctx).Debugf(msg, p...)
+	if o.o == nil {
+		return auth.AnonymousActor, errors.Errorf("OAuth server not initialized")
 	}
-	cl := auth.ClientResolver(o.c, auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn))
-	return cl.LoadActorFromRequest(r)
+	return o.o.LoadActorFromRequest(r)
 }
 
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
