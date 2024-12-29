@@ -9,7 +9,7 @@ export const contrast = readability;
 
 export function prefersDarkTheme() {
     return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-};
+}
 
 export function OnReady(a) {
     'loading' === document.readyState ? document.addEventListener && document.addEventListener('DOMContentLoaded', a) : a.call()
@@ -36,8 +36,7 @@ export async function fetchActivityPubIRI(iri) {
     const errors = (await response.json()).errors;
     for (let k in errors) {
         if (k !== "message") continue;
-        const err = errors[k];
-        it["content"] = err;
+        it["content"] = errors[k];
         it["type"] = "Note";
     }
     console.debug(`received err`, it)
@@ -158,7 +157,7 @@ export function relativeDate(old) {
 export function pluralize(d, unit) {
     d = Math.round(d);
     const l = unit.length;
-    if (l > 2 && unit[l - 1] == 'y' && isCons(unit[l - 2])) {
+    if (l > 2 && unit[l - 1] === 'y' && isCons(unit[l - 2])) {
         unit = `${unit.substring(0, l - 1)}ie`;
     }
     if (d > 1) {
@@ -235,14 +234,15 @@ export async function loadPalette(it) {
 
     if (localStorage.getItem('palette')) {
         const palette = JSON.parse(localStorage.getItem('palette'));
-        //console.debug('refreshing palette?', !(palette.bgImageURL == imageURL && palette.iconURL == iconURL))
-        if (palette.bgImageURL == imageURL && palette.iconURL == iconURL) {
+        if (palette.bgImageURL === imageURL && palette.iconURL === iconURL) {
             return palette;
         }
     }
-
     const root = document.documentElement;
     const style = getComputedStyle(root);
+    const defaultBgColor = style.getPropertyValue('--bg-color').trim();
+    console.debug(`default bg color: ${defaultBgColor}`);
+
     const palette = {
         bgColor: style.getPropertyValue('--bg-color').trim(),
         fgColor: style.getPropertyValue('--fg-color').trim(),
@@ -257,28 +257,35 @@ export async function loadPalette(it) {
 
     let iconColors = [];
     let imageColors = [];
+    let avgColor = {};
+
     if (imageURL) {
         palette.bgImageURL = imageURL;
-
-        imageColors = (await colorsFromImage(imageURL))?.filter(validColors);
-        const avgColor = await average(imageURL, {format: 'hex'});
-        if (avgColor) {
-            console.debug(`bgColor: ${avgColor}`)
-            palette.bgColor = avgColor;
-            palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
-            console.debug(`color scheme: ${palette.colorScheme}`)
-
-            root.style.setProperty('--bg-color', avgColor.trim());
-            root.style.setProperty('backgroundImage', `linear-gradient(${tc(avgColor).setAlpha(0).toRgb()}, ${tc(avgColor).setAlpha(1).toRgb()}), url(${imageURL});`)
-        }
+        imageColors = (await colorsFromImage(imageURL));//?.filter(validColors);
+        console.debug(`image colors`, imageColors);
+        avgColor = await average(imageURL, {format: 'hex'});
     }
 
     if (iconURL) {
         palette.iconURL = iconURL;
-        iconColors = (await colorsFromImage(iconURL))?.filter(validColors);
+        iconColors = (await colorsFromImage(iconURL));//?.filter(validColors);
+        console.debug(`icon colors`, iconColors);
+        if (avgColor) {
+            avgColor = await average(iconURL, {format: 'hex'});
+        }
     }
 
-    palette.imageColors = imageColors;
+    if (avgColor) {
+        palette.bgColor = avgColor;
+        palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
+
+        console.debug(`bgColor: ${palette.bgColor}`)
+        console.debug(`color scheme: ${palette.colorScheme}`)
+
+        root.style.setProperty('--bg-color', palette.bgColor);
+        root.style.setProperty('backgroundImage', `linear-gradient(${tc(avgColor).setAlpha(0).toRgb()}, ${tc(avgColor).setAlpha(1).toRgb()}), url(${imageURL});`)
+    }
+
     palette.iconColors = iconColors;
 
     if (iconColors.length > 0) {
@@ -294,8 +301,10 @@ export async function loadPalette(it) {
         palette.linkActiveColor = getClosestColor(palette, iconColors, palette.linkColor) || palette.linkActiveColor;
     }
 
-    if (imageColors.length > 0) {
-        palette.fgColor = getFgColor(palette, imageColors) || palette.fgColor;
+    if (imageColors.length+iconColors.length > 0) {
+        palette.fgColor = getFgColor(palette, imageColors+iconColors) || palette.fgColor;
+        console.debug(`fgColor: ${palette.fgColor}`)
+        root.style.setProperty('--fg-color', palette.fgColor);
     }
 
     localStorage.setItem('palette', JSON.stringify(palette));
@@ -333,6 +342,9 @@ function getAccentColor(palette, colors) {
         colors.forEach((value, index) => {
             accentColors[index] = tc(value).saturate().toHexString()
         });
+    }
+    if (accentColors.length === 0) {
+        return "";
     }
     return mostReadable(palette.bgColor, accentColors)?.toHexString();
 }
@@ -390,7 +402,9 @@ export function renderDuration(seconds) {
 }
 
 function validColors(value, index, array) {
-    return array.indexOf(value) === index && not('#000000', 0.2)(value) && not('#ffffff', 0.2)(value);
+    const notDark = not('#000000',2)(value);
+    const notLight = not('#ffffff', 2)(value);
+    return notDark && notLight;
 }
 
 // formulas from : https://www.easyrgb.com/en/math.php
