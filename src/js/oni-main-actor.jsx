@@ -234,7 +234,7 @@ export class OniMainActor extends ActivityPubActor {
         if (!endPoints.hasOwnProperty('oauthTokenEndpoint')) {
             return nothing;
         }
-        const authURL = endPoints.oauthAuthorizationEndpoint;
+        const authURL = new URL(endPoints.oauthAuthorizationEndpoint)
         const tokenURL = endPoints.oauthTokenEndpoint;
 
         return html`

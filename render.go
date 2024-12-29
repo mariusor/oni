@@ -5,12 +5,13 @@ import (
 	"strings"
 
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/errors"
 	json "github.com/go-ap/jsonld"
 	"github.com/mariusor/render"
 )
 
 var (
-	ren = render.New(render.Options{
+	defaultRenderOptions = render.Options{
 		Directory:                 "templates",
 		Layout:                    "main",
 		Extensions:                []string{".html"},
@@ -66,6 +67,10 @@ var (
 				}
 				return template.HTMLAttr(res)
 			},
+			"HTTPErrors": errors.HttpErrors,
 		}},
-	})
+	}
+
+	renderOptions = render.HTMLOptions{}
+	ren           = render.New(defaultRenderOptions)
 )

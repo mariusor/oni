@@ -55,7 +55,7 @@ func (o *oni) Error(err error) http.HandlerFunc {
 			errors.HandleError(err).ServeHTTP(w, r)
 			return
 		}
-		io.Copy(w, &wrt)
+		_, _ = io.Copy(w, &wrt)
 	}
 }
 
@@ -496,11 +496,12 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 		}
 		wrt := bytes.Buffer{}
 		if err := ren.HTML(&wrt, http.StatusOK, templatePath, it, render.HTMLOptions{Funcs: oniFn}); err != nil {
+			o.l.Errorf("unable to render %s: %s", templatePath, err)
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}
 		w.Header().Set("Vary", "Accept")
-		io.Copy(w, &wrt)
+		_, _ = io.Copy(w, &wrt)
 	}
 }
 

@@ -1,0 +1,14 @@
+<main>
+    <form method="post">
+        <fieldset style="border: none">
+            <input type="hidden" name="state" value="{{.State}}" />
+            <input type="hidden" name="client" value="{{.Client.ID}}" />
+            <label for="auth-pw">
+            <input name="_pw" id="auth-pw" type="password" placeholder="Password" autofocus size="40" required/>
+            </label><br/>
+            <button type="submit">Sign in</button>
+            <a href="{{ .BackURL }}">Cancel and return</a>
+        </fieldset>
+    </form>
+</main>
+<footer></footer>

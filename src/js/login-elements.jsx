@@ -95,7 +95,10 @@ export class LoginDialog extends LitElement {
         const req = {
             method: 'POST',
             body: l.toString(),
-            headers: {"Content-Type": "application/x-www-form-urlencoded"}
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/x-www-form-urlencoded",
+            }
         };
         this.error = "";
         fetch(targetURI, req)
@@ -127,6 +130,7 @@ export class LoginDialog extends LitElement {
             method: 'POST',
             body: l.toString(),
             headers: {
+                Accept: "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
                 Authorization: `Basic ${basicAuth}`
             }

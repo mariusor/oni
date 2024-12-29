@@ -1,13 +1,19 @@
 package oni
 
 import (
+	"bytes"
 	"crypto"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"html/template"
+	"io"
 	"math/rand"
 	"net/http"
+	"net/url"
 
 	"git.sr.ht/~mariusor/lw"
+	ct "github.com/elnormous/contenttype"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/errors"
@@ -56,7 +62,7 @@ type authModel struct {
 
 func AuthorizeURL(actor vocab.Actor, state string) string {
 	u, _ := actor.ID.URL()
-	config := oauth2.Config{ClientID: u.Host}
+	config := oauth2.Config{ClientID: u.Host, RedirectURL: actor.ID.String()}
 	if !vocab.IsNil(actor) && actor.Endpoints != nil {
 		if actor.Endpoints.OauthTokenEndpoint != nil {
 			config.Endpoint.TokenURL = actor.Endpoints.OauthTokenEndpoint.GetLink().String()
@@ -113,32 +119,62 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 	}
 	o.o = as
 
-	if r.Method == http.MethodGet && r.Header.Get("Accept") == "application/json" {
+	acceptableMediaTypes := []ct.MediaType{textHTML, applicationJson}
+	acc, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
+	if r.Method == http.MethodGet && !acc.EqualsMIME(textHTML) {
 		state := base64.URLEncoding.EncodeToString(authKey())
 		m := authModel{
 			AuthorizeURL: AuthorizeURL(a, state),
 			State:        state,
 		}
 
-		json.NewEncoder(w).Encode(m)
+		_ = json.NewEncoder(w).Encode(m)
 		return
 	}
 
 	s := o.o
+
 	resp := s.NewResponse()
 	defer resp.Close()
 
 	if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
-		if err := o.loadAccountFromPost(a, r); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err}).Errorf("wrong password")
-			errors.HandleError(errors.Unauthorizedf("Wrong password")).ServeHTTP(w, r)
+		if r.Method == http.MethodGet {
+			// this is basically the login page, with client being set
+			m := login{title: "Login"}
+			m.backURL = backURL(r)
+
+			clientIRI := vocab.IRI(fmt.Sprintf("https://%s", ar.Client.GetId()))
+			it, err := o.s.Load(clientIRI)
+			if err != nil {
+				o.l.WithContext(lw.Ctx{"err": err, "iri": clientIRI}).Errorf("invalid client")
+				errors.HandleError(errors.Unauthorizedf("Invalid client")).ServeHTTP(w, r)
+				return
+			}
+			if !vocab.IsNil(it) {
+				m.client = it
+				m.state = ar.State
+			} else {
+				resp.SetError(osin.E_INVALID_REQUEST, fmt.Sprintf("invalid client: %+s", err))
+				redirectOrOutput(resp, w, r)
+				return
+			}
+
+			o.renderTemplate(r, w, "login", m)
 			return
+		} else {
+			if err := o.loadAccountFromPost(a, r); err != nil {
+				o.l.WithContext(lw.Ctx{"err": err}).Errorf("wrong password")
+				errors.HandleError(errors.Unauthorizedf("Wrong password")).ServeHTTP(w, r)
+				return
+			}
+			ar.Authorized = true
+			ar.UserData = a.ID
+			s.FinishAuthorizeRequest(resp, r, ar)
 		}
-		ar.Authorized = true
-		ar.UserData = a.ID
-		s.FinishAuthorizeRequest(resp, r, ar)
 	}
-	resp.Type = osin.DATA
+	if !acc.Equal(textHTML) {
+		resp.Type = osin.DATA
+	}
 	redirectOrOutput(resp, w, r)
 }
 
@@ -169,11 +205,11 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 
 	actor := &auth.AnonymousActor
 	if ar := as.HandleAccessRequest(resp, r); ar != nil {
-		actorFilters := filters.FiltersNew()
+		actorIRI := a.ID
 		if iri, ok := ar.UserData.(string); ok {
-			actorFilters.IRI = vocab.IRI(iri)
+			actorIRI = vocab.IRI(iri)
 		}
-		it, err := o.s.Load(actorFilters.GetLink())
+		it, err := o.s.Load(actorIRI)
 		if err != nil {
 			o.l.Errorf("%s", errUnauthorized)
 			errors.HandleError(errUnauthorized).ServeHTTP(w, r)
@@ -190,7 +226,11 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 		ar.UserData = actor.GetLink()
 		as.FinishAccessRequest(resp, r, ar)
 	}
-	resp.Type = osin.DATA
+
+	acc, _, _ := ct.GetAcceptableMediaType(r, []ct.MediaType{textHTML, applicationJson})
+	if !acc.Equal(textHTML) {
+		resp.Type = osin.DATA
+	}
 	redirectOrOutput(resp, w, r)
 }
 
@@ -225,14 +265,14 @@ func redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http.Request)
 
 	if rs.Type == osin.REDIRECT {
 		// Output redirect with parameters
-		url, err := rs.GetRedirectUrl()
+		u, err := rs.GetRedirectUrl()
 		if err != nil {
 			err := annotatedRsError(http.StatusInternalServerError, err, "Error getting OAuth2 redirect URL")
 			errors.HandleError(err).ServeHTTP(w, r)
 			return
 		}
 
-		http.Redirect(w, r, url, http.StatusFound)
+		http.Redirect(w, r, u, http.StatusFound)
 	} else {
 		// set content type if the response doesn't already have one associated with it
 		if w.Header().Get("Content-Type") == "" {
@@ -286,4 +326,61 @@ var authKey = func() []byte {
 		byte(0xff & (v2 >> 56)),
 	}
 	return b[:]
+}
+
+func backURL(r *http.Request) string {
+	if r.URL == nil || r.URL.Query() == nil {
+		return ""
+	}
+	q := make(url.Values)
+	q.Set("error", osin.E_UNAUTHORIZED_CLIENT)
+	q.Set("error_description", "user denied authorization request")
+	u, _ := url.QueryUnescape(r.URL.Query().Get("redirect_uri"))
+	u = fmt.Sprintf("%s?%s", u, q.Encode())
+	return u
+}
+
+func (o *oni) renderTemplate(r *http.Request, w http.ResponseWriter, name string, m model) {
+	wrt := bytes.Buffer{}
+
+	oniActor := o.oniActor(r)
+	renderOptions.Funcs = template.FuncMap{
+		"ONI":   func() vocab.Actor { return o.oniActor(r) },
+		"URLS":  actorURLs(o.oniActor(r)),
+		"Title": titleFromActor(oniActor, r),
+	}
+
+	err := ren.HTML(&wrt, http.StatusOK, name, m, renderOptions)
+	if err == nil {
+		_, _ = io.Copy(w, &wrt)
+		return
+	}
+	o.Error(errors.Annotatef(err, "failed to render template"))
+}
+
+type login struct {
+	title   string
+	state   string
+	client  vocab.Item
+	backURL string
+}
+
+func (l login) Title() string {
+	return l.title
+}
+
+func (l login) BackURL() template.HTMLAttr {
+	return template.HTMLAttr(l.backURL)
+}
+
+func (l login) State() string {
+	return l.state
+}
+
+func (l login) Client() vocab.Item {
+	return l.client
+}
+
+type model interface {
+	Title() string
 }
