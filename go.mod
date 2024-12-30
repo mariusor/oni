@@ -7,9 +7,9 @@ require (
 	git.sr.ht/~mariusor/ssm v0.0.0-20241220163816-32d18afe7b22
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240519120935-f877e4d97def
 	github.com/elnormous/contenttype v1.0.4
-	github.com/evanw/esbuild v0.21.5
+	github.com/evanw/esbuild v0.24.2
 	github.com/go-ap/activitypub v0.0.0-20241228090954-75890bd9cfda
-	github.com/go-ap/auth v0.0.0-20241228091549-42783d36aae4
+	github.com/go-ap/auth v0.0.0-20241230092902-b30e5b931b79
 	github.com/go-ap/client v0.0.0-20241228091406-581647f214a8
 	github.com/go-ap/errors v0.0.0-20241212155021-5a598b6bf467
 	github.com/go-ap/filters v0.0.0-20241228091325-b92f78983bb6
@@ -22,7 +22,7 @@ require (
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/openshift/osin v1.0.2-0.20220317075346-0f4d38c6e53f
-	github.com/urfave/cli/v2 v2.27.3
+	github.com/urfave/cli/v2 v2.27.5
 	golang.org/x/oauth2 v0.24.0
 )
 
@@ -33,7 +33,7 @@ require (
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.20.0 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/go-ap/cache v0.0.0-20241228091143-603fda798574 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
