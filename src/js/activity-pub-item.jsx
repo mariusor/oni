@@ -23,15 +23,10 @@ export class ActivityPubItem {
         }
         const setPropIfExists = (p) => {
             if (!it.hasOwnProperty(p)) return;
-
-            if (p === "actor") {
-                 this[p] = new ActivityPubItem(it[p]);
-                 return;
-            }
             this[p] = it[p];
         };
         objectProperties.forEach(setPropIfExists);
-        if (this.type == 'Tombstone') {
+        if (this.type === 'Tombstone') {
             tombstoneProperties.forEach(setPropIfExists);
         }
         if (ActorTypes.indexOf(this.type) >= 0) {
@@ -85,19 +80,19 @@ export class ActivityPubItem {
     getRecipients() {
         let recipients = [];
         if (this.hasOwnProperty('to')) {
-            recipients.concat(this.to);
+            recipients = recipients.concat(this.to);
         }
         if (this.hasOwnProperty('cc')) {
-            recipients.concat(this.cc);
+            recipients = recipients.concat(this.cc);
         }
         if (this.hasOwnProperty('bto')) {
-            recipients.concat(this.bto);
+            recipients = recipients.concat(this.bto);
         }
         if (this.hasOwnProperty('bcc')) {
-            recipients.concat(this.bcc);
+            recipients = recipients.concat(this.bcc);
         }
         if (this.hasOwnProperty('audience')) {
-            recipients.concat(this.audience);
+            recipients = recipients.concat(this.audience);
         }
         return recipients.flat()
             .filter((value, index, array) => array.indexOf(value) === index);
