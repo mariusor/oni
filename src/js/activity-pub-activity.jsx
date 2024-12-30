@@ -1,7 +1,7 @@
 import {html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
-import {ObjectTypes, ActorTypes} from "./activity-pub-item";
+import {ObjectTypes, ActorTypes, ActivityPubItem} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {map} from "lit-html/directives/map.js";
 
@@ -17,12 +17,19 @@ export class ActivityPubActivity extends ActivityPubObject {
 
     async renderActor() {
         if (!this.it.hasOwnProperty('actor')) return nothing;
+
+        let act = await this.dereferenceProperty('actor');
+        if (act === null) {
+            return nothing;
+        }
+
+        this.it.actor = new ActivityPubItem(act);
         return this.it.actor.getName();
     }
 
     async renderObject(showMetadata) {
         if (!this.it.hasOwnProperty('object')) return nothing;
-        let raw = await this.load('object');
+        let raw = await this.dereferenceProperty('object');
         if (raw === null) {
             return nothing;
         }

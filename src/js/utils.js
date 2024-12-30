@@ -27,20 +27,13 @@ export async function fetchActivityPubIRI(iri) {
     } else {
         // generate HTTP-signature for the actor
     }
-    console.log(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI`, iri)
+    console.log(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI ${iri}`)
     const response = await fetch(iri, {headers: headers, mode: 'no-cors'}).catch(console.error);
     if (response.status === 200) {
         return await response.json();
     }
-    let it = {};
-    const errors = (await response.json()).errors;
-    for (let k in errors) {
-        if (k !== "message") continue;
-        it["content"] = errors[k];
-        it["type"] = "Note";
-    }
-    console.debug(`received err`, it)
-    return it;
+    response.json().then(console.warn).catch(console.warn);
+    return null;
 }
 
 export function isLocalIRI(iri) {

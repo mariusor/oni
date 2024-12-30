@@ -147,7 +147,7 @@ export class ActivityPubObject extends LitElement {
         return collections;
     }
 
-    async load(prop) {
+    async dereferenceProperty(prop) {
         if (!this.it.hasOwnProperty(prop)) {
             return null;
         }
@@ -160,10 +160,16 @@ export class ActivityPubObject extends LitElement {
 
     async fetchAuthor() {
         if (this.it.hasOwnProperty('actor')) {
-            return await this.load('actor');
+            this.it.actor = await this.dereferenceProperty('actor');
+            if (this.it.actor) {
+                return new ActivityPubItem(this.it.actor);
+            }
         }
         if (this.it.hasOwnProperty('attributedTo')) {
-            return await this.load('attributedTo');
+            this.it.attributedTo = await this.dereferenceProperty('attributedTo');
+            if (this.it.attributedTo) {
+                return new ActivityPubItem(this.it.attributedTo);
+            }
         }
         return null;
     }
@@ -284,7 +290,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        const replies = await this.load('replies');
+        const replies = await this.dereferenceProperty('replies');
         if (replies === null) {
             return nothing;
         }
@@ -301,7 +307,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        const replies = await this.load('replies');
+        const replies = await this.dereferenceProperty('replies');
         if (replies === null) {
             return nothing;
         }
