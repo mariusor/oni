@@ -50,6 +50,7 @@ OnReady(function () {
     const root = document.documentElement;
     if (localStorage.getItem('palette')) {
         const palette = JSON.parse(localStorage.getItem('palette'));
+        root.style.setProperty('--fg-color', palette.fgColor);
         root.style.setProperty('--bg-color', palette.bgColor);
         root.style.setProperty('--link-color', palette.linkColor);
         root.style.setProperty('--link-visited-color', palette.linkVisitedColor);
