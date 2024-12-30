@@ -177,7 +177,7 @@ export class ActivityPubObject extends LitElement {
         }
 
         return html`by ${map(act, function (act, i) {
-            let username = act.preferredUsername;
+            let username = act.getPreferredUsername();
             if (!isLocalIRI(act.id)) {
                 username = `${username}@${new URL(act.id).hostname}`
             }
