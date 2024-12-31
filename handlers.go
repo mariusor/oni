@@ -418,7 +418,7 @@ var iriNotFound = func(iri vocab.IRI) error {
 func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct.MediaType) bool {
 	acceptableMediaTypes := make([]ct.MediaType, 0)
 
-	vocab.OnObject(it, func(ob *vocab.Object) error {
+	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
 		if ob.MediaType != "" {
 			if mt, err := ct.ParseMediaType(string(ob.MediaType)); err == nil {
 				mt.Parameters["q"] = "1.0"
@@ -441,14 +441,14 @@ func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct
 func actorURLs(act vocab.Actor) func() vocab.IRIs {
 	urls := make(vocab.IRIs, 0)
 	if vocab.IsItemCollection(act.URL) {
-		vocab.OnItemCollection(act.URL, func(col *vocab.ItemCollection) error {
+		_ = vocab.OnItemCollection(act.URL, func(col *vocab.ItemCollection) error {
 			for _, u := range *col {
-				urls.Append(u.GetLink())
+				_ = urls.Append(u.GetLink())
 			}
 			return nil
 		})
 	} else if !vocab.IsNil(act.URL) {
-		urls.Append(act.URL.GetLink())
+		_ = urls.Append(act.URL.GetLink())
 	}
 	return func() vocab.IRIs {
 		return urls

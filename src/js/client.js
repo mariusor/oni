@@ -10,17 +10,22 @@ export async function fetchActivityPubIRI(iri) {
     } else {
         // generate HTTP-signature for the actor
     }
-    console.log(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI ${iri}`)
-    const response = await fetch(iri, {headers: headers, mode: 'no-cors'}).catch(console.error);
+    console.log(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI ${iri}`);
+    const opts = {
+        headers: headers,
+        // mode: 'no-cors',
+        cache: 'force-cache',
+    };
+    const response = await fetch(iri, opts).catch(console.error);
     if (response.status === 200) {
-        const it =  await response.json();
-        return it;
+        return await response.json().catch(console.warn);
     }
     response.json().then(console.warn).catch(console.warn);
     return null;
 }
 
-const fetchHeaders = {Accept: 'application/activity+json;' /*, 'Cache-Control': 'no-store'*/};
+const jsonLDContentType = 'application/activity+json; profile="https://www.w3.org/ns/activitystreams"';
+const fetchHeaders = {Accept: jsonLDContentType /*, 'Cache-Control': 'no-store'*/};
 
 export function isLocalIRI(iri) {
     if (typeof iri !== 'string') {
