@@ -193,15 +193,17 @@ const /* sort */ byContrastTo = (base) => (a, b) => contrast(b, base) - contrast
 const /* sort */ bySaturation = (a, b) => tc(b).toHsv().s - tc(a).toHsv().s;
 const /* sort */ byDiff = (base) => (a, b) => Math.abs(colorDiff(a, base)) - Math.abs(colorDiff(b, base));
 
+function paletteIsValid(palette, imageURL, iconURL) {
+    return ((!palette.hasOwnProperty('bgImageURL') && imageURL === '') || palette.bgImageURL === imageURL) &&
+    ((!palette.hasOwnProperty('iconURL') && iconURL === '') || palette.iconURL === iconURL)
+}
 export async function loadPalette(it) {
     const imageURL = apURL(it.getImage());
     const iconURL = apURL(it.getIcon());
 
     if (localStorage.getItem('palette')) {
         const palette = JSON.parse(localStorage.getItem('palette'));
-        if (palette.bgImageURL === imageURL && palette.iconURL === iconURL) {
-            return palette;
-        }
+        if (paletteIsValid(palette, imageURL, iconURL)) return palette;
     }
     const root = document.documentElement;
     const style = getComputedStyle(root);
