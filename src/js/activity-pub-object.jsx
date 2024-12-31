@@ -1,5 +1,6 @@
 import {css, html, LitElement, nothing} from "lit";
-import {fetchActivityPubIRI, isLocalIRI, pluralize, renderTimestamp} from "./utils";
+import {fetchActivityPubIRI, isLocalIRI} from "./client.js";
+import {pluralize, renderTimestamp} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";

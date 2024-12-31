@@ -1,9 +1,9 @@
 import {css, html, LitElement} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {when} from "lit-html/directives/when.js";
-import {handleServerError, isAuthorized} from "./utils";
+import {handleServerError, isAuthorized} from "./utils.js";
 import {ref} from "lit-html/directives/ref.js";
-import {AuthController} from "./auth-controller";
+import {AuthController} from "./auth-controller.js";
 
 export class LoginDialog extends LitElement {
     static styles = css`

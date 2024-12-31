@@ -1,6 +1,6 @@
 import {html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {isLocalIRI} from "./utils";
+import {isLocalIRI} from "./client";
 
 export class ActivityPubActor extends ActivityPubObject {
     static styles = ActivityPubObject.styles;

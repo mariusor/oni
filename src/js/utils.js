@@ -15,34 +15,6 @@ export function OnReady(a) {
     'loading' === document.readyState ? document.addEventListener && document.addEventListener('DOMContentLoaded', a) : a.call()
 }
 
-const fetchHeaders = {Accept: 'application/activity+json', 'Cache-Control': 'no-store'};
-
-export async function fetchActivityPubIRI(iri) {
-    let headers = fetchHeaders;
-    if (isLocalIRI(iri)) {
-        const auth = authorization();
-        if (auth.hasOwnProperty('token_type') && auth.hasOwnProperty('access_token')) {
-            headers.Authorization = `${auth.token_type} ${auth.access_token}`;
-        }
-    } else {
-        // generate HTTP-signature for the actor
-    }
-    console.log(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI ${iri}`)
-    const response = await fetch(iri, {headers: headers, mode: 'no-cors'}).catch(console.error);
-    if (response.status === 200) {
-        return await response.json();
-    }
-    response.json().then(console.warn).catch(console.warn);
-    return null;
-}
-
-export function isLocalIRI(iri) {
-    if (typeof iri !== 'string') {
-        return false;
-    }
-    return iri.indexOf(window.location.hostname) > 0;
-}
-
 export function hostFromIRI(iri) {
     try {
         return (new URL(iri)).host;
