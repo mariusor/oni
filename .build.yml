@@ -25,7 +25,6 @@ tasks:
       cd oni
       make coverage
   - images: |
-      test ${BUILD_SUBMITTER} = "git.sr.ht" || complete-build
       set -a +x
       source ~/.buildah.env
 
@@ -60,7 +59,7 @@ tasks:
       }
       _push
   - push_to_github: |
-      test ${BUILD_SUBMITTER} != "git.sr.ht" && complete-build
+      test "${BUILD_SUBMITTER}" != "git.sr.ht" && complete-build
       set -a +x
       ssh-keyscan -H github.com >> ~/.ssh/known_hosts
 

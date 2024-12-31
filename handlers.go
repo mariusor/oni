@@ -146,7 +146,7 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(raw)))
 		w.Header().Set("Vary", "Accept")
-		w.Write(raw)
+		_, _ = w.Write(raw)
 	}
 }
 

@@ -24,8 +24,8 @@ export async function fetchActivityPubIRI(iri) {
     return null;
 }
 
-const jsonLDContentType = 'application/activity+json; profile="https://www.w3.org/ns/activitystreams"';
-const fetchHeaders = {Accept: jsonLDContentType /*, 'Cache-Control': 'no-store'*/};
+const jsonLDContentType = 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';
+const fetchHeaders = {Accept: jsonLDContentType};
 
 export function isLocalIRI(iri) {
     if (typeof iri !== 'string') {
