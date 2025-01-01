@@ -464,6 +464,18 @@ var validObjectTypes = vocab.ActivityVocabularyTypes{
 	vocab.EventType, vocab.CollectionOfItems,
 }
 
+func filtersCreateUpdate(ff filters.Checks) bool {
+	for _, vv := range filters.ToValues(filters.TypeChecks(ff...)...) {
+		for _, v := range vv {
+			t := vocab.ActivityVocabularyType(v)
+			if validActivityTypes.Contains(t) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func iriHasTypeFilter(iri vocab.IRI) bool {
 	u, err := iri.URL()
 	if err != nil {
@@ -531,7 +543,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 				if !iriHasTypeFilter(iri) {
 					colFilters = append(colFilters, filters.HasType(validActivityTypes...))
 				}
-				if !iriHasObjectTypeFilter(iri) {
+				if filtersCreateUpdate(colFilters) && !iriHasObjectTypeFilter(iri) {
 					obFilters = append(obFilters, filters.HasType(validObjectTypes...))
 				}
 			}
