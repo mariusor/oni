@@ -107,17 +107,6 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
-	as, err := auth.New(
-		auth.WithURL(a.ID.String()),
-		auth.WithStorage(o.s),
-		auth.WithClient(o.c),
-		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
-	)
-	if err != nil {
-		o.l.Errorf("unable to initialize OAuth2 server")
-		return
-	}
-	o.o = as
 
 	acceptableMediaTypes := []ct.MediaType{textHTML, applicationJson}
 	acc, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
@@ -189,17 +178,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
-	as, err := auth.New(
-		auth.WithURL(a.ID.String()),
-		auth.WithStorage(o.s),
-		auth.WithClient(o.c),
-		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
-	)
-	if err != nil {
-		o.l.Errorf("unable to initialize OAuth2 server")
-		return
-	}
-	o.o = as
+	as := o.o
 	resp := as.NewResponse()
 	defer resp.Close()
 

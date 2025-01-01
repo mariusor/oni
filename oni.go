@@ -48,6 +48,7 @@ func Oni(initFns ...optionFn) *oni {
 		client.SkipTLSValidation(true),
 	)
 
+	localURLs := make(vocab.IRIs, 0, len(o.a))
 	for i, act := range o.a {
 		it, err := o.s.Load(act.GetLink())
 		if err != nil {
@@ -59,6 +60,7 @@ func Oni(initFns ...optionFn) *oni {
 			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to load Actor")
 			continue
 		}
+		_ = localURLs.Append(actor.GetLink())
 
 		if err := CreateOauth2ClientIfMissing(o.s, actor.ID, DefaultOAuth2ClientPw); err != nil {
 			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save OAuth2 Client")
@@ -88,6 +90,16 @@ func Oni(initFns ...optionFn) *oni {
 
 		o.a[i] = *actor
 	}
+	as, err := auth.New(
+		auth.WithIRI(localURLs...),
+		auth.WithStorage(o.s),
+		auth.WithClient(o.c),
+		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
+	)
+	if err != nil {
+		o.l.Errorf("unable to initialize OAuth2 server")
+	}
+	o.o = as
 
 	o.setupRoutes(o.a)
 	return o
