@@ -13,10 +13,12 @@ export async function fetchActivityPubIRI(iri) {
     console.log(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI ${iri}`);
     const opts = {
         headers: headers,
-        // mode: 'no-cors',
         cache: 'force-cache',
     };
     const response = await fetch(iri, opts).catch(console.error);
+    if (!response) {
+        return null
+    }
     if (response.status === 200) {
         return await response.json().catch(console.warn);
     }
