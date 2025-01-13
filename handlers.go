@@ -115,7 +115,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	})
 	c.Log, _ = o.l.WithContext(lw.Ctx{"log": "cors"}).(cors.Logger)
 	m.Group(func(m chi.Router) {
-		m.Use(c.Handler)
+		m.Use(c.Handler, o.StopBlocked)
 		m.HandleFunc("/*", o.ActivityPubItem)
 	})
 }
@@ -524,6 +524,32 @@ func (o oni) loadAuthorizedActor(r *http.Request) (vocab.Actor, error) {
 	return o.o.LoadActorFromRequest(r)
 }
 
+func (o *oni) StopBlocked(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		authActor, _ := o.loadAuthorizedActor(r)
+		if authActor.ID != vocab.PublicNS {
+			oniActor := o.oniActor(r)
+
+			if res, err := o.s.Load(processing.BlockedCollection.IRI(oniActor)); err == nil {
+				var blocked vocab.IRIs
+				_ = vocab.OnCollectionIntf(res, func(col vocab.CollectionInterface) error {
+					blocked = col.Collection().IRIs()
+					return nil
+				})
+
+				for _, blockedIRI := range blocked {
+					if blockedIRI.Contains(authActor.ID, false) {
+						next = o.Error(errors.Gonef("nothing to see here, please move along"))
+						break
+					}
+				}
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
 	colFilters := make(filters.Checks, 0)
@@ -540,9 +566,6 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 			obFilters := make(filters.Checks, 0)
 			obFilters = append(obFilters, filters.Not(filters.NilID))
 			if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
-				if !iriHasTypeFilter(iri) {
-					colFilters = append(colFilters, filters.HasType(validActivityTypes...))
-				}
 				if filtersCreateUpdate(colFilters) && !iriHasObjectTypeFilter(iri) {
 					obFilters = append(obFilters, filters.HasType(validObjectTypes...))
 				}
@@ -655,7 +678,7 @@ func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
 	}
 
 	oniOutbox := vocab.Outbox.IRI(accept.Actor)
-	processing.SetIDIfMissing(accept, oniOutbox, nil)
+	_ = processing.SetIDIfMissing(accept, oniOutbox, nil)
 	if _, err := o.s.Save(accept); err != nil {
 		o.l.Errorf("Failed saving activity %T[%s]: %+s", accept, accept.Type, err)
 		return err
@@ -748,7 +771,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed initializing the Activity processor")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
-		vocab.OnActivity(it, func(a *vocab.Activity) error {
+		_ = vocab.OnActivity(it, func(a *vocab.Activity) error {
 			// TODO(marius): this should be handled in the processing package
 			if a.AttributedTo == nil {
 				a.AttributedTo = act
@@ -779,13 +802,13 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		}
 		if it.GetType() == vocab.UpdateType {
 			// NOTE(marius): if we updated one of the main actors, we replace it in the array
-			vocab.OnActivity(it, func(upd *vocab.Activity) error {
+			_ = vocab.OnActivity(it, func(upd *vocab.Activity) error {
 				ob := upd.Object
 				for i, a := range o.a {
 					if !a.ID.Equals(ob.GetID(), true) {
 						continue
 					}
-					vocab.OnActor(ob, func(actor *vocab.Actor) error {
+					_ = vocab.OnActor(ob, func(actor *vocab.Actor) error {
 						o.a[i] = *actor
 						return nil
 					})
