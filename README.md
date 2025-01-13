@@ -44,3 +44,11 @@ $ oni -listen 127.0.4.2:4567 -path ~/.cache/oni
 # usable directly in an ActivityPub client.
 $ onictl actor add --pw SuperSecretOAuth2ClientPassword https://johndoe.example.com
 ```
+
+## Block remote instances
+
+```sh
+# Blocks all access to all johndoe.example.com pages for any access that has requests with Authorization 
+# headers generated for actors hosted on naughty.social
+$ onictl block --client https://johndoe.example.com https://naughty.social
+```
