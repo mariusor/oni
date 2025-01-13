@@ -12,7 +12,6 @@ import (
 
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
-	"github.com/go-ap/client"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
 	"github.com/go-ap/processing"
@@ -278,22 +277,34 @@ func blockInstance(ctl *Control) cli.ActionFunc {
 		}
 		ctl.Service = *act
 
-		ap := client.New()
-
 		urls := ctx.Args()
 		for _, u := range urls.Slice() {
-			toBlock, err := ap.CtxLoadIRI(ctx.Context, vocab.IRI(u))
-			if err != nil {
+			if toBlock, _ := ctl.Storage.Load(vocab.IRI(u)); toBlock == nil {
+				// NOTE(marius): if we don't have a local representation of the blocked item
+				// we invent an empty object that we can block.
+				// This probably needs more investigation to check if we should at least try to remote load.
 				ctl.Logger.Warnf("Unable to load instance to block %s: %s", u, err)
-				toBlock = vocab.Actor{ID: vocab.IRI(u)}
+				if toBlock, err = ctl.Storage.Save(vocab.Object{ID: vocab.IRI(u)}); err != nil {
+					ctl.Logger.Warnf("Unable to save locally the instance to block %s: %s", u, err)
+				}
+
 			}
 
-			if toBlock, err = ctl.Storage.Save(toBlock); err != nil {
-				ctl.Logger.Warnf("Unable to save locally the instance to block %s: %s", u, err)
-			}
+			blockedIRI := processing.BlockedCollection.IRI(ctl.Service)
+			col, _ := ctl.Storage.Load(blockedIRI)
+			if !vocab.IsObject(col) {
+				col = vocab.OrderedCollection{
+					ID:        blockedIRI,
+					Type:      vocab.OrderedCollectionType,
+					To:        vocab.ItemCollection{ctl.Service.ID},
+					Published: time.Now().UTC(),
+				}
 
-			blockCollection := vocab.CollectionPath("blocked").IRI(ctl.Service)
-			if err := ctl.Storage.AddTo(blockCollection, vocab.IRI(u)); err != nil {
+				if col, err = ctl.Storage.Save(col); err != nil {
+					ctl.Logger.Warnf("Unable to save the blocked collection %s: %s", blockedIRI, err)
+				}
+			}
+			if err := ctl.Storage.AddTo(blockedIRI, vocab.IRI(u)); err != nil {
 				ctl.Logger.Warnf("Unable to block instance %s: %s", u, err)
 			}
 		}
