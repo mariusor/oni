@@ -12,6 +12,7 @@ import (
 
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/client"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
 	"github.com/go-ap/processing"
@@ -54,6 +55,16 @@ var fixCollectionsCmd = &cli.Command{
 	Name:   "fix-collections",
 	Usage:  "",
 	Action: fixCollectionsAct(&ctl),
+}
+
+var blockInstanceCmd = &cli.Command{
+	Name:  "block",
+	Usage: "Block instances",
+	Flags: []cli.Flag{&cli.StringFlag{
+		Name:     "client",
+		Required: true,
+	}},
+	Action: blockInstance(&ctl),
 }
 
 var ActorCmd = &cli.Command{
@@ -251,6 +262,45 @@ func fixCollectionsAct(ctl *Control) cli.ActionFunc {
 	}
 }
 
+func blockInstance(ctl *Control) cli.ActionFunc {
+	return func(ctx *cli.Context) error {
+		actorID := ctx.String("client")
+		if actorID == "" {
+			return errors.Newf("Need to provide the client id")
+		}
+		cl, err := ctl.Storage.Load(vocab.IRI(actorID))
+		if err != nil {
+			return err
+		}
+		act, err := vocab.ToActor(cl)
+		if err != nil {
+			return errors.Annotatef(err, "unable to load actor from the client IRI")
+		}
+		ctl.Service = *act
+
+		ap := client.New()
+
+		urls := ctx.Args()
+		for _, u := range urls.Slice() {
+			toBlock, err := ap.CtxLoadIRI(ctx.Context, vocab.IRI(u))
+			if err != nil {
+				ctl.Logger.Warnf("Unable to load instance to block %s: %s", u, err)
+				toBlock = vocab.Actor{ID: vocab.IRI(u)}
+			}
+
+			if toBlock, err = ctl.Storage.Save(toBlock); err != nil {
+				ctl.Logger.Warnf("Unable to save locally the instance to block %s: %s", u, err)
+			}
+
+			blockCollection := vocab.CollectionPath("blocked").IRI(ctl.Service)
+			if err := ctl.Storage.AddTo(blockCollection, vocab.IRI(u)); err != nil {
+				ctl.Logger.Warnf("Unable to block instance %s: %s", u, err)
+			}
+		}
+		return nil
+	}
+}
+
 func tokenAct(ctl *Control) cli.ActionFunc {
 	return func(c *cli.Context) error {
 		clientID := c.String("client")
@@ -411,7 +461,7 @@ func main() {
 			Value: dataPath(),
 		},
 	}
-	app.Commands = []*cli.Command{ActorCmd, OAuth2Cmd, fixCollectionsCmd}
+	app.Commands = []*cli.Command{ActorCmd, OAuth2Cmd, fixCollectionsCmd, blockInstanceCmd}
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintln(os.Stderr, err)
