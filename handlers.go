@@ -517,7 +517,12 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 	}
 }
 
+const authorizedActorCtxKey = "__authorizedActor"
+
 func (o oni) loadAuthorizedActor(r *http.Request, toIgnore ...vocab.IRI) (vocab.Actor, error) {
+	if act, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
+		return act, nil
+	}
 	if o.o == nil {
 		return auth.AnonymousActor, errors.Errorf("OAuth server not initialized")
 	}
@@ -535,15 +540,16 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 				return nil
 			})
 
-			authActor, _ := o.loadAuthorizedActor(r, blocked...)
-			if authActor.ID != vocab.PublicNS {
+			act, _ := o.loadAuthorizedActor(r, blocked...)
+			if act.ID != vocab.PublicNS {
 				for _, blockedIRI := range blocked {
-					if blockedIRI.Contains(authActor.ID, false) {
+					if blockedIRI.Contains(act.ID, false) {
 						next = o.Error(errors.Gonef("nothing to see here, please move along"))
 						break
 					}
 				}
 			}
+			r = r.WithContext(context.WithValue(r.Context(), authorizedActorCtxKey, act))
 		}
 
 		next.ServeHTTP(w, r)
