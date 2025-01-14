@@ -517,26 +517,26 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 	}
 }
 
-func (o oni) loadAuthorizedActor(r *http.Request) (vocab.Actor, error) {
+func (o oni) loadAuthorizedActor(r *http.Request, toIgnore ...vocab.IRI) (vocab.Actor, error) {
 	if o.o == nil {
 		return auth.AnonymousActor, errors.Errorf("OAuth server not initialized")
 	}
-	return o.o.LoadActorFromRequest(r)
+	return o.o.LoadActorFromRequest(r, toIgnore...)
 }
 
 func (o *oni) StopBlocked(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authActor, _ := o.loadAuthorizedActor(r)
-		if authActor.ID != vocab.PublicNS {
-			oniActor := o.oniActor(r)
+		oniActor := o.oniActor(r)
 
-			if res, err := o.s.Load(processing.BlockedCollection.IRI(oniActor)); err == nil {
-				var blocked vocab.IRIs
-				_ = vocab.OnCollectionIntf(res, func(col vocab.CollectionInterface) error {
-					blocked = col.Collection().IRIs()
-					return nil
-				})
+		if res, err := o.s.Load(processing.BlockedCollection.IRI(oniActor)); err == nil {
+			var blocked vocab.IRIs
+			_ = vocab.OnCollectionIntf(res, func(col vocab.CollectionInterface) error {
+				blocked = col.Collection().IRIs()
+				return nil
+			})
 
+			authActor, _ := o.loadAuthorizedActor(r, blocked...)
+			if authActor.ID != vocab.PublicNS {
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(authActor.ID, false) {
 						next = o.Error(errors.Gonef("nothing to see here, please move along"))
@@ -715,7 +715,7 @@ func runWithRetry(fn ssm.Fn) ssm.Fn {
 func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	baseIRIs := make(vocab.IRIs, 0)
 	for _, act := range o.a {
-		baseIRIs.Append(act.GetID())
+		_ = baseIRIs.Append(act.GetID())
 	}
 
 	isLocalIRI := func(iri vocab.IRI) bool {
@@ -725,7 +725,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	var logFn auth.LoggerFn = func(ctx lw.Ctx, msg string, p ...interface{}) {
 		o.l.WithContext(lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
 	}
-	auth := auth.ClientResolver(o.c,
+	solver := auth.ClientResolver(o.c,
 		auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn),
 		auth.SolverWithLocalIRIFn(isLocalIRI),
 	)
@@ -740,7 +740,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
 
-		act, err := auth.LoadActorFromRequest(r)
+		act, err := solver.LoadActorFromRequest(r)
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")
 		}
