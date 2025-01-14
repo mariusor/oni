@@ -3,13 +3,13 @@ module oni
 go 1.23
 
 require (
-	git.sr.ht/~mariusor/lw v0.0.0-20241117105956-4b4009e28502
+	git.sr.ht/~mariusor/lw v0.0.0-20250114195945-ba9c7bcca3c1
 	git.sr.ht/~mariusor/ssm v0.0.0-20241220163816-32d18afe7b22
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240519120935-f877e4d97def
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.24.2
 	github.com/go-ap/activitypub v0.0.0-20250112165501-7b898763a1e9
-	github.com/go-ap/auth v0.0.0-20250114152328-31908ecb3be0
+	github.com/go-ap/auth v0.0.0-20250114195703-e9e09b3689ac
 	github.com/go-ap/client v0.0.0-20250112171502-daf7a388c2cc
 	github.com/go-ap/errors v0.0.0-20241212155021-5a598b6bf467
 	github.com/go-ap/filters v0.0.0-20250112171040-56ab034847c4
@@ -29,7 +29,7 @@ require (
 require (
 	git.sr.ht/~mariusor/cache v0.0.0-20241212172633-e1563652acb4 // indirect
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
-	git.sr.ht/~mariusor/mask v0.0.0-20240327084502-ef2a9438457e // indirect
+	git.sr.ht/~mariusor/mask v0.0.0-20250114195353-98705a6977b7 // indirect
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.20.0 // indirect
