@@ -269,7 +269,7 @@ func propNameInIRI(iri vocab.IRI) (bool, string) {
 }
 
 var mediaTypes = vocab.ActivityVocabularyTypes{
-	vocab.ImageType, vocab.AudioType, vocab.VideoType,
+	vocab.ImageType, vocab.AudioType, vocab.VideoType, vocab.DocumentType,
 }
 
 func cleanupMediaObjectFromItem(it vocab.Item) error {
@@ -387,6 +387,7 @@ var textHTML, _ = ct.ParseMediaType("text/html;q=1.0")
 var imageAny, _ = ct.ParseMediaType("image/*;q=1.0")
 var audioAny, _ = ct.ParseMediaType("audio/*;q=1.0")
 var videoAny, _ = ct.ParseMediaType("video/*;q=1.0")
+var pdfDocument, _ = ct.ParseMediaType("application/pdf;q=1.0")
 
 func getWeight(m ct.MediaType) int {
 	q, ok := m.Parameters["q"]
@@ -617,7 +618,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case accepts(jsonLD, activityJson, applicationJson):
 		o.ServeActivityPubItem(it).ServeHTTP(w, r)
-	case accepts(imageAny), accepts(audioAny), accepts(videoAny):
+	case accepts(imageAny), accepts(audioAny), accepts(videoAny), accepts(pdfDocument):
 		o.ServeBinData(it).ServeHTTP(w, r)
 	case accepts(textHTML):
 		fallthrough
