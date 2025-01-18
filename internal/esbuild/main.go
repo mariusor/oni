@@ -10,11 +10,11 @@ import (
 
 func main() {
 	env := os.Getenv("ENV")
-	prod := strings.HasPrefix(strings.ToLower(env), "prod")
+	isProd := strings.HasPrefix(strings.ToLower(env), "prod")
 
-	buildJS(prod)
-	buildCSS(prod)
-	copySVG()
+	buildJS(isProd)
+	buildCSS(isProd)
+	copyOthers()
 }
 
 func buildJS(prod bool) {
@@ -65,15 +65,22 @@ func buildCSS(prod bool) {
 	}
 }
 
-func copySVG() {
-	svg, err := os.ReadFile("src/icons.svg")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
-		return
-	}
+var others = []string{
+	"src/icons.svg",
+	"src/robots.txt",
+}
 
-	err = os.WriteFile("static/icons.svg", svg, 0600)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
+func copyOthers() {
+	for _, other := range others {
+		ff, err := os.ReadFile(other)
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "%v", err)
+			return
+		}
+
+		err = os.WriteFile(strings.Replace(other, "src", "static", 1), ff, 0600)
+		if err != nil {
+			_, _ = fmt.Fprintf(os.Stderr, "%v", err)
+		}
 	}
 }

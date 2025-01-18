@@ -18,6 +18,7 @@ GO_SOURCES := $(wildcard ./*.go)
 TS_SOURCES := $(wildcard src/js/*)
 CSS_SOURCES := $(wildcard src/css/*)
 SVG_SOURCES := $(wildcard src/*.svg)
+ROBOTS_TXT := $(wildcard src/robots.txt)
 
 TAGS := $(ENV)
 
@@ -62,7 +63,7 @@ bin/ctl: go.mod go.sum cmd/ctl/main.go $(GO_SOURCES)
 yarn.lock:
 	$(YARN) install
 
-assets: static/main.css static/main.js static/icons.svg
+assets: static/main.css static/main.js static/icons.svg static/robots.txt
 
 static/main.js: $(TS_SOURCES) yarn.lock
 	go generate -v assets.go
@@ -70,7 +71,10 @@ static/main.js: $(TS_SOURCES) yarn.lock
 static/main.css: $(CSS_SOURCES) yarn.lock
 	go generate -v assets.go
 
-static/icons.svg: $(SVG_SOURCES) yarn.lock
+static/icons.svg: $(SVG_SOURCES)
+	go generate -v assets.go
+
+static/robots.txt: $(ROBOTS_TXT)
 	go generate -v assets.go
 
 clean: ## Cleanup the build workspace.

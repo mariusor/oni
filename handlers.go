@@ -95,6 +95,7 @@ func (o *oni) setupStaticRoutes(m chi.Router) {
 	m.Handle("/main.js.map", fsServe)
 	m.Handle("/main.css", fsServe)
 	m.HandleFunc("/icons.svg", fsServe)
+	m.HandleFunc("/robots.txt", fsServe)
 	m.HandleFunc("/favicon.ico", o.NotFound)
 }
 
