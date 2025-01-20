@@ -1,4 +1,6 @@
 @charset "UTF-8";
+@import "reset.css";
+
 :root {
     --bg-color: #232627;
     --fg-color: #EFF0F1;
