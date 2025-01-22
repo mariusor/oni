@@ -9,13 +9,13 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.24.2
 	github.com/go-ap/activitypub v0.0.0-20250112165501-7b898763a1e9
-	github.com/go-ap/auth v0.0.0-20250114195703-e9e09b3689ac
-	github.com/go-ap/client v0.0.0-20250112171502-daf7a388c2cc
+	github.com/go-ap/auth v0.0.0-20250122170531-7fae85ea8b61
+	github.com/go-ap/client v0.0.0-20250122170329-4328b36804af
 	github.com/go-ap/errors v0.0.0-20241212155021-5a598b6bf467
-	github.com/go-ap/filters v0.0.0-20250112171040-56ab034847c4
+	github.com/go-ap/filters v0.0.0-20250120192219-348d2d08111c
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250112171625-80ada28015f7
-	github.com/go-ap/storage-fs v0.0.0-20250113185622-05b67ea8c0b2
+	github.com/go-ap/processing v0.0.0-20250122170601-9cdffba7178e
+	github.com/go-ap/storage-fs v0.0.0-20250122170627-90edd7212d9a
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
@@ -27,7 +27,7 @@ require (
 )
 
 require (
-	git.sr.ht/~mariusor/cache v0.0.0-20241212172633-e1563652acb4 // indirect
+	git.sr.ht/~mariusor/cache v0.0.0-20250122165545-14c90d7a9de8 // indirect
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	git.sr.ht/~mariusor/mask v0.0.0-20250114195353-98705a6977b7 // indirect
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
