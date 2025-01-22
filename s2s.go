@@ -29,21 +29,21 @@ type signer struct {
 }
 
 func (s signer) SignRequest(pKey crypto.PrivateKey, pubKeyId string, r *http.Request, body []byte) error {
-	algs := make([]string, 0)
+	algos := make([]string, 0)
 	for a, v := range s.signers {
-		algs = append(algs, string(a))
-		if err := v.SignRequest(pKey, pubKeyId, r, body); err == nil {
+		algos = append(algos, string(a))
+		err := v.SignRequest(pKey, pubKeyId, r, body)
+		if err == nil {
 			return nil
-		} else {
-			s.logger.Warnf("invalid signer algo %s:%T %+s", a, v, err)
 		}
+		s.logger.Warnf("invalid signer algo %s:%T %+s", a, v, err)
 	}
-	return errors.Newf("no suitable request signer for public key[%T] %s, tried %+v", pKey, pubKeyId, algs)
+	return errors.Newf("no suitable request signer for public key[%T] %s, tried %+v", pKey, pubKeyId, algos)
 }
 
 func newSigner(pubKey crypto.PrivateKey, headers []string, l lw.Logger) (signer, error) {
 	s := signer{logger: l}
-	s.signers = make(map[httpsig.Algorithm]httpsig.Signer, 0)
+	s.signers = make(map[httpsig.Algorithm]httpsig.Signer)
 
 	algos := make([]httpsig.Algorithm, 0)
 	switch pubKey.(type) {

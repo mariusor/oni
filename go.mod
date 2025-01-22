@@ -9,13 +9,13 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.24.2
 	github.com/go-ap/activitypub v0.0.0-20250112165501-7b898763a1e9
-	github.com/go-ap/auth v0.0.0-20250122170531-7fae85ea8b61
+	github.com/go-ap/auth v0.0.0-20250122194455-a848804446e4
 	github.com/go-ap/client v0.0.0-20250122170329-4328b36804af
 	github.com/go-ap/errors v0.0.0-20241212155021-5a598b6bf467
-	github.com/go-ap/filters v0.0.0-20250120192219-348d2d08111c
+	github.com/go-ap/filters v0.0.0-20250122193938-87a29d4e0ed7
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250122170601-9cdffba7178e
-	github.com/go-ap/storage-fs v0.0.0-20250122170627-90edd7212d9a
+	github.com/go-ap/processing v0.0.0-20250122194534-a9bc23ab5866
+	github.com/go-ap/storage-fs v0.0.0-20250122194655-7f5e89d767a2
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
