@@ -48,42 +48,42 @@ func CollectionExists(ob vocab.Item, col vocab.CollectionPath) bool {
 	has := false
 	switch col {
 	case vocab.Outbox:
-		vocab.OnActor(ob, func(actor *vocab.Actor) error {
+		_ = vocab.OnActor(ob, func(actor *vocab.Actor) error {
 			has = actor.Outbox != nil
 			return nil
 		})
 	case vocab.Inbox:
-		vocab.OnActor(ob, func(actor *vocab.Actor) error {
+		_ = vocab.OnActor(ob, func(actor *vocab.Actor) error {
 			has = actor.Inbox != nil
 			return nil
 		})
 	case vocab.Liked:
-		vocab.OnActor(ob, func(actor *vocab.Actor) error {
+		_ = vocab.OnActor(ob, func(actor *vocab.Actor) error {
 			has = actor.Liked != nil
 			return nil
 		})
 	case vocab.Following:
-		vocab.OnActor(ob, func(actor *vocab.Actor) error {
+		_ = vocab.OnActor(ob, func(actor *vocab.Actor) error {
 			has = actor.Following != nil
 			return nil
 		})
 	case vocab.Followers:
-		vocab.OnActor(ob, func(actor *vocab.Actor) error {
+		_ = vocab.OnActor(ob, func(actor *vocab.Actor) error {
 			has = actor.Followers != nil
 			return nil
 		})
 	case vocab.Likes:
-		vocab.OnObject(ob, func(ob *vocab.Object) error {
+		_ = vocab.OnObject(ob, func(ob *vocab.Object) error {
 			has = ob.Likes != nil
 			return nil
 		})
 	case vocab.Shares:
-		vocab.OnObject(ob, func(ob *vocab.Object) error {
+		_ = vocab.OnObject(ob, func(ob *vocab.Object) error {
 			has = ob.Shares != nil
 			return nil
 		})
 	case vocab.Replies:
-		vocab.OnObject(ob, func(ob *vocab.Object) error {
+		_ = vocab.OnObject(ob, func(ob *vocab.Object) error {
 			has = ob.Replies != nil
 			return nil
 		})
@@ -188,8 +188,8 @@ func irif(r *http.Request) vocab.IRI {
 func logRequest(o *oni, h http.Header, body []byte) {
 	fn := fmt.Sprintf("%s/%s.req", o.StoragePath, time.Now().UTC().Format(time.RFC3339))
 	all := bytes.Buffer{}
-	h.Write(&all)
+	_ = h.Write(&all)
 	all.Write([]byte{'\n', '\n'})
 	all.Write(body)
-	os.WriteFile(fn, all.Bytes(), 0660)
+	_ = os.WriteFile(fn, all.Bytes(), 0660)
 }
