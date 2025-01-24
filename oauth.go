@@ -101,6 +101,16 @@ func loadBaseActor(o *oni, r *http.Request) (vocab.Actor, error) {
 	return actor, err
 }
 
+func authServer(o *oni, oniActor vocab.Actor) (*auth.Server, error) {
+	c := Client(&http.Transport{}, oniActor, o.l)
+	return auth.New(
+		auth.WithIRI(oniActor.GetLink()),
+		auth.WithStorage(o.s),
+		auth.WithClient(c),
+		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
+	)
+}
+
 func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 	a, err := loadBaseActor(o, r)
 	if err != nil {
@@ -121,8 +131,10 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s := o.o
-
+	s, err := authServer(o, a)
+	if err != nil {
+		o.l.Errorf("unable to initialize OAuth2 server")
+	}
 	resp := s.NewResponse()
 	defer resp.Close()
 
@@ -178,12 +190,17 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
-	as := o.o
-	resp := as.NewResponse()
+
+	s, err := authServer(o, a)
+	if err != nil {
+		o.l.Errorf("unable to initialize OAuth2 server")
+	}
+
+	resp := s.NewResponse()
 	defer resp.Close()
 
 	actor := &auth.AnonymousActor
-	if ar := as.HandleAccessRequest(resp, r); ar != nil {
+	if ar := s.HandleAccessRequest(resp, r); ar != nil {
 		actorIRI := a.ID
 		if iri, ok := ar.UserData.(string); ok {
 			actorIRI = vocab.IRI(iri)
@@ -203,7 +220,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 
 		ar.Authorized = !actor.GetID().Equals(auth.AnonymousActor.ID, true)
 		ar.UserData = actor.GetLink()
-		as.FinishAccessRequest(resp, r, ar)
+		s.FinishAccessRequest(resp, r, ar)
 	}
 
 	acc, _, _ := ct.GetAcceptableMediaType(r, []ct.MediaType{textHTML, applicationJson})

@@ -8,11 +8,13 @@ import (
 	"io"
 	"io/fs"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
 
+	"git.sr.ht/~mariusor/cache"
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/ssm"
 	ct "github.com/elnormous/contenttype"
@@ -521,14 +523,22 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 
 const authorizedActorCtxKey = "__authorizedActor"
 
-func (o oni) loadAuthorizedActor(r *http.Request, toIgnore ...vocab.IRI) (vocab.Actor, error) {
+func (o oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore ...vocab.IRI) (vocab.Actor, error) {
 	if act, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		return act, nil
 	}
-	if o.o == nil {
+
+	c := Client(&http.Transport{}, oniActor, o.l)
+	s, err := auth.New(
+		auth.WithIRI(oniActor.GetLink()),
+		auth.WithStorage(o.s),
+		auth.WithClient(c),
+		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
+	)
+	if err != nil {
 		return auth.AnonymousActor, errors.Errorf("OAuth server not initialized")
 	}
-	return o.o.LoadActorFromRequest(r, toIgnore...)
+	return s.LoadActorFromRequest(r, toIgnore...)
 }
 
 func (o *oni) StopBlocked(next http.Handler) http.Handler {
@@ -542,7 +552,7 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 				return nil
 			})
 
-			act, _ := o.loadAuthorizedActor(r, blocked...)
+			act, _ := o.loadAuthorizedActor(r, oniActor, blocked...)
 			if act.ID != vocab.PublicNS {
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
@@ -594,7 +604,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		}
 		colFilters = append(colFilters, filters.WithMaxCount(MaxItems))
 	}
-	if authActor, _ := o.loadAuthorizedActor(r); authActor.ID != "" {
+	if authActor, _ := o.loadAuthorizedActor(r, o.oniActor(r)); authActor.ID != "" {
 		colFilters = append(colFilters, filters.Authorized(authActor.ID))
 	}
 
@@ -681,7 +691,6 @@ func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
 	for _, act := range o.a {
 		if act.ID.Equals(f.Object.GetID(), true) {
 			accept.Actor = act
-			o.c.SignFn(s2sSignFn(act, o.s, o.l))
 		}
 	}
 
@@ -704,6 +713,29 @@ func IRIsContain(iris vocab.IRIs) func(i vocab.IRI) bool {
 	return func(i vocab.IRI) bool {
 		return iris.Contains(i)
 	}
+}
+
+func Client(tr http.RoundTripper, actor vocab.Actor, l lw.Logger) *client.C {
+	cachePath, err := os.UserCacheDir()
+	if err != nil {
+		cachePath = os.TempDir()
+	}
+
+	if tr == nil {
+		tr = &http.Transport{}
+	}
+
+	client.UserAgent = fmt.Sprintf("%s/%s (+%s)", actor.GetLink(), Version, ProjectURL)
+	baseClient := &http.Client{
+		Transport: cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni"))),
+	}
+
+	return client.New(
+		client.WithLogger(l.WithContext(lw.Ctx{"log": "client"})),
+		client.WithHTTPClient(baseClient),
+		client.SkipTLSValidation(true),
+		client.SetDefaultHTTPClient(),
+	)
 }
 
 const (
@@ -733,27 +765,29 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	var logFn auth.LoggerFn = func(ctx lw.Ctx, msg string, p ...interface{}) {
 		o.l.WithContext(lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
 	}
-	solver := auth.ClientResolver(o.c,
-		auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn),
-		auth.SolverWithLocalIRIFn(isLocalIRI),
-	)
-
-	processor := processing.New(
-		processing.WithIRI(baseIRIs...), processing.WithStorage(o.s),
-		processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})), processing.WithIDGenerator(GenerateID),
-		processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
-		processing.WithClient(o.c),
-	)
 
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
+
+		actor := o.oniActor(r)
+		c := Client(&http.Transport{}, actor, o.l)
+
+		solver := auth.ClientResolver(c,
+			auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn),
+			auth.SolverWithLocalIRIFn(isLocalIRI),
+		)
+
+		processor := processing.New(
+			processing.WithIRI(baseIRIs...), processing.WithStorage(o.s),
+			processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})), processing.WithIDGenerator(GenerateID),
+			processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
+			processing.WithClient(c),
+		)
 
 		act, err := solver.LoadActorFromRequest(r)
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")
 		}
-
-		o.c.SignFn(s2sSignFn(o.oniActor(r), o.s, o.l))
 
 		if ok, err := ValidateRequest(r); !ok {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed request validation")

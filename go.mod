@@ -3,19 +3,20 @@ module oni
 go 1.23
 
 require (
+	git.sr.ht/~mariusor/cache v0.0.0-20250122165545-14c90d7a9de8
 	git.sr.ht/~mariusor/lw v0.0.0-20250114195945-ba9c7bcca3c1
 	git.sr.ht/~mariusor/ssm v0.0.0-20241220163816-32d18afe7b22
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240519120935-f877e4d97def
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.24.2
-	github.com/go-ap/activitypub v0.0.0-20250112165501-7b898763a1e9
-	github.com/go-ap/auth v0.0.0-20250122194455-a848804446e4
-	github.com/go-ap/client v0.0.0-20250122170329-4328b36804af
-	github.com/go-ap/errors v0.0.0-20241212155021-5a598b6bf467
-	github.com/go-ap/filters v0.0.0-20250122193938-87a29d4e0ed7
+	github.com/go-ap/activitypub v0.0.0-20250124194921-d52b4c694e14
+	github.com/go-ap/auth v0.0.0-20250124204650-4ba26f022179
+	github.com/go-ap/client v0.0.0-20250124203935-c85d69be5705
+	github.com/go-ap/errors v0.0.0-20250124135319-3da8adefd4a9
+	github.com/go-ap/filters v0.0.0-20250124201430-3eab6e3d69dc
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250122194534-a9bc23ab5866
-	github.com/go-ap/storage-fs v0.0.0-20250122194655-7f5e89d767a2
+	github.com/go-ap/processing v0.0.0-20250124211251-f8460f4f2a52
+	github.com/go-ap/storage-fs v0.0.0-20250124211358-ee86489b3e7a
 	github.com/go-chi/chi/v5 v5.2.0
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
@@ -27,14 +28,13 @@ require (
 )
 
 require (
-	git.sr.ht/~mariusor/cache v0.0.0-20250122165545-14c90d7a9de8 // indirect
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	git.sr.ht/~mariusor/mask v0.0.0-20250114195353-98705a6977b7 // indirect
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.20.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
-	github.com/go-ap/cache v0.0.0-20250112165639-6a4b00eb5067 // indirect
+	github.com/go-ap/cache v0.0.0-20250124200926-2c9bbefd884b // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect

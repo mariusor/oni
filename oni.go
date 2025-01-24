@@ -13,12 +13,11 @@ import (
 	"git.sr.ht/~mariusor/lw"
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
-	"github.com/go-ap/auth"
-	"github.com/go-ap/client"
 	storage "github.com/go-ap/storage-fs"
 )
 
 var Version = "(devel)"
+var ProjectURL = "https://git.sr.ht/~mariusor/oni"
 
 type oni struct {
 	Listen      string
@@ -26,12 +25,10 @@ type oni struct {
 	TimeOut     time.Duration
 	PwHash      []byte
 
-	c *client.C
 	a []vocab.Actor
 	s FullStorage
 	l lw.Logger
 	m http.Handler
-	o *auth.Server
 }
 
 type optionFn func(o *oni)
@@ -42,11 +39,6 @@ func Oni(initFns ...optionFn) *oni {
 	for _, fn := range initFns {
 		fn(o)
 	}
-
-	o.c = client.New(
-		client.WithLogger(o.l.WithContext(lw.Ctx{"log": "client"})),
-		client.SkipTLSValidation(true),
-	)
 
 	localURLs := make(vocab.IRIs, 0, len(o.a))
 	for i, act := range o.a {
@@ -90,16 +82,6 @@ func Oni(initFns ...optionFn) *oni {
 
 		o.a[i] = *actor
 	}
-	as, err := auth.New(
-		auth.WithIRI(localURLs...),
-		auth.WithStorage(o.s),
-		auth.WithClient(o.c),
-		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
-	)
-	if err != nil {
-		o.l.Errorf("unable to initialize OAuth2 server")
-	}
-	o.o = as
 
 	o.setupRoutes(o.a)
 	return o
