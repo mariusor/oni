@@ -102,11 +102,10 @@ func loadBaseActor(o *oni, r *http.Request) (vocab.Actor, error) {
 }
 
 func authServer(o *oni, oniActor vocab.Actor) (*auth.Server, error) {
-	c := Client(&http.Transport{}, oniActor, o.l)
 	return auth.New(
 		auth.WithIRI(oniActor.GetLink()),
 		auth.WithStorage(o.s),
-		auth.WithClient(c),
+		auth.WithClient(Client(&http.Transport{}, oniActor, o.l)),
 		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
 	)
 }

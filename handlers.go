@@ -556,8 +556,8 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 			if act.ID != vocab.PublicNS {
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
-						next = o.Error(errors.Gonef("nothing to see here, please move along"))
-						break
+						o.Error(errors.Gonef("nothing to see here, please move along")).ServeHTTP(w, r)
+						return
 					}
 				}
 			}
