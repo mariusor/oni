@@ -17,6 +17,7 @@ import (
 	"git.sr.ht/~mariusor/cache"
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/ssm"
+	"github.com/go-ap/client/s2s"
 	ct "github.com/elnormous/contenttype"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
@@ -528,7 +529,7 @@ func (o oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore
 		return act, nil
 	}
 
-	c := Client(&http.Transport{}, oniActor, o.l)
+	c := Client(&http.Transport{}, oniActor, o.s, o.l)
 	s, err := auth.New(
 		auth.WithIRI(oniActor.GetLink()),
 		auth.WithStorage(o.s),
@@ -715,14 +716,16 @@ func IRIsContain(iris vocab.IRIs) func(i vocab.IRI) bool {
 	}
 }
 
-func Client(tr http.RoundTripper, actor vocab.Actor, l lw.Logger) *client.C {
+func Client(tr http.RoundTripper, actor vocab.Actor, st processing.KeyLoader, l lw.Logger) *client.C {
 	cachePath, err := os.UserCacheDir()
 	if err != nil {
 		cachePath = os.TempDir()
 	}
-
 	if tr == nil {
 		tr = &http.Transport{}
+	}
+	if prv, _ := st.LoadKey(actor.ID); prv != nil {
+		tr = &s2s.HTTPSignatureTransport{Base: tr, Key: prv, Actor: &actor}
 	}
 
 	client.UserAgent = fmt.Sprintf("%s/%s (+%s)", actor.GetLink(), Version, ProjectURL)
@@ -770,7 +773,8 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		var it vocab.Item
 
 		actor := o.oniActor(r)
-		c := Client(&http.Transport{}, actor, o.l)
+
+		c := Client(&http.Transport{}, actor, o.s, o.l)
 
 		solver := auth.ClientResolver(c,
 			auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn),
@@ -778,10 +782,9 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		)
 
 		processor := processing.New(
-			processing.WithIRI(baseIRIs...), processing.WithStorage(o.s),
-			processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})), processing.WithIDGenerator(GenerateID),
-			processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
-			processing.WithClient(c),
+			processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})),
+			processing.WithIRI(baseIRIs...), processing.WithClient(c), processing.WithStorage(o.s),
+			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
 		)
 
 		act, err := solver.LoadActorFromRequest(r)

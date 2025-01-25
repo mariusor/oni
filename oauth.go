@@ -105,7 +105,7 @@ func authServer(o *oni, oniActor vocab.Actor) (*auth.Server, error) {
 	return auth.New(
 		auth.WithIRI(oniActor.GetLink()),
 		auth.WithStorage(o.s),
-		auth.WithClient(Client(&http.Transport{}, oniActor, o.l)),
+		auth.WithClient(Client(&http.Transport{}, oniActor, o.s, o.l)),
 		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
 	)
 }
