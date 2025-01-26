@@ -56,6 +56,12 @@ var fixCollectionsCmd = &cli.Command{
 	Action: fixCollectionsAct(&ctl),
 }
 
+var rotateKeyCmd = &cli.Command{
+	Name:   "rotate-key",
+	Usage:  "Rotate the actors' private and public key pair",
+	Action: rotateKey(&ctl),
+}
+
 var blockInstanceCmd = &cli.Command{
 	Name:  "block",
 	Usage: "Block instances",
@@ -69,7 +75,7 @@ var blockInstanceCmd = &cli.Command{
 var ActorCmd = &cli.Command{
 	Name:        "actor",
 	Usage:       "Actor helper",
-	Subcommands: []*cli.Command{actorAddCmd},
+	Subcommands: []*cli.Command{actorAddCmd, rotateKeyCmd},
 }
 
 var actorAddCmd = &cli.Command{
@@ -231,19 +237,50 @@ func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
 	return nil
 }
 
-func fixCollectionsAct(ctl *Control) cli.ActionFunc {
+func rotateKey(ctl *Control) cli.ActionFunc {
 	return func(context *cli.Context) error {
 		urls := context.Args()
 
-		for _, url := range urls.Slice() {
-			it, err := ctl.Storage.Load(vocab.IRI(url))
+		for _, u := range urls.Slice() {
+			it, err := ctl.Storage.Load(vocab.IRI(u))
 			if err != nil {
-				ctl.Logger.Errorf("Invalid actor url %s: %s", url, err)
+				ctl.Logger.Errorf("Invalid actor url %s: %s", u, err)
 				continue
 			}
 			actor, err := vocab.ToActor(it)
 			if err != nil {
-				ctl.Logger.Errorf("Invalid actor found for url %s: %s", url, err)
+				ctl.Logger.Errorf("Invalid actor found for url %s: %s", u, err)
+				continue
+			}
+
+			if actor, err = oni.GenPrivateKey(ctl.Storage, actor); err != nil {
+				ctl.Logger.Errorf("Invalid actor found for url %s: %s", u, err)
+				continue
+			}
+
+			_, err = ctl.Storage.Save(actor)
+			if err != nil {
+				ctl.Logger.Errorf("Unable to save main actor %s: %s", actor.ID, err)
+				continue
+			}
+		}
+		return nil
+	}
+}
+
+func fixCollectionsAct(ctl *Control) cli.ActionFunc {
+	return func(context *cli.Context) error {
+		urls := context.Args()
+
+		for _, u := range urls.Slice() {
+			it, err := ctl.Storage.Load(vocab.IRI(u))
+			if err != nil {
+				ctl.Logger.Errorf("Invalid actor url %s: %s", u, err)
+				continue
+			}
+			actor, err := vocab.ToActor(it)
+			if err != nil {
+				ctl.Logger.Errorf("Invalid actor found for url %s: %s", u, err)
 				continue
 			}
 			_, err = ctl.Storage.Save(actor)

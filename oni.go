@@ -13,6 +13,7 @@ import (
 	"git.sr.ht/~mariusor/lw"
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/errors"
 	storage "github.com/go-ap/storage-fs"
 )
 
@@ -32,6 +33,35 @@ type oni struct {
 }
 
 type optionFn func(o *oni)
+
+func GenPrivateKey(st FullStorage, actor *vocab.Actor) (*vocab.Actor, error) {
+	prvKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return actor, errors.Annotatef(err, "unable to save Private Key")
+	}
+
+	var it vocab.Item
+	// NOTE(marius): even though we generate the keys, we don't save them if storage reports they exist
+	if it, err = st.SaveKey(actor.GetLink(), prvKey); err != nil {
+		return actor, errors.Annotatef(err, "unable to save Private Key")
+	}
+
+	// NOTE(marius): this generates a new key pair for every run of the service
+	if prvKey, err = rsa.GenerateKey(rand.Reader, 2048); err != nil {
+		return actor, errors.Annotatef(err, "unable to save Private Key")
+	}
+
+	// NOTE(marius): even though we generate the keys, we don't save them if storage reports they exist
+	if it, err = st.SaveKey(actor.GetLink(), prvKey); err != nil {
+		return actor, errors.Annotatef(err, "unable to save Private Key")
+	}
+
+	if actor, err = vocab.ToActor(it); err != nil {
+		return actor, errors.Annotatef(err, "unable to convert saved Item to Actor")
+	}
+
+	return actor, nil
+}
 
 func Oni(initFns ...optionFn) *oni {
 	o := new(oni)
@@ -59,28 +89,15 @@ func Oni(initFns ...optionFn) *oni {
 		}
 
 		if actor.PublicKey.PublicKeyPem == "" {
-			// NOTE(marius): this generates a new key pair for every run of the service
-			prvKey, err := rsa.GenerateKey(rand.Reader, 2048)
-			if err != nil {
-				o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save Private Key")
-				continue
-			}
-
-			// NOTE(marius): even though we generate the keys, we don't save them if storage reports they exist
-			it, err = o.s.SaveKey(actor.GetLink(), prvKey)
-			if err != nil {
-				o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save Private Key")
-				continue
-			}
-
-			actor, err = vocab.ToActor(it)
-			if err != nil {
-				o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to convert saved Item to Actor")
-				continue
+			iri := actor.ID
+			if actor, err = GenPrivateKey(o.s, actor); err != nil {
+				o.l.WithContext(lw.Ctx{"err": err, "id": iri}).Errorf("unable to generate Private Key")
 			}
 		}
 
-		o.a[i] = *actor
+		if actor != nil {
+			o.a[i] = *actor
+		}
 	}
 
 	o.setupRoutes(o.a)
