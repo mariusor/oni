@@ -74,12 +74,13 @@ export class ActivityPubObject extends LitElement {
             margin: 0;
             padding: 0;
             font-size: .8rem;
+            line-height: 1rem;
         }
         .tag ul {
             display: inline-flex;
             flex-wrap: wrap;
-            padding-left: 0;
-            margin-left: 0;
+            padding: 0;
+            margin: 0;
         }
         .tag li {
             display: inline-block;
