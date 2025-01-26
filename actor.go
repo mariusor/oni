@@ -28,7 +28,8 @@ func DefaultActor(iri vocab.IRI) vocab.Actor {
 		PreferredUsername: DefaultValue("oni"),
 		Summary:           DefaultValue(fmt.Sprintf(description, Version)),
 		Inbox:             vocab.Inbox.Of(iri),
-		PublicKey:         PublicKey(iri, nil),
+		// NOTE(marius): we create a blank PublicKey so the server doesn't have outbound federation enabled.
+		PublicKey: PublicKey(iri, nil),
 	}
 
 	return actor
