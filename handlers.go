@@ -780,6 +780,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		)
 
 		processor := processing.New(
+			processing.Async,
 			processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})),
 			processing.WithIRI(baseIRIs...), processing.WithClient(c), processing.WithStorage(o.s),
 			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
