@@ -7,11 +7,10 @@ _image_name=${2:-oni/builder}
 
 _context=$(realpath "${_workdir}")
 
-_builder=$(buildah from docker.io/library/golang:alpine3.19)
+_builder=$(buildah from docker.io/library/golang:1.24-alpine)
 
-buildah config --env DEBIAN_FRONTEND=noninteractive "${_builder}"
 buildah run "${_builder}" /sbin/apk update
-buildah run "${_builder}" /sbin/apk add yarn make openssl
+buildah run "${_builder}" /sbin/apk add yarn make bash openssl
 
 buildah config --env GO111MODULE=on "${_builder}"
 buildah config --env GOWORK=off "${_builder}"
