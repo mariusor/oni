@@ -685,23 +685,21 @@ const MaxItems = 20
 func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
 	accept := new(vocab.Accept)
 	accept.Type = vocab.AcceptType
-	accept.CC = append(accept.CC, vocab.PublicNS)
+	_ = accept.To.Append(f.Actor.GetID())
 	accept.InReplyTo = f.GetID()
 	accept.Object = f.GetID()
 
+	var actor vocab.Actor
 	for _, act := range o.a {
 		if act.ID.Equals(f.Object.GetID(), true) {
+			actor = act
 			accept.Actor = act
+			break
 		}
 	}
 
 	oniOutbox := vocab.Outbox.IRI(accept.Actor)
-	_ = processing.SetIDIfMissing(accept, oniOutbox, nil)
-	if _, err := o.s.Save(accept); err != nil {
-		o.l.Errorf("Failed saving activity %T[%s]: %+s", accept, accept.Type, err)
-		return err
-	}
-	_, err := processing.AcceptActivity(p, accept, oniOutbox)
+	_, err := p.ProcessClientActivity(accept, actor, oniOutbox)
 	if err != nil {
 		o.l.Errorf("Failed processing %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
 		return err
