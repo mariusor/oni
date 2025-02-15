@@ -263,20 +263,20 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 				Href: id.String(),
 			},
 		}
-		vocab.OnObject(result, func(ob *vocab.Object) error {
+		_ = vocab.OnObject(result, func(ob *vocab.Object) error {
 			if vocab.IsNil(ob.URL) {
 				return nil
 			}
 			urls := make(vocab.IRIs, 0)
 			if vocab.IsItemCollection(ob.URL) {
-				vocab.OnItemCollection(ob.URL, func(col *vocab.ItemCollection) error {
+				_ = vocab.OnItemCollection(ob.URL, func(col *vocab.ItemCollection) error {
 					for _, it := range col.Collection() {
 						urls.Append(it.GetLink())
 					}
 					return nil
 				})
 			} else {
-				urls.Append(ob.URL.GetLink())
+				_ = urls.Append(ob.URL.GetLink())
 			}
 
 			for _, u := range urls {
@@ -322,7 +322,7 @@ func HandleHostMeta(o oni) func(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/jrd+json")
 		w.WriteHeader(http.StatusOK)
-		w.Write(dat)
+		_, _ = w.Write(dat)
 		o.l.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
 	}
 }
