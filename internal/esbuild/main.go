@@ -10,7 +10,7 @@ import (
 
 func main() {
 	env := os.Getenv("ENV")
-	isProd := strings.HasPrefix(strings.ToLower(env), "prod")
+	isProd := strings.HasPrefix(strings.ToLower(env), "prod") || strings.HasPrefix(strings.ToLower(env), "qa")
 
 	buildJS(isProd)
 	buildCSS(isProd)
