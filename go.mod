@@ -8,15 +8,15 @@ require (
 	git.sr.ht/~mariusor/ssm v0.0.0-20241220163816-32d18afe7b22
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240519120935-f877e4d97def
 	github.com/elnormous/contenttype v1.0.4
-	github.com/evanw/esbuild v0.25.0
+	github.com/evanw/esbuild v0.25.1
 	github.com/go-ap/activitypub v0.0.0-20250212090640-aeb6499ba581
-	github.com/go-ap/auth v0.0.0-20250215161350-61a8ea3adef5
-	github.com/go-ap/client v0.0.0-20250212093435-5abaf05c43c3
+	github.com/go-ap/auth v0.0.0-20250313174208-1fe284554dd0
+	github.com/go-ap/client v0.0.0-20250313174107-ecce11584a74
 	github.com/go-ap/errors v0.0.0-20250124135319-3da8adefd4a9
-	github.com/go-ap/filters v0.0.0-20250215161313-df9d6de7ad5a
+	github.com/go-ap/filters v0.0.0-20250313173721-b110d9e58d05
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250215163048-bb965f7592b5
-	github.com/go-ap/storage-fs v0.0.0-20250215161651-b9d27f82cecf
+	github.com/go-ap/processing v0.0.0-20250313174258-2dd5917737c7
+	github.com/go-ap/storage-fs v0.0.0-20250316081605-72cfeefed2ec
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/cors v1.2.1
 	github.com/go-fed/httpsig v1.1.0
@@ -24,7 +24,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/openshift/osin v1.0.2-0.20220317075346-0f4d38c6e53f
 	github.com/urfave/cli/v2 v2.27.5
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.28.0
 )
 
 require (
@@ -32,7 +32,7 @@ require (
 	git.sr.ht/~mariusor/mask v0.0.0-20250114195353-98705a6977b7 // indirect
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/bits-and-blooms/bitset v1.20.0 // indirect
+	github.com/bits-and-blooms/bitset v1.22.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
 	github.com/go-ap/cache v0.0.0-20250212092834-8063df8eb5ff // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -49,9 +49,9 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/valyala/fastjson v1.6.4 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	golang.org/x/crypto v0.33.0 // indirect
-	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
 )
