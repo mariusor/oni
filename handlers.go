@@ -477,8 +477,8 @@ var validActivityTypes = vocab.ActivityVocabularyTypes{
 }
 
 var validObjectTypes = vocab.ActivityVocabularyTypes{
-	vocab.NoteType, vocab.ArticleType, vocab.ImageType, vocab.AudioType, vocab.VideoType, /*vocab.DocumentType,*/
-	vocab.EventType, vocab.CollectionOfItems,
+	vocab.NoteType, vocab.ArticleType, vocab.ImageType, vocab.AudioType, vocab.VideoType,
+	vocab.EventType, /*vocab.DocumentType, vocab.CollectionOfItems,*/
 }
 
 func filtersCreateUpdate(ff filters.Checks) bool {
