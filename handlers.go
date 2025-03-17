@@ -604,17 +604,17 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 
 		colFilters = filters.FromValues(r.URL.Query())
 		if vocab.ValidActivityCollection(whichCollection) {
-			obFilters := make(filters.Checks, 0)
-
 			accepts := getRequestAcceptedContentType(r)
 
-			obFilters = append(obFilters, filters.Not(filters.NilID))
 			if accepts(textHTML) {
+				obFilters := make(filters.Checks, 0)
+				obFilters = append(obFilters, filters.Not(filters.NilID))
 				if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
 					if filtersCreateUpdate(colFilters) && !iriHasObjectTypeFilter(iri) {
 						obFilters = append(obFilters, filters.HasType(validObjectTypes...))
 					}
 				}
+				colFilters = append(colFilters, filters.HasType(vocab.CreateType))
 				if len(obFilters) > 0 {
 					colFilters = append(colFilters, filters.Object(obFilters...))
 				}
