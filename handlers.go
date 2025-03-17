@@ -279,7 +279,7 @@ func propNameInIRI(iri vocab.IRI) (bool, string) {
 }
 
 var mediaTypes = vocab.ActivityVocabularyTypes{
-	vocab.ImageType, vocab.AudioType, vocab.VideoType, vocab.DocumentType,
+	vocab.ImageType, vocab.AudioType, vocab.VideoType, /*vocab.DocumentType,*/
 }
 
 func cleanupMediaObjectFromItem(it vocab.Item) error {
