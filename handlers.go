@@ -17,11 +17,11 @@ import (
 	"git.sr.ht/~mariusor/cache"
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/ssm"
-	"github.com/go-ap/client/s2s"
 	ct "github.com/elnormous/contenttype"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/client"
+	"github.com/go-ap/client/s2s"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
 	json "github.com/go-ap/jsonld"
@@ -350,7 +350,7 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 		w.Header().Set("Vary", "Accept")
 		w.WriteHeader(status)
 		if r.Method == http.MethodGet {
-			w.Write(dat)
+			_, _ = w.Write(dat)
 		}
 	}
 }
@@ -424,6 +424,12 @@ func checkAcceptMediaType(accepted ct.MediaType) func(check ...ct.MediaType) boo
 
 var iriNotFound = func(iri vocab.IRI) error {
 	return errors.NotFoundf("%s not found", iri)
+}
+
+func getRequestAcceptedContentType(r *http.Request) func(...ct.MediaType) bool {
+	acceptableMediaTypes := []ct.MediaType{textHTML, jsonLD, activityJson, applicationJson}
+	accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
+	return checkAcceptMediaType(accepted)
 }
 
 func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct.MediaType) bool {
@@ -590,16 +596,21 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		colFilters = filters.FromValues(r.URL.Query())
 		if vocab.ValidActivityCollection(whichCollection) {
 			obFilters := make(filters.Checks, 0)
+
+			accepts := getRequestAcceptedContentType(r)
+
 			obFilters = append(obFilters, filters.Not(filters.NilID))
-			if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
-				if filtersCreateUpdate(colFilters) && !iriHasObjectTypeFilter(iri) {
-					obFilters = append(obFilters, filters.HasType(validObjectTypes...))
+			if accepts(textHTML) {
+				if (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
+					if filtersCreateUpdate(colFilters) && !iriHasObjectTypeFilter(iri) {
+						obFilters = append(obFilters, filters.HasType(validObjectTypes...))
+					}
 				}
+				if len(obFilters) > 0 {
+					colFilters = append(colFilters, filters.Object(obFilters...))
+				}
+				colFilters = append(colFilters, filters.Actor(filters.Not(filters.NilID)))
 			}
-			if len(obFilters) > 0 {
-				colFilters = append(colFilters, filters.Object(obFilters...))
-			}
-			colFilters = append(colFilters, filters.Actor(filters.Not(filters.NilID)))
 		}
 
 		if u, err := iri.URL(); err == nil {
@@ -793,7 +804,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
 		)
 
-		act, err := solver.LoadActorFromRequest(r)
+		author, err := solver.LoadActorFromRequest(r)
 		if err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")
 		}
@@ -825,11 +836,11 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		_ = vocab.OnActivity(it, func(a *vocab.Activity) error {
 			// TODO(marius): this should be handled in the processing package
 			if a.AttributedTo == nil {
-				a.AttributedTo = act
+				a.AttributedTo = author
 			}
 			return nil
 		})
-		if it, err = processor.ProcessActivity(it, act, receivedIn); err != nil {
+		if it, err = processor.ProcessActivity(it, author, receivedIn); err != nil {
 			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed processing activity")
 			err = errors.Annotatef(err, "Can't save %q activity to %s", it.GetType(), receivedIn)
 			return it, errors.HttpStatus(err), err
