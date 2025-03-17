@@ -108,6 +108,12 @@ func (o *oni) setupWebfingerRoutes(m chi.Router) {
 	m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
 }
 
+type corsLogger func(string, ...any)
+
+func (c corsLogger) Printf(f string, v ...interface{}) {
+	c(f, v...)
+}
+
 func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"https://*"},
@@ -117,7 +123,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 		Debug:            true,
 	})
-	c.Log, _ = o.l.WithContext(lw.Ctx{"log": "cors"}).(cors.Logger)
+	c.Log = corsLogger(o.l.WithContext(lw.Ctx{"log": "cors"}).Debugf)
 	m.Group(func(m chi.Router) {
 		m.Use(c.Handler, o.StopBlocked)
 		m.HandleFunc("/*", o.ActivityPubItem)
@@ -330,7 +336,7 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		vocab.OnObject(it, func(o *vocab.Object) error {
+		_ = vocab.OnObject(it, func(o *vocab.Object) error {
 			if vocab.ActivityTypes.Contains(o.Type) {
 				w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(8766*time.Hour.Seconds())))
 			}
@@ -557,6 +563,7 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 			if act.ID != vocab.PublicNS {
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
+						o.l.WithContext(lw.Ctx{"actor": act.ID}).Warnf("blocked")
 						o.Error(errors.Gonef("nothing to see here, please move along")).ServeHTTP(w, r)
 						return
 					}
