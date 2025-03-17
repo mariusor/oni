@@ -279,7 +279,7 @@ func propNameInIRI(iri vocab.IRI) (bool, string) {
 }
 
 var mediaTypes = vocab.ActivityVocabularyTypes{
-	vocab.ImageType, vocab.AudioType, vocab.VideoType, /*vocab.DocumentType,*/
+	vocab.ImageType, vocab.AudioType, vocab.VideoType, vocab.DocumentType,
 }
 
 func cleanupMediaObjectFromItem(it vocab.Item) error {
@@ -315,8 +315,17 @@ func cleanupMediaObjectFromActivity(act *vocab.Activity) error {
 	return nil
 }
 
+func contentHasBinaryData(nlv vocab.NaturalLanguageValues) bool {
+	for _, nv := range nlv {
+		if bytes.HasPrefix(nv.Value, []byte("data:")) {
+			return true
+		}
+	}
+	return false
+}
+
 func cleanupMediaObject(o *vocab.Object) error {
-	if mediaTypes.Contains(o.Type) {
+	if contentHasBinaryData(o.Content) {
 		// NOTE(marius): remove inline content from media ActivityPub objects
 		o.Content = o.Content[:0]
 		if o.URL == nil {
