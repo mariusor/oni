@@ -41,17 +41,6 @@ func GenPrivateKey(st FullStorage, actor *vocab.Actor) (*vocab.Actor, error) {
 	}
 
 	var it vocab.Item
-	// NOTE(marius): even though we generate the keys, we don't save them if storage reports they exist
-	if it, err = st.SaveKey(actor.GetLink(), prvKey); err != nil {
-		return actor, errors.Annotatef(err, "unable to save Private Key")
-	}
-
-	// NOTE(marius): this generates a new key pair for every run of the service
-	if prvKey, err = rsa.GenerateKey(rand.Reader, 2048); err != nil {
-		return actor, errors.Annotatef(err, "unable to save Private Key")
-	}
-
-	// NOTE(marius): even though we generate the keys, we don't save them if storage reports they exist
 	if it, err = st.SaveKey(actor.GetLink(), prvKey); err != nil {
 		return actor, errors.Annotatef(err, "unable to save Private Key")
 	}

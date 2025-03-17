@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"net/url"
 	"oni"
@@ -238,6 +240,19 @@ func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
 }
 
 func rotateKey(ctl *Control) cli.ActionFunc {
+	printKey := func(u string) {
+		pk, _ := ctl.Storage.LoadKey(vocab.IRI(u))
+		if pk != nil {
+			pkEnc, _ := x509.MarshalPKCS8PrivateKey(pk)
+			if pkEnc != nil {
+				pkPem := pem.EncodeToMemory(&pem.Block{
+					Type:  "PRIVATE KEY",
+					Bytes: pkEnc,
+				})
+				fmt.Printf("Private Key: %s\n", pkPem)
+			}
+		}
+	}
 	return func(context *cli.Context) error {
 		urls := context.Args()
 
@@ -252,17 +267,13 @@ func rotateKey(ctl *Control) cli.ActionFunc {
 				ctl.Logger.Errorf("Invalid actor found for url %s: %s", u, err)
 				continue
 			}
+			printKey(u)
 
 			if actor, err = oni.GenPrivateKey(ctl.Storage, actor); err != nil {
 				ctl.Logger.Errorf("Invalid actor found for url %s: %s", u, err)
 				continue
 			}
-
-			_, err = ctl.Storage.Save(actor)
-			if err != nil {
-				ctl.Logger.Errorf("Unable to save main actor %s: %s", actor.ID, err)
-				continue
-			}
+			printKey(u)
 		}
 		return nil
 	}
