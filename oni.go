@@ -206,7 +206,7 @@ func (o *oni) Run(c context.Context) error {
 		},
 		syscall.SIGTERM: func(exit chan<- error) {
 			if o.l != nil {
-				o.l.Infof("SIGITERM received, force stopping")
+				o.l.Infof("SIGTERM received, force stopping")
 			}
 			exit <- nil
 		},

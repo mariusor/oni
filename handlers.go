@@ -645,7 +645,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
-
+	it = vocab.CleanRecipients(it)
 	_ = vocab.OnObject(it, func(o *vocab.Object) error {
 		updatedAt := o.Published
 		if !o.Updated.IsZero() {
