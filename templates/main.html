@@ -8,6 +8,10 @@
     {{- range $key, $value := URLS }}
     <link href="{{ $value }}" rel="me alternate">
     {{- end }}
+    {{- $curURL := CurrentURL  -}}
+    {{- if ne $curURL "" }}
+    <link rel="alternate" type="application/activity+json" href="{{ $curURL }}">
+    {{- end }}
     <script defer src="/main.js"></script>
     <style>script { display: none; } </style>
 </head>

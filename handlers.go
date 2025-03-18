@@ -48,9 +48,10 @@ func (o *oni) Error(err error) http.HandlerFunc {
 		}
 		errs := errors.HttpErrors(err)
 		oniFn := template.FuncMap{
-			"ONI":   func() vocab.Actor { return o.oniActor(r) },
-			"URLS":  actorURLs(o.oniActor(r)),
-			"Title": func() string { return http.StatusText(errors.HttpStatus(err)) },
+			"ONI":        func() vocab.Actor { return o.oniActor(r) },
+			"URLS":       actorURLs(o.oniActor(r)),
+			"Title":      func() string { return http.StatusText(errors.HttpStatus(err)) },
+			"CurrentURL": func() template.HTMLAttr { return "" },
 		}
 		templatePath := "components/errors"
 		wrt := bytes.Buffer{}
@@ -531,6 +532,9 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 			"ONI":   func() vocab.Actor { return oniActor },
 			"URLS":  actorURLs(oniActor),
 			"Title": titleFromActor(oniActor, r),
+			"CurrentURL": func() template.HTMLAttr {
+				return template.HTMLAttr(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
+			},
 		}
 		wrt := bytes.Buffer{}
 		if err := ren.HTML(&wrt, http.StatusOK, templatePath, it, render.HTMLOptions{Funcs: oniFn}); err != nil {
