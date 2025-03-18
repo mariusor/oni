@@ -79,7 +79,7 @@ export class ActivityPubImage extends ActivityPubObject {
                     <img src=${src ?? nothing} title="${alt}" alt="${alt}" />
                 </figure>
                 ${this.renderTag()}
-                ${metadata != nothing ? html`<footer>${metadata}</footer>` : nothing}
+                ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
         `;
     }
 }

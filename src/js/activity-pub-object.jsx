@@ -34,11 +34,8 @@ export class ActivityPubObject extends LitElement {
             padding: 0;
             margin: 0;
         }
-        article header h2 {
-            font-size: 1.2rem;
-        }
         article header h1 {
-            font-size: 1.2rem;
+            font-size: 1.32rem;
         }
         article {
             display: flex;
