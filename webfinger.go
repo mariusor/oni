@@ -304,6 +304,41 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// OauthAuthorizationMetadata is the metadata returned by RFC8414 well known oauth-authorization-server end-point
+//
+// https://datatracker.ietf.org/doc/html/rfc8414#section-3.2
+type OauthAuthorizationMetadata struct {
+	Issuer                                     string   `json:"issuer"`
+	AuthorizationEndpoint                      string   `json:"authorization_endpoint"`
+	TokenEndpoint                              string   `json:"token_endpoint"`
+	TokenEndpointAuthMethodsSupported          []string `json:"token_endpoint_auth_methods_supported,omitempty"`
+	GrantTypesSupported                        []string `json:"grant_types_supported,omitempty"`
+	TokenEndpointAuthSigningAlgValuesSupported []string `json:"token_endpoint_auth_signing_alg_values_supported,omitempty"`
+	ScopesSupported                            []string `json:"scopes_supported,omitempty"`
+	ResponseTypesSupported                     []string `json:"response_types_supported,omitempty"`
+}
+
+func HandleOauthAuthorizationServer(o oni) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		actor := o.oniActor(r)
+		meta := OauthAuthorizationMetadata{
+			Issuer:                            actor.ID.String(),
+			AuthorizationEndpoint:             actor.Endpoints.OauthAuthorizationEndpoint.GetID().String(),
+			TokenEndpoint:                     actor.Endpoints.OauthTokenEndpoint.GetID().String(),
+			GrantTypesSupported:               []string{"authorization_code", "implicit"},
+			TokenEndpointAuthMethodsSupported: []string{"client_secret_basic"},
+			TokenEndpointAuthSigningAlgValuesSupported: []string{},
+			ResponseTypesSupported:                     nil,
+		}
+		data, _ := json.Marshal(meta)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(data)
+		o.l.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
+	}
+}
+
 // HandleHostMeta serves /.well-known/host-meta
 func HandleHostMeta(o oni) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
