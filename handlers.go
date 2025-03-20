@@ -47,6 +47,7 @@ func (o *oni) Error(err error) http.HandlerFunc {
 			return
 		}
 		errs := errors.HttpErrors(err)
+		status := errors.HttpStatus(err)
 		oniFn := template.FuncMap{
 			"ONI":        func() vocab.Actor { return o.oniActor(r) },
 			"URLS":       actorURLs(o.oniActor(r)),
@@ -55,10 +56,11 @@ func (o *oni) Error(err error) http.HandlerFunc {
 		}
 		templatePath := "components/errors"
 		wrt := bytes.Buffer{}
-		if err := ren.HTML(&wrt, http.StatusOK, templatePath, errs, render.HTMLOptions{Funcs: oniFn}); err != nil {
+		if err = ren.HTML(&wrt, status, templatePath, errs, render.HTMLOptions{Funcs: oniFn}); err != nil {
 			errors.HandleError(err).ServeHTTP(w, r)
 			return
 		}
+		w.WriteHeader(status)
 		_, _ = io.Copy(w, &wrt)
 	}
 }
