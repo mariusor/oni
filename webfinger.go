@@ -11,6 +11,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/google/uuid"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -558,8 +559,16 @@ func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Re
 			return
 		}
 
+		body, err := io.ReadAll(r.Body)
+		if err != nil || len(body) == 0 {
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed loading body")
+			o.Error(errors.NewNotValid(err, "unable to read request body")).ServeHTTP(w, r)
+			return
+		}
+		defer logRequest(&o, r.Header, body)
+
 		regReq := ClientRegistrationRequest{}
-		if err := json.NewDecoder(r.Body).Decode(&regReq); err != nil {
+		if err := json.Unmarshal(body, &regReq); err != nil {
 			o.Error(errors.NewBadRequest(err, "invalid RFC7591 payload")).ServeHTTP(w, r)
 			return
 		}
@@ -670,6 +679,7 @@ func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Re
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(resp)
+		o.l.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
 	}
 }
 
