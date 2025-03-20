@@ -48,6 +48,9 @@ func (o *oni) Error(err error) http.HandlerFunc {
 		}
 		errs := errors.HttpErrors(err)
 		status := errors.HttpStatus(err)
+		if status == 0 {
+			status = http.StatusInternalServerError
+		}
 		oniFn := template.FuncMap{
 			"ONI":        func() vocab.Actor { return o.oniActor(r) },
 			"URLS":       actorURLs(o.oniActor(r)),
