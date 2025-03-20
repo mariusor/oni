@@ -218,7 +218,7 @@ func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
 		ctl.Logger.Errorf("Saved object is not a valid OrderedCollection, but %s: %s", items.GetType(), err)
 		return err
 	}
-	vocab.OnCollectionIntf(items, func(col vocab.CollectionInterface) error {
+	_ = vocab.OnCollectionIntf(items, func(col vocab.CollectionInterface) error {
 		collection.TotalItems = col.Count()
 		for _, it := range col.Collection() {
 			// Try saving objects in collection, which would create the collections if they exist
@@ -327,7 +327,8 @@ func blockInstance(ctl *Control) cli.ActionFunc {
 
 		urls := ctx.Args()
 		for _, u := range urls.Slice() {
-			if toBlock, _ := ctl.Storage.Load(vocab.IRI(u)); toBlock == nil {
+			toBlock, _ := ctl.Storage.Load(vocab.IRI(u))
+			if vocab.IsNil(toBlock) {
 				// NOTE(marius): if we don't have a local representation of the blocked item
 				// we invent an empty object that we can block.
 				// This probably needs more investigation to check if we should at least try to remote load.
@@ -335,7 +336,6 @@ func blockInstance(ctl *Control) cli.ActionFunc {
 				if toBlock, err = ctl.Storage.Save(vocab.Object{ID: vocab.IRI(u)}); err != nil {
 					ctl.Logger.Warnf("Unable to save locally the instance to block %s: %s", u, err)
 				}
-
 			}
 
 			blockedIRI := processing.BlockedCollection.IRI(ctl.Service)
