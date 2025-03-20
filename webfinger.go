@@ -560,7 +560,7 @@ func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Re
 
 		regReq := ClientRegistrationRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&regReq); err != nil {
-			o.Error(err).ServeHTTP(w, r)
+			o.Error(errors.NewBadRequest(err, "invalid RFC7591 payload")).ServeHTTP(w, r)
 			return
 		}
 
