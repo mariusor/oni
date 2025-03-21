@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"net/url"
@@ -18,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/valyala/fastjson"
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
@@ -285,7 +286,7 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 			if vocab.IsItemCollection(ob.URL) {
 				_ = vocab.OnItemCollection(ob.URL, func(col *vocab.ItemCollection) error {
 					for _, it := range col.Collection() {
-						urls.Append(it.GetLink())
+						_ = urls.Append(it.GetLink())
 					}
 					return nil
 				})
@@ -440,7 +441,6 @@ type ClientRegistrationRequest struct {
 	// this URL to the end-user if it is provided.  The value of this
 	// field MUST point to a valid web page.  The value of this field MAY
 	// be internationalized, as described in Section 2.2.
-
 	TosURI string `json:"tos_uri,omitempty"`
 
 	// PolicyURI
@@ -486,6 +486,99 @@ type ClientRegistrationRequest struct {
 	// "software_id" SHOULD remain the same for all instances of the
 	// client software.  The "software_id" SHOULD remain the same across
 	SoftwareID *uuid.UUID `json:"software_id,omitempty"`
+}
+
+func loadString(r *fastjson.Value, s *string) error {
+	if r == nil {
+		return nil
+	}
+	*s = r.String()
+	if ls := len(*s); ls > 0 && (*s)[0] == '"' && (*s)[ls-1] == '"' {
+		*s = (*s)[1 : ls-1]
+	}
+	*s = strings.ReplaceAll(*s, "\\/", "/")
+	return nil
+}
+
+func loadStringArray(r *fastjson.Value, st *[]string) error {
+	if r == nil {
+		return nil
+	}
+	switch r.Type() {
+	case fastjson.TypeArray:
+		arr, err := r.Array()
+		if err != nil {
+			return err
+		}
+		for _, vv := range arr {
+			s := ""
+			if _ = loadString(vv, &s); s != "" {
+				*st = append(*st, s)
+			}
+		}
+	case fastjson.TypeString:
+		s := ""
+		if _ = loadString(r, &s); s != "" {
+			*st = append(*st, s)
+		}
+	}
+	return nil
+}
+
+func (c *ClientRegistrationRequest) UnmarshalJSON(data []byte) error {
+	v, err := fastjson.ParseBytes(data)
+	if err != nil {
+		return err
+	}
+	if cn := v.Get("client_name"); cn != nil {
+		_ = loadString(cn, &c.ClientName)
+	}
+	if ci := v.Get("client_uri"); ci != nil {
+		_ = loadString(ci, &c.ClientURI)
+	}
+	if cl := v.Get("logo_uri"); cl != nil {
+		_ = loadString(cl, &c.LogoURI)
+	}
+	if ta := v.Get("token_endpoint_auth_method"); ta != nil {
+		_ = loadString(ta, &c.TokenEndpointAuthMethod)
+	}
+	if s := v.Get("scope"); s != nil {
+		_ = loadString(s, &c.Scope)
+	}
+	if tu := v.Get("tos_uri"); tu != nil {
+		_ = loadString(tu, &c.TosURI)
+	}
+	if pu := v.Get("policy_uri"); pu != nil {
+		_ = loadString(pu, &c.PolicyURI)
+	}
+	if ju := v.Get("jwks_uri"); ju != nil {
+		_ = loadString(ju, &c.JwksURI)
+	}
+	if si := v.Get("software_id"); si != nil {
+		i := ""
+		_ = loadString(si, &i)
+		if u, err := uuid.Parse(i); err == nil {
+			c.SoftwareID = &u
+		}
+	}
+
+	c.RedirectUris = make([]string, 0)
+	if err = loadStringArray(v.Get("redirect_uris"), &c.RedirectUris); err != nil {
+		return err
+	}
+	c.GrantTypes = make([]string, 0)
+	if err = loadStringArray(v.Get("grant_types"), &c.GrantTypes); err != nil {
+		return err
+	}
+	c.ResponseTypes = make([]string, 0)
+	if err = loadStringArray(v.Get("response_types"), &c.ResponseTypes); err != nil {
+		return err
+	}
+	c.Contacts = make([]string, 0)
+	if err = loadStringArray(v.Get("contacts"), &c.Contacts); err != nil {
+		return err
+	}
+	return nil
 }
 
 type ClientRegistrationResponse struct {
