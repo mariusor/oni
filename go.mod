@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	git.sr.ht/~mariusor/cache v0.0.0-20250122165545-14c90d7a9de8
-	git.sr.ht/~mariusor/lw v0.0.0-20250114195945-ba9c7bcca3c1
+	git.sr.ht/~mariusor/lw v0.0.0-20250325163623-1639f3fb0e0d
 	git.sr.ht/~mariusor/ssm v0.0.0-20241220163816-32d18afe7b22
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240519120935-f877e4d97def
 	github.com/elnormous/contenttype v1.0.4
@@ -45,7 +45,7 @@ require (
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/rs/xid v1.6.0 // indirect
-	github.com/rs/zerolog v1.33.0 // indirect
+	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
