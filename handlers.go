@@ -777,11 +777,14 @@ func Client(tr http.RoundTripper, actor vocab.Actor, st processing.KeyLoader, l 
 	if err != nil {
 		cachePath = os.TempDir()
 	}
+	lctx := lw.Ctx{"log": "client"}
 	if tr == nil {
 		tr = &http.Transport{}
 	}
 	if prv, _ := st.LoadKey(actor.ID); prv != nil {
 		tr = &s2s.HTTPSignatureTransport{Base: tr, Key: prv, Actor: &actor}
+		lctx["transport"] = "httpSignatureTransport"
+		lctx["actor"] = actor.GetLink()
 	}
 
 	client.UserAgent = fmt.Sprintf("%s/%s (+%s)", actor.GetLink(), Version, ProjectURL)
@@ -790,7 +793,7 @@ func Client(tr http.RoundTripper, actor vocab.Actor, st processing.KeyLoader, l 
 	}
 
 	return client.New(
-		client.WithLogger(l.WithContext(lw.Ctx{"log": "client"})),
+		client.WithLogger(l.WithContext(lctx)),
 		client.WithHTTPClient(baseClient),
 		client.SkipTLSValidation(true),
 		client.SetDefaultHTTPClient(),
@@ -821,48 +824,55 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		return baseIRIs.Contains(iri)
 	}
 
-	var logFn auth.LoggerFn = func(ctx lw.Ctx, msg string, p ...interface{}) {
-		o.l.WithContext(lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
+	logFn := func(ctx1 lw.Ctx) auth.LoggerFn {
+		return func(ctx lw.Ctx, msg string, p ...interface{}) {
+			o.l.WithContext(ctx1, lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
+		}
 	}
 
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
+		lctx := lw.Ctx{}
 
 		actor := o.oniActor(r)
+		lctx["oni"] = actor.GetLink()
 
-		c := Client(&http.Transport{}, actor, o.s, o.l)
-
+		c := Client(&http.Transport{}, actor, o.s, o.l.WithContext(lctx))
 		solver := auth.ClientResolver(c,
-			auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn),
+			auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn(lctx)),
 			auth.SolverWithLocalIRIFn(isLocalIRI),
 		)
 
 		processor := processing.New(
 			processing.Async,
-			processing.WithLogger(o.l.WithContext(lw.Ctx{"log": "processing"})),
+			processing.WithLogger(o.l.WithContext(lctx, lw.Ctx{"log": "processing"})),
 			processing.WithIRI(baseIRIs...), processing.WithClient(c), processing.WithStorage(o.s),
 			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
 		)
 
 		author, err := solver.LoadActorFromRequest(r)
 		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to load an authorized Actor from request")
+			lctx["err"] = err.Error
+			o.l.WithContext(lctx).Errorf("unable to load an authorized Actor from request")
 		}
 
 		if ok, err := ValidateRequest(r); !ok {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed request validation")
+			lctx["err"] = err.Error
+			o.l.WithContext(lctx).Errorf("failed request validation")
 			return it, errors.HttpStatus(err), err
 		}
 		body, err := io.ReadAll(r.Body)
 		if err != nil || len(body) == 0 {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed loading body")
+			lctx["err"] = err.Error
+			o.l.WithContext(lctx).Errorf("failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
 
 		defer logRequest(o, r.Header, body)
 
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed unmarshalling jsonld body")
+			lctx["err"] = err.Error
+			o.l.WithContext(lctx).Errorf("failed unmarshalling jsonld body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
 		}
 		if vocab.IsNil(it) {
@@ -870,7 +880,8 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		}
 
 		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed initializing the Activity processor")
+			lctx["err"] = err.Error
+			o.l.WithContext(lctx).Errorf("failed initializing the Activity processor")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
 		_ = vocab.OnActivity(it, func(a *vocab.Activity) error {
@@ -881,7 +892,8 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			return nil
 		})
 		if it, err = processor.ProcessActivity(it, author, receivedIn); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed processing activity")
+			lctx["err"] = err.Error
+			o.l.WithContext(lctx).Errorf("failed processing activity")
 			err = errors.Annotatef(err, "Can't save %q activity to %s", it.GetType(), receivedIn)
 			return it, errors.HttpStatus(err), err
 		}
@@ -897,7 +909,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 					})
 					if err != nil {
 						l["err"] = err.Error()
-						o.l.WithContext(l).Errorf("unable to automatically accept follow")
+						o.l.WithContext(lctx, l).Errorf("unable to automatically accept follow")
 					}
 					return ssm.End
 				}))
