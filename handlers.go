@@ -574,17 +574,22 @@ func (o oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore
 	return s.LoadActorFromRequest(r, toIgnore...)
 }
 
+func (o *oni) loadBlockedActors(of vocab.Item) vocab.IRIs {
+	var blocked vocab.IRIs
+	if res, err := o.s.Load(processing.BlockedCollection.IRI(of)); err == nil {
+		_ = vocab.OnCollectionIntf(res, func(col vocab.CollectionInterface) error {
+			blocked = col.Collection().IRIs()
+			return nil
+		})
+	}
+	return blocked
+}
+
 func (o *oni) StopBlocked(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		oniActor := o.oniActor(r)
 
-		if res, err := o.s.Load(processing.BlockedCollection.IRI(oniActor)); err == nil {
-			var blocked vocab.IRIs
-			_ = vocab.OnCollectionIntf(res, func(col vocab.CollectionInterface) error {
-				blocked = col.Collection().IRIs()
-				return nil
-			})
-
+		if blocked := o.loadBlockedActors(oniActor); len(blocked) > 0 {
 			act, _ := o.loadAuthorizedActor(r, oniActor, blocked...)
 			if act.ID != vocab.PublicNS {
 				for _, blockedIRI := range blocked {
@@ -719,28 +724,45 @@ func col(r *http.Request) vocab.CollectionPath {
 const MaxItems = 20
 
 func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
-	accept := new(vocab.Accept)
-	accept.Type = vocab.AcceptType
-	_ = accept.To.Append(f.Actor.GetID())
-	accept.InReplyTo = f.GetID()
-	accept.Object = f.GetID()
-
-	var actor vocab.Actor
+	var accepter vocab.Actor
 	for _, act := range o.a {
-		if act.ID.Equals(f.Object.GetID(), true) {
-			actor = act
-			accept.Actor = act
+		if toBeFollowed := f.Object.GetID(); act.ID.Equals(toBeFollowed, true) {
+			accepter = act
 			break
 		}
 	}
 
-	oniOutbox := vocab.Outbox.IRI(accept.Actor)
-	_, err := p.ProcessClientActivity(accept, actor, oniOutbox)
+	follower := f.Actor.GetID()
+	if vocab.IsNil(accepter) {
+		o.l.Warnf("Follow object does not match any root actor on this ONI instance")
+		return errors.NotFoundf("Follow object Actor not found")
+	}
+
+	if blocks := o.loadBlockedActors(accepter); len(blocks) > 0 {
+		// NOTE(marius): this should not happen as the StopBlock middleware has kicked in before
+		if blocks.Contains(f.Actor) {
+			o.l.WithContext(lw.Ctx{"blocked": follower}).Warnf("Follow actor is blocked")
+			return errors.NotFoundf("Follow object Actor not found")
+		}
+	}
+
+	accept := new(vocab.Accept)
+	accept.Type = vocab.AcceptType
+	_ = accept.To.Append(follower)
+	accept.InReplyTo = f.GetID()
+	accept.Object = f.GetID()
+
+	l := lw.Ctx{"from": follower, "to": accepter}
+
+	f.AttributedTo = accepter.GetLink()
+	accept.Actor = accepter
+	oniOutbox := vocab.Outbox.IRI(accepter)
+	_, err := p.ProcessClientActivity(accept, accepter, oniOutbox)
 	if err != nil {
-		o.l.Errorf("Failed processing %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
+		o.l.WithContext(l).Errorf("Failed processing %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
 		return err
 	}
-	o.l.Infof("Accepted Follow: %s", f.ID)
+	o.l.WithContext(l).Infof("Accepted Follow: %s", f.ID)
 	return nil
 }
 
@@ -870,6 +892,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 					l := lw.Ctx{}
 					err := vocab.OnActivity(it, func(a *vocab.Activity) error {
 						l["from"] = a.Actor.GetLink()
+						l["to"] = a.Object.GetLink()
 						return acceptFollows(*o, *a, processor)
 					})
 					if err != nil {
