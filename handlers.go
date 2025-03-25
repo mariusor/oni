@@ -796,7 +796,6 @@ func Client(tr http.RoundTripper, actor vocab.Actor, st processing.KeyLoader, l 
 		client.WithLogger(l.WithContext(lctx)),
 		client.WithHTTPClient(baseClient),
 		client.SkipTLSValidation(true),
-		client.SetDefaultHTTPClient(),
 	)
 }
 
