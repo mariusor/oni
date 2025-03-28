@@ -37,7 +37,7 @@ func buildJS(prod bool) {
 	result := api.Build(opt)
 
 	if len(result.Errors) > 0 {
-		fmt.Fprintf(os.Stderr, "%v", result.Errors)
+		_, _ = fmt.Fprintf(os.Stderr, "%v", result.Errors)
 	}
 }
 
@@ -61,7 +61,7 @@ func buildCSS(prod bool) {
 	result := api.Build(opt)
 
 	if len(result.Errors) > 0 {
-		fmt.Fprintf(os.Stderr, "%v", result.Errors)
+		_, _ = fmt.Fprintf(os.Stderr, "%v", result.Errors)
 	}
 }
 
