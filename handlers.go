@@ -561,7 +561,7 @@ func (o oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore
 		return act, nil
 	}
 
-	c := Client(&http.Transport{}, oniActor, o.s, o.l)
+	c := Client(auth.AnonymousActor, o.s, o.l)
 	s, err := auth.New(
 		auth.WithIRI(oniActor.GetLink()),
 		auth.WithStorage(o.s),
@@ -772,30 +772,32 @@ func IRIsContain(iris vocab.IRIs) func(i vocab.IRI) bool {
 	}
 }
 
-func Client(tr http.RoundTripper, actor vocab.Actor, st processing.KeyLoader, l lw.Logger) *client.C {
+func Client(actor vocab.Actor, st processing.KeyLoader, l lw.Logger) *client.C {
+	var tr http.RoundTripper = &http.Transport{}
 	cachePath, err := os.UserCacheDir()
 	if err != nil {
 		cachePath = os.TempDir()
 	}
+
 	lctx := lw.Ctx{"log": "client"}
-	if tr == nil {
-		tr = &http.Transport{}
-	}
-	if prv, _ := st.LoadKey(actor.ID); prv != nil {
-		tr = &s2s.HTTPSignatureTransport{Base: tr, Key: prv, Actor: &actor}
-		lctx["transport"] = "httpSignatureTransport"
-		lctx["actor"] = actor.GetLink()
+	if !vocab.PublicNS.Equals(actor.ID, true) {
+		if prv, _ := st.LoadKey(actor.ID); prv != nil {
+			tr = s2s.WrapTransport(tr, &actor, prv)
+			lctx["transport"] = "HTTP-Sig"
+			lctx["actor"] = actor.GetLink()
+		}
 	}
 
-	client.UserAgent = fmt.Sprintf("%s/%s (+%s)", actor.GetLink(), Version, ProjectURL)
+	ua := fmt.Sprintf("%s/%s (+%s)", ProjectURL, Version, actor.GetLink())
 	baseClient := &http.Client{
 		Transport: cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni"))),
 	}
 
 	return client.New(
+		client.WithUserAgent(ua),
 		client.WithLogger(l.WithContext(lctx)),
 		client.WithHTTPClient(baseClient),
-		client.SkipTLSValidation(true),
+		client.SkipTLSValidation(IsDev),
 	)
 }
 
@@ -836,12 +838,16 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		actor := o.oniActor(r)
 		lctx["oni"] = actor.GetLink()
 
-		c := Client(&http.Transport{}, actor, o.s, o.l.WithContext(lctx))
-		solver := auth.ClientResolver(c,
-			auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn(lctx)),
-			auth.SolverWithLocalIRIFn(isLocalIRI),
-		)
+		author := auth.AnonymousActor
+		if ok, err := o.ValidateRequest(r); !ok {
+			lctx["err"] = err.Error()
+			o.l.WithContext(lctx).Errorf("failed request validation")
+			return it, errors.HttpStatus(err), err
+		} else {
+			author, _ = r.Context().Value(authorizedActorCtxKey).(vocab.Actor)
+		}
 
+		c := Client(actor, o.s, o.l.WithContext(lctx, lw.Ctx{"log": "client"}))
 		processor := processing.New(
 			processing.Async,
 			processing.WithLogger(o.l.WithContext(lctx, lw.Ctx{"log": "processing"})),
