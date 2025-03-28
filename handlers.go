@@ -392,7 +392,7 @@ func validActivityCollection(r *http.Request) bool {
 	return validActivityCollections.Contains(processing.Typer.Type(r))
 }
 
-func ValidateRequest(r *http.Request) (bool, error) {
+func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 	contType := r.Header.Get("Content-Type")
 	if r.Method != http.MethodPost {
 		return false, errors.MethodNotAllowedf("invalid HTTP method")
@@ -402,6 +402,35 @@ func ValidateRequest(r *http.Request) (bool, error) {
 	}
 	if !validActivityCollection(r) {
 		return false, errors.NotValidf("invalid collection")
+	}
+
+	baseIRIs := make(vocab.IRIs, 0)
+	for _, act := range o.a {
+		_ = baseIRIs.Append(act.GetID())
+	}
+
+	isLocalIRI := func(iri vocab.IRI) bool {
+		return baseIRIs.Contains(iri)
+	}
+
+	var logFn auth.LoggerFn = func(ctx lw.Ctx, msg string, p ...interface{}) {
+		o.l.WithContext(lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
+	}
+
+	author := auth.AnonymousActor
+	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
+		author = loaded
+	} else {
+		solver := auth.ClientResolver(Client(auth.AnonymousActor, o.s, o.l.WithContext(lw.Ctx{"log": "keyfetch"})),
+			auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn),
+			auth.SolverWithLocalIRIFn(isLocalIRI),
+		)
+
+		author, _ = solver.LoadActorFromRequest(r)
+	}
+
+	if auth.AnonymousActor.ID.Equals(author.ID, true) {
+		return false, errors.Unauthorizedf("authorized Actor is invalid")
 	}
 
 	return true, nil
@@ -590,8 +619,8 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 		oniActor := o.oniActor(r)
 
 		if blocked := o.loadBlockedActors(oniActor); len(blocked) > 0 {
-			act, _ := o.loadAuthorizedActor(r, oniActor, blocked...)
-			if act.ID != vocab.PublicNS {
+			act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor, blocked...)
+			if !vocab.PublicNS.Equals(act.ID, true) {
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
 						o.l.WithContext(lw.Ctx{"actor": act.ID}).Warnf("blocked")
@@ -646,7 +675,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		}
 		colFilters = append(colFilters, filters.WithMaxCount(MaxItems))
 	}
-	if authActor, _ := o.loadAuthorizedActor(r, o.oniActor(r)); authActor.ID != "" {
+	if authActor, _ := o.loadAuthorizedActor(r, auth.AnonymousActor); authActor.ID != "" {
 		colFilters = append(colFilters, filters.Authorized(authActor.ID))
 	}
 
@@ -821,16 +850,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		_ = baseIRIs.Append(act.GetID())
 	}
 
-	isLocalIRI := func(iri vocab.IRI) bool {
-		return baseIRIs.Contains(iri)
-	}
-
-	logFn := func(ctx1 lw.Ctx) auth.LoggerFn {
-		return func(ctx lw.Ctx, msg string, p ...interface{}) {
-			o.l.WithContext(ctx1, lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
-		}
-	}
-
 	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
 		var it vocab.Item
 		lctx := lw.Ctx{}
@@ -855,17 +874,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
 		)
 
-		author, err := solver.LoadActorFromRequest(r)
-		if err != nil {
-			lctx["err"] = err.Error
-			o.l.WithContext(lctx).Errorf("unable to load an authorized Actor from request")
-		}
-
-		if ok, err := ValidateRequest(r); !ok {
-			lctx["err"] = err.Error
-			o.l.WithContext(lctx).Errorf("failed request validation")
-			return it, errors.HttpStatus(err), err
-		}
 		body, err := io.ReadAll(r.Body)
 		if err != nil || len(body) == 0 {
 			lctx["err"] = err.Error()
@@ -889,13 +897,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.l.WithContext(lctx).Errorf("failed initializing the Activity processor")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
-		_ = vocab.OnActivity(it, func(a *vocab.Activity) error {
-			// TODO(marius): this should be handled in the processing package
-			if a.AttributedTo == nil {
-				a.AttributedTo = author
-			}
-			return nil
-		})
 		if it, err = processor.ProcessActivity(it, author, receivedIn); err != nil {
 			lctx["err"] = err.Error()
 			o.l.WithContext(lctx).Errorf("failed processing activity")
