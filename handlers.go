@@ -868,7 +868,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		}
 		body, err := io.ReadAll(r.Body)
 		if err != nil || len(body) == 0 {
-			lctx["err"] = err.Error
+			lctx["err"] = err.Error()
 			o.l.WithContext(lctx).Errorf("failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
@@ -876,7 +876,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		defer logRequest(o, r.Header, body)
 
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
-			lctx["err"] = err.Error
+			lctx["err"] = err.Error()
 			o.l.WithContext(lctx).Errorf("failed unmarshalling jsonld body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
 		}
@@ -885,7 +885,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		}
 
 		if err != nil {
-			lctx["err"] = err.Error
+			lctx["err"] = err.Error()
 			o.l.WithContext(lctx).Errorf("failed initializing the Activity processor")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
@@ -897,7 +897,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			return nil
 		})
 		if it, err = processor.ProcessActivity(it, author, receivedIn); err != nil {
-			lctx["err"] = err.Error
+			lctx["err"] = err.Error()
 			o.l.WithContext(lctx).Errorf("failed processing activity")
 			err = errors.Annotatef(err, "Can't save %q activity to %s", it.GetType(), receivedIn)
 			return it, errors.HttpStatus(err), err
