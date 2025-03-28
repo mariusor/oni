@@ -267,9 +267,8 @@ func rotateKey(ctl *Control) cli.ActionFunc {
 				ctl.Logger.Errorf("Invalid actor found for url %s: %s", u, err)
 				continue
 			}
-			printKey(u)
 
-			if actor, err = oni.GenPrivateKey(ctl.Storage, actor); err != nil {
+			if actor, err = oni.UpdateActorKey(ctl.Storage, ctl.Logger, actor); err != nil {
 				ctl.Logger.Errorf("Invalid actor found for url %s: %s", u, err)
 				continue
 			}

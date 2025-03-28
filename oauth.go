@@ -2,7 +2,6 @@ package oni
 
 import (
 	"bytes"
-	"crypto"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -36,18 +35,14 @@ type ClientLister interface {
 	GetClient(id string) (osin.Client, error)
 }
 
-type KeySaver interface {
-	SaveKey(vocab.IRI, crypto.PrivateKey) (vocab.Item, error)
-}
-
 type FullStorage interface {
 	ClientSaver
 	ClientLister
 	PasswordChanger
-	KeySaver
 	osin.Storage
 	processing.Store
 	processing.KeyLoader
+	MetadataTyper
 }
 
 type PasswordChanger interface {

@@ -4,6 +4,9 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,7 +16,9 @@ import (
 	"git.sr.ht/~mariusor/lw"
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/auth"
 	"github.com/go-ap/errors"
+	"github.com/go-ap/processing"
 	storage "github.com/go-ap/storage-fs"
 )
 
@@ -34,19 +39,84 @@ type oni struct {
 
 type optionFn func(o *oni)
 
-func GenPrivateKey(st FullStorage, actor *vocab.Actor) (*vocab.Actor, error) {
-	prvKey, err := rsa.GenerateKey(rand.Reader, 2048)
+func UpdateActorKey(st FullStorage, l lw.Logger, actor *vocab.Actor) (*vocab.Actor, error) {
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return actor, errors.Annotatef(err, "unable to save Private Key")
 	}
 
-	var it vocab.Item
-	if it, err = st.SaveKey(actor.GetLink(), prvKey); err != nil {
-		return actor, errors.Annotatef(err, "unable to save Private Key")
+	typ := actor.GetType()
+	if !vocab.ActorTypes.Contains(typ) {
+		return actor, errors.Newf("trying to generate keys for invalid ActivityPub object type: %s", typ)
 	}
 
-	if actor, err = vocab.ToActor(it); err != nil {
-		return actor, errors.Annotatef(err, "unable to convert saved Item to Actor")
+	iri := actor.ID
+
+	m, err := st.LoadMetadata(iri)
+	if err != nil && !errors.IsNotFound(err) {
+		return actor, err
+	}
+	if m == nil {
+		m = new(auth.Metadata)
+	}
+	if m.PrivateKey != nil {
+		l.Debugf("actor %s already has a private key", iri)
+	}
+
+	prvEnc, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		l.Errorf("unable to x509.MarshalPKCS8PrivateKey() the private key %T for %s", key, iri)
+		return actor, err
+	}
+
+	pub := key.Public()
+	pubEnc, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		l.Errorf("unable to x509.MarshalPKIXPublicKey() the private key %T for %s", pub, iri)
+		return actor, err
+	}
+	pubEncoded := pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: pubEnc,
+	})
+
+	actor.PublicKey = vocab.PublicKey{
+		ID:           vocab.IRI(fmt.Sprintf("%s#main", iri)),
+		Owner:        iri,
+		PublicKeyPem: string(pubEncoded),
+	}
+
+	c := Client(*actor, st, l.WithContext(lw.Ctx{"log": "client"}))
+	p := processing.New(
+		processing.Async, processing.WithIDGenerator(GenerateID),
+		processing.WithLogger(l.WithContext(lw.Ctx{"log": "processing"})),
+		processing.WithIRI(actor.ID), processing.WithClient(c), processing.WithStorage(st),
+		processing.WithLocalIRIChecker(IRIsContain(vocab.IRIs{actor.ID})),
+	)
+
+	followers := vocab.Followers.IRI(actor)
+	outbox := vocab.Outbox.IRI(actor)
+	upd := new(vocab.Activity)
+	upd.Type = vocab.UpdateType
+	upd.Actor = actor.GetLink()
+	upd.Object = actor
+	upd.Published = time.Now().UTC()
+	upd.To = vocab.ItemCollection{vocab.PublicNS}
+	upd.CC = vocab.ItemCollection{followers}
+
+	_, err = p.ProcessClientActivity(upd, *actor, outbox)
+	if err != nil {
+		return actor, err
+	}
+
+	m.PrivateKey = pem.EncodeToMemory(&pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: prvEnc,
+	})
+
+	if err = st.SaveMetadata(*m, iri); err != nil {
+		l.Errorf("unable to save the private key %T for %s", key, iri)
+		return actor, err
 	}
 
 	return actor, nil
@@ -79,7 +149,7 @@ func Oni(initFns ...optionFn) *oni {
 
 		if actor.PublicKey.PublicKeyPem == "" {
 			iri := actor.ID
-			if actor, err = GenPrivateKey(o.s, actor); err != nil {
+			if actor, err = UpdateActorKey(o.s, o.l, actor); err != nil {
 				o.l.WithContext(lw.Ctx{"err": err, "id": iri}).Errorf("unable to generate Private Key")
 			}
 		}
