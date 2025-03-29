@@ -170,6 +170,10 @@ func WithLogger(l lw.Logger) optionFn {
 func LoadActor(items ...vocab.Item) optionFn {
 	a := make([]vocab.Actor, 0)
 	for _, it := range items {
+		if act, err := vocab.ToActor(it); err == nil {
+			a = append(a, *act)
+			continue
+		}
 		if vocab.IsIRI(it) {
 			a = append(a, DefaultActor(it.GetLink()))
 		}
@@ -210,11 +214,11 @@ func WithStoragePath(st string) optionFn {
 }
 
 func iris(list ...vocab.Actor) vocab.IRIs {
-	urls := vocab.IRIs{}
+	urls := make(vocab.ItemCollection, 0, len(list))
 	for _, a := range list {
-		urls = append(urls, a.GetLink())
+		urls = append(urls, a)
 	}
-	return urls
+	return urls.IRIs()
 }
 
 // Run is the wrapper for starting the web-server and handling signals

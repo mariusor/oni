@@ -10,13 +10,13 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.1
 	github.com/go-ap/activitypub v0.0.0-20250212090640-aeb6499ba581
-	github.com/go-ap/auth v0.0.0-20250327125140-728f6078848a
-	github.com/go-ap/client v0.0.0-20250327123330-d621aba0697a
+	github.com/go-ap/auth v0.0.0-20250329152007-c2d58d59fecd
+	github.com/go-ap/client v0.0.0-20250329151908-0ddd35fff4fb
 	github.com/go-ap/errors v0.0.0-20250124135319-3da8adefd4a9
 	github.com/go-ap/filters v0.0.0-20250327124545-0df3f4a5cc88
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250327130747-ca4381b92828
-	github.com/go-ap/storage-fs v0.0.0-20250327131059-abfbda9948f1
+	github.com/go-ap/processing v0.0.0-20250329152025-0f003fa4f47a
+	github.com/go-ap/storage-fs v0.0.0-20250329152047-7498a4db2134
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/cors v1.2.1
 	github.com/google/uuid v1.6.0
@@ -50,7 +50,7 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect

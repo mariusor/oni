@@ -781,7 +781,7 @@ func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
 	accept.InReplyTo = f.GetID()
 	accept.Object = f.GetID()
 
-	l := lw.Ctx{"from": follower, "to": accepter}
+	l := lw.Ctx{"from": follower.GetLink(), "to": accepter.GetLink()}
 
 	f.AttributedTo = accepter.GetLink()
 	accept.Actor = accepter
@@ -811,7 +811,7 @@ func Client(actor vocab.Actor, st processing.KeyLoader, l lw.Logger) *client.C {
 	lctx := lw.Ctx{"log": "client"}
 	if !vocab.PublicNS.Equals(actor.ID, true) {
 		if prv, _ := st.LoadKey(actor.ID); prv != nil {
-			tr = s2s.WrapTransport(tr, &actor, prv)
+			tr = s2s.New(s2s.WithTransport(tr), s2s.WithActor(&actor, prv), s2s.WithLogger(l.WithContext(lw.Ctx{"log": "HTTP-Sig"})))
 			lctx["transport"] = "HTTP-Sig"
 			lctx["actor"] = actor.GetLink()
 		}

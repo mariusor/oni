@@ -34,7 +34,7 @@ func loadAccountsFromStorage(base string) (vocab.ItemCollection, error) {
 	urls := make(vocab.ItemCollection, 0)
 	err := filepath.WalkDir(base, func(file string, d fs.DirEntry, err error) error {
 		if maybeActor, ok := maybeLoadServiceActor(path, file); ok {
-			urls = append(urls, maybeActor.ID)
+			urls = append(urls, maybeActor)
 		}
 		return nil
 	})
