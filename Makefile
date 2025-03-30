@@ -12,6 +12,7 @@ LDFLAGS ?= -X main.version=$(VERSION)
 BUILDFLAGS ?= -a -ldflags '$(LDFLAGS)' -tags "$(TAGS)"
 TEST_FLAGS ?= -count=1
 
+UPX ?= upx
 YARN ?= yarn
 GO ?= go
 GO_SOURCES := $(wildcard ./*.go)
@@ -55,10 +56,16 @@ go.sum: go.mod
 $(PROJECT_NAME): go.mod bin/$(PROJECT_NAME)
 bin/$(PROJECT_NAME): cmd/oni/main.go $(GO_SOURCES) go.mod go.sum static/main.css static/main.js static/icons.svg
 	$(BUILD) -o $@ cmd/oni/main.go
+ifneq ($(ENV),dev)
+	$(UPX) --best $@
+endif
 
 ctl: bin/ctl
 bin/ctl: go.mod go.sum cmd/ctl/main.go $(GO_SOURCES)
 	$(BUILD) -o $@ cmd/ctl/main.go
+ifneq ($(ENV),dev)
+	$(UPX) --best $@
+endif
 
 yarn.lock:
 	$(YARN) install
