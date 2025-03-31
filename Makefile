@@ -57,14 +57,14 @@ $(PROJECT_NAME): go.mod bin/$(PROJECT_NAME)
 bin/$(PROJECT_NAME): cmd/oni/main.go $(GO_SOURCES) go.mod go.sum static/main.css static/main.js static/icons.svg
 	$(BUILD) -o $@ cmd/oni/main.go
 ifneq ($(ENV),dev)
-	$(UPX) --best $@
+	$(UPX) --best $@ || true
 endif
 
 ctl: bin/ctl
 bin/ctl: go.mod go.sum cmd/ctl/main.go $(GO_SOURCES)
 	$(BUILD) -o $@ cmd/ctl/main.go
 ifneq ($(ENV),dev)
-	$(UPX) --best $@
+	$(UPX) --best $@ || true
 endif
 
 yarn.lock:
