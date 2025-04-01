@@ -427,6 +427,7 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 		)
 
 		author, _ = solver.LoadActorFromRequest(r)
+		*r = *r.WithContext(context.WithValue(r.Context(), authorizedActorCtxKey, author))
 	}
 
 	if auth.AnonymousActor.ID.Equals(author.ID, true) {
@@ -618,8 +619,10 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		oniActor := o.oniActor(r)
 
-		if blocked := o.loadBlockedActors(oniActor); len(blocked) > 0 {
-			act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor, blocked...)
+		blocked := o.loadBlockedActors(oniActor)
+		act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor, blocked...)
+		r = r.WithContext(context.WithValue(r.Context(), authorizedActorCtxKey, act))
+		if len(blocked) > 0 {
 			if !vocab.PublicNS.Equals(act.ID, true) {
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
@@ -629,9 +632,7 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 					}
 				}
 			}
-			r = r.WithContext(context.WithValue(r.Context(), authorizedActorCtxKey, act))
 		}
-
 		next.ServeHTTP(w, r)
 	})
 }
@@ -863,7 +864,9 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.l.WithContext(lctx).Errorf("failed request validation")
 			return it, errors.HttpStatus(err), err
 		} else {
-			author, _ = r.Context().Value(authorizedActorCtxKey).(vocab.Actor)
+			if stored, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
+				author = stored
+			}
 		}
 
 		c := Client(actor, o.s, o.l.WithContext(lctx, lw.Ctx{"log": "client"}))
