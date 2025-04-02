@@ -342,12 +342,13 @@ ActivityPubObject.renderByMediaType = function (it, inline) {
 }
 
 ActivityPubObject.renderByType = async function (it, showMetadata) {
-    if (it == null ) {
+    if (it === null) {
         return nothing;
     }
 
     if (typeof it === 'string') {
         it = await fetchActivityPubIRI(it);
+        if (it === null) return nothing;
     }
 
     if (!it.hasOwnProperty('type')) {
