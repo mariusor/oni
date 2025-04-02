@@ -4,10 +4,11 @@
 
 _workdir=${1:-../}
 _image_name=${2:-oni/builder}
+_go_version=${GO_VERSION:-1.24}
 
 _context=$(realpath "${_workdir}")
 
-_builder=$(buildah from docker.io/library/golang:1.24-alpine)
+_builder=$(buildah from docker.io/library/golang:${_go_version})
 
 buildah run "${_builder}" /sbin/apk update
 buildah run "${_builder}" /sbin/apk add yarn make bash openssl upx
