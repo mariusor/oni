@@ -1,6 +1,6 @@
 module oni
 
-go 1.23.0
+go 1.24.0
 
 require (
 	git.sr.ht/~mariusor/cache v0.0.0-20250122165545-14c90d7a9de8
@@ -16,7 +16,7 @@ require (
 	github.com/go-ap/filters v0.0.0-20250327124545-0df3f4a5cc88
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-ap/processing v0.0.0-20250401102842-a6c3d3683560
-	github.com/go-ap/storage-fs v0.0.0-20250401110153-10a43c9fa1d4
+	github.com/go-ap/storage-fs v0.0.0-20250408193750-d731c33eebb7
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/cors v1.2.1
 	github.com/google/uuid v1.6.0
@@ -25,7 +25,7 @@ require (
 	github.com/openshift/osin v1.0.2-0.20220317075346-0f4d38c6e53f
 	github.com/urfave/cli/v2 v2.27.5
 	github.com/valyala/fastjson v1.6.4
-	golang.org/x/oauth2 v0.28.0
+	golang.org/x/oauth2 v0.29.0
 )
 
 require (
@@ -49,9 +49,9 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/crypto v0.37.0 // indirect
+	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/text v0.24.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
 )
