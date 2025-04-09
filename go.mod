@@ -9,14 +9,14 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20240519120935-f877e4d97def
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.1
-	github.com/go-ap/activitypub v0.0.0-20250212090640-aeb6499ba581
-	github.com/go-ap/auth v0.0.0-20250401105142-5b0d96ee4510
-	github.com/go-ap/client v0.0.0-20250401102605-7f23112c7c13
-	github.com/go-ap/errors v0.0.0-20250124135319-3da8adefd4a9
-	github.com/go-ap/filters v0.0.0-20250327124545-0df3f4a5cc88
+	github.com/go-ap/activitypub v0.0.0-20250409143848-7113328b1f3d
+	github.com/go-ap/auth v0.0.0-20250409144154-5b90f4f02389
+	github.com/go-ap/client v0.0.0-20250409144111-73642f11a3cf
+	github.com/go-ap/errors v0.0.0-20250409143711-5686c11ae650
+	github.com/go-ap/filters v0.0.0-20250409144015-c6cbbadeefe4
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250401102842-a6c3d3683560
-	github.com/go-ap/storage-fs v0.0.0-20250408193750-d731c33eebb7
+	github.com/go-ap/processing v0.0.0-20250409144309-b7bd9397ac3a
+	github.com/go-ap/storage-fs v0.0.0-20250409144758-e3bdce89fccf
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/cors v1.2.1
 	github.com/google/uuid v1.6.0
@@ -35,7 +35,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
-	github.com/go-ap/cache v0.0.0-20250212092834-8063df8eb5ff // indirect
+	github.com/go-ap/cache v0.0.0-20250409143941-46ead8c57c50 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
