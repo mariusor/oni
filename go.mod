@@ -6,7 +6,7 @@ require (
 	git.sr.ht/~mariusor/cache v0.0.0-20250122165545-14c90d7a9de8
 	git.sr.ht/~mariusor/lw v0.0.0-20250325163623-1639f3fb0e0d
 	git.sr.ht/~mariusor/ssm v0.0.0-20241220163816-32d18afe7b22
-	git.sr.ht/~mariusor/wrapper v0.0.0-20240519120935-f877e4d97def
+	git.sr.ht/~mariusor/wrapper v0.0.0-20250414202025-7af98c35299c
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.1
 	github.com/go-ap/activitypub v0.0.0-20250409143848-7113328b1f3d
@@ -16,7 +16,7 @@ require (
 	github.com/go-ap/filters v0.0.0-20250409144015-c6cbbadeefe4
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-ap/processing v0.0.0-20250409144309-b7bd9397ac3a
-	github.com/go-ap/storage-fs v0.0.0-20250409144758-e3bdce89fccf
+	github.com/go-ap/storage-fs v0.0.0-20250414135724-28ce9aff7dd4
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/cors v1.2.1
 	github.com/google/uuid v1.6.0

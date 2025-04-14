@@ -129,6 +129,13 @@ func Oni(initFns ...optionFn) *oni {
 		fn(o)
 	}
 
+	if opener, ok := o.s.(interface{ Open() error }); ok {
+		if err := opener.Open(); err != nil {
+			o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to open storage")
+			return o
+		}
+	}
+
 	localURLs := make(vocab.IRIs, 0, len(o.a))
 	for i, act := range o.a {
 		it, err := o.s.Load(act.GetLink())
@@ -227,6 +234,10 @@ func (o *oni) Run(c context.Context) error {
 	ctx, cancelFn := context.WithTimeout(c, o.TimeOut)
 	defer cancelFn()
 
+	if closer, ok := o.s.(interface{ Close() }); ok {
+		defer closer.Close()
+	}
+
 	sockType := ""
 	setters := []w.SetFn{w.Handler(o.m)}
 
@@ -238,7 +249,7 @@ func (o *oni) Run(c context.Context) error {
 		if _, err := os.Stat(dir); err == nil {
 			sockType = "socket"
 			setters = append(setters, w.OnSocket(o.Listen))
-			defer func() { os.RemoveAll(o.Listen) }()
+			defer func() { _ = os.RemoveAll(o.Listen) }()
 		}
 	} else {
 		sockType = "TCP"

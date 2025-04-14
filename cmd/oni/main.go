@@ -103,8 +103,8 @@ func main() {
 
 	err = oni.Oni(
 		oni.WithLogger(log),
-		oni.LoadActor(urls...),
 		oni.WithStoragePath(path),
+		oni.LoadActor(urls...),
 		oni.ListenOn(listen),
 	).Run(context.Background())
 
