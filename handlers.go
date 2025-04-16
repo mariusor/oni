@@ -128,8 +128,9 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders:   []string{"*"},
 		AllowCredentials: true,
+		AllowOriginFunc:  checkOriginForBlockedActors,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
-		Debug:            true,
+		Debug:            IsDev,
 	})
 	c.Log = corsLogger(o.l.WithContext(lw.Ctx{"log": "cors"}).Debugf)
 	m.Group(func(m chi.Router) {
@@ -585,6 +586,7 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 }
 
 const authorizedActorCtxKey = "__authorizedActor"
+const blockedActorsCtxKey = "__blockedActors"
 
 func (o oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore ...vocab.IRI) (vocab.Actor, error) {
 	if act, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
@@ -604,6 +606,19 @@ func (o oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore
 	return s.LoadActorFromRequest(r, toIgnore...)
 }
 
+func checkOriginForBlockedActors(r *http.Request, origin string) bool {
+	blocked, ok := r.Context().Value(blockedActorsCtxKey).(vocab.IRIs)
+	if ok {
+		oIRI := vocab.IRI(origin)
+		for _, b := range blocked {
+			if b.Contains(oIRI, false) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (o *oni) loadBlockedActors(of vocab.Item) vocab.IRIs {
 	var blocked vocab.IRIs
 	if res, err := o.s.Load(processing.BlockedCollection.IRI(of)); err == nil {
@@ -621,7 +636,10 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 
 		blocked := o.loadBlockedActors(oniActor)
 		act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor, blocked...)
-		r = r.WithContext(context.WithValue(r.Context(), authorizedActorCtxKey, act))
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, authorizedActorCtxKey, act)
+		ctx = context.WithValue(ctx, blockedActorsCtxKey, blocked)
+		r = r.WithContext(ctx)
 		if len(blocked) > 0 {
 			if !vocab.PublicNS.Equals(act.ID, true) {
 				for _, blockedIRI := range blocked {

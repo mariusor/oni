@@ -187,7 +187,9 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 
 	s, err := authServer(o, a)
 	if err != nil {
-		o.l.Errorf("unable to initialize OAuth2 server")
+		o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to initialize OAuth2 server")
+		o.Error(err).ServeHTTP(w, r)
+		return
 	}
 
 	resp := s.NewResponse()

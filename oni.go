@@ -231,12 +231,7 @@ func iris(list ...vocab.Actor) vocab.IRIs {
 // Run is the wrapper for starting the web-server and handling signals
 func (o *oni) Run(c context.Context) error {
 	// Create a deadline to wait for.
-	ctx, cancelFn := context.WithTimeout(c, o.TimeOut)
-	defer cancelFn()
-
-	if closer, ok := o.s.(interface{ Close() }); ok {
-		defer closer.Close()
-	}
+	ctx, cancelFn := context.WithCancel(c)
 
 	sockType := ""
 	setters := []w.SetFn{w.Handler(o.m)}
@@ -270,12 +265,20 @@ func (o *oni) Run(c context.Context) error {
 		o.l.WithContext(logCtx).Infof("Started")
 	}
 
-	stopFn := func() {
-		if err := srvStop(ctx); err != nil {
-			o.l.WithContext(logCtx).Errorf("%+v", err)
+	stopFn := func(ctx context.Context) {
+		o.s.Close()
+		err := srvStop(ctx)
+		if o.l != nil {
+			ll := o.l.WithContext(logCtx)
+			if err != nil {
+				ll.Errorf("%+v", err)
+			} else {
+				ll.Infof("Stopped")
+			}
 		}
+		cancelFn()
 	}
-	defer stopFn()
+	defer stopFn(ctx)
 
 	err := w.RegisterSignalHandlers(w.SignalHandlers{
 		syscall.SIGHUP: func(_ chan<- error) {
@@ -299,6 +302,7 @@ func (o *oni) Run(c context.Context) error {
 			if o.l != nil {
 				o.l.Infof("SIGQUIT received, force stopping with core-dump")
 			}
+			cancelFn()
 			exit <- nil
 		},
 	}).Exec(ctx, srvRun)
