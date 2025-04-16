@@ -130,7 +130,6 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 		o.l.Errorf("unable to initialize OAuth2 server")
 	}
 	resp := s.NewResponse()
-	defer resp.Close()
 
 	if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
 		if r.Method == http.MethodGet {
@@ -193,7 +192,6 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := s.NewResponse()
-	defer resp.Close()
 
 	actor := &auth.AnonymousActor
 	if ar := s.HandleAccessRequest(resp, r); ar != nil {
