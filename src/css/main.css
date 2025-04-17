@@ -164,3 +164,7 @@ oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-tag {
 p {
     margin: unset;
 }
+
+code {
+    white-space: pre-wrap;
+}
