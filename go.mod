@@ -16,7 +16,7 @@ require (
 	github.com/go-ap/filters v0.0.0-20250409144015-c6cbbadeefe4
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-ap/processing v0.0.0-20250409144309-b7bd9397ac3a
-	github.com/go-ap/storage-fs v0.0.0-20250414135724-28ce9aff7dd4
+	github.com/go-ap/storage-fs v0.0.0-20250418065925-56b92d352b12
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/cors v1.2.1
 	github.com/google/uuid v1.6.0
