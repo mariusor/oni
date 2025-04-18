@@ -13,6 +13,10 @@ export class NaturalLanguageValues extends LitElement {
             display: inline-block; 
             margin: 0;
         }
+        pre {
+            max-width: 100%;
+            white-space: pre-wrap;
+        }
     `, ActivityPubObject.styles];
 
     static properties = {

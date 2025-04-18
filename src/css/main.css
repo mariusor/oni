@@ -146,6 +146,10 @@ oni-icon {
     fill: currentColor;
 }
 
+p {
+    margin: unset;
+}
+
 oni-natural-language-values, oni-icon {
     display: inline-block;
 }
@@ -159,12 +163,4 @@ oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-tag {
     margin-top: 1rem;
     display: flex;
     flex-direction: column;
-}
-
-p {
-    margin: unset;
-}
-
-code {
-    white-space: pre-wrap;
 }

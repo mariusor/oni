@@ -17,14 +17,17 @@ export class OniMainActor extends ActivityPubActor {
             background-size: cover;
             background-clip: padding-box;
             display: grid;
-            grid-template-columns: 1fr 6fr;
             gap: 2em;
+            justify-content: start;
+            align-items: center;
+            justify-items: start;
             grid-template-areas: "icon description";
+            grid-template-columns: minmax(0, min-content) auto;
         }
         section header {
             grid-area: description;
-            align-self: end;
             width: 90%;
+            min-width: 0;
         }
         header h1 {
             margin: .2rem 0;
@@ -34,7 +37,8 @@ export class OniMainActor extends ActivityPubActor {
             text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
         }
         section > a {
-            grid-area: "icon";
+            min-width: 0;
+            grid-area: icon;
             text-decoration: none;
             display: inline-block;
             align-self: start;
@@ -45,7 +49,6 @@ export class OniMainActor extends ActivityPubActor {
             shape-outside: margin-box;
             box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
-            width: 100%;
             max-height: 14em;
             margin-bottom: -1.4rem;
         }
