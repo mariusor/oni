@@ -81,7 +81,9 @@ func (o *oni) setupRoutes(actors []vocab.Actor) {
 		m.HandleFunc("/", o.NotFound)
 		return
 	}
+	m.Use(o.OutOfOrderMw)
 	m.Use(Log(o.l))
+
 	o.setupActivityPubRoutes(m)
 	o.setupOauthRoutes(m)
 	o.setupStaticRoutes(m)
@@ -966,4 +968,16 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 		return it, status, nil
 	}
+}
+
+var InMaintenanceMode bool = false
+
+func (o *oni) OutOfOrderMw(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if InMaintenanceMode {
+			o.Error(errors.ServiceUnavailablef("temporarily out of order")).ServeHTTP(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }

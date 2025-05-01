@@ -283,24 +283,30 @@ func (o *oni) Run(c context.Context) error {
 	err := w.RegisterSignalHandlers(w.SignalHandlers{
 		syscall.SIGHUP: func(_ chan<- error) {
 			if o.l != nil {
-				o.l.Infof("SIGHUP received, reloading configuration")
+				o.l.Debugf("SIGHUP received, reloading configuration")
+			}
+		},
+		syscall.SIGUSR1: func(_ chan<- error) {
+			InMaintenanceMode = !InMaintenanceMode
+			if o.l != nil {
+				o.l.WithContext(lw.Ctx{"maintenance": InMaintenanceMode}).Debugf("SIGUSR1 received")
 			}
 		},
 		syscall.SIGINT: func(exit chan<- error) {
 			if o.l != nil {
-				o.l.Infof("SIGINT received, stopping")
+				o.l.Debugf("SIGINT received, stopping")
 			}
 			exit <- nil
 		},
 		syscall.SIGTERM: func(exit chan<- error) {
 			if o.l != nil {
-				o.l.Infof("SIGTERM received, force stopping")
+				o.l.Debugf("SIGTERM received, force stopping")
 			}
 			exit <- nil
 		},
 		syscall.SIGQUIT: func(exit chan<- error) {
 			if o.l != nil {
-				o.l.Infof("SIGQUIT received, force stopping with core-dump")
+				o.l.Debugf("SIGQUIT received, force stopping with core-dump")
 			}
 			cancelFn()
 			exit <- nil
