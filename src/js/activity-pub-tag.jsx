@@ -1,5 +1,6 @@
 import {html, nothing} from "lit";
 import {ActivityPubNote} from "./activity-pub-note";
+import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubTag extends ActivityPubNote {
     static styles = ActivityPubNote.styles;
@@ -26,7 +27,10 @@ export class ActivityPubTag extends ActivityPubNote {
             const header = this.it.getName().length + this.it.getSummary().length > 0 ? html`
             <header>${name}${summary}</header>` : nothing;
 
-            return html`<article>${header} ${this.renderContent()}</article><footer>${this.renderMetadata()}</footer>`;
+            return html`
+                <article>${header} ${this.renderContent()}</article>
+                <footer>${this.renderMetadata()}</footer>
+                ${until(this.renderReplies())}`;
         }
         return html`<a rel="${rel}" href="${this.it.iri()}">${this.renderNameText()}</a>`;
     }

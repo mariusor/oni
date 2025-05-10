@@ -1,5 +1,6 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
+import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubNote extends ActivityPubObject {
     static styles = [css`

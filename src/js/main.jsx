@@ -43,7 +43,7 @@ customElements.define('oni-icon', OniIcon);
 customElements.define('bandcamp-embed', BandCampEmbed);
 
 OnReady(function () {
-    console.debug(`Loading ${window.location}`);
+    //console.debug(`Loading ${window.location}`);
 
     const root = document.documentElement;
     if (localStorage.getItem('palette')) {

@@ -1,8 +1,9 @@
+import {fetchActivityPubIRI} from "./client";
 
 export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', 'Mention', ''];
 export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
-export const ActivityTypes = [ 'Create', 'Update', 'Delete', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore' ];
-export const CollectionTypes = [ 'Collection', 'CollectionPage', 'OrderedCollection', 'OrderedCollectionPage'];
+export const ActivityTypes = ['Create', 'Update', 'Delete', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore'];
+export const CollectionTypes = ['Collection', 'CollectionPage', 'OrderedCollection', 'OrderedCollectionPage'];
 
 //const itemProperties = ['icon', 'image', 'actor', 'attachment', 'audience', 'attributedTo', 'context', 'generator', 'inReplyTo', 'location', 'preview', 'target', 'result', 'origin', 'instrument', 'object'];
 
@@ -21,9 +22,18 @@ export class ActivityPubItem {
             this.id = it;
             return;
         }
+        this.loadFromObject(it);
+        return this;
+    }
+
+    setProp (k, v) {
+        this[k] = v;
+    }
+
+    loadFromObject(it, loaded) {
         const setPropIfExists = (p) => {
             if (!it.hasOwnProperty(p)) return;
-            this[p] = it[p];
+            this.setProp(p, it[p]);
         };
         objectProperties.forEach(setPropIfExists);
         if (this.type === 'Tombstone') {
@@ -38,7 +48,6 @@ export class ActivityPubItem {
         if (CollectionTypes.indexOf(this.type) >= 0) {
             collectionProperties.forEach(setPropIfExists);
         }
-        return this;
     }
 
     iri() {
@@ -175,7 +184,7 @@ export class ActivityPubItem {
     }
 
     getImage() {
-        if(!this.hasOwnProperty('image')) {
+        if (!this.hasOwnProperty('image')) {
             this.image = null;
         }
         return this.image;
@@ -200,6 +209,33 @@ export class ActivityPubItem {
             items = this['items'];
         }
         return items.sort(sortByPublished);
+    }
+
+    static load(it) {
+        let raw = {};
+        if (typeof it === "string") {
+            try {
+                raw = JSON.parse(it);
+            } catch (e) {
+                raw = it;
+            }
+            if (URL.canParse(raw) === true) {
+                const o = new this({id: raw});
+                fetchActivityPubIRI(raw)
+                    .then(value => {
+                        if (typeof value === 'undefined') { console.warn('invalid response received'); return;}
+                        if (!value.hasOwnProperty("id")) { console.warn(`invalid return structure`, value); return; }
+                        if (value.hasOwnProperty("errors")) {console.warn(value.errors);return;}
+                        console.info(`fetched ${raw} loading object`, loaded);
+                        o.loadFromObject(value);
+                    }).catch(e => console.warn(e));
+                return o;
+            }
+        }
+        if (typeof it === "object") {
+            raw = it;
+        }
+        return new this(raw);
     }
 }
 

@@ -10,20 +10,24 @@ export async function fetchActivityPubIRI(iri) {
     } else {
         // generate HTTP-signature for the actor
     }
-    console.log(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI ${iri}`);
+    headers["Origin"] = window.location.hostname;
+    console.log(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI `, iri);
     const opts = {
         headers: headers,
         cache: 'force-cache',
     };
-    const response = await fetch(iri, opts).catch(console.error);
-    if (!response) {
-        return null
-    }
-    if (response.status === 200) {
-        return await response.json().catch(console.warn);
-    }
-    response.json().then(console.warn).catch(console.warn);
-    return null;
+    return new Promise((resolve, reject) => {
+        fetch(iri, opts).then(response => {
+            if (response.hasOwnProperty("headers") && response.headers["Content-Type"] !== jsonLDContentType) {
+                reject(`invalid response Content-Type ${response.headers["Content-Type"]}`)
+            }
+            if (response.status !== 200) {
+                reject(`Invalid status received ${response.statusText}`);
+            } else {
+               response.json().then(resolve).catch(e => reject(e));
+            }
+        }).catch(e => reject(e))
+    });
 }
 
 const jsonLDContentType = 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"';

@@ -98,12 +98,8 @@ export class ActivityPubObject extends LitElement {
         it: {
             type: ActivityPubItem,
             converter: {
-                toAttribute : (value, type) => {
-                    return JSON.stringify(value);
-                },
-                fromAttribute : (value, type)  => {
-                    return new ActivityPubItem(JSON.parse(value));
-                },
+                toAttribute : (val, typ) => JSON.stringify(val),
+                fromAttribute : (val, typ) => ActivityPubItem.load(val, this.requestUpdate),
             },
         },
         showMetadata: {type: Boolean},
@@ -112,22 +108,12 @@ export class ActivityPubObject extends LitElement {
 
     constructor(it, showMetadata) {
         super();
-        if (typeof it === 'string') {
-            fetchActivityPubIRI(it).then(value => {
-                if (!value.hasOwnProperty("id") && value.hasOwnProperty("errors")) {
-                    console.debug(value.errors);
-                    return;
-                }
-                this.it = value
-            });
-        } else {
-            this.it = it;
-        }
+
         this.showMetadata = showMetadata;
 
         const json = this.querySelector('script')?.text;
-        if (json && this.it === null) {
-            this.it = new ActivityPubItem(JSON.parse(json));
+        if (json !== null && this.it === null) {
+            this.it = ActivityPubItem.load(json);
         }
     }
 
@@ -306,12 +292,15 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        const replies = await this.dereferenceProperty('replies');
+        if (!this.it.hasOwnProperty('replies')) {
+            return nothing;
+        }
+        const replies = this.dereferenceProperty('replies');
         if (replies === null) {
             return nothing;
         }
 
-        return html`<oni-collection it=${JSON.stringify(replies)}></oni-collection>`;
+        return html`<oni-collection it=${JSON.stringify(until(replies, []))}></oni-collection>`;
     }
 
     inFocus() {
