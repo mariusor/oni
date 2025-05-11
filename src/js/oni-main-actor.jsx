@@ -59,7 +59,14 @@ export class OniMainActor extends ActivityPubActor {
             border-radius: 1.6em;
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
         }
-        @media(max-width: 800px) {
+        @media(max-width: 480px) {
+            :host section {
+                display: inline-block;
+                width: 100%;
+            }
+            :host section h1 {
+                margin-top: 1rem;
+            }
             header ul {
                 display: none;
             }
@@ -91,9 +98,9 @@ export class OniMainActor extends ActivityPubActor {
             font-size: .8em;
         }
     `, ActivityPubObject.styles];
-    static properties = {
+    static properties = [{
         colors: {type: Array},
-    };
+    }, ActivityPubObject.properties];
 
     _auth = new AuthController(this);
 

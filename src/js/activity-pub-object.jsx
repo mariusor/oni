@@ -65,7 +65,7 @@ export class ActivityPubObject extends LitElement {
             flex-wrap: wrap;
             align-content: flex-start;
             align-items: flex-start;
-        } 
+        }
         .tag {
             display: inline-block;
             margin: 0;

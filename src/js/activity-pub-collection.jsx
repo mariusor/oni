@@ -8,13 +8,12 @@ import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = [css`
-        :host ul, :host ol { 
-            width: 100%; 
-            padding: 0; 
-            margin: 0; 
+        :host ul, :host ol {
+            padding: 0;
+            margin: 0;
             list-style: none;
         }
-        :host li { 
+        :host li {
             overflow: hidden;
             border-bottom: 1px solid var(--fg-color);
         }

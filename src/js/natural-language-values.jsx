@@ -8,10 +8,18 @@ export class NaturalLanguageValues extends LitElement {
           display: inline-block;
           position: relative;
         }
+        :host p { text-align: justify; }
         :host div { display: inline-block; }
         :host([name=summary]) p, :host([name=name]) p, :host([name=preferredUsername]) p {
             display: inline-block; 
             margin: 0;
+        }
+        aside {
+            display: inline-block;
+            border: 1px solid var(--fg-color);
+            padding: .4rem;
+            font-size: 0.9rem;
+            background-color: color-mix(in srgb, var(--accent-color) 20%, transparent);
         }
         pre {
             max-width: 100%;
