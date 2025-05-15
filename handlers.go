@@ -572,7 +572,7 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 		oniFn := template.FuncMap{
 			"ONI":   func() vocab.Actor { return oniActor },
 			"URLS":  actorURLs(oniActor),
-			"Title": titleFromActor(oniActor, r),
+			"Title": titleFromItem(it, r),
 			"CurrentURL": func() template.HTMLAttr {
 				return template.HTMLAttr(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
 			},
@@ -741,18 +741,23 @@ func (o *oni) oniActor(r *http.Request) vocab.Actor {
 	return auth.AnonymousActor
 }
 
-func titleFromActor(o vocab.Actor, r *http.Request) func() template.HTML {
-	username := o.PreferredUsername.First()
-	details := "page"
-	switch r.URL.Path {
-	case "/":
-		details = "profile page"
-	case "/inbox", "/outbox", "/followers", "/following":
-		details = strings.TrimPrefix(r.URL.Path, "/")
+func titleFromItem(m vocab.Item, r *http.Request) func() template.HTML {
+	title := bluemonday.StripTagsPolicy().Sanitize(vocab.NameOf(m))
+	if vocab.ActorTypes.Contains(m.GetType()) {
+		details := "page"
+		name := bluemonday.StripTagsPolicy().Sanitize(vocab.PreferredNameOf(m))
+		switch r.URL.Path {
+		case "/":
+			details = "profile page"
+			title = fmt.Sprintf("%s :: fediverse %s", name, details)
+		case "/inbox", "/outbox", "/followers", "/following":
+			details = strings.TrimPrefix(r.URL.Path, "/")
+			title = fmt.Sprintf("%s :: fediverse %s", name, details)
+		}
 	}
-	sanitized := bluemonday.StripTagsPolicy().Sanitize(string(username.Value))
+
 	return func() template.HTML {
-		return template.HTML(fmt.Sprintf("%s :: fediverse %s", sanitized, details))
+		return template.HTML(title)
 	}
 }
 

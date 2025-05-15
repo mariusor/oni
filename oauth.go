@@ -333,11 +333,14 @@ func backURL(r *http.Request) string {
 func (o *oni) renderTemplate(r *http.Request, w http.ResponseWriter, name string, m model) {
 	wrt := bytes.Buffer{}
 
-	oniActor := o.oniActor(r)
+	actor := o.oniActor(r)
 	renderOptions.Funcs = template.FuncMap{
-		"ONI":   func() vocab.Actor { return o.oniActor(r) },
-		"URLS":  actorURLs(o.oniActor(r)),
-		"Title": titleFromActor(oniActor, r),
+		"ONI":   func() vocab.Actor { return actor },
+		"URLS":  actorURLs(actor),
+		"Title": m.Title,
+		"CurrentURL": func() template.HTMLAttr {
+			return template.HTMLAttr(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
+		},
 	}
 
 	err := ren.HTML(&wrt, http.StatusOK, name, m, renderOptions)
