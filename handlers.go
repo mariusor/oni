@@ -39,6 +39,7 @@ func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *oni) Error(err error) http.HandlerFunc {
+	o.l.Errorf("Error: %+s", err)
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptableMediaTypes := []ct.MediaType{textHTML, applicationJson}
 		accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)

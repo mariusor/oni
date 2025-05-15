@@ -149,7 +149,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 				m.state = ar.State
 			} else {
 				resp.SetError(osin.E_INVALID_REQUEST, fmt.Sprintf("invalid client: %+s", err))
-				redirectOrOutput(resp, w, r)
+				o.redirectOrOutput(resp, w, r)
 				return
 			}
 
@@ -169,7 +169,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 	if !acc.Equal(textHTML) {
 		resp.Type = osin.DATA
 	}
-	redirectOrOutput(resp, w, r)
+	o.redirectOrOutput(resp, w, r)
 }
 
 var (
@@ -221,7 +221,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 	if !acc.Equal(textHTML) {
 		resp.Type = osin.DATA
 	}
-	redirectOrOutput(resp, w, r)
+	o.redirectOrOutput(resp, w, r)
 }
 
 func annotatedRsError(status int, old error, msg string, args ...interface{}) error {
@@ -240,10 +240,10 @@ func annotatedRsError(status int, old error, msg string, args ...interface{}) er
 	return err
 }
 
-func redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http.Request) {
+func (o *oni) redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http.Request) {
 	if rs.IsError {
 		err := annotatedRsError(rs.StatusCode, rs.InternalError, "Error processing OAuth2 request: %s", rs.StatusText)
-		errors.HandleError(err).ServeHTTP(w, r)
+		o.Error(err).ServeHTTP(w, r)
 		return
 	}
 	// Add headers
@@ -258,7 +258,7 @@ func redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http.Request)
 		u, err := rs.GetRedirectUrl()
 		if err != nil {
 			err := annotatedRsError(http.StatusInternalServerError, err, "Error getting OAuth2 redirect URL")
-			errors.HandleError(err).ServeHTTP(w, r)
+			o.Error(err).ServeHTTP(w, r)
 			return
 		}
 
@@ -271,7 +271,7 @@ func redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http.Request)
 		w.WriteHeader(rs.StatusCode)
 
 		if err := json.NewEncoder(w).Encode(rs.Output); err != nil {
-			errors.HandleError(err).ServeHTTP(w, r)
+			o.Error(err).ServeHTTP(w, r)
 			return
 		}
 	}
@@ -345,7 +345,7 @@ func (o *oni) renderTemplate(r *http.Request, w http.ResponseWriter, name string
 		_, _ = io.Copy(w, &wrt)
 		return
 	}
-	o.Error(errors.Annotatef(err, "failed to render template"))
+	o.Error(errors.Annotatef(err, "failed to render template"))(w, r)
 }
 
 type login struct {
