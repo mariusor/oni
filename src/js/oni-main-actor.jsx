@@ -26,7 +26,7 @@ export class OniMainActor extends ActivityPubActor {
         }
         section header {
             grid-area: description;
-            width: 90%;
+            width: fit-content;
             min-width: 0;
         }
         header h1 {
