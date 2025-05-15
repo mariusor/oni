@@ -15,8 +15,10 @@ import {ActivityPubTombstone} from "./activity-pub-tombstone";
 import {ActivityPubTag} from "./activity-pub-tag";
 import {ActivityPubEvent} from "./activity-pub-event";
 import {BandCampEmbed} from "./bandcamp-embed";
+import {OniErrors} from "./oni-errors";
 
 customElements.define('oni-main', OniMainActor);
+customElements.define('oni-errors', OniErrors);
 customElements.define('oni-object', ActivityPubObject);
 customElements.define('oni-note', ActivityPubNote);
 customElements.define('oni-image', ActivityPubImage);

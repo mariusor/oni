@@ -3,7 +3,14 @@ import {map} from "lit-html/directives/map.js";
 import {when} from "lit-html/directives/when.js";
 
 export class OniErrors extends LitElement {
-    static styles = css``;
+    static styles = css`
+        details[open] summary::before {
+            content: "Collapse";
+        }
+        details summary::before {
+            content: "Expand";
+        }
+    `;
     static properties = {
         it: {type: Object},
     };
@@ -14,8 +21,9 @@ export class OniErrors extends LitElement {
 
     renderErrorWithTrace(err) {
         return html`
+            <h2>${err.status ?? nothing} ${err.message}</h2>
             <details>
-                <summary>${err.status ?? nothing} ${err.message}</summary>
+                <summary></summary>
                 ${when(Array.isArray(err.trace), () => html`
                     ${map(err.trace, tr => html`<pre><code><strong>${tr.function}</strong>: ${tr.file}:${tr.line}</code></pre>`)}
                 `)}
