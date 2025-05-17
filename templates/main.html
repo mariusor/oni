@@ -16,14 +16,14 @@
     <style>script { display: none; } </style>
 </head>
 <body>
-<noscript>
-    We must apologise, but this site was created as a reference implementation for a JavasScript client
-    on top of ActivityPub, and as such, it does not work without it.
-</noscript>
-<oni-main it="{{ ONI | JSON }}">
+<oni-main>
 {{ yield -}}
 </oni-main>
 <footer>
+    <noscript>
+        We must apologise, but this site was created as a reference implementation for a JavasScript client
+        on top of ActivityPub, and as such, it does not work without it.
+    </noscript>
     <ul>
         <li><small>Content: <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license">CC-BY-SA 4.0</a></small></li>
         <li><small>Source code:

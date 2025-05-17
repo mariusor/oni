@@ -1,5 +1,5 @@
 import {OnReady} from "./utils";
-import {OniMainActor} from "./oni-main-actor";
+import {OniMain} from "./oni-main";
 import {ActivityPubActor} from "./activity-pub-actor";
 import {CollectionLink, CollectionLinks} from "./collection-links";
 import {NaturalLanguageValues} from "./natural-language-values";
@@ -17,8 +17,9 @@ import {ActivityPubEvent} from "./activity-pub-event";
 import {BandCampEmbed} from "./bandcamp-embed";
 import {OniErrors} from "./oni-errors";
 
-customElements.define('oni-main', OniMainActor);
+customElements.define('oni-main', OniMain);
 customElements.define('oni-errors', OniErrors);
+
 customElements.define('oni-object', ActivityPubObject);
 customElements.define('oni-note', ActivityPubNote);
 customElements.define('oni-image', ActivityPubImage);
