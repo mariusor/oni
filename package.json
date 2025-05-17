@@ -3,7 +3,7 @@
   "dependencies": {
     "@ctrl/tinycolor": "^4.1.0",
     "color.js": "^1.2.0",
-    "lit": "^3.2.0",
-    "lit-html": "^3.2.0"
+    "lit": "^3.3.0",
+    "lit-html": "^3.3.0"
   }
 }
