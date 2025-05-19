@@ -23,6 +23,9 @@ export class ActivityPubObject extends LitElement {
         a:active {
             color: var(--link-active-color);
         }
+        a:has(oni-natural-language-values) {
+            text-decoration: none;
+        }
         p a[rel=mention], p a[rel=tag] {
             font-size: .9rem;
             font-weight: bold;

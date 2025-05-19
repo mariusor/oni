@@ -3,15 +3,15 @@ import {unsafeSVG} from "lit-html/directives/unsafe-svg.js";
 
 export class OniIcon extends LitElement {
     static styles = css`
-    :host, :host svg {
-        display: inline-block;
-    }
     svg {
         max-width: 1em;
         max-height: 1.2em;
         fill: currentColor;
-        vertical-align: text-bottom;
+        vertical-align: middle;
         margin: 0 .2rem;
+    }
+    svg[name=icon-outbox] {
+        vertical-align: text-bottom;
     }
     svg[name=icon-clock] {
         margin: 0;

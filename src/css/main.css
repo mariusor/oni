@@ -121,6 +121,9 @@ a:visited {
 
 a:active {
     color: var(--link-active-color);
+
+a:has(oni-natural-language-values) {
+    text-decoration: none;
 }
 
 body > footer {

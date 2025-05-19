@@ -5,8 +5,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 export class NaturalLanguageValues extends LitElement {
     static styles = [css`
         :host {
-          display: inline-block;
-          position: relative;
+            display: inline
         }
         :host p { text-align: justify; }
         :host div { display: inline-block; }
@@ -22,8 +21,8 @@ export class NaturalLanguageValues extends LitElement {
             background-color: color-mix(in srgb, var(--accent-color) 20%, transparent);
         }
         pre {
-            max-width: 100%;
-            white-space: pre-wrap;
+            max-width: 90vw;
+            overflow-x: scroll;
         }
     `, ActivityPubObject.styles];
 
