@@ -12,8 +12,6 @@ export class ActivityPubActor extends ActivityPubObject {
     static styles = [css`
         :host header {
             padding: 1rem;
-            background-size: cover;
-            background-clip: padding-box;
             display: grid;
             gap: 2em;
             justify-content: start;
@@ -47,7 +45,7 @@ export class ActivityPubActor extends ActivityPubObject {
             shape-outside: margin-box;
             box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
-            max-height: 14em;
+            max-height: 10em;
             margin-bottom: -1.4rem;
         }
         section ul {
@@ -222,8 +220,10 @@ export class ActivityPubActor extends ActivityPubObject {
 
         const img = palette.bgImageURL;
         return html`:host header {
-                        background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
-                    }`;
+                background-size: cover;
+                background-clip: padding-box;
+                background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
+            }`;
     }
 
     async renderPalette() {
