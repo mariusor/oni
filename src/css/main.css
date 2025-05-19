@@ -153,6 +153,10 @@ oni-natural-language-values, oni-icon {
     display: inline-block;
 }
 
+oni-main {
+    max-width: 100vw;
+}
+
 oni-main > * {
     display: block;
     margin: 0 1rem;
@@ -160,7 +164,6 @@ oni-main > * {
 
 oni-main > oni-actor {
     margin: 0;
-    max-width: 100vw;
 }
 
 oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-tag {

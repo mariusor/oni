@@ -1,10 +1,11 @@
-import {html, LitElement, nothing} from "lit";
+import {html} from "lit";
 import {until} from "lit-html/directives/until.js";
 import {ActivityPubObject} from "./activity-pub-object";
 import {isMainPage, renderColors} from "./utils";
 import {AuthController} from "./auth-controller";
+import {when} from "lit-html/directives/when.js";
 
-export class OniMain extends LitElement {
+export class OniMain extends ActivityPubObject {
     static styles = [];
     static properties = [{
         colors: {type: Array},
@@ -12,8 +13,8 @@ export class OniMain extends LitElement {
 
     _auth = new AuthController(this);
 
-    constructor() {
-        super();
+    constructor(it) {
+        super(it);
     }
 
     get authorized() {
@@ -24,7 +25,12 @@ export class OniMain extends LitElement {
         const colors = html`${until(renderColors(this.it))}`
 
         return html`
+            ${when(
+                !isMainPage(),
+                () => html`<oni-header it="${JSON.stringify(this.it)}"></oni-header>`,
+            )}
             <slot></slot>
-            ${colors}`;
+            ${colors}
+            `;
     }
 }

@@ -1,18 +1,21 @@
 import {css, html, LitElement, nothing} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
-import {ActivityPubCollection} from "./activity-pub-collection";
+import {ActivityPubObject} from "./activity-pub-object";
 
 export class CollectionLinks extends LitElement {
     static styles = css`
-        :host {
+        :host nav {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             border-bottom: 3px solid var(--accent-color);
-            clear: both;
+        }
+        ::slotted {
+            align-self: start;
         }
         :host ul {
             margin: 0 .8rem 0;
             padding: 0;
+            align-self: end;
         }
         :host li {
             border-width: 1px;
@@ -35,22 +38,23 @@ export class CollectionLinks extends LitElement {
     `
 
     static properties = {
-        it: {type: Object}
+        it: {type: Array}
     }
 
     constructor() {
         super();
-        this.it = {};
+        this.it = [];
     }
 
     render() {
+        if (!Array.isArray(this.it) || this.it.length === 0) return nothing;
         return html`
             <nav>
+                <slot></slot>
                 <ul>
-                    <slot></slot>
                     ${this.it.map(value => html`
                         <li class=${classMap({'active': (value === window.location.href)})}>
-                            <oni-collection-link it=${JSON.stringify(value)}></oni-collection-link>
+                            <oni-collection-link it=${value}></oni-collection-link>
                         </li>`
                     )}
                 </ul>
@@ -71,8 +75,10 @@ const LinkStyle = css`
         }
     `;
 
-export class CollectionLink extends ActivityPubCollection {
+export class CollectionLink extends ActivityPubObject {
     static styles = LinkStyle;
+
+    static properties = ActivityPubObject.properties;
 
     constructor(it) {
         super(it);

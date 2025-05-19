@@ -16,9 +16,11 @@ import {ActivityPubTag} from "./activity-pub-tag";
 import {ActivityPubEvent} from "./activity-pub-event";
 import {BandCampEmbed} from "./bandcamp-embed";
 import {OniErrors} from "./oni-errors";
+import {OniHeader} from "./oni-header";
 
 customElements.define('oni-main', OniMain);
 customElements.define('oni-errors', OniErrors);
+customElements.define('oni-header', OniHeader);
 
 customElements.define('oni-object', ActivityPubObject);
 customElements.define('oni-note', ActivityPubNote);

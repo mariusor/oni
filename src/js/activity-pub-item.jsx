@@ -1,4 +1,5 @@
 import {fetchActivityPubIRI} from "./client";
+import {nothing} from "lit";
 
 export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', 'Mention', ''];
 export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
@@ -74,6 +75,49 @@ export class ActivityPubItem {
         }
         return this.attachment;
     }
+
+    getInbox() {
+        if (!this.hasOwnProperty('inbox')) {
+            this.inbox = null;
+        }
+        return this.inbox;
+    }
+
+    getOutbox() {
+        if (!this.hasOwnProperty('outbox')) {
+            this.outbox = null;
+        }
+        return this.outbox;
+    }
+
+    getLiked() {
+        if (!this.hasOwnProperty('liked')) {
+            this.liked = null;
+        }
+        return this.liked;
+    }
+
+    getLikes() {
+        if (!this.hasOwnProperty('likes')) {
+            this.likes = null;
+        }
+        return this.likes;
+    }
+
+    getFollowers() {
+        if (!this.hasOwnProperty('followers')) {
+            this.followers = null;
+        }
+        return this.followers;
+    }
+
+    getFollowing() {
+        if (!this.hasOwnProperty('following')) {
+            this.following = null;
+        }
+        return this.following;
+    }
+
 
     getDeleted() {
         if (!this.hasOwnProperty('deleted')) {
@@ -211,6 +255,14 @@ export class ActivityPubItem {
         return items.sort(sortByPublished);
     }
 
+
+    getEndPoints() {
+        if (!this.hasOwnProperty('endpoints')) {
+            return this.endpoints = {};
+        }
+        return this.endpoints;
+    }
+
     static load(it) {
         let raw = {};
         if (typeof it === "string") {
@@ -226,8 +278,8 @@ export class ActivityPubItem {
                         if (typeof value === 'undefined') { console.warn('invalid response received'); return;}
                         if (!value.hasOwnProperty("id")) { console.warn(`invalid return structure`, value); return; }
                         if (value.hasOwnProperty("errors")) {console.warn(value.errors);return;}
-                        console.info(`fetched ${raw} loading object`, loaded);
                         o.loadFromObject(value);
+                        console.info(`fetched ${raw} loaded object`, o);
                     }).catch(e => console.warn(e));
                 return o;
             }

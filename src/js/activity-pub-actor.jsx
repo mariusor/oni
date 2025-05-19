@@ -3,7 +3,6 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {activity, loadPalette} from "./utils";
 import {ActivityPubItem} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
-import {when} from "lit-html/directives/when.js";
 import {TinyColor} from "@ctrl/tinycolor";
 
 
@@ -11,7 +10,7 @@ const tc = (c) => new TinyColor(c)
 
 export class ActivityPubActor extends ActivityPubObject {
     static styles = [css`
-        :host section {
+        :host header {
             padding: 1rem;
             background-size: cover;
             background-clip: padding-box;
@@ -23,26 +22,26 @@ export class ActivityPubActor extends ActivityPubObject {
             grid-template-areas: "icon description";
             grid-template-columns: minmax(0, min-content) auto;
         }
-        section header {
+        header section {
             grid-area: description;
             width: fit-content;
             min-width: 0;
         }
-        header h1 {
+        section h1 {
             margin: .2rem 0;
         }
-        header h1 a oni-natural-language-values {
+        section h1 a oni-natural-language-values {
             color: var(--accent-color);
             text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
         }
-        section > a {
+        header > a {
             min-width: 0;
             grid-area: icon;
             text-decoration: none;
             display: inline-block;
             align-self: start;
         }
-        section > a img {
+        header > a img {
             border: .1vw solid var(--accent-color);
             border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
@@ -51,7 +50,7 @@ export class ActivityPubActor extends ActivityPubObject {
             max-height: 14em;
             margin-bottom: -1.4rem;
         }
-        header ul {
+        section ul {
             display: inline-block;
             padding: 0.3rem 1.4rem;
             margin-left: -1.4rem;
@@ -59,22 +58,22 @@ export class ActivityPubActor extends ActivityPubObject {
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
         }
         @media(max-width: 480px) {
-            :host section {
+            :host header {
                 display: inline-block;
                 width: 100%;
             }
-            :host section h1 {
+            :host header h1 {
                 margin-top: 1rem;
             }
-            header ul {
+            section ul {
                 display: none;
             }
         }
-        header ul a, header ul a:visited, header ul a:active {
+        section ul a, section ul a:visited, section ul a:active {
             color: var(--accent-color);
             text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
         }
-        header ul li {
+        section ul li {
             list-style: none;
             display: inline-block;
             margin-right: .8rem;
@@ -100,8 +99,6 @@ export class ActivityPubActor extends ActivityPubObject {
 
     constructor(it) {
         super(it);
-
-        this.addEventListener('content.change', this.updateSelf)
     }
 
     async updateSelf(e) {
@@ -132,41 +129,6 @@ export class ActivityPubActor extends ActivityPubObject {
                 response.json().then((it) => this.it = new ActivityPubItem(it));
             }).catch(console.error);
     }
-
-    collections() {
-        let collections = super.collections();
-        const outbox = this.it.getOutbox();
-        if (outbox !== null) {
-            collections.push(outbox);
-        }
-        if (this.authorized) {
-            const inbox = this.it.getInbox();
-            if (inbox !== null ) {
-                collections.push(inbox);
-            }
-            const liked = this.it.getLiked();
-            if (liked !== null) {
-                collections.push(liked);
-            }
-            const followers = this.it.getFollowers();
-            if (followers !== null) {
-                collections.push(followers);
-            }
-            const following = this.it.getFollowing();
-            if (following !== null) {
-                collections.push(following);
-            }
-        }
-        return collections;
-    }
-
-    renderCollections() {
-        const c = this.collections();
-        if (c.length === 0) {
-            return nothing;
-        }
-        return html`<oni-collection-links it=${JSON.stringify(c)}></oni-collection-links>`;
-    };
 
     renderOAuth() {
         const endPoints = this.it.getEndPoints();
@@ -246,56 +208,28 @@ export class ActivityPubActor extends ActivityPubObject {
         return html`<oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
     }
 
+    async renderBgImage() {
+        const palette = await loadPalette(this.it);
+        if (!palette) {
+            return nothing;
+        }
 
-    // renderIcon() {
-    //     const icon = this.it.getIcon();
-    //     if (!icon) {
-    //         return nothing;
-    //     }
-    //     if (typeof icon == 'string') {
-    //         return html`<oni-image it=${JSON.stringify(icon)} ?inline=${this.inline}></oni-image>`;
-    //     } else {
-    //         return ActivityPubObject.renderByMediaType(icon, this.inline);
-    //     }
-    // }
-    // renderIconName() {
-    //         let username = this.it.getPreferredUsername();
-    //         const iri = this.it.iri();
-    //         if (!isLocalIRI(iri)) {
-    //             username = `${username}@${new URL(iri).hostname}`
-    //         }
-    //         return html`
-    //             <a href=${iri}> ${this.renderIcon()} ${username}</a>
-    //         `;
-    // }
+        const col = tc(palette.bgColor);
+        const haveBgImg = palette.hasOwnProperty('bgImageURL') && palette.bgImageURL.length > 0;
+        if (!haveBgImg || !col) {
+            return nothing;
+        }
 
-    // renderUrl() {
-    //     let url = this.it.getUrl();
-    //     if (!url) return nothing;
-    //     if (!Array.isArray(url)) url = [url];
-    //
-    //     return html`
-    //         <ul>
-    //             ${url.map((u) => html`
-    //                 <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}>
-    //                     <oni-icon name="external-href"></oni-icon>
-    //                     ${u}</a></li>`)}
-    //         </ul>`;
-    // }
-    // renderPreferredUsername() {
-    //     if (this.it.getPreferredUsername().length === 0) {
-    //         return nothing;
-    //     }
-    //     return html`<oni-natural-language-values it=${JSON.stringify(this.preferredUsername())}></oni-natural-language-values>`;
-    // }
+        const img = palette.bgImageURL;
+        return html`:host header {
+                        background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
+                    }`;
+    }
 
     async renderPalette() {
         const palette = await loadPalette(this.it);
         if (!palette) return nothing;
 
-        const col = tc(palette.bgColor);
-        const haveBgImg = palette.hasOwnProperty('bgImageURL') && palette.bgImageURL.length > 0 && col;
-        const img = palette.bgImageURL;
         return html`
             :host {
                 --bg-color: ${palette.bgColor};
@@ -305,31 +239,62 @@ export class ActivityPubActor extends ActivityPubObject {
                 --link-active-color: ${palette.linkActiveColor};
                 --accent-color: ${palette.accentColor};
             }
-            ${when(haveBgImg, () => html`
-                :host section {
-                    background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
-                }`
-        )}
+            ${until(this.renderBgImage(), nothing)}
         `;
     }
 
+    collections() {
+        let collections = super.collections();
+        if (this.authorized) {
+            const inbox = this.it.getInbox();
+            if (inbox !== null ) {
+                collections.push(inbox);
+            }
+            const liked = this.it.getLiked();
+            if (liked !== null) {
+                collections.push(liked);
+            }
+            const followers = this.it.getFollowers();
+            if (followers !== null) {
+                collections.push(followers);
+            }
+            const following = this.it.getFollowing();
+            if (following !== null) {
+                collections.push(following);
+            }
+        }
+        const outbox = this.it.getOutbox();
+        if (outbox !== null) {
+            collections.push(outbox);
+        }
+        return collections;
+    }
+
+    renderCollections(slot) {
+        slot = slot || html`<a href="#"></a>`;
+        const c = this.collections();
+        if (c.length === 0) {
+            return slot;
+        }
+        return html`<oni-collection-links it=${JSON.stringify(c)}>${slot}</oni-collection-links>`;
+    };
 
     render() {
-        const style = html`${until(this.renderPalette())}`;
+        const style = html`<style>${until(this.renderPalette())}</style>`;
 
         const iri = this.it.iri();
 
         //console.info(`rendering and checking authorized: ${this.authorized}`,);
         return html`${this.renderOAuth()}
-            <style>${style}</style>
-            <section>
+            ${style}
+            <header>
                 <a href=${iri}>${this.renderIcon()}</a>
-                <header>
+                <section>
                     ${this.renderUrl()}
                     <h1><a href=${until(iri,"#")}>${this.renderPreferredUsername()}</a></h1>
                     ${this.renderSummary()}
-                </header>
-            </section>
+                </section>
+            </header>
             <nav>${ until(this.renderCollections(), html`<hr/>`)}</nav>
             ${this.renderContent()}
         `;

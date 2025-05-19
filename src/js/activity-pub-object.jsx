@@ -115,6 +115,8 @@ export class ActivityPubObject extends LitElement {
         if (json !== null && this.it === null) {
             this.it = ActivityPubItem.load(json);
         }
+
+        this.addEventListener('content.change', this.updateSelf)
     }
 
 
