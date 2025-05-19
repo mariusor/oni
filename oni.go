@@ -210,7 +210,7 @@ func WithStoragePath(st string) optionFn {
 		if o.l != nil {
 			conf.Logger = o.l
 		}
-		o.l.Infof("Using storage: %s", st)
+		o.l.WithContext(lw.Ctx{"path": st}).Debugf("Using storage")
 		st, err := storage.New(conf)
 		if err != nil {
 			o.l.Errorf("%s", err.Error())
