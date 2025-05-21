@@ -21,7 +21,7 @@ export class NaturalLanguageValues extends LitElement {
             background-color: color-mix(in srgb, var(--accent-color) 20%, transparent);
         }
         pre {
-            max-width: 90vw;
+            max-width: 100%;
             overflow-x: scroll;
         }
     `, ActivityPubObject.styles];

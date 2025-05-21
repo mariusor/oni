@@ -168,10 +168,14 @@ oni-main > * {
 
 oni-main > oni-actor {
     margin: 0;
+    width: 100%;
+    max-width: 100%;
 }
 
 oni-main > * {
-    margin-top: 1rem;
     display: flex;
     flex-direction: column;
+    max-width: 94vw;
+    width: 120rch;
+    margin: 1rem auto auto;
 }

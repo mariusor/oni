@@ -7,7 +7,7 @@ export class ActivityPubImage extends ActivityPubObject {
         img {
             border-radius: .4rem;
             border: 1px solid var(--accent-color);
-            max-width: 94vw;
+            max-width: 100%;
             height: auto;
         }
         img.small {
