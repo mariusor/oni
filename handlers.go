@@ -135,7 +135,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 		Debug:            IsDev,
 	})
-	c.Log = corsLogger(o.l.WithContext(lw.Ctx{"log": "cors"}).Debugf)
+	c.Log = corsLogger(o.l.WithContext(lw.Ctx{"log": "cors"}).Tracef)
 	m.Group(func(m chi.Router) {
 		m.Use(c.Handler, o.StopBlocked)
 		m.HandleFunc("/*", o.ActivityPubItem)
