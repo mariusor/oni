@@ -175,7 +175,7 @@ oni-main > oni-actor {
 oni-main > * {
     display: flex;
     flex-direction: column;
-    max-width: 94vw;
-    width: 120rch;
+    max-width: 90cqw;
+    width: 82ch;
     margin: 1rem auto auto;
 }

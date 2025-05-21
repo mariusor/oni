@@ -4,6 +4,9 @@ import {when} from "lit-html/directives/when.js";
 
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`
+        :host {
+            padding: 1rem 1px 0;
+        }
         img {
             border-radius: .4rem;
             border: 1px solid var(--accent-color);
