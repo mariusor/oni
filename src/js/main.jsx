@@ -1,7 +1,7 @@
 import {OnReady} from "./utils";
 import {OniMain} from "./oni-main";
 import {ActivityPubActor} from "./activity-pub-actor";
-import {CollectionLink, CollectionLinks} from "./collection-links";
+import {OniCollectionLink, OniCollectionLinks} from "./oni-collection-links";
 import {NaturalLanguageValues} from "./natural-language-values";
 import {ActivityPubActivity} from "./activity-pub-activity";
 import {ActivityPubCollection} from "./activity-pub-collection";
@@ -36,8 +36,8 @@ customElements.define('oni-event', ActivityPubEvent);
 
 customElements.define('oni-natural-language-values', NaturalLanguageValues);
 
-customElements.define('oni-collection-links', CollectionLinks);
-customElements.define('oni-collection-link', CollectionLink);
+customElements.define('oni-collection-links', OniCollectionLinks);
+customElements.define('oni-collection-link', OniCollectionLink);
 
 customElements.define('oni-icon', OniIcon);
 

@@ -2,7 +2,7 @@ import {css, html, LitElement, nothing} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {ActivityPubObject} from "./activity-pub-object";
 
-export class CollectionLinks extends LitElement {
+export class OniCollectionLinks extends LitElement {
     static styles = css`
         :host nav {
             display: flex;
@@ -75,7 +75,7 @@ const LinkStyle = css`
         }
     `;
 
-export class CollectionLink extends ActivityPubObject {
+export class OniCollectionLink extends ActivityPubObject {
     static styles = LinkStyle;
 
     static properties = ActivityPubObject.properties;
