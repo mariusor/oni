@@ -92,6 +92,9 @@ func CollectionExists(ob vocab.Item, col vocab.CollectionPath) bool {
 }
 
 func pemEncodePublicKey(prvKey *rsa.PrivateKey) string {
+	if prvKey == nil {
+		return ""
+	}
 	pubKey := prvKey.PublicKey
 	pubEnc, err := x509.MarshalPKIXPublicKey(&pubKey)
 	if err != nil {

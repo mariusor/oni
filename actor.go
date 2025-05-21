@@ -11,9 +11,6 @@ var description = `Single actor ActivityPub service.
 Version: %s`
 
 func PublicKey(iri vocab.IRI, prvKey *rsa.PrivateKey) vocab.PublicKey {
-	if prvKey == nil {
-		return vocab.PublicKey{}
-	}
 	return vocab.PublicKey{
 		ID:           vocab.IRI(fmt.Sprintf("%s#main", iri)),
 		Owner:        iri,
@@ -28,6 +25,8 @@ func DefaultActor(iri vocab.IRI) vocab.Actor {
 		PreferredUsername: DefaultValue("oni"),
 		Summary:           DefaultValue(fmt.Sprintf(description, Version)),
 		Inbox:             vocab.Inbox.Of(iri),
+		Outbox:            vocab.Outbox.Of(iri),
+		Audience:          vocab.ItemCollection{vocab.PublicNS},
 		// NOTE(marius): we create a blank PublicKey so the server doesn't have outbound federation enabled.
 		PublicKey: PublicKey(iri, nil),
 	}

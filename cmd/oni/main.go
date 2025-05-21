@@ -27,9 +27,6 @@ var dataPath = func() string {
 	return filepath.Join(dh, "oni")
 }()
 
-var listen string
-var path string
-
 func loadAccountsFromStorage(base string) (vocab.ItemCollection, error) {
 	urls := make(vocab.ItemCollection, 0)
 	err := filepath.WalkDir(base, func(file string, d fs.DirEntry, err error) error {
@@ -64,11 +61,18 @@ func maybeLoadServiceActor(base, path string) (*vocab.Actor, bool) {
 	return nil, false
 }
 
-var version = "HEAD"
+var (
+	version = "HEAD"
+
+	listen  string
+	path    string
+	verbose bool
+)
 
 func main() {
 	flag.StringVar(&listen, "listen", "127.0.0.1:60123", "Listen socket")
 	flag.StringVar(&path, "path", dataPath, "Path for ActivityPub storage")
+	flag.BoolVar(&verbose, "verbose", false, "Show verbose ll output")
 	flag.Parse()
 
 	if build, ok := debug.ReadBuildInfo(); ok && version == "HEAD" {
@@ -86,30 +90,33 @@ func main() {
 	}
 
 	oni.Version = version
+	lvl := lw.DebugLevel
+	if verbose {
+		lvl = lw.TraceLevel
+	}
 
-	log := lw.Dev()
+	ll := lw.Dev(lw.SetLevel(lvl))
 
 	err := mkDirIfNotExists(path)
 	if err != nil {
-		log.Errorf("%s", err.Error())
+		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed to create path")
 		os.Exit(1)
 	}
 
 	urls, err := loadAccountsFromStorage(path)
 	if err != nil {
-		log.Errorf("%s", err.Error())
+		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed to load accounts from storage")
 		os.Exit(1)
 	}
 
 	err = oni.Oni(
-		oni.WithLogger(log),
+		oni.WithLogger(ll),
 		oni.WithStoragePath(path),
 		oni.LoadActor(urls...),
 		oni.ListenOn(listen),
 	).Run(context.Background())
-
 	if err != nil {
-		log.Errorf("%s", err.Error())
+		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed to start server")
 		os.Exit(1)
 	}
 }

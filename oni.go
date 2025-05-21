@@ -22,8 +22,11 @@ import (
 	storage "github.com/go-ap/storage-fs"
 )
 
-var Version = "(devel)"
-var ProjectURL = "https://git.sr.ht/~mariusor/oni"
+var (
+	Version    = "(devel)"
+	ProjectURL = "https://git.sr.ht/~mariusor/oni"
+	DefaultURL = "https://oni.local"
+)
 
 type oni struct {
 	Listen      string
@@ -122,6 +125,23 @@ func UpdateActorKey(st FullStorage, l lw.Logger, actor *vocab.Actor) (*vocab.Act
 	return actor, nil
 }
 
+func CreateBlankInstance(o *oni) *vocab.Actor {
+	blankIRI := vocab.IRI(DefaultURL)
+	if it, err := o.s.Load(blankIRI); err == nil {
+		if blank, err := vocab.ToActor(it); err == nil {
+			return blank
+		} else {
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Warnf("invalid type %T for expected blank actor", it)
+		}
+	}
+
+	blank := DefaultActor(blankIRI)
+	if _, err := o.s.Save(blank); err != nil {
+		o.l.WithContext(lw.Ctx{"err": err.Error()}).Warnf("unable to save blank oni actor")
+	}
+	return &blank
+}
+
 func Oni(initFns ...optionFn) *oni {
 	o := new(oni)
 
@@ -136,6 +156,11 @@ func Oni(initFns ...optionFn) *oni {
 		}
 	}
 
+	if len(o.a) == 0 {
+		if blank := CreateBlankInstance(o); blank != nil {
+			o.a = append(o.a, *blank)
+		}
+	}
 	localURLs := make(vocab.IRIs, 0, len(o.a))
 	for i, act := range o.a {
 		it, err := o.s.Load(act.GetLink())
@@ -154,7 +179,7 @@ func Oni(initFns ...optionFn) *oni {
 			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save OAuth2 Client")
 		}
 
-		if actor.PublicKey.PublicKeyPem == "" {
+		if actor.PublicKey.ID == "" {
 			iri := actor.ID
 			if actor, err = UpdateActorKey(o.s, o.l, actor); err != nil {
 				o.l.WithContext(lw.Ctx{"err": err, "id": iri}).Errorf("unable to generate Private Key")
@@ -213,7 +238,7 @@ func WithStoragePath(st string) optionFn {
 		o.l.WithContext(lw.Ctx{"path": st}).Debugf("Using storage")
 		st, err := storage.New(conf)
 		if err != nil {
-			o.l.Errorf("%s", err.Error())
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to initialize storage")
 			return
 		}
 		o.s = st
@@ -266,7 +291,9 @@ func (o *oni) Run(c context.Context) error {
 	}
 
 	stopFn := func(ctx context.Context) {
-		o.s.Close()
+		if closer, ok := o.s.(interface{ Close() }); ok {
+			closer.Close()
+		}
 		err := srvStop(ctx)
 		if o.l != nil {
 			ll := o.l.WithContext(logCtx)
