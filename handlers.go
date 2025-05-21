@@ -3,6 +3,7 @@ package oni
 import (
 	"bytes"
 	"context"
+	"crypto/md5"
 	"fmt"
 	"html/template"
 	"io"
@@ -161,6 +162,7 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 		}
 		return nil
 	})
+	eTag := md5.Sum(raw)
 	if err != nil {
 		return o.Error(err)
 	}
@@ -168,6 +170,7 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(raw)))
 		w.Header().Set("Vary", "Accept")
+		w.Header().Set("ETag", fmt.Sprintf(`"%2x"`, eTag))
 		_, _ = w.Write(raw)
 	}
 }
@@ -356,6 +359,7 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 		return o.Error(err)
 	}
 
+	eTag := md5.Sum(dat)
 	return func(w http.ResponseWriter, r *http.Request) {
 		_ = vocab.OnObject(it, func(o *vocab.Object) error {
 			if vocab.ActivityTypes.Contains(o.Type) {
@@ -369,6 +373,7 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 		}
 		w.Header().Set("Content-Type", json.ContentType)
 		w.Header().Set("Vary", "Accept")
+		w.Header().Set("ETag", fmt.Sprintf(`"%2x"`, eTag))
 		w.WriteHeader(status)
 		if r.Method == http.MethodGet {
 			_, _ = w.Write(dat)
@@ -583,7 +588,9 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}
+		eTag := md5.Sum(wrt.Bytes())
 		w.Header().Set("Vary", "Accept")
+		w.Header().Set("ETag", fmt.Sprintf(`"%2x"`, eTag))
 		_, _ = io.Copy(w, &wrt)
 	}
 }
