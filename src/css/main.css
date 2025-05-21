@@ -129,7 +129,7 @@ a:has(oni-natural-language-values) {
 
 body > footer {
     padding: .8rem 0;
-    width: 100%;
+    width: auto;
     align-self: end;
     text-align: end;
 }
@@ -170,7 +170,7 @@ oni-main > oni-actor {
     margin: 0;
 }
 
-oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-tag {
+oni-main > * {
     margin-top: 1rem;
     display: flex;
     flex-direction: column;

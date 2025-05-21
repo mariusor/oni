@@ -12,32 +12,29 @@ export class ActivityPubActor extends ActivityPubObject {
     static styles = [css`
         :host header {
             padding: 1rem;
-            display: grid;
-            gap: 2em;
+            display: flex;
             justify-content: start;
-            align-items: center;
+            align-items: flex-end;
             justify-items: start;
-            grid-template-areas: "icon description";
-            grid-template-columns: minmax(0, min-content) auto;
+            column-gap: 1.4rem;
         }
         header section {
-            grid-area: description;
-            width: fit-content;
-            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-content: center;
+            justify-content: center;
+            align-items: flex-start;
         }
-        section h1 {
+        section h1, section h2 {
             margin: .2rem 0;
+        }
+        section h2 {
+            font-weight: 300;
         }
         section h1 a oni-natural-language-values {
             color: var(--accent-color);
             text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
-        }
-        header > a {
-            min-width: 0;
-            grid-area: icon;
-            text-decoration: none;
-            display: inline-block;
-            align-self: start;
         }
         header > a img {
             border: .1vw solid var(--accent-color);
@@ -46,19 +43,19 @@ export class ActivityPubActor extends ActivityPubObject {
             box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
             max-height: 10em;
-            margin-bottom: -1.4rem;
+            margin-bottom: -.4rem;
         }
         section ul {
             display: inline-block;
+            margin: 0.3rem 0 0 -1.2rem;
             padding: 0.3rem 1.4rem;
-            margin-left: -1.4rem;
             border-radius: 1.6em;
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
         }
         @media(max-width: 480px) {
             :host header {
-                display: inline-block;
-                width: 100%;
+                display: block;
+                width: auto;
             }
             :host header h1 {
                 margin-top: 1rem;
@@ -290,9 +287,9 @@ export class ActivityPubActor extends ActivityPubObject {
             <header>
                 <a href=${iri}>${this.renderIcon()}</a>
                 <section>
-                    ${this.renderUrl()}
                     <h1><a href=${until(iri,"#")}>${this.renderPreferredUsername()}</a></h1>
-                    ${this.renderSummary()}
+                    <h2>${this.renderSummary()}</h2>
+                    <nav>${this.renderUrl()}</nav>
                 </section>
             </header>
             <nav>${ until(this.renderCollections(), html`<hr/>`)}</nav>

@@ -7,13 +7,16 @@ export class ActivityPubImage extends ActivityPubObject {
         img {
             border-radius: .4rem;
             border: 1px solid var(--accent-color);
-            max-width: 100%;
+            max-width: 94vw;
             height: auto;
         }
         img.small {
             max-width: 1rem;
             max-height: 1rem;
             vertical-align: text-top;
+        }
+        figure {
+            margin: 0px auto;
         }
         figcaption {
             position: absolute;
