@@ -12,7 +12,7 @@ import (
 var (
 	iconOni            = `<svg aria-hidden="true" name="icon-oni"> <use href="/icons.svg#icon-oni"><title>Oni</title></use> </svg>`
 	nameOni            = "<strong>Oni</strong>"
-	descriptionOni     = `Single actor ActivityPub service.`
+	descriptionOni     = `Single user ActivityPub service.`
 	contentOniTemplate = template.Must(
 		template.New("content").
 			Parse(`<h1>Congratulations!</h1>
