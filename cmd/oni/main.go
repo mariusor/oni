@@ -90,7 +90,6 @@ func main() {
 	}
 
 	oni.Version = version
-	oni.ListenSocket = listen
 	lvl := lw.DebugLevel
 	if verbose {
 		lvl = lw.TraceLevel
