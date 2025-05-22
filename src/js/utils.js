@@ -197,6 +197,7 @@ function paletteIsValid(palette, imageURL, iconURL) {
     return ((!palette.hasOwnProperty('bgImageURL') && imageURL === '') || palette.bgImageURL === imageURL) &&
     ((!palette.hasOwnProperty('iconURL') && iconURL === '') || palette.iconURL === iconURL)
 }
+
 export async function loadPalette(it) {
     const imageURL = apURL(it.getImage());
     const iconURL = apURL(it.getIcon());
@@ -208,7 +209,6 @@ export async function loadPalette(it) {
     const root = document.documentElement;
     const style = getComputedStyle(root);
     const defaultBgColor = style.getPropertyValue('--bg-color').trim();
-    console.debug(`default bg color: ${defaultBgColor}`);
 
     const palette = {
         bgColor: style.getPropertyValue('--bg-color').trim(),
@@ -224,19 +224,17 @@ export async function loadPalette(it) {
 
     let iconColors = [];
     let imageColors = [];
-    let avgColor = {};
+    let avgColor = defaultBgColor;
 
     if (imageURL) {
         palette.bgImageURL = imageURL;
         imageColors = (await colorsFromImage(imageURL));//?.filter(validColors);
-        console.debug(`image colors`, imageColors);
         avgColor = await average(imageURL, {format: 'hex'});
     }
 
     if (iconURL) {
         palette.iconURL = iconURL;
         iconColors = (await colorsFromImage(iconURL));//?.filter(validColors);
-        console.debug(`icon colors`, iconColors);
         if (avgColor) {
             avgColor = await average(iconURL, {format: 'hex'});
         }
@@ -246,9 +244,6 @@ export async function loadPalette(it) {
         palette.bgColor = avgColor;
         palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
 
-        console.debug(`bgColor: ${palette.bgColor}`)
-        console.debug(`color scheme: ${palette.colorScheme}`)
-
         root.style.setProperty('--bg-color', palette.bgColor);
         root.style.setProperty('backgroundImage', `linear-gradient(${tc(avgColor).setAlpha(0).toRgb()}, ${tc(avgColor).setAlpha(1).toRgb()}), url(${imageURL});`)
     }
@@ -256,6 +251,7 @@ export async function loadPalette(it) {
     palette.iconColors = iconColors;
 
     if (iconColors.length > 0) {
+        console.debug(`loaded icon colors:`, iconColors);
         palette.accentColor = getAccentColor(palette, iconColors) || palette.accentColor;
         iconColors = iconColors.filter(not(palette.accentColor, 1));
 
@@ -269,8 +265,8 @@ export async function loadPalette(it) {
     }
 
     if (imageColors.length+iconColors.length > 0) {
+        console.debug(`loaded image colors:`, imageColors);
         palette.fgColor = getFgColor(palette, imageColors+iconColors) || palette.fgColor;
-        console.debug(`fgColor: ${palette.fgColor}`)
         root.style.setProperty('--fg-color', palette.fgColor);
     }
 

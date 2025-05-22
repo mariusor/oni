@@ -175,7 +175,7 @@ func Oni(initFns ...optionFn) *oni {
 		}
 		_ = localURLs.Append(actor.GetLink())
 
-		if err := CreateOauth2ClientIfMissing(o.s, actor.ID, DefaultOAuth2ClientPw); err != nil {
+		if err = CreateOauth2ClientIfMissing(o.s, actor.ID, DefaultOAuth2ClientPw); err != nil {
 			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save OAuth2 Client")
 		}
 

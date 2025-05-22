@@ -14,8 +14,9 @@ export class OniHeader extends ActivityPubActor {
                 height: 2.2em;
                 align-items: end;
             }
-            header a img { 
-                max-height: 2em;
+            header a img, header a svg { 
+                max-height: 2.2em;
+                max-width: 2.2em;
                 border: .1vw solid var(--accent-color);
                 border-radius: 0 20% 20% 20%;
                 shape-outside: margin-box;

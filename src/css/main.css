@@ -4,20 +4,20 @@
 :root {
     --bg-color: #232627;
     --fg-color: #EFF0F1;
-    --link-color: #1e90ff; /* dodgerblue */
-    --link-visited-color: #9370db; /* mediumpurple */
-    --link-active-color: #9370db;
-    --accent-color: #EFF0F1;
+    --link-color: #1E90FF; /* dodgerblue */
+    --link-visited-color: #9370DB; /* mediumpurple */
+    --link-active-color: var(--link-visited-color);
+    --accent-color: var(--fg-color);
 }
 
 @media (prefers-color-scheme: light) {
     :root {
         --bg-color: #EFF0F1;
         --fg-color: #232627;
-        --link-color: #0000cd; /* mediumblue */
+        --link-color: #0000CD; /* mediumblue */
         --link-visited-color: #663399; /* rebeccapurple */
-        --link-active-color: #663399;
-        --shadow-color: #232627;
+        --link-active-color: var(--link-visited-color);
+        --accent-color: var(--fg-color);
     }
 }
 

@@ -4,7 +4,7 @@ import {activity, loadPalette} from "./utils";
 import {ActivityPubItem} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
 import {TinyColor} from "@ctrl/tinycolor";
-
+import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 const tc = (c) => new TinyColor(c)
 
@@ -36,13 +36,17 @@ export class ActivityPubActor extends ActivityPubObject {
             color: var(--accent-color);
             text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
         }
-        header > a img {
+        header > a svg {
+            color: var(--accent-color);
+        }
+        header > a img, header > a svg {
             border: .1vw solid var(--accent-color);
             border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
             box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
             max-height: 10em;
+            max-width: 10em;
             margin-bottom: -.4rem;
         }
         section ul {
@@ -94,6 +98,8 @@ export class ActivityPubActor extends ActivityPubObject {
 
     constructor(it) {
         super(it);
+
+        this.addEventListener('content.change', this.updateSelf)
     }
 
     async updateSelf(e) {
@@ -154,6 +160,15 @@ export class ActivityPubActor extends ActivityPubObject {
             const url = icon.id || icon.url;
             if (url) {
                 return html`<img src="${url}" alt="icon"/>`;
+            }
+            const cont = new ActivityPubItem(icon).getContent().at(0);
+            if (cont.length > 0) {
+                try {
+                    return unsafeHTML(cont);
+                } catch (e) {
+                    console.warn(e);
+                    return nothing;
+                }
             }
         }
         return nothing;
@@ -227,6 +242,7 @@ export class ActivityPubActor extends ActivityPubObject {
         const palette = await loadPalette(this.it);
         if (!palette) return nothing;
 
+        this.scheduleUpdate();
         return html`
             :host {
                 --bg-color: ${palette.bgColor};

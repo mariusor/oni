@@ -26,6 +26,6 @@ export class OniIcon extends LitElement {
 
     render() {
         if (!this.name) return nothing;
-        return html`${unsafeSVG(`<svg aria-hidden="true" name="icon-${this.name}"><use xlink:href="/icons.svg#icon-${this.name}"><title>${this.name}</title></use></svg>`)}`
+        return html`${unsafeSVG(`<svg aria-hidden="true" name="icon-${this.name}"><use href="/icons.svg#icon-${this.name}"><title>${this.name}</title></use></svg>`)}`
     }
 }
