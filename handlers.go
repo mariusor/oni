@@ -718,7 +718,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		if errors.IsNotFound(err) && len(o.a) == 1 {
 			if a := o.a[0]; !a.ID.Equals(iri, true) {
 				if _, cerr := CheckActorResolvesLocally(a); cerr == nil {
-					err = errors.NewPermanentRedirect(err, a.ID.String())
+					err = errors.NewTemporaryRedirect(err, a.ID.String())
 				}
 			}
 		}
