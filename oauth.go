@@ -72,7 +72,7 @@ func AuthorizeURL(actor vocab.Actor, state string) string {
 func (o *oni) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
 	pw := r.PostFormValue("_pw")
 
-	o.l.WithContext(lw.Ctx{"pass": pw}).Infof("received")
+	o.l.WithContext(lw.Ctx{"pass": pw}).Infof("Received")
 
 	return o.s.PasswordCheck(actor, []byte(pw))
 }
@@ -127,7 +127,8 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 
 	s, err := authServer(o, a)
 	if err != nil {
-		o.l.Errorf("unable to initialize OAuth2 server")
+		o.Error(errors.Annotatef(err, "Unable to initialize OAuth2 server"))
+		return
 	}
 	resp := s.NewResponse()
 
@@ -140,7 +141,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 			clientIRI := vocab.IRI(fmt.Sprintf("https://%s", ar.Client.GetId()))
 			it, err := o.s.Load(clientIRI)
 			if err != nil {
-				o.l.WithContext(lw.Ctx{"err": err, "iri": clientIRI}).Errorf("invalid client")
+				o.l.WithContext(lw.Ctx{"err": err, "iri": clientIRI}).Errorf("Invalid client")
 				errors.HandleError(errors.Unauthorizedf("Invalid client")).ServeHTTP(w, r)
 				return
 			}
@@ -148,7 +149,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 				m.client = it
 				m.state = ar.State
 			} else {
-				resp.SetError(osin.E_INVALID_REQUEST, fmt.Sprintf("invalid client: %+s", err))
+				resp.SetError(osin.E_INVALID_REQUEST, fmt.Sprintf("Invalid client: %+s", err))
 				o.redirectOrOutput(resp, w, r)
 				return
 			}
@@ -157,7 +158,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			if err := o.loadAccountFromPost(a, r); err != nil {
-				o.l.WithContext(lw.Ctx{"err": err}).Errorf("wrong password")
+				o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("wrong password")
 				errors.HandleError(errors.Unauthorizedf("Wrong password")).ServeHTTP(w, r)
 				return
 			}
@@ -186,7 +187,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 
 	s, err := authServer(o, a)
 	if err != nil {
-		o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("unable to initialize OAuth2 server")
+		o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to initialize OAuth2 server")
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}

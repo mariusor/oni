@@ -63,19 +63,19 @@ func UpdateActorKey(st FullStorage, l lw.Logger, actor *vocab.Actor) (*vocab.Act
 		m = new(auth.Metadata)
 	}
 	if m.PrivateKey != nil {
-		l.Debugf("actor %s already has a private key", iri)
+		l.WithContext(lw.Ctx{"iri": iri}).Debugf("Actor already has a private key")
 	}
 
 	prvEnc, err := x509.MarshalPKCS8PrivateKey(key)
 	if err != nil {
-		l.Errorf("unable to x509.MarshalPKCS8PrivateKey() the private key %T for %s", key, iri)
+		l.WithContext(lw.Ctx{"key": key, "iri": iri}).Errorf("Unable to x509.MarshalPKCS8PrivateKey()")
 		return actor, err
 	}
 
 	pub := key.Public()
 	pubEnc, err := x509.MarshalPKIXPublicKey(pub)
 	if err != nil {
-		l.Errorf("unable to x509.MarshalPKIXPublicKey() the private key %T for %s", pub, iri)
+		l.WithContext(lw.Ctx{"pubKey": pub, "iri": iri}).Errorf("Unable to x509.MarshalPKIXPublicKey()")
 		return actor, err
 	}
 	pubEncoded := pem.EncodeToMemory(&pem.Block{
@@ -118,7 +118,7 @@ func UpdateActorKey(st FullStorage, l lw.Logger, actor *vocab.Actor) (*vocab.Act
 	})
 
 	if err = st.SaveMetadata(*m, iri); err != nil {
-		l.Errorf("unable to save the private key %T for %s", key, iri)
+		l.WithContext(lw.Ctx{"key": key, "iri": iri}).Errorf("Unable to save the private key")
 		return actor, err
 	}
 
@@ -131,13 +131,14 @@ func CreateBlankInstance(o *oni) *vocab.Actor {
 		if blank, err := vocab.ToActor(it); err == nil {
 			return blank
 		} else {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Warnf("invalid type %T for expected blank actor", it)
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Invalid type %T for expected blank actor", it)
 		}
 	}
 
 	blank := DefaultActor(blankIRI)
+	// FIXME(marius): use the command for adding an Actor instead of this
 	if _, err := o.s.Save(blank); err != nil {
-		o.l.WithContext(lw.Ctx{"err": err.Error()}).Warnf("unable to save blank oni actor")
+		o.l.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Unable to save blank oni actor")
 	}
 	return &blank
 }
@@ -151,7 +152,7 @@ func Oni(initFns ...optionFn) *oni {
 
 	if opener, ok := o.s.(interface{ Open() error }); ok {
 		if err := opener.Open(); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err}).Errorf("unable to open storage")
+			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to open storage")
 			return o
 		}
 	}
@@ -165,24 +166,24 @@ func Oni(initFns ...optionFn) *oni {
 	for i, act := range o.a {
 		it, err := o.s.Load(act.GetLink())
 		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to find Actor")
+			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("Unable to find Actor")
 			continue
 		}
 		actor, err := vocab.ToActor(it)
 		if err != nil || actor == nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("unable to load Actor")
+			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("Unable to load Actor")
 			continue
 		}
 		_ = localURLs.Append(actor.GetLink())
 
 		if err = CreateOauth2ClientIfMissing(o.s, actor.ID, DefaultOAuth2ClientPw); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("unable to save OAuth2 Client")
+			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("Unable to save OAuth2 Client")
 		}
 
 		if actor.PublicKey.ID == "" {
 			iri := actor.ID
 			if actor, err = UpdateActorKey(o.s, o.l, actor); err != nil {
-				o.l.WithContext(lw.Ctx{"err": err, "id": iri}).Errorf("unable to generate Private Key")
+				o.l.WithContext(lw.Ctx{"err": err, "id": iri}).Errorf("Unable to generate Private Key")
 			}
 		}
 

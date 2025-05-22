@@ -40,7 +40,7 @@ func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *oni) Error(err error) http.HandlerFunc {
-	o.l.Errorf("Error: %+s", err)
+	o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Rendering error")
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptableMediaTypes := []ct.MediaType{textHTML, applicationJson}
 		accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
@@ -589,7 +589,7 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 		}
 		wrt := bytes.Buffer{}
 		if err := ren.HTML(&wrt, http.StatusOK, templatePath, it, render.HTMLOptions{Funcs: oniFn}); err != nil {
-			o.l.Errorf("unable to render %s: %s", templatePath, err)
+			o.l.Errorf("Unable to render %s: %s", templatePath, err)
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}
@@ -659,7 +659,7 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 			if !vocab.PublicNS.Equals(act.ID, true) {
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
-						o.l.WithContext(lw.Ctx{"actor": act.ID}).Warnf("blocked")
+						o.l.WithContext(lw.Ctx{"actor": act.ID}).Warnf("Blocked")
 						o.Error(errors.Gonef("nothing to see here, please move along")).ServeHTTP(w, r)
 						return
 					}
@@ -716,8 +716,11 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	it, err := loadItemFromStorage(o.s, iri, colFilters...)
 	if err != nil {
 		if errors.IsNotFound(err) && len(o.a) == 1 {
-			o.Error(errors.NewTemporaryRedirect(err, o.a[0].ID.String())).ServeHTTP(w, r)
-			return
+			if a := o.a[0]; !a.ID.Equals(iri, true) {
+				if _, cerr := CheckActorResolvesLocally(a); cerr == nil {
+					err = errors.NewPermanentRedirect(err, a.ID.String())
+				}
+			}
 		}
 		o.Error(err).ServeHTTP(w, r)
 		return
@@ -903,7 +906,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		author := auth.AnonymousActor
 		if ok, err := o.ValidateRequest(r); !ok {
 			lctx["err"] = err.Error()
-			o.l.WithContext(lctx).Errorf("failed request validation")
+			o.l.WithContext(lctx).Errorf("Failed request validation")
 			return it, errors.HttpStatus(err), err
 		} else {
 			if stored, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
@@ -922,7 +925,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		body, err := io.ReadAll(r.Body)
 		if err != nil || len(body) == 0 {
 			lctx["err"] = err.Error()
-			o.l.WithContext(lctx).Errorf("failed loading body")
+			o.l.WithContext(lctx).Errorf("Failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
 
@@ -930,7 +933,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
 			lctx["err"] = err.Error()
-			o.l.WithContext(lctx).Errorf("failed unmarshalling jsonld body")
+			o.l.WithContext(lctx).Errorf("Failed unmarshalling jsonld body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
 		}
 		if vocab.IsNil(it) {
@@ -939,12 +942,12 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 		if err != nil {
 			lctx["err"] = err.Error()
-			o.l.WithContext(lctx).Errorf("failed initializing the Activity processor")
+			o.l.WithContext(lctx).Errorf("Failed initializing the Activity processor")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
 		if it, err = processor.ProcessActivity(it, author, receivedIn); err != nil {
 			lctx["err"] = err.Error()
-			o.l.WithContext(lctx).Errorf("failed processing activity")
+			o.l.WithContext(lctx).Errorf("Failed processing activity")
 			err = errors.Annotatef(err, "Can't save %q activity to %s", it.GetType(), receivedIn)
 			return it, errors.HttpStatus(err), err
 		}
@@ -960,7 +963,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 					})
 					if err != nil {
 						l["err"] = err.Error()
-						o.l.WithContext(lctx, l).Errorf("unable to automatically accept follow")
+						o.l.WithContext(lctx, l).Errorf("Unable to automatically accept follow")
 					}
 					return ssm.End
 				}))

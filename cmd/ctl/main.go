@@ -150,7 +150,7 @@ func addActorAct(ctl *Control) cli.ActionFunc {
 				clientID := u.Hostname()
 				tok, err := ctl.GenAccessToken(clientID, actor.ID.String(), nil)
 				if err == nil {
-					ctl.Logger.Infof("\tAuthorization: Bearer %s\n", tok)
+					ctl.Logger.Infof("    Authorization: Bearer %s", tok)
 				}
 			}
 		}

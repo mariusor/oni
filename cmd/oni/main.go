@@ -100,13 +100,13 @@ func main() {
 
 	err := mkDirIfNotExists(path)
 	if err != nil {
-		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed to create path")
+		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to create path")
 		os.Exit(1)
 	}
 
 	urls, err := loadAccountsFromStorage(path)
 	if err != nil {
-		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed to load accounts from storage")
+		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to load accounts from storage")
 		os.Exit(1)
 	}
 
@@ -117,7 +117,7 @@ func main() {
 		oni.ListenOn(listen),
 	).Run(context.Background())
 	if err != nil {
-		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("failed to start server")
+		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to start server")
 		os.Exit(1)
 	}
 }
