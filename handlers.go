@@ -157,7 +157,7 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 		if len(ob.Content) == 0 {
 			return errors.NotSupportedf("invalid object")
 		}
-		if contentType, raw, err = getBinData(ob.Content); err != nil {
+		if contentType, raw, err = getBinData(ob.Content, ob.MediaType); err != nil {
 			return err
 		}
 		return nil
@@ -275,7 +275,12 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 		if err != nil {
 			return it, errors.NewMovedPermanently(err, it.GetLink().String())
 		}
-		return it, errors.MovedPermanently(it.GetLink().String())
+		propIRI := it.GetLink()
+		if propIRI != "" {
+			return it, errors.MovedPermanently(it.GetLink().String())
+		} else {
+			return it, nil
+		}
 	}
 	return it, err
 }

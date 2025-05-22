@@ -145,10 +145,13 @@ func GenerateID(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) 
 	return id, nil
 }
 
-func getBinData(nlVal vocab.NaturalLanguageValues) (string, []byte, error) {
+func getBinData(nlVal vocab.NaturalLanguageValues, mt vocab.MimeType) (string, []byte, error) {
 	val := nlVal.First().Value
 
 	contentType := "application/octet-stream"
+	if mt != "" {
+		contentType = string(mt)
+	}
 	colPos := bytes.Index(val, []byte{':'})
 	if colPos < 0 {
 		colPos = 0
@@ -159,22 +162,26 @@ func getBinData(nlVal vocab.NaturalLanguageValues) (string, []byte, error) {
 		contentType = string(val[colPos+1 : semicolPos])
 	}
 	comPos := bytes.Index(val, []byte{','})
-	decType := val[semicolPos+1 : comPos]
-
 	var raw []byte
-	switch string(decType) {
-	case "base64":
-		data := val[comPos+1:]
+	if semicolPos > 0 && comPos > 0 {
+		decType := val[semicolPos+1 : comPos]
 
-		dec := base64.RawStdEncoding
-		raw = make([]byte, dec.DecodedLen(len(data)))
-		cnt, err := dec.Decode(raw, data)
-		if err != nil {
-			return contentType, raw, err
+		switch string(decType) {
+		case "base64":
+			data := val[comPos+1:]
+
+			dec := base64.RawStdEncoding
+			raw = make([]byte, dec.DecodedLen(len(data)))
+			cnt, err := dec.Decode(raw, data)
+			if err != nil {
+				return contentType, raw, err
+			}
+			if cnt != len(data) {
+				// something wrong
+			}
 		}
-		if cnt != len(data) {
-			// something wrong
-		}
+	} else {
+		raw = val
 	}
 
 	return contentType, raw, nil
