@@ -95,10 +95,14 @@ var actorAddCmd = &cli.Command{
 
 func addActorAct(ctl *Control) cli.ActionFunc {
 	return func(context *cli.Context) error {
-		urls := context.Args()
+		urls := context.Args().Slice()
 		pws := context.StringSlice("pw")
 
-		for i, maybeURL := range urls.Slice() {
+		if context.NArg() == 0 {
+			ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
+			urls = append(urls, oni.DefaultURL)
+		}
+		for i, maybeURL := range urls {
 			u, err := url.ParseRequestURI(maybeURL)
 			if err != nil {
 				ctl.Logger.Errorf("Received invalid URL %s: %s", maybeURL, err)
@@ -260,9 +264,13 @@ func rotateKey(ctl *Control) cli.ActionFunc {
 		}
 	}
 	return func(context *cli.Context) error {
-		urls := context.Args()
+		urls := context.Args().Slice()
 
-		for _, u := range urls.Slice() {
+		if context.NArg() == 0 {
+			ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
+			urls = append(urls, oni.DefaultURL)
+		}
+		for _, u := range urls {
 			it, err := ctl.Storage.Load(vocab.IRI(u))
 			if err != nil {
 				ctl.Logger.Errorf("Invalid actor url %s: %s", u, err)
@@ -286,9 +294,13 @@ func rotateKey(ctl *Control) cli.ActionFunc {
 
 func fixCollectionsAct(ctl *Control) cli.ActionFunc {
 	return func(context *cli.Context) error {
-		urls := context.Args()
+		urls := context.Args().Slice()
 
-		for _, u := range urls.Slice() {
+		if context.NArg() == 0 {
+			ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
+			urls = append(urls, oni.DefaultURL)
+		}
+		for _, u := range urls {
 			it, err := ctl.Storage.Load(vocab.IRI(u))
 			if err != nil {
 				ctl.Logger.Errorf("Invalid actor url %s: %s", u, err)
