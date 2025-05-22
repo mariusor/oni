@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -140,7 +141,25 @@ func CreateBlankInstance(o *oni) *vocab.Actor {
 	if _, err := o.s.Save(blank); err != nil {
 		o.l.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Unable to save blank oni actor")
 	}
+	if addr, err := CheckActorResolvesLocally(blank); err != nil {
+		o.l.WithContext(lw.Ctx{"err": err.Error(), "iri": blank.ID}).Warnf("Unable to resolve hostname to a valid address")
+		o.l.Warnf("Please make sure you configure your network is configured correctly.")
+	} else {
+		o.l.WithContext(lw.Ctx{"iri": blank.ID, "addr": addr.String()}).Debugf("Successfully resolved hostname to a valid address")
+	}
 	return &blank
+}
+
+func CheckActorResolvesLocally(actor vocab.Actor) (*net.TCPAddr, error) {
+	uu, err := actor.ID.URL()
+	if err != nil {
+		return nil, err
+	}
+	host := uu.Host + ":80"
+	if uu.Scheme == "https" {
+		host = uu.Host + ":443"
+	}
+	return net.ResolveTCPAddr("tcp", host)
 }
 
 func Oni(initFns ...optionFn) *oni {

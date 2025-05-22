@@ -153,6 +153,12 @@ func addActorAct(ctl *Control) cli.ActionFunc {
 					ctl.Logger.Infof("    Authorization: Bearer %s", tok)
 				}
 			}
+			if addr, err := oni.CheckActorResolvesLocally(*actor); err != nil {
+				ctl.Logger.WithContext(lw.Ctx{"err": err.Error(), "iri": actor.ID}).Warnf("Unable to resolve hostname to a valid address")
+				ctl.Logger.Warnf("Please make sure you configure your network is configured correctly.")
+			} else {
+				ctl.Logger.WithContext(lw.Ctx{"iri": actor.ID, "addr": addr.String()}).Debugf("Successfully resolved hostname to a valid address")
+			}
 		}
 		return nil
 	}
