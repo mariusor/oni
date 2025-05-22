@@ -475,18 +475,33 @@ func (c *Control) GenAccessToken(clientID, actorIdentifier string, dat interface
 var ctl Control
 
 func Before(c *cli.Context) error {
-	fields := lw.Ctx{}
-	ctl = Control{Logger: lw.Dev().WithContext(fields)}
-
 	storagePath := c.Path("path")
+	fields := lw.Ctx{"path": storagePath}
+
+	ll := lw.Dev().WithContext(fields)
+	ctl = Control{Logger: ll}
+
+	if err := mkDirIfNotExists(storagePath); err != nil {
+		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to create path")
+		return err
+	}
+
 	conf := storage.Config{CacheEnable: true, Path: storagePath, Logger: ctl.Logger}
 	st, err := storage.New(conf)
 	if err != nil {
-		ctl.Logger.Errorf("%s", err.Error())
+		ctl.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to initialize storage")
 		return err
 	}
-	ctl.Storage = st
 
+	ctl.Storage = st
+	if opener, ok := ctl.Storage.(interface{ Open() error }); ok {
+		return opener.Open()
+	}
+	return nil
+}
+
+func After(c *cli.Context) error {
+	defer ctl.Storage.Close()
 	return nil
 }
 
@@ -513,6 +528,7 @@ func main() {
 	app.Version = version
 
 	app.Before = Before
+	app.After = After
 	app.Flags = []cli.Flag{
 		&cli.PathFlag{
 			Name:  "path",
@@ -522,7 +538,28 @@ func main() {
 	app.Commands = []*cli.Command{ActorCmd, OAuth2Cmd, fixCollectionsCmd, blockInstanceCmd}
 
 	if err := app.Run(os.Args); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		_, _ = fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+func mkDirIfNotExists(p string) (err error) {
+	p, err = filepath.Abs(p)
+	if err != nil {
+		return err
+	}
+	fi, err := os.Stat(p)
+	if err != nil && os.IsNotExist(err) {
+		if err = os.MkdirAll(p, os.ModeDir|os.ModePerm|0700); err != nil {
+			return err
+		}
+		fi, err = os.Stat(p)
+	}
+	if err != nil {
+		return err
+	}
+	if !fi.IsDir() {
+		return fmt.Errorf("path exists, and is not a folder %s", p)
+	}
+	return nil
 }
