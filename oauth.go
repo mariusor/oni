@@ -72,9 +72,9 @@ func AuthorizeURL(actor vocab.Actor, state string) string {
 func (o *oni) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
 	pw := r.PostFormValue("_pw")
 
-	o.l.WithContext(lw.Ctx{"pass": pw}).Infof("Received")
+	o.Logger.WithContext(lw.Ctx{"pass": pw}).Infof("Received")
 
-	return o.s.PasswordCheck(actor, []byte(pw))
+	return o.Storage.PasswordCheck(actor, []byte(pw))
 }
 
 func actorIRIFromRequest(r *http.Request) vocab.IRI {
@@ -84,7 +84,7 @@ func actorIRIFromRequest(r *http.Request) vocab.IRI {
 }
 
 func loadBaseActor(o *oni, r *http.Request) (vocab.Actor, error) {
-	result, err := o.s.Load(actorIRIFromRequest(r))
+	result, err := o.Storage.Load(actorIRIFromRequest(r))
 	if err != nil {
 		return auth.AnonymousActor, err
 	}
@@ -99,9 +99,9 @@ func loadBaseActor(o *oni, r *http.Request) (vocab.Actor, error) {
 func authServer(o *oni, oniActor vocab.Actor) (*auth.Server, error) {
 	return auth.New(
 		auth.WithIRI(oniActor.GetLink()),
-		auth.WithStorage(o.s),
-		auth.WithClient(Client(oniActor, o.s, o.l)),
-		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
+		auth.WithStorage(o.Storage),
+		auth.WithClient(Client(oniActor, o.Storage, o.Logger)),
+		auth.WithLogger(o.Logger.WithContext(lw.Ctx{"log": "osin"})),
 	)
 }
 
@@ -139,9 +139,9 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 			m.backURL = backURL(r)
 
 			clientIRI := vocab.IRI(fmt.Sprintf("https://%s", ar.Client.GetId()))
-			it, err := o.s.Load(clientIRI)
+			it, err := o.Storage.Load(clientIRI)
 			if err != nil {
-				o.l.WithContext(lw.Ctx{"err": err, "iri": clientIRI}).Errorf("Invalid client")
+				o.Logger.WithContext(lw.Ctx{"err": err, "iri": clientIRI}).Errorf("Invalid client")
 				errors.HandleError(errors.Unauthorizedf("Invalid client")).ServeHTTP(w, r)
 				return
 			}
@@ -158,7 +158,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			if err := o.loadAccountFromPost(a, r); err != nil {
-				o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("wrong password")
+				o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("wrong password")
 				errors.HandleError(errors.Unauthorizedf("Wrong password")).ServeHTTP(w, r)
 				return
 			}
@@ -187,7 +187,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 
 	s, err := authServer(o, a)
 	if err != nil {
-		o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to initialize OAuth2 server")
+		o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to initialize OAuth2 server")
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
@@ -200,15 +200,15 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 		if iri, ok := ar.UserData.(string); ok {
 			actorIRI = vocab.IRI(iri)
 		}
-		it, err := o.s.Load(actorIRI)
+		it, err := o.Storage.Load(actorIRI)
 		if err != nil {
-			o.l.Errorf("%s", errUnauthorized)
+			o.Logger.Errorf("%s", errUnauthorized)
 			errors.HandleError(errUnauthorized).ServeHTTP(w, r)
 			return
 		}
 
 		if actor, err = vocab.ToActor(it); err != nil {
-			o.l.Errorf("%s", errUnauthorized)
+			o.Logger.Errorf("%s", errUnauthorized)
 			errors.HandleError(errUnauthorized).ServeHTTP(w, r)
 			return
 		}

@@ -212,14 +212,14 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := r.URL.Query().Get("resource")
 		if res == "" {
-			handleErr(o.l)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
+			handleErr(o.Logger)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
 			return
 		}
 
 		host := r.Host
 		typ, handle := splitResourceString(res)
 		if typ == "" || handle == "" {
-			handleErr(o.l)(r, errors.BadRequestf("invalid resource %s", res)).ServeHTTP(w, r)
+			handleErr(o.Logger)(r, errors.BadRequestf("invalid resource %s", res)).ServeHTTP(w, r)
 			return
 		}
 		if typ == "acct" {
@@ -247,23 +247,23 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 		if typ == "acct" {
 			a, err := loadActorFromStorage(o, filterFn)
 			if err != nil {
-				handleErr(o.l)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
+				handleErr(o.Logger)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
 				return
 			}
 			if vocab.IsNil(a) {
-				handleErr(o.l)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
+				handleErr(o.Logger)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
 				return
 			}
 			result = a
 		}
 		if typ == "https" {
-			ob, err := LoadIRI(o.s, vocab.IRI(res), CheckObjectURL(res), CheckObjectID(res))
+			ob, err := LoadIRI(o.Storage, vocab.IRI(res), CheckObjectURL(res), CheckObjectID(res))
 			if err != nil {
-				handleErr(o.l)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
+				handleErr(o.Logger)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
 				return
 			}
 			if vocab.IsNil(ob) {
-				handleErr(o.l)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
+				handleErr(o.Logger)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
 				return
 			}
 			result = ob
@@ -315,7 +315,7 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/jrd+json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(dat)
-		o.l.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
+		o.Logger.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
 	}
 }
 
@@ -610,7 +610,7 @@ type ClientRegistrationResponse struct {
 }
 
 func (o *oni) AddActor(p *vocab.Person, pw []byte, author vocab.Actor) (*vocab.Person, error) {
-	if o.s == nil {
+	if o.Storage == nil {
 		return nil, errors.Errorf("invalid storage backend")
 	}
 	if author.GetLink().Equals(auth.AnonymousActor.GetLink(), false) {
@@ -637,12 +637,12 @@ func (o *oni) AddActor(p *vocab.Person, pw []byte, author vocab.Actor) (*vocab.P
 		return nil, errors.Newf("unable to find Actor's outbox: %s", author)
 	}
 
-	ap := processing.New(processing.WithStorage(o.s), processing.WithIDGenerator(GenerateID))
+	ap := processing.New(processing.WithStorage(o.Storage), processing.WithIDGenerator(GenerateID))
 	if _, err := ap.ProcessClientActivity(create, author, outbox.GetLink()); err != nil {
 		return nil, err
 	}
 
-	return p, o.s.PasswordSet(p.GetLink(), pw)
+	return p, o.Storage.PasswordSet(p.GetLink(), pw)
 }
 
 func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Request) {
@@ -654,7 +654,7 @@ func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Re
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil || len(body) == 0 {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed loading body")
+			o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed loading body")
 			o.Error(errors.NewNotValid(err, "unable to read request body")).ServeHTTP(w, r)
 			return
 		}
@@ -733,7 +733,7 @@ func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Re
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}
-		if metaSaver, ok := o.s.(MetadataTyper); ok {
+		if metaSaver, ok := o.Storage.(MetadataTyper); ok {
 			if err := AddKeyToItem(metaSaver, p, "RSA"); err != nil {
 				o.Error(errors.Annotatef(err, "Error saving metadata for application %s", name)).ServeHTTP(w, r)
 				return
@@ -758,7 +758,7 @@ func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Re
 			UserData:    userData,
 		}
 
-		if err = o.s.CreateClient(&d); err != nil {
+		if err = o.Storage.CreateClient(&d); err != nil {
 			o.Error(errors.Newf("unable to save OAuth2 client application")).ServeHTTP(w, r)
 			return
 		}
@@ -772,7 +772,7 @@ func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Re
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(resp)
-		o.l.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
+		o.Logger.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
 	}
 }
 
@@ -911,7 +911,7 @@ func HandleOauthAuthorizationServer(o oni) func(w http.ResponseWriter, r *http.R
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(data)
-		o.l.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
+		o.Logger.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
 	}
 }
 
@@ -934,7 +934,7 @@ func HandleHostMeta(o oni) func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/jrd+json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(dat)
-		o.l.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
+		o.Logger.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
 	}
 }
 

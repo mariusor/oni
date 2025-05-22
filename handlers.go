@@ -40,7 +40,7 @@ func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *oni) Error(err error) http.HandlerFunc {
-	o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Rendering error")
+	o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Rendering error")
 	return func(w http.ResponseWriter, r *http.Request) {
 		acceptableMediaTypes := []ct.MediaType{textHTML, applicationJson}
 		accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
@@ -84,7 +84,7 @@ func (o *oni) setupRoutes(actors []vocab.Actor) {
 		return
 	}
 	m.Use(o.OutOfOrderMw)
-	m.Use(Log(o.l))
+	m.Use(Log(o.Logger))
 
 	o.setupActivityPubRoutes(m)
 	o.setupOauthRoutes(m)
@@ -136,7 +136,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 		Debug:            IsDev,
 	})
-	c.Log = corsLogger(o.l.WithContext(lw.Ctx{"log": "cors"}).Tracef)
+	c.Log = corsLogger(o.Logger.WithContext(lw.Ctx{"log": "cors"}).Tracef)
 	m.Group(func(m chi.Router) {
 		m.Use(c.Handler, o.StopBlocked)
 		m.HandleFunc("/*", o.ActivityPubItem)
@@ -428,15 +428,15 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 	}
 
 	var logFn auth.LoggerFn = func(ctx lw.Ctx, msg string, p ...interface{}) {
-		o.l.WithContext(lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
+		o.Logger.WithContext(lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
 	}
 
 	author := auth.AnonymousActor
 	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		author = loaded
 	} else {
-		solver := auth.ClientResolver(Client(auth.AnonymousActor, o.s, o.l.WithContext(lw.Ctx{"log": "keyfetch"})),
-			auth.SolverWithStorage(o.s), auth.SolverWithLogger(logFn),
+		solver := auth.ClientResolver(Client(auth.AnonymousActor, o.Storage, o.Logger.WithContext(lw.Ctx{"log": "keyfetch"})),
+			auth.SolverWithStorage(o.Storage), auth.SolverWithLogger(logFn),
 			auth.SolverWithLocalIRIFn(isLocalIRI),
 		)
 
@@ -589,7 +589,7 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 		}
 		wrt := bytes.Buffer{}
 		if err := ren.HTML(&wrt, http.StatusOK, templatePath, it, render.HTMLOptions{Funcs: oniFn}); err != nil {
-			o.l.Errorf("Unable to render %s: %s", templatePath, err)
+			o.Logger.Errorf("Unable to render %s: %s", templatePath, err)
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}
@@ -608,12 +608,12 @@ func (o oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore
 		return act, nil
 	}
 
-	c := Client(auth.AnonymousActor, o.s, o.l)
+	c := Client(auth.AnonymousActor, o.Storage, o.Logger)
 	s, err := auth.New(
 		auth.WithIRI(oniActor.GetLink()),
-		auth.WithStorage(o.s),
+		auth.WithStorage(o.Storage),
 		auth.WithClient(c),
-		auth.WithLogger(o.l.WithContext(lw.Ctx{"log": "osin"})),
+		auth.WithLogger(o.Logger.WithContext(lw.Ctx{"log": "osin"})),
 	)
 	if err != nil {
 		return auth.AnonymousActor, errors.Errorf("OAuth server not initialized")
@@ -636,7 +636,7 @@ func checkOriginForBlockedActors(r *http.Request, origin string) bool {
 
 func (o *oni) loadBlockedActors(of vocab.Item) vocab.IRIs {
 	var blocked vocab.IRIs
-	if res, err := o.s.Load(processing.BlockedCollection.IRI(of)); err == nil {
+	if res, err := o.Storage.Load(processing.BlockedCollection.IRI(of)); err == nil {
 		_ = vocab.OnCollectionIntf(res, func(col vocab.CollectionInterface) error {
 			blocked = col.Collection().IRIs()
 			return nil
@@ -659,7 +659,7 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 			if !vocab.PublicNS.Equals(act.ID, true) {
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
-						o.l.WithContext(lw.Ctx{"actor": act.ID}).Warnf("Blocked")
+						o.Logger.WithContext(lw.Ctx{"actor": act.ID}).Warnf("Blocked")
 						o.Error(errors.Gonef("nothing to see here, please move along")).ServeHTTP(w, r)
 						return
 					}
@@ -713,11 +713,11 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		colFilters = append(colFilters, filters.Authorized(authActor.ID))
 	}
 
-	it, err := loadItemFromStorage(o.s, iri, colFilters...)
+	it, err := loadItemFromStorage(o.Storage, iri, colFilters...)
 	if err != nil {
 		if errors.IsNotFound(err) && len(o.a) == 1 {
 			if a := o.a[0]; !a.ID.Equals(iri, true) {
-				if _, cerr := CheckActorResolvesLocally(a); cerr == nil {
+				if _, cerr := checkIRIResolvesLocally(a.ID); cerr == nil {
 					err = errors.NewTemporaryRedirect(err, a.ID.String())
 				}
 			}
@@ -809,14 +809,14 @@ func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
 
 	follower := f.Actor.GetID()
 	if vocab.IsNil(accepter) {
-		o.l.Warnf("Follow object does not match any root actor on this ONI instance")
+		o.Logger.Warnf("Follow object does not match any root actor on this ONI instance")
 		return errors.NotFoundf("Follow object Actor not found")
 	}
 
 	if blocks := o.loadBlockedActors(accepter); len(blocks) > 0 {
 		// NOTE(marius): this should not happen as the StopBlock middleware has kicked in before
 		if blocks.Contains(f.Actor) {
-			o.l.WithContext(lw.Ctx{"blocked": follower}).Warnf("Follow actor is blocked")
+			o.Logger.WithContext(lw.Ctx{"blocked": follower}).Warnf("Follow actor is blocked")
 			return errors.NotFoundf("Follow object Actor not found")
 		}
 	}
@@ -834,10 +834,10 @@ func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
 	oniOutbox := vocab.Outbox.IRI(accepter)
 	_, err := p.ProcessClientActivity(accept, accepter, oniOutbox)
 	if err != nil {
-		o.l.WithContext(l).Errorf("Failed processing %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
+		o.Logger.WithContext(l).Errorf("Failed processing %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
 		return err
 	}
-	o.l.WithContext(l).Infof("Accepted Follow: %s", f.ID)
+	o.Logger.WithContext(l).Infof("Accepted Follow: %s", f.ID)
 	return nil
 }
 
@@ -906,7 +906,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		author := auth.AnonymousActor
 		if ok, err := o.ValidateRequest(r); !ok {
 			lctx["err"] = err.Error()
-			o.l.WithContext(lctx).Errorf("Failed request validation")
+			o.Logger.WithContext(lctx).Errorf("Failed request validation")
 			return it, errors.HttpStatus(err), err
 		} else {
 			if stored, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
@@ -914,18 +914,18 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			}
 		}
 
-		c := Client(actor, o.s, o.l.WithContext(lctx, lw.Ctx{"log": "client"}))
+		c := Client(actor, o.Storage, o.Logger.WithContext(lctx, lw.Ctx{"log": "client"}))
 		processor := processing.New(
 			processing.Async,
-			processing.WithLogger(o.l.WithContext(lctx, lw.Ctx{"log": "processing"})),
-			processing.WithIRI(baseIRIs...), processing.WithClient(c), processing.WithStorage(o.s),
+			processing.WithLogger(o.Logger.WithContext(lctx, lw.Ctx{"log": "processing"})),
+			processing.WithIRI(baseIRIs...), processing.WithClient(c), processing.WithStorage(o.Storage),
 			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
 		)
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil || len(body) == 0 {
 			lctx["err"] = err.Error()
-			o.l.WithContext(lctx).Errorf("Failed loading body")
+			o.Logger.WithContext(lctx).Errorf("Failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
 
@@ -933,7 +933,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
 			lctx["err"] = err.Error()
-			o.l.WithContext(lctx).Errorf("Failed unmarshalling jsonld body")
+			o.Logger.WithContext(lctx).Errorf("Failed unmarshalling jsonld body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
 		}
 		if vocab.IsNil(it) {
@@ -942,12 +942,12 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 
 		if err != nil {
 			lctx["err"] = err.Error()
-			o.l.WithContext(lctx).Errorf("Failed initializing the Activity processor")
+			o.Logger.WithContext(lctx).Errorf("Failed initializing the Activity processor")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
 		if it, err = processor.ProcessActivity(it, author, receivedIn); err != nil {
 			lctx["err"] = err.Error()
-			o.l.WithContext(lctx).Errorf("Failed processing activity")
+			o.Logger.WithContext(lctx).Errorf("Failed processing activity")
 			err = errors.Annotatef(err, "Can't save %q activity to %s", it.GetType(), receivedIn)
 			return it, errors.HttpStatus(err), err
 		}
@@ -963,7 +963,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 					})
 					if err != nil {
 						l["err"] = err.Error()
-						o.l.WithContext(lctx, l).Errorf("Unable to automatically accept follow")
+						o.Logger.WithContext(lctx, l).Errorf("Unable to automatically accept follow")
 					}
 					return ssm.End
 				}))

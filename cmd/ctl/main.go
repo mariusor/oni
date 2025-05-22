@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"oni"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime/debug"
 	"time"
@@ -15,18 +14,15 @@ import (
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
-	"github.com/go-ap/filters"
 	"github.com/go-ap/processing"
 	storage "github.com/go-ap/storage-fs"
-	"github.com/openshift/osin"
 	"github.com/urfave/cli/v2"
 )
 
 type Control struct {
+	oni.Control
 	Service     vocab.Actor
-	Storage     oni.FullStorage
 	StoragePath string
-	Logger      lw.Logger
 }
 
 var tokenCmd = &cli.Command{
@@ -103,65 +99,18 @@ func addActorAct(ctl *Control) cli.ActionFunc {
 			urls = append(urls, oni.DefaultURL)
 		}
 		for i, maybeURL := range urls {
-			u, err := url.ParseRequestURI(maybeURL)
-			if err != nil {
-				ctl.Logger.Errorf("Received invalid URL %s: %s", maybeURL, err)
+			if _, err := url.ParseRequestURI(maybeURL); err != nil {
+				ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Received invalid URL")
 				continue
 			}
 
-			iri := vocab.IRI(maybeURL)
-			pw := oni.DefaultOAuth2ClientPw
+			pw := ""
 			if i < len(pws)-1 {
 				pw = pws[i]
 			}
 
-			it, err := ctl.Storage.Load(iri)
-			if err == nil || (!vocab.IsNil(it) && it.GetLink().Equals(iri, true)) {
-				if err != nil && !errors.IsNotFound(err) {
-					ctl.Logger.Warnf("Actor already exists at URL %s: %s", iri, err)
-				} else {
-					ctl.Logger.Warnf("Actor already exists at URL %s", iri)
-				}
-				continue
-			}
-
-			o := oni.DefaultActor(iri)
-			o.Outbox = vocab.Outbox.Of(iri)
-			o.Followers = vocab.Followers.Of(iri)
-			o.Following = vocab.Following.Of(iri)
-
-			if it, err = ctl.Storage.Save(o); err != nil {
-				ctl.Logger.Errorf("Unable to save main actor %s: %s", maybeURL, err)
-				continue
-			} else {
-				ctl.Logger.Infof("Created root actor: %s", it.GetID())
-			}
-
-			actor, err := vocab.ToActor(it)
-			if err != nil {
-				ctl.Logger.Errorf("Invalid actor type saved for %s: %s", maybeURL, err)
-				continue
-			}
-
-			if err = oni.CreateOauth2ClientIfMissing(ctl.Storage, actor.ID, pw); err != nil {
-				ctl.Logger.Errorf("Unable to save OAuth2 Client %s: %s", u.Hostname(), err)
-				continue
-			} else {
-				ctl.Logger.Infof("Created OAuth2 Client: %s", actor.ID)
-			}
-
-			if context.Bool("with-token") {
-				clientID := u.Hostname()
-				tok, err := ctl.GenAccessToken(clientID, actor.ID.String(), nil)
-				if err == nil {
-					ctl.Logger.Infof("    Authorization: Bearer %s", tok)
-				}
-			}
-			if addr, err := oni.CheckActorResolvesLocally(*actor); err != nil {
-				ctl.Logger.WithContext(lw.Ctx{"err": err.Error(), "iri": actor.ID}).Warnf("Unable to resolve hostname to a valid address")
-				ctl.Logger.Warnf("Please make sure you configure your network is configured correctly.")
-			} else {
-				ctl.Logger.WithContext(lw.Ctx{"iri": actor.ID, "addr": addr.String()}).Debugf("Successfully resolved hostname to a valid address")
+			if _, err := ctl.CreateActor(vocab.IRI(maybeURL), pw, context.Bool("with-token")); err != nil {
+				ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Unable to create new Actor")
 			}
 		}
 		return nil
@@ -393,103 +342,6 @@ func tokenAct(ctl *Control) cli.ActionFunc {
 	}
 }
 
-func (c *Control) GenAccessToken(clientID, actorIdentifier string, dat interface{}) (string, error) {
-	if u, err := url.Parse(clientID); err == nil {
-		clientID = path.Base(u.Path)
-		if clientID == "." {
-			clientID = u.Host
-		}
-	}
-	cl, err := c.Storage.GetClient(clientID)
-	if err != nil {
-		return "", err
-	}
-
-	now := time.Now().UTC()
-	var f processing.Filterable
-	if u, err := url.Parse(actorIdentifier); err == nil {
-		u.Scheme = "https"
-		f = vocab.IRI(u.String())
-	} else {
-		f = filters.FiltersNew(filters.Name(actorIdentifier), filters.Type(vocab.ActorTypes...))
-	}
-	list, err := c.Storage.Load(f.GetLink())
-	if err != nil {
-		return "", err
-	}
-	if vocab.IsNil(list) {
-		return "", errors.NotFoundf("not found")
-	}
-	var actor vocab.Item
-	if list.IsCollection() {
-		err = vocab.OnCollectionIntf(list, func(c vocab.CollectionInterface) error {
-			f := c.Collection().First()
-			if f == nil {
-				return errors.NotFoundf("no actor found %s", c.GetLink())
-			}
-			actor, err = vocab.ToActor(f)
-			return err
-		})
-	} else {
-		actor, err = vocab.ToActor(list)
-	}
-	if err != nil {
-		return "", err
-	}
-
-	aud := &osin.AuthorizeData{
-		Client:      cl,
-		CreatedAt:   now,
-		ExpiresIn:   86400,
-		RedirectUri: cl.GetRedirectUri(),
-		State:       "state",
-	}
-
-	// generate token code
-	aud.Code, err = (&osin.AuthorizeTokenGenDefault{}).GenerateAuthorizeToken(aud)
-	if err != nil {
-		return "", err
-	}
-
-	// generate token directly
-	ar := &osin.AccessRequest{
-		Type:          osin.AUTHORIZATION_CODE,
-		AuthorizeData: aud,
-		Client:        cl,
-		RedirectUri:   cl.GetRedirectUri(),
-		Scope:         "scope",
-		Authorized:    true,
-		Expiration:    -1,
-	}
-
-	ad := &osin.AccessData{
-		Client:        ar.Client,
-		AuthorizeData: ar.AuthorizeData,
-		AccessData:    ar.AccessData,
-		ExpiresIn:     ar.Expiration,
-		Scope:         ar.Scope,
-		RedirectUri:   cl.GetRedirectUri(),
-		CreatedAt:     now,
-		UserData:      actor.GetLink(),
-	}
-
-	// generate access token
-	ad.AccessToken, ad.RefreshToken, err = (&osin.AccessTokenGenDefault{}).GenerateAccessToken(ad, ar.GenerateRefresh)
-	if err != nil {
-		return "", err
-	}
-	// save authorize data
-	if err = c.Storage.SaveAuthorize(aud); err != nil {
-		return "", err
-	}
-	// save access token
-	if err = c.Storage.SaveAccess(ad); err != nil {
-		return "", err
-	}
-
-	return ad.AccessToken, nil
-}
-
 var ctl Control
 
 func Before(c *cli.Context) error {
@@ -497,7 +349,7 @@ func Before(c *cli.Context) error {
 	fields := lw.Ctx{"path": storagePath}
 
 	ll := lw.Dev().WithContext(fields)
-	ctl = Control{Logger: ll}
+	ctl.Logger = ll
 
 	if err := mkDirIfNotExists(storagePath); err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to create path")

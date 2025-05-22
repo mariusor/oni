@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
@@ -30,14 +31,14 @@ var (
 )
 
 type oni struct {
+	Control
+
 	Listen      string
 	StoragePath string
 	TimeOut     time.Duration
 	PwHash      []byte
 
 	a []vocab.Actor
-	s FullStorage
-	l lw.Logger
 	m http.Handler
 }
 
@@ -128,36 +129,34 @@ func UpdateActorKey(st FullStorage, l lw.Logger, actor *vocab.Actor) (*vocab.Act
 
 func CreateBlankInstance(o *oni) *vocab.Actor {
 	blankIRI := vocab.IRI(DefaultURL)
-	if it, err := o.s.Load(blankIRI); err == nil {
+	if it, err := o.Storage.Load(blankIRI); err == nil {
 		if blank, err := vocab.ToActor(it); err == nil {
 			return blank
 		} else {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Invalid type %T for expected blank actor", it)
+			o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Invalid type %T for expected blank actor", it)
 		}
 	}
 
-	blank := DefaultActor(blankIRI)
-	// FIXME(marius): use the command for adding an Actor instead of this
-	if _, err := o.s.Save(blank); err != nil {
-		o.l.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Unable to save blank oni actor")
+	blank, err := o.CreateActor(blankIRI, "", false)
+	if err != nil {
+		o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Unable to create Actor")
 	}
-	if addr, err := CheckActorResolvesLocally(blank); err != nil {
-		o.l.WithContext(lw.Ctx{"err": err.Error(), "iri": blank.ID}).Warnf("Unable to resolve hostname to a valid address")
-		o.l.Warnf("Please make sure you configure your network is configured correctly.")
-	} else {
-		o.l.WithContext(lw.Ctx{"iri": blank.ID, "addr": addr.String()}).Debugf("Successfully resolved hostname to a valid address")
-	}
-	return &blank
+	return blank
 }
 
-func CheckActorResolvesLocally(actor vocab.Actor) (*net.TCPAddr, error) {
-	uu, err := actor.ID.URL()
+func checkIRIResolvesLocally(iri vocab.IRI) (*net.TCPAddr, error) {
+	uu, err := iri.URL()
 	if err != nil {
 		return nil, err
 	}
-	host := uu.Host + ":80"
-	if uu.Scheme == "https" {
-		host = uu.Host + ":443"
+
+	host := uu.Host
+	if strings.LastIndexByte(host, ':') < 0 {
+		if uu.Scheme == "https" {
+			host += ":443"
+		} else {
+			host += ":80"
+		}
 	}
 	return net.ResolveTCPAddr("tcp", host)
 }
@@ -169,9 +168,9 @@ func Oni(initFns ...optionFn) *oni {
 		fn(o)
 	}
 
-	if opener, ok := o.s.(interface{ Open() error }); ok {
+	if opener, ok := o.Storage.(interface{ Open() error }); ok {
 		if err := opener.Open(); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to open storage")
+			o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to open storage")
 			return o
 		}
 	}
@@ -183,26 +182,26 @@ func Oni(initFns ...optionFn) *oni {
 	}
 	localURLs := make(vocab.IRIs, 0, len(o.a))
 	for i, act := range o.a {
-		it, err := o.s.Load(act.GetLink())
+		it, err := o.Storage.Load(act.GetLink())
 		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("Unable to find Actor")
+			o.Logger.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("Unable to find Actor")
 			continue
 		}
 		actor, err := vocab.ToActor(it)
 		if err != nil || actor == nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("Unable to load Actor")
+			o.Logger.WithContext(lw.Ctx{"err": err, "id": act.GetLink()}).Errorf("Unable to load Actor")
 			continue
 		}
 		_ = localURLs.Append(actor.GetLink())
 
-		if err = CreateOauth2ClientIfMissing(o.s, actor.ID, DefaultOAuth2ClientPw); err != nil {
-			o.l.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("Unable to save OAuth2 Client")
+		if err = CreateOauth2ClientIfMissing(o.Storage, actor.ID, DefaultOAuth2ClientPw); err != nil {
+			o.Logger.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("Unable to save OAuth2 Client")
 		}
 
 		if actor.PublicKey.ID == "" {
 			iri := actor.ID
-			if actor, err = UpdateActorKey(o.s, o.l, actor); err != nil {
-				o.l.WithContext(lw.Ctx{"err": err, "id": iri}).Errorf("Unable to generate Private Key")
+			if actor, err = UpdateActorKey(o.Storage, o.Logger, actor); err != nil {
+				o.Logger.WithContext(lw.Ctx{"err": err, "id": iri}).Errorf("Unable to generate Private Key")
 			}
 		}
 
@@ -216,7 +215,7 @@ func Oni(initFns ...optionFn) *oni {
 }
 
 func WithLogger(l lw.Logger) optionFn {
-	return func(o *oni) { o.l = l }
+	return func(o *oni) { o.Logger = l }
 }
 
 func LoadActor(items ...vocab.Item) optionFn {
@@ -252,16 +251,16 @@ func WithStoragePath(st string) optionFn {
 
 	return func(o *oni) {
 		o.StoragePath = st
-		if o.l != nil {
-			conf.Logger = o.l
+		if o.Logger != nil {
+			conf.Logger = o.Logger
 		}
-		o.l.WithContext(lw.Ctx{"path": st}).Debugf("Using storage")
+		o.Logger.WithContext(lw.Ctx{"path": st}).Debugf("Using storage")
 		st, err := storage.New(conf)
 		if err != nil {
-			o.l.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to initialize storage")
+			o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to initialize storage")
 			return
 		}
-		o.s = st
+		o.Storage = st
 	}
 }
 
@@ -306,17 +305,17 @@ func (o *oni) Run(c context.Context) error {
 
 	// Get start/stop functions for the http server
 	srvRun, srvStop := w.HttpServer(setters...)
-	if o.l != nil {
-		o.l.WithContext(logCtx).Infof("Started")
+	if o.Logger != nil {
+		o.Logger.WithContext(logCtx).Infof("Started")
 	}
 
 	stopFn := func(ctx context.Context) {
-		if closer, ok := o.s.(interface{ Close() }); ok {
+		if closer, ok := o.Storage.(interface{ Close() }); ok {
 			closer.Close()
 		}
 		err := srvStop(ctx)
-		if o.l != nil {
-			ll := o.l.WithContext(logCtx)
+		if o.Logger != nil {
+			ll := o.Logger.WithContext(logCtx)
 			if err != nil {
 				ll.Errorf("%+v", err)
 			} else {
@@ -329,38 +328,38 @@ func (o *oni) Run(c context.Context) error {
 
 	err := w.RegisterSignalHandlers(w.SignalHandlers{
 		syscall.SIGHUP: func(_ chan<- error) {
-			if o.l != nil {
-				o.l.Debugf("SIGHUP received, reloading configuration")
+			if o.Logger != nil {
+				o.Logger.Debugf("SIGHUP received, reloading configuration")
 			}
 		},
 		syscall.SIGUSR1: func(_ chan<- error) {
 			InMaintenanceMode = !InMaintenanceMode
-			if o.l != nil {
-				o.l.WithContext(lw.Ctx{"maintenance": InMaintenanceMode}).Debugf("SIGUSR1 received")
+			if o.Logger != nil {
+				o.Logger.WithContext(lw.Ctx{"maintenance": InMaintenanceMode}).Debugf("SIGUSR1 received")
 			}
 		},
 		syscall.SIGINT: func(exit chan<- error) {
-			if o.l != nil {
-				o.l.Debugf("SIGINT received, stopping")
+			if o.Logger != nil {
+				o.Logger.Debugf("SIGINT received, stopping")
 			}
 			exit <- nil
 		},
 		syscall.SIGTERM: func(exit chan<- error) {
-			if o.l != nil {
-				o.l.Debugf("SIGTERM received, force stopping")
+			if o.Logger != nil {
+				o.Logger.Debugf("SIGTERM received, force stopping")
 			}
 			exit <- nil
 		},
 		syscall.SIGQUIT: func(exit chan<- error) {
-			if o.l != nil {
-				o.l.Debugf("SIGQUIT received, force stopping with core-dump")
+			if o.Logger != nil {
+				o.Logger.Debugf("SIGQUIT received, force stopping with core-dump")
 			}
 			cancelFn()
 			exit <- nil
 		},
 	}).Exec(ctx, srvRun)
-	if o.l != nil {
-		o.l.Infof("Shutting down")
+	if o.Logger != nil {
+		o.Logger.Infof("Shutting down")
 	}
 	return err
 }
