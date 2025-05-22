@@ -280,19 +280,20 @@ func (o *oni) redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http
 
 const DefaultOAuth2ClientPw = "NotSoSecretPassword"
 
-func CreateOauth2ClientIfMissing(s FullStorage, i vocab.IRI, pw string) error {
+func (c *Control) CreateOAuth2ClientIfMissing(i vocab.IRI, pw string) error {
 	u, _ := i.URL()
-	c, err := s.GetClient(u.Host)
+
+	cl, err := c.Storage.GetClient(u.Host)
 	if err == nil {
 		return nil
 	}
-	c = &osin.DefaultClient{
+	cl = &osin.DefaultClient{
 		Id:          u.Host,
 		Secret:      pw,
 		RedirectUri: u.String(),
 		UserData:    i,
 	}
-	return s.CreateClient(c)
+	return c.Storage.CreateClient(cl)
 }
 
 var authKey = func() []byte {

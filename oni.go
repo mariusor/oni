@@ -44,7 +44,10 @@ type oni struct {
 
 type optionFn func(o *oni)
 
-func UpdateActorKey(st FullStorage, l lw.Logger, actor *vocab.Actor) (*vocab.Actor, error) {
+func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
+	st := c.Storage
+	l := c.Logger
+
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return actor, errors.Annotatef(err, "unable to save Private Key")
@@ -91,11 +94,11 @@ func UpdateActorKey(st FullStorage, l lw.Logger, actor *vocab.Actor) (*vocab.Act
 		PublicKeyPem: string(pubEncoded),
 	}
 
-	c := Client(*actor, st, l.WithContext(lw.Ctx{"log": "client"}))
+	cl := Client(*actor, st, l.WithContext(lw.Ctx{"log": "client"}))
 	p := processing.New(
 		processing.Async, processing.WithIDGenerator(GenerateID),
 		processing.WithLogger(l.WithContext(lw.Ctx{"log": "processing"})),
-		processing.WithIRI(actor.ID), processing.WithClient(c), processing.WithStorage(st),
+		processing.WithIRI(actor.ID), processing.WithClient(cl), processing.WithStorage(st),
 		processing.WithLocalIRIChecker(IRIsContain(vocab.IRIs{actor.ID})),
 	)
 
@@ -194,13 +197,13 @@ func Oni(initFns ...optionFn) *oni {
 		}
 		_ = localURLs.Append(actor.GetLink())
 
-		if err = CreateOauth2ClientIfMissing(o.Storage, actor.ID, DefaultOAuth2ClientPw); err != nil {
+		if err = o.CreateOAuth2ClientIfMissing(actor.ID, DefaultOAuth2ClientPw); err != nil {
 			o.Logger.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("Unable to save OAuth2 Client")
 		}
 
 		if actor.PublicKey.ID == "" {
 			iri := actor.ID
-			if actor, err = UpdateActorKey(o.Storage, o.Logger, actor); err != nil {
+			if actor, err = o.UpdateActorKey(actor); err != nil {
 				o.Logger.WithContext(lw.Ctx{"err": err, "id": iri}).Errorf("Unable to generate Private Key")
 			}
 		}

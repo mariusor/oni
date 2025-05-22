@@ -222,17 +222,17 @@ func rotateKey(ctl *Control) cli.ActionFunc {
 		for _, u := range urls {
 			it, err := ctl.Storage.Load(vocab.IRI(u))
 			if err != nil {
-				ctl.Logger.Errorf("Invalid actor url %s: %s", u, err)
+				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor URL")
 				continue
 			}
 			actor, err := vocab.ToActor(it)
 			if err != nil {
-				ctl.Logger.Errorf("Invalid actor found for url %s: %s", u, err)
+				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor found for URL")
 				continue
 			}
 
-			if actor, err = oni.UpdateActorKey(ctl.Storage, ctl.Logger, actor); err != nil {
-				ctl.Logger.Errorf("Invalid actor found for url %s: %s", u, err)
+			if actor, err = ctl.UpdateActorKey(actor); err != nil {
+				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Unable to update main Actor key")
 				continue
 			}
 			printKey(u)
@@ -252,22 +252,22 @@ func fixCollectionsAct(ctl *Control) cli.ActionFunc {
 		for _, u := range urls {
 			it, err := ctl.Storage.Load(vocab.IRI(u))
 			if err != nil {
-				ctl.Logger.Errorf("Invalid actor url %s: %s", u, err)
+				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor URL")
 				continue
 			}
 			actor, err := vocab.ToActor(it)
 			if err != nil {
-				ctl.Logger.Errorf("Invalid actor found for url %s: %s", u, err)
+				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor found for URL")
 				continue
 			}
 			_, err = ctl.Storage.Save(actor)
 			if err != nil {
-				ctl.Logger.Errorf("Unable to save main actor %s: %s", actor.ID, err)
+				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Unable to save main Actor")
 				continue
 			}
 			err = tryCreateCollection(ctl.Storage, actor.Outbox.GetLink())
 			if err != nil {
-				ctl.Logger.Errorf("Unable to save Outbox collection for main actor %s: %s", actor.ID, err)
+				ctl.Logger.WithContext(lw.Ctx{"iri": actor.ID, "err": err.Error()}).Errorf("Unable to save Outbox collection for main Actor")
 				continue
 			}
 		}

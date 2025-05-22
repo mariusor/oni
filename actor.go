@@ -105,7 +105,7 @@ func (c *Control) CreateActor(iri vocab.IRI, maybePw string, withToken bool) (*v
 	}
 
 	u, _ := actor.ID.URL()
-	if err = CreateOauth2ClientIfMissing(c.Storage, actor.ID, pw); err != nil {
+	if err = c.CreateOAuth2ClientIfMissing(actor.ID, pw); err != nil {
 		c.Logger.WithContext(lw.Ctx{"host": u.Hostname(), "err": err.Error()}).Errorf("Unable to save OAuth2 Client")
 		return nil, err
 	} else {
