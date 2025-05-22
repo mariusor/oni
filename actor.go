@@ -1,23 +1,43 @@
 package oni
 
 import (
+	"bytes"
 	"crypto/rsa"
 	"fmt"
+	"html/template"
 
 	vocab "github.com/go-ap/activitypub"
 )
 
-var description = `Single actor ActivityPub service.<br/>Version: %s`
-var iconOni = `<svg aria-hidden="true" name="icon-oni">
-<use href="/icons.svg#icon-oni"><title>Oni</title></use>
-</svg>`
+var (
+	ListenSocket = ""
+
+	iconOni            = `<svg aria-hidden="true" name="icon-oni"> <use href="/icons.svg#icon-oni"><title>Oni</title></use> </svg>`
+	nameOni            = "<strong>Oni</strong>"
+	descriptionOni     = `Single actor ActivityPub service.`
+	contentOniTemplate = template.Must(
+		template.New("content").
+			Parse(`<h1>Congratulations!</h1>
+<p>You have successfully started your default Oni server.<br/>
+You're currently running version <code>{{ .Version }}</code>.<br/>
+The server is listening on <code>{{ .ListenOn }}</code> and can be accessed at <a href="{{ .URL }}">{{ .URL }}</a>.<br/>
+</p>`))
+)
 
 func DefaultActor(iri vocab.IRI) vocab.Actor {
+	contentOni := bytes.Buffer{}
+	_ = contentOniTemplate.Execute(&contentOni, struct {
+		Version  string
+		ListenOn string
+		URL      string
+	}{Version: Version, ListenOn: ListenSocket, URL: DefaultURL})
+
 	actor := vocab.Actor{
 		ID:                iri,
 		Type:              vocab.ApplicationType,
-		PreferredUsername: DefaultValue("oni"),
-		Summary:           DefaultValue(fmt.Sprintf(description, Version)),
+		PreferredUsername: DefaultValue(nameOni),
+		Summary:           DefaultValue(descriptionOni),
+		Content:           DefaultValue(contentOni.String()),
 		Inbox:             vocab.Inbox.Of(iri),
 		Outbox:            vocab.Outbox.Of(iri),
 		Audience:          vocab.ItemCollection{vocab.PublicNS},

@@ -715,6 +715,10 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 
 	it, err := loadItemFromStorage(o.s, iri, colFilters...)
 	if err != nil {
+		if errors.IsNotFound(err) && len(o.a) == 1 {
+			o.Error(errors.NewTemporaryRedirect(err, o.a[0].ID.String())).ServeHTTP(w, r)
+			return
+		}
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
