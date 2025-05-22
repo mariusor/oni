@@ -865,11 +865,10 @@ func Client(actor vocab.Actor, st processing.KeyLoader, l lw.Logger) *client.C {
 
 	ua := fmt.Sprintf("%s/%s (+%s)", ProjectURL, Version, actor.GetLink())
 	baseClient := &http.Client{
-		Transport: cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni"))),
+		Transport: client.UserAgentTransport(ua, cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni")))),
 	}
 
 	return client.New(
-		client.WithUserAgent(ua),
 		client.WithLogger(l.WithContext(lctx)),
 		client.WithHTTPClient(baseClient),
 		client.SkipTLSValidation(IsDev),
