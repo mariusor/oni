@@ -10,8 +10,6 @@ import (
 )
 
 var (
-	ListenSocket = ""
-
 	iconOni            = `<svg aria-hidden="true" name="icon-oni"> <use href="/icons.svg#icon-oni"><title>Oni</title></use> </svg>`
 	nameOni            = "<strong>Oni</strong>"
 	descriptionOni     = `Single actor ActivityPub service.`
@@ -20,17 +18,16 @@ var (
 			Parse(`<h1>Congratulations!</h1>
 <p>You have successfully started your default Oni server.<br/>
 You're currently running version <code>{{ .Version }}</code>.<br/>
-The server is listening on <code>{{ .ListenOn }}</code> and can be accessed at <a href="{{ .URL }}">{{ .URL }}</a>.<br/>
+The server can be accessed at <a href="{{ .URL }}">{{ .URL }}</a>.<br/>
 </p>`))
 )
 
 func DefaultActor(iri vocab.IRI) vocab.Actor {
 	contentOni := bytes.Buffer{}
 	_ = contentOniTemplate.Execute(&contentOni, struct {
-		Version  string
-		ListenOn string
-		URL      string
-	}{Version: Version, ListenOn: ListenSocket, URL: DefaultURL})
+		Version string
+		URL     string
+	}{Version: Version, URL: iri.String()})
 
 	actor := vocab.Actor{
 		ID:                iri,
