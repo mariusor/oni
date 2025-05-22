@@ -4,11 +4,20 @@ import {when} from "lit-html/directives/when.js";
 
 export class OniErrors extends LitElement {
     static styles = css`
+        h2 {
+            text-align: center;
+        }
+        details {
+            font-size: .8em;
+        }
         details[open] summary::before {
             content: "Collapse";
         }
         details summary::before {
             content: "Expand";
+        }
+        pre {
+            margin: 0 auto;
         }
     `;
     static properties = {
@@ -19,9 +28,9 @@ export class OniErrors extends LitElement {
         super();
     }
 
-    renderErrorWithTrace(err) {
+    renderErrorDetails(err) {
         return html`
-            <h2>${err.status ?? nothing} ${err.message}</h2>
+            ${this.renderErrorTitle(err)}
             <details>
                 <summary></summary>
                 ${when(Array.isArray(err.trace), () => html`
@@ -30,13 +39,12 @@ export class OniErrors extends LitElement {
             </details>`
     }
 
-    renderErrorWithoutTrace(err) {
-        return html`<div>${err.status ?? nothing} ${err.message}</div>`
+    renderErrorTitle(err) {
+        return html`<h2>${err.status ?? nothing} ${err.message}</h2>`
     }
 
     renderError(err) {
-        return Array.isArray(err.trace) ? this.renderErrorWithTrace(err) : this.renderErrorWithoutTrace(err);
-
+        return Array.isArray(err.trace) ? this.renderErrorDetails(err) : this.renderErrorTitle(err);
     }
 
     render() {
