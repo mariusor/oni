@@ -554,14 +554,6 @@ func filtersCreateUpdate(ff filters.Checks) bool {
 	return false
 }
 
-func iriHasTypeFilter(iri vocab.IRI) bool {
-	u, err := iri.URL()
-	if err != nil {
-		return false
-	}
-	return u.Query().Has("type")
-}
-
 func iriHasObjectTypeFilter(iri vocab.IRI) bool {
 	u, err := iri.URL()
 	if err != nil {
