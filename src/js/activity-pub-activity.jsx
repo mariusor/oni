@@ -1,4 +1,4 @@
-import {html, nothing} from "lit";
+import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
 import {ObjectTypes, ActorTypes, ActivityPubItem} from "./activity-pub-item";
@@ -8,6 +8,11 @@ import {map} from "lit-html/directives/map.js";
 export class ActivityPubActivity extends ActivityPubObject {
     static styles = [
         ActivityPubObject.styles,
+        css`
+            :host > oni-image {
+                margin-top: 1rem;
+            }
+        `,
     ];
 
     constructor(it) {

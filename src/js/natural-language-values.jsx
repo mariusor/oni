@@ -24,6 +24,9 @@ export class NaturalLanguageValues extends LitElement {
             max-width: 100%;
             overflow-x: scroll;
         }
+        h1 + p, h2 + p, h3 + p {
+            margin-top: 0;
+        }
     `, ActivityPubObject.styles];
 
     static properties = {
