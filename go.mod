@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	git.sr.ht/~mariusor/cache v0.0.0-20250122165545-14c90d7a9de8
 	git.sr.ht/~mariusor/lw v0.0.0-20250325163623-1639f3fb0e0d
-	git.sr.ht/~mariusor/ssm v0.0.0-20250423085606-bbcdeae30fce
+	git.sr.ht/~mariusor/ssm v0.0.0-20250531143603-dfd2809e769a
 	git.sr.ht/~mariusor/wrapper v0.0.0-20250504120759-5fa47ac25e08
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.1
@@ -15,7 +15,7 @@ require (
 	github.com/go-ap/errors v0.0.0-20250527110557-c8db454e53fd
 	github.com/go-ap/filters v0.0.0-20250527111509-8ef063ce5449
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250527112052-3ec998803b27
+	github.com/go-ap/processing v0.0.0-20250605151937-034f5491fd38
 	github.com/go-ap/storage-fs v0.0.0-20250527112321-492ff876f7e8
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/cors v1.2.1
@@ -52,6 +52,6 @@ require (
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/text v0.25.0 // indirect
+	golang.org/x/text v0.26.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
 )

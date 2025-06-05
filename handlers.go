@@ -877,7 +877,7 @@ const (
 )
 
 func runWithRetry(fn ssm.Fn) ssm.Fn {
-	return ssm.After(300*time.Millisecond, ssm.Retry(retries, ssm.BackOff(ssm.Jitter(jitterDelay, ssm.Linear(baseWaitTime, multiplier)), fn)))
+	return ssm.After(300*time.Millisecond, ssm.Retry(retries, ssm.BackOff(baseWaitTime, ssm.Jitter(jitterDelay, ssm.Linear(multiplier)), fn)))
 }
 
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
