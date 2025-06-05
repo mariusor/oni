@@ -20,7 +20,7 @@ export class ActivityPubImage extends ActivityPubObject {
             vertical-align: text-top;
         }
         figure {
-            margin: 0px auto;
+            margin: auto;
         }
         figcaption {
             position: absolute;
