@@ -73,8 +73,7 @@ export class ActivityPubCollection extends ActivityPubObject {
     render() {
         const collection = () => {
             if (this.it.getItems().length === 0) {
-                return html`
-                    <div class="content">Nothing to see here, please move along.</div>`;
+                return nothing;
             }
 
             const list = this.it.type.toLowerCase().includes('ordered')
