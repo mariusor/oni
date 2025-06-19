@@ -60,12 +60,9 @@ func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
 
 	iri := actor.ID
 
-	m, err := st.LoadMetadata(iri)
-	if err != nil && !errors.IsNotFound(err) {
+	m := new(auth.Metadata)
+	if err = st.LoadMetadata(iri, m); err != nil && !errors.IsNotFound(err) {
 		return actor, err
-	}
-	if m == nil {
-		m = new(auth.Metadata)
 	}
 	if m.PrivateKey != nil {
 		l.WithContext(lw.Ctx{"iri": iri}).Debugf("Actor already has a private key")
@@ -122,7 +119,7 @@ func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
 		Bytes: prvEnc,
 	})
 
-	if err = st.SaveMetadata(*m, iri); err != nil {
+	if err = st.SaveMetadata(iri, m); err != nil {
 		l.WithContext(lw.Ctx{"key": key, "iri": iri}).Errorf("Unable to save the private key")
 		return actor, err
 	}

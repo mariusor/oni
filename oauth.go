@@ -42,7 +42,7 @@ type FullStorage interface {
 	osin.Storage
 	processing.Store
 	processing.KeyLoader
-	MetadataTyper
+	MetadataStorage
 }
 
 type PasswordChanger interface {

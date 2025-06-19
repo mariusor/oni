@@ -17,14 +17,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/valyala/fastjson"
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
+	"github.com/google/uuid"
 	"github.com/openshift/osin"
+	"github.com/valyala/fastjson"
 )
 
 type handler struct {
@@ -733,7 +733,7 @@ func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Re
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}
-		if metaSaver, ok := o.Storage.(MetadataTyper); ok {
+		if metaSaver, ok := o.Storage.(MetadataStorage); ok {
 			if err := AddKeyToItem(metaSaver, p, "RSA"); err != nil {
 				o.Error(errors.Annotatef(err, "Error saving metadata for application %s", name)).ServeHTTP(w, r)
 				return
@@ -776,9 +776,9 @@ func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Re
 	}
 }
 
-type MetadataTyper interface {
-	LoadMetadata(vocab.IRI) (*auth.Metadata, error)
-	SaveMetadata(auth.Metadata, vocab.IRI) error
+type MetadataStorage interface {
+	LoadMetadata(vocab.IRI, any) error
+	SaveMetadata(vocab.IRI, any) error
 }
 
 func GenerateRSAKeyPair() (pem.Block, pem.Block) {
@@ -826,7 +826,8 @@ func publicKeyFrom(prvBytes []byte) pem.Block {
 	}
 	return pem.Block{Type: "PUBLIC KEY", Bytes: pubEnc}
 }
-func AddKeyToPerson(metaSaver MetadataTyper, typ string) func(act *vocab.Actor) error {
+
+func AddKeyToPerson(metaSaver MetadataStorage, typ string) func(act *vocab.Actor) error {
 	// TODO(marius): add a way to pass if we should overwrite the keys
 	//  for now we'll assume that if we're calling this, we want to do it
 	overwriteKeys := true
@@ -835,15 +836,13 @@ func AddKeyToPerson(metaSaver MetadataTyper, typ string) func(act *vocab.Actor) 
 			return nil
 		}
 
-		m, _ := metaSaver.LoadMetadata(act.ID)
-		if m == nil {
-			m = new(auth.Metadata)
-		}
+		m := new(auth.Metadata)
+		_ = metaSaver.LoadMetadata(act.ID, m)
 		var pubB, prvB pem.Block
 		if m.PrivateKey == nil || overwriteKeys {
 			pubB, prvB = GenerateRSAKeyPair()
 			m.PrivateKey = pem.EncodeToMemory(&prvB)
-			if err := metaSaver.SaveMetadata(*m, act.ID); err != nil {
+			if err := metaSaver.SaveMetadata(act.ID, m); err != nil {
 				return errors.Annotatef(err, "failed saving metadata for actor: %s", act.ID)
 			}
 		} else {
@@ -860,7 +859,7 @@ func AddKeyToPerson(metaSaver MetadataTyper, typ string) func(act *vocab.Actor) 
 	}
 }
 
-func AddKeyToItem(metaSaver MetadataTyper, it vocab.Item, typ string) error {
+func AddKeyToItem(metaSaver MetadataStorage, it vocab.Item, typ string) error {
 	if err := vocab.OnActor(it, AddKeyToPerson(metaSaver, typ)); err != nil {
 		return errors.Annotatef(err, "failed to process actor: %s", it.GetID())
 	}
