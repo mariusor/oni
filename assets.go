@@ -70,6 +70,11 @@ func HandleStaticAssets(s fs.FS, errFn func(error) http.HandlerFunc) http.Handle
 		if mimeType != "" {
 			w.Header().Set("Content-Type", mimeType)
 		}
+		if requestMatchesETag(r.Header, asset.hash) {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(asset.raw)
 	}
 }
