@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 
 	"github.com/go-ap/errors"
@@ -35,6 +36,14 @@ func HandleStaticAssets(s fs.FS, errFn func(error) http.HandlerFunc) http.Handle
 	_ = mime.AddExtensionType(".ico", "image/vnd.microsoft.icon")
 	_ = mime.AddExtensionType(".txt", "text/plain; charset=utf-8")
 
+	updated := time.Time{}
+	if build, ok := debug.ReadBuildInfo(); ok {
+		for _, bs := range build.Settings {
+			if bs.Key == "vcs.time" {
+				updated, _ = time.Parse("2006-01-02T15:04:05Z07", bs.Value)
+			}
+		}
+	}
 	assetMap := make(map[string]assetData)
 	return func(w http.ResponseWriter, r *http.Request) {
 		assetPath := filepath.Join("static", r.RequestURI)
@@ -51,11 +60,9 @@ func HandleStaticAssets(s fs.FS, errFn func(error) http.HandlerFunc) http.Handle
 				return
 			}
 			asset = assetData{
-				raw:  raw,
-				hash: fmt.Sprintf(`"%2x"`, md5.Sum(raw)),
-			}
-			if fi, err := fs.Stat(s, assetPath); err == nil {
-				asset.updatedAt = fi.ModTime()
+				raw:       raw,
+				hash:      fmt.Sprintf(`"%2x"`, md5.Sum(raw)),
+				updatedAt: updated,
 			}
 		}
 		assetMap[assetPath] = asset
