@@ -162,16 +162,30 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 		}
 		return nil
 	})
-	eTag := md5.Sum(raw)
 	if err != nil {
 		return o.Error(err)
 	}
+	eTag := fmt.Sprintf(`"%2x"`, md5.Sum(raw))
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(raw)))
 		w.Header().Set("Vary", "Accept")
-		w.Header().Set("ETag", fmt.Sprintf(`"%2x"`, eTag))
-		_, _ = w.Write(raw)
+		w.Header().Set("ETag", eTag)
+
+		status := http.StatusOK
+		uaHasItem := requestMatchesHash(r.Header, eTag)
+		if uaHasItem {
+			status = http.StatusNotModified
+		} else {
+			if it.GetType() == vocab.TombstoneType {
+				status = http.StatusGone
+			}
+		}
+
+		w.WriteHeader(status)
+		if r.Method == http.MethodGet && !uaHasItem {
+			_, _ = w.Write(raw)
+		}
 	}
 }
 
@@ -364,23 +378,27 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 		return o.Error(err)
 	}
 
-	eTag := md5.Sum(dat)
+	eTag := fmt.Sprintf(`"%2x"`, md5.Sum(dat))
 	return func(w http.ResponseWriter, r *http.Request) {
-		_ = vocab.OnObject(it, func(o *vocab.Object) error {
-			if vocab.ActivityTypes.Contains(o.Type) {
-				w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(8766*time.Hour.Seconds())))
-			}
-			return nil
-		})
-		status := http.StatusOK
-		if it.GetType() == vocab.TombstoneType {
-			status = http.StatusGone
+		if vocab.ActivityTypes.Contains(it.GetType()) {
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(8766*time.Hour.Seconds())))
 		}
 		w.Header().Set("Content-Type", json.ContentType)
 		w.Header().Set("Vary", "Accept")
-		w.Header().Set("ETag", fmt.Sprintf(`"%2x"`, eTag))
+		w.Header().Set("ETag", eTag)
+
+		status := http.StatusOK
+		uaHasItem := requestMatchesHash(r.Header, eTag)
+		if uaHasItem {
+			status = http.StatusNotModified
+		} else {
+			if it.GetType() == vocab.TombstoneType {
+				status = http.StatusGone
+			}
+		}
+
 		w.WriteHeader(status)
-		if r.Method == http.MethodGet {
+		if r.Method == http.MethodGet && !uaHasItem {
 			_, _ = w.Write(dat)
 		}
 	}
@@ -562,6 +580,20 @@ func iriHasObjectTypeFilter(iri vocab.IRI) bool {
 	return u.Query().Has("object.type")
 }
 
+func requestMatchesHash(h http.Header, eTag string) bool {
+	noneMatchValues, ok := h["If-None-Match"]
+	if !ok {
+		return false
+	}
+
+	for _, ifNoneMatch := range noneMatchValues {
+		if ifNoneMatch == eTag {
+			return true
+		}
+	}
+	return false
+}
+
 func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 	templatePath := "components/person"
 	if !vocab.ActorTypes.Contains(it.GetType()) {
@@ -585,10 +617,24 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}
-		eTag := md5.Sum(wrt.Bytes())
+		eTag := fmt.Sprintf(`"%2x"`, md5.Sum(wrt.Bytes()))
 		w.Header().Set("Vary", "Accept")
-		w.Header().Set("ETag", fmt.Sprintf(`"%2x"`, eTag))
-		_, _ = io.Copy(w, &wrt)
+		w.Header().Set("ETag", eTag)
+
+		status := http.StatusOK
+		uaHasItem := requestMatchesHash(r.Header, eTag)
+		if uaHasItem {
+			status = http.StatusNotModified
+		} else {
+			if it.GetType() == vocab.TombstoneType {
+				status = http.StatusGone
+			}
+		}
+
+		w.WriteHeader(status)
+		if r.Method == http.MethodGet && !uaHasItem {
+			_, _ = io.Copy(w, &wrt)
+		}
 	}
 }
 
