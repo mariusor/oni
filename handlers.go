@@ -149,6 +149,7 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 	}
 	var contentType string
 	var raw []byte
+	updatedAt := time.Now()
 	err := vocab.OnObject(it, func(ob *vocab.Object) error {
 		var err error
 		if !mediaTypes.Contains(ob.Type) {
@@ -159,6 +160,10 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 		}
 		if contentType, raw, err = getBinData(ob.Content, ob.MediaType); err != nil {
 			return err
+		}
+		updatedAt = ob.Published
+		if !ob.Updated.IsZero() {
+			updatedAt = ob.Updated
 		}
 		return nil
 	})
@@ -171,9 +176,17 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(raw)))
 		w.Header().Set("Vary", "Accept")
 		w.Header().Set("ETag", eTag)
+		if vocab.ActivityTypes.Contains(it.GetType()) {
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(activityCacheDuration.Seconds())))
+		} else {
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(objectCacheDuration.Seconds())))
+		}
+		if !updatedAt.IsZero() {
+			w.Header().Set("Last-Modified", updatedAt.Format(time.RFC1123))
+		}
 
 		status := http.StatusOK
-		uaHasItem := requestMatchesHash(r.Header, eTag)
+		uaHasItem := requestMatchesETag(r.Header, eTag) || requestMatchesLastModified(r.Header, updatedAt)
 		if uaHasItem {
 			status = http.StatusNotModified
 		} else {
@@ -205,6 +218,22 @@ func sameishIRI(check, colIRI vocab.IRI) bool {
 
 var orderedCollectionTypes = vocab.ActivityVocabularyTypes{
 	vocab.OrderedCollectionPageType, vocab.OrderedCollectionType,
+}
+
+func loadItemMetadataFromStorage(s MetadataStorage, it vocab.Item) (interface{ AddETag(w http.ResponseWriter) }, error) {
+	var (
+		m   any
+		iri = it.GetLink()
+	)
+	m = new(auth.Metadata)
+	if err := s.LoadMetadata(iri, m); err != nil {
+		return nil, err
+	}
+	etagMeta, ok := m.(interface{ AddETag(w http.ResponseWriter) })
+	if !ok {
+		return nil, errors.Newf("unsupported metadata type: %T", m)
+	}
+	return etagMeta, nil
 }
 
 func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.Item, error) {
@@ -370,6 +399,11 @@ func cleanupMediaObject(o *vocab.Object) error {
 	return cleanupMediaObjectFromItem(o.Attachment)
 }
 
+const (
+	activityCacheDuration = 8766 * time.Hour
+	objectCacheDuration   = 24 * time.Hour
+)
+
 func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 	_ = cleanupMediaObjectFromItem(it)
 
@@ -379,16 +413,29 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 	}
 
 	eTag := fmt.Sprintf(`"%2x"`, md5.Sum(dat))
+	updatedAt := time.Now()
+	_ = vocab.OnObject(it, func(o *vocab.Object) error {
+		updatedAt = o.Published
+		if !o.Updated.IsZero() {
+			updatedAt = o.Updated
+		}
+		return nil
+	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		if vocab.ActivityTypes.Contains(it.GetType()) {
-			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(8766*time.Hour.Seconds())))
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(activityCacheDuration.Seconds())))
+		} else {
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(objectCacheDuration.Seconds())))
 		}
 		w.Header().Set("Content-Type", json.ContentType)
 		w.Header().Set("Vary", "Accept")
 		w.Header().Set("ETag", eTag)
+		if !updatedAt.IsZero() {
+			w.Header().Set("Last-Modified", updatedAt.Format(time.RFC1123))
+		}
 
 		status := http.StatusOK
-		uaHasItem := requestMatchesHash(r.Header, eTag)
+		uaHasItem := requestMatchesETag(r.Header, eTag) || requestMatchesLastModified(r.Header, updatedAt)
 		if uaHasItem {
 			status = http.StatusNotModified
 		} else {
@@ -580,7 +627,16 @@ func iriHasObjectTypeFilter(iri vocab.IRI) bool {
 	return u.Query().Has("object.type")
 }
 
-func requestMatchesHash(h http.Header, eTag string) bool {
+func requestMatchesLastModified(h http.Header, updated time.Time) bool {
+	modifiedSince := h.Get("If-Modified-Since")
+	modSinceTime, err := time.Parse(time.RFC1123, modifiedSince)
+	if err != nil {
+		return false
+	}
+	return modSinceTime.Equal(updated) || modSinceTime.After(updated)
+}
+
+func requestMatchesETag(h http.Header, eTag string) bool {
 	noneMatchValues, ok := h["If-None-Match"]
 	if !ok {
 		return false
@@ -601,6 +657,14 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 	}
 
 	_ = cleanupMediaObjectFromItem(it)
+	updatedAt := time.Now()
+	_ = vocab.OnObject(it, func(o *vocab.Object) error {
+		updatedAt = o.Published
+		if !o.Updated.IsZero() {
+			updatedAt = o.Updated
+		}
+		return nil
+	})
 	return func(w http.ResponseWriter, r *http.Request) {
 		oniActor := o.oniActor(r)
 		oniFn := template.FuncMap{
@@ -617,12 +681,21 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 			o.Error(err).ServeHTTP(w, r)
 			return
 		}
+
 		eTag := fmt.Sprintf(`"%2x"`, md5.Sum(wrt.Bytes()))
+		if vocab.ActivityTypes.Contains(it.GetType()) {
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(activityCacheDuration.Seconds())))
+		} else {
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(objectCacheDuration.Seconds())))
+		}
 		w.Header().Set("Vary", "Accept")
 		w.Header().Set("ETag", eTag)
+		if !updatedAt.IsZero() {
+			w.Header().Set("Last-Modified", updatedAt.Format(time.RFC1123))
+		}
 
 		status := http.StatusOK
-		uaHasItem := requestMatchesHash(r.Header, eTag)
+		uaHasItem := requestMatchesETag(r.Header, eTag) || requestMatchesLastModified(r.Header, updatedAt)
 		if uaHasItem {
 			status = http.StatusNotModified
 		} else {
@@ -764,17 +837,6 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	it = vocab.CleanRecipients(it)
-	_ = vocab.OnObject(it, func(o *vocab.Object) error {
-		updatedAt := o.Published
-		if !o.Updated.IsZero() {
-			updatedAt = o.Updated
-		}
-		if !updatedAt.IsZero() {
-			w.Header().Set("Last-Modified", updatedAt.Format(time.RFC1123))
-		}
-		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(24*time.Hour.Seconds())))
-		return nil
-	})
 	accepts := getItemAcceptedContentType(it, r)
 	switch {
 	case accepts(jsonLD, activityJson, applicationJson):
