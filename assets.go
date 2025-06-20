@@ -45,7 +45,7 @@ func HandleStaticAssets(s fs.FS, errFn func(error) http.HandlerFunc) http.Handle
 			raw, err := fs.ReadFile(s, assetPath)
 			if err != nil {
 				if errors.Is(err, os.ErrNotExist) {
-					err = errors.NewNotFound(err, assetPath)
+					err = errors.NewNotFound(err, "%s", r.RequestURI)
 				}
 				errFn(err).ServeHTTP(w, r)
 				return
