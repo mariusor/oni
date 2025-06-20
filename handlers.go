@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -97,14 +96,7 @@ func (o *oni) setupRoutes(actors []vocab.Actor) {
 }
 
 func (o *oni) setupStaticRoutes(m chi.Router) {
-	var fsServe http.HandlerFunc
-	if assetFilesFS, err := fs.Sub(AssetsFS, "static"); err == nil {
-		fsServe = func(w http.ResponseWriter, r *http.Request) {
-			http.FileServer(http.FS(assetFilesFS)).ServeHTTP(w, r)
-		}
-	} else {
-		fsServe = o.Error(err).ServeHTTP
-	}
+	fsServe := HandleStaticAssets(AssetsFS, o.Error)
 	m.Handle("/main.js", fsServe)
 	m.Handle("/main.js.map", fsServe)
 	m.Handle("/main.css", fsServe)
