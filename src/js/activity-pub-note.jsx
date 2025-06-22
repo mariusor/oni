@@ -50,6 +50,6 @@ export class ActivityPubNote extends ActivityPubObject {
             ${this.renderContent()}
             ${this.renderTag()}
             ${this.renderAttachment()}
-        </article>${metadata}`;
+        </article>${metadata}${until(this.renderReplies())}`;
     }
 }
