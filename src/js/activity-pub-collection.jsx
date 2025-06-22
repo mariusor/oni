@@ -19,20 +19,22 @@ export class ActivityPubCollection extends ActivityPubObject {
         }
     `, ActivityPubObject.styles];
 
+    static properties = ActivityPubObject.properties;
+
     constructor(it) {
         super(it);
     }
 
     renderNext() {
         if (this.it.hasOwnProperty("next")) {
-            return html`<a href=${this.it.next}>Next</a>`;
+            return html`<a href=${this.it.getNext()}>Next</a>`;
         }
         return nothing;
     }
 
     renderPrev() {
         if (this.it.hasOwnProperty("prev")) {
-            return html`<a href=${this.it.prev}>Prev</a>`;
+            return html`<a href=${this.it.getPrev()}>Prev</a>`;
         }
         return nothing;
     }

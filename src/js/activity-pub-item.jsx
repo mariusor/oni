@@ -263,6 +263,20 @@ export class ActivityPubItem {
         return this.endpoints;
     }
 
+    getNext() {
+        if (!this.hasOwnProperty('next')) {
+            return this.next = {};
+        }
+        return this.next;
+    }
+
+    getPrev() {
+        if (!this.hasOwnProperty('prev')) {
+            return this.prev = {};
+        }
+        return this.prev;
+    }
+
     static load(it) {
         let raw = {};
         if (typeof it === "string") {
