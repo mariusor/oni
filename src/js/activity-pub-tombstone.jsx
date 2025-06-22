@@ -17,7 +17,7 @@ export class ActivityPubTombstone extends ActivityPubObject {
         return html`This ${this.it.formerType} has been deleted ${deleted ?
                 html`
                     <time dateTime=${deleted.toUTCString()} title=${deleted.toUTCString()}>
-                        <oni-icon name="deleted" title="Deleted"></oni-icon>
+                        <oni-icon name="deleted" alt="Deleted"></oni-icon>
                         ${relativeDate(deleted)}
                     </time>` : nothing}`;
     }

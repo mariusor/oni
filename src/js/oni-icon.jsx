@@ -18,7 +18,10 @@ export class OniIcon extends LitElement {
         margin-right: -.2rem;
     }
     `;
-    static properties = {name: {type: String}};
+    static properties = {
+        name: {type: String},
+        alt: {type: String}
+    };
 
     constructor() {
         super();
@@ -26,6 +29,6 @@ export class OniIcon extends LitElement {
 
     render() {
         if (!this.name) return nothing;
-        return html`${unsafeSVG(`<svg aria-hidden="true" name="icon-${this.name}"><use href="/icons.svg#icon-${this.name}"><title>${this.name}</title></use></svg>`)}`
+        return html`${unsafeSVG(`<svg aria-hidden="true"><use role="img" href="/icons.svg#icon-${this.name}"><title>${this.alt || this.name}</title></use></svg>`)}`
     }
 }

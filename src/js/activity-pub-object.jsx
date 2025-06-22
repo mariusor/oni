@@ -222,7 +222,7 @@ export class ActivityPubObject extends LitElement {
 
     renderBookmark() {
         const hasName = this.it.getName().length > 0;
-        return !hasName ? html`<a href="${this.it.iri() ?? nothing}"><oni-icon name="bookmark"></oni-icon></a>` : nothing
+        return !hasName ? html`<a href="${this.it.iri() ?? nothing}"><oni-icon alt="Bookmark this item" name="bookmark"></oni-icon></a>` : nothing
     }
 
     renderMetadata() {
@@ -251,7 +251,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
         return html`<a href=${this.it.iri() ?? nothing}>
-            <oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values><oni-icon name="bookmark"></oni-icon>
+            <oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values><oni-icon alt="Avatar" name="bookmark"></oni-icon>
         </a>`;
     }
 

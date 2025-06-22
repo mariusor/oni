@@ -188,7 +188,7 @@ export class ActivityPubActor extends ActivityPubObject {
                 ${url.map((u) => html`
                     <li><a target="external" rel="me noopener noreferrer nofollow" href=${u}>
                         ${u}
-                        <oni-icon name="external-href"></oni-icon>
+                        <oni-icon name="external-href" alt="Open external link"></oni-icon>
                     </a></li>`)}
             </ul>`;
     }
