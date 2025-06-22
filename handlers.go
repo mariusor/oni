@@ -852,6 +852,8 @@ func (o *oni) oniActor(r *http.Request) vocab.Actor {
 	return auth.AnonymousActor
 }
 
+var createTypes = vocab.ActivityVocabularyTypes{vocab.CreateType, vocab.UpdateType}
+
 func titleFromItem(actor vocab.Actor, m vocab.Item, r *http.Request) func() template.HTML {
 	title := bluemonday.StripTagsPolicy().Sanitize(vocab.NameOf(m))
 	details := ""
@@ -868,12 +870,25 @@ func titleFromItem(actor vocab.Actor, m vocab.Item, r *http.Request) func() temp
 		if currentName != "" {
 			details = currentName
 		} else {
+			details = string(m.GetType())
 			if vocab.ActivityPubCollections.Contains(vocab.CollectionPath(path)) {
-				details = strings.TrimPrefix(r.URL.Path, "/")
-			} else {
-				details = string(m.GetType()) + " details"
+				details = "fediverse " + strings.TrimPrefix(r.URL.Path, "/")
+			} else if createTypes.Contains(m.GetType()) {
+				_ = vocab.OnActivity(m, func(act *vocab.Activity) error {
+					if act.Object == nil {
+						return nil
+					}
+					currentName = vocab.NameOf(act.Object)
+					if currentName == "" {
+						currentName = string(act.Object.GetType())
+					}
+					return nil
+				})
+				if currentName != "" {
+					details += ": " + currentName
+				}
 			}
-			title = fmt.Sprintf("%s :: fediverse %s", name, details)
+			title = fmt.Sprintf("%s :: %s", name, details)
 		}
 	}
 
