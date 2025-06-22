@@ -31,10 +31,11 @@ type assetData struct {
 }
 
 func HandleStaticAssets(s fs.FS, errFn func(error) http.HandlerFunc) http.HandlerFunc {
-	const cacheTime = 8766 * time.Hour
+	const cacheTime = 730 * time.Hour
 
 	_ = mime.AddExtensionType(".ico", "image/vnd.microsoft.icon")
 	_ = mime.AddExtensionType(".txt", "text/plain; charset=utf-8")
+	_ = mime.AddExtensionType(".map", "application/map+json")
 
 	updated := time.Time{}
 	if build, ok := debug.ReadBuildInfo(); ok {
