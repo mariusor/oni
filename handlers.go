@@ -662,7 +662,7 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 		oniFn := template.FuncMap{
 			"ONI":   func() vocab.Actor { return oniActor },
 			"URLS":  actorURLs(oniActor),
-			"Title": titleFromItem(it, r),
+			"Title": titleFromItem(oniActor, it, r),
 			"CurrentURL": func() template.HTMLAttr {
 				return template.HTMLAttr(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
 			},
@@ -852,17 +852,27 @@ func (o *oni) oniActor(r *http.Request) vocab.Actor {
 	return auth.AnonymousActor
 }
 
-func titleFromItem(m vocab.Item, r *http.Request) func() template.HTML {
+func titleFromItem(actor vocab.Actor, m vocab.Item, r *http.Request) func() template.HTML {
 	title := bluemonday.StripTagsPolicy().Sanitize(vocab.NameOf(m))
-	if vocab.ActorTypes.Contains(m.GetType()) {
-		details := "page"
-		name := bluemonday.StripTagsPolicy().Sanitize(vocab.PreferredNameOf(m))
-		switch r.URL.Path {
-		case "/":
+	details := ""
+	name := bluemonday.StripTagsPolicy().Sanitize(vocab.PreferredNameOf(actor))
+	path := filepath.Base(r.URL.Path)
+	switch {
+	case path == "/":
+		if vocab.ActorTypes.Contains(m.GetType()) {
 			details = "profile page"
 			title = fmt.Sprintf("%s :: fediverse %s", name, details)
-		case "/inbox", "/outbox", "/followers", "/following":
-			details = strings.TrimPrefix(r.URL.Path, "/")
+		}
+	default:
+		currentName := vocab.NameOf(m)
+		if currentName != "" {
+			details = currentName
+		} else {
+			if vocab.ActivityPubCollections.Contains(vocab.CollectionPath(path)) {
+				details = strings.TrimPrefix(r.URL.Path, "/")
+			} else {
+				details = string(m.GetType()) + " details"
+			}
 			title = fmt.Sprintf("%s :: fediverse %s", name, details)
 		}
 	}
