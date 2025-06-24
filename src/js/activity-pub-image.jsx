@@ -53,24 +53,46 @@ export class ActivityPubImage extends ActivityPubObject {
     }
 
     renderInline() {
-        let src = this.it.iri();
-        if (!src) {
-            src = this.it.getUrl();
+        const src = this.it.getUrl() || [{href : this.it.iri()}];
+        if (src?.length === 0) {
+            return nothing;
         }
         const alt = this.renderAltText();
-        return html`<img src=${src ?? nothing} title="${alt}" alt="${alt}" class="small""/>`;
+        const smallest = Array.isArray(src) ?
+            src.reduce(
+                (prev, cur) => (cur?.width <= prev?.width) ? cur : prev
+            ) :
+            src;
+        return html`<img src=${smallest?.href ?? nothing} title="${alt}" alt="${alt}" class="small""/>`;
     }
 
     render() {
-        let src = this.it.iri();
-        if (!src) {
-            src = this.it.getUrl();
-        }
         if (this.inline) {
             return this.renderInline();
         }
+
+        const src = this.it.getUrl() || [{href : this.it.iri()}];
         const alt = this.renderAltText();
         const metadata = this.renderMetadata();
+
+        let largest = {href: src};
+        let sources = nothing;
+        let sizes = nothing;
+        if (Array.isArray(src)) {
+            const sorted = src.sort((a, b) => a?.width - b?.width);
+            largest = sorted.reduce((prev, cur) => (cur?.width >= prev?.width ? cur : prev));
+            sources = (
+                src.length > 1 ?
+                    sorted.map((u) => `${u?.href} ${u?.width}w`).join(", ") :
+                    nothing
+            );
+            sizes = (
+                src.length > 1 ? sorted.map(
+                        u => `(${u?.width === largest?.width ? "min" : "max"}-width: ${u?.width + 80}px)`).join(", ") :
+                    nothing
+            );
+        }
+
         return html`
                 <figure>
                     ${when(alt.length > 0,
@@ -83,7 +105,9 @@ export class ActivityPubImage extends ActivityPubObject {
                                 </figcaption>`,
                             () => nothing
                     )}
-                    <img src=${src ?? nothing} title="${alt}" alt="${alt}" />
+                    <img src=${largest.href ?? nothing}
+                         title="${alt}" alt="${alt}"
+                         srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
                 </figure>
                 ${this.renderTag()}
                 ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
