@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"sync"
 	"time"
 
 	"github.com/go-ap/errors"
@@ -46,6 +47,7 @@ func HandleStaticAssets(s fs.FS, errFn func(error) http.HandlerFunc) http.Handle
 		}
 	}
 	assetMap := make(map[string]assetData)
+	m := sync.Mutex{}
 	return func(w http.ResponseWriter, r *http.Request) {
 		assetPath := filepath.Join("static", r.RequestURI)
 		mimeType := mime.TypeByExtension(filepath.Ext(assetPath))
@@ -65,8 +67,10 @@ func HandleStaticAssets(s fs.FS, errFn func(error) http.HandlerFunc) http.Handle
 				hash:      fmt.Sprintf(`"%2x"`, md5.Sum(raw)),
 				updatedAt: updated,
 			}
+			m.Lock()
+			assetMap[assetPath] = asset
+			m.Unlock()
 		}
-		assetMap[assetPath] = asset
 
 		w.Header().Set("Cache-Control", fmt.Sprintf("public,max-age=%d", int(cacheTime.Seconds())))
 		if !asset.updatedAt.IsZero() {
