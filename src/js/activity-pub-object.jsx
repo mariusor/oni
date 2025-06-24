@@ -319,6 +319,7 @@ export class ActivityPubObject extends LitElement {
 }
 
 ActivityPubObject.renderByMediaType = function (it, inline) {
+    it = new ActivityPubItem(it);
     if (!it?.hasOwnProperty('mediaType')) {
         return nothing;
     }
@@ -329,7 +330,24 @@ ActivityPubObject.renderByMediaType = function (it, inline) {
     if (it.mediaType.indexOf('text/html') === 0) {
         return unsafeHTML(it.content);
     }
-    return html`<a href=${it.url}>${it.name}</a>`;
+
+    let src = it.getUrl();
+    let name;
+    if (typeof src === 'string') {
+        src = { href: src};
+        name = src;
+    }
+    if (!name) {
+        name = it.getSummary()[0];
+    }
+    if (!name) {
+        name = it.getName()[0];
+    }
+    if (!name) {
+        name = it.getType();
+    }
+
+    return html`<div><a href=${src.href}>${unsafeHTML(name) ?? src.href}</a></div>`;
 }
 
 ActivityPubObject.renderByType = async function (it, showMetadata) {
