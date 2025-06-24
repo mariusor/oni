@@ -17,7 +17,7 @@ require (
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-ap/processing v0.0.0-20250618080358-876012eb81d8
 	github.com/go-ap/storage-fs v0.0.0-20250619141714-38985a9ea4a6
-	github.com/go-chi/chi/v5 v5.2.1
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/cors v1.2.1
 	github.com/google/uuid v1.6.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
