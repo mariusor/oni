@@ -392,8 +392,8 @@ func cleanupMediaObject(o *vocab.Object) error {
 }
 
 const (
-	activityCacheDuration = 8766 * time.Hour
-	objectCacheDuration   = 24 * time.Hour
+	activityCacheDuration = 8766 * time.Hour // 1 year
+	objectCacheDuration   = 168 * time.Hour  // 7 days
 )
 
 func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
