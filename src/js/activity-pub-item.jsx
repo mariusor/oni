@@ -1,5 +1,4 @@
 import {fetchActivityPubIRI} from "./client";
-import {nothing} from "lit";
 
 export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', 'Mention', ''];
 export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];

@@ -75,7 +75,7 @@ export class ActivityPubImage extends ActivityPubObject {
         const alt = this.renderAltText();
         const metadata = this.renderMetadata();
 
-        let largest = {href: src};
+        let largest = typeof(src) === 'string' ? {href: src} : src;
         let sources = nothing;
         let sizes = nothing;
         if (Array.isArray(src)) {
