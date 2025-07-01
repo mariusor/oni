@@ -46,6 +46,12 @@ export class ActivityPubImage extends ActivityPubObject {
         super(it);
     }
 
+    renderNameText() {
+        const name = document.createElement('div');
+        name.innerHTML = this.it.getName();
+        return name.innerText.trim();
+    }
+
     renderAltText() {
         const alt = document.createElement('div');
         alt.innerHTML = this.it.getSummary();
@@ -72,6 +78,7 @@ export class ActivityPubImage extends ActivityPubObject {
         }
 
         const src = this.it.getUrl() || [{href : this.it.iri()}];
+        const name = this.renderNameText();
         const alt = this.renderAltText();
         const metadata = this.renderMetadata();
 
@@ -106,7 +113,7 @@ export class ActivityPubImage extends ActivityPubObject {
                             () => nothing
                     )}
                     <img src=${largest.href ?? nothing}
-                         title="${alt}" alt="${alt}"
+                         title="${name ?? alt}" alt="${alt}"
                          srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
                 </figure>
                 ${this.renderTag()}

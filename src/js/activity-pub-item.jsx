@@ -292,7 +292,7 @@ export class ActivityPubItem {
                         if (!value.hasOwnProperty("id")) { console.warn(`invalid return structure`, value); return; }
                         if (value.hasOwnProperty("errors")) {console.warn(value.errors);return;}
                         o.loadFromObject(value);
-                        console.info(`fetched ${raw} loaded object`, o);
+                        //console.info(`fetched ${raw} loaded object`, o);
                     }).catch(e => console.warn(e));
                 return o;
             }
