@@ -77,7 +77,8 @@ export class ActivityPubImage extends ActivityPubObject {
             return this.renderInline();
         }
 
-        const src = this.it.getUrl() || [{href : this.it.iri()}];
+        const iri = this.it.iri();
+        const src = this.it.getUrl();
         const name = this.renderNameText();
         const alt = this.renderAltText();
         const metadata = this.renderMetadata();
@@ -107,12 +108,13 @@ export class ActivityPubImage extends ActivityPubObject {
                                 <figcaption>
                                     <details>
                                         <summary>alt</summary>
+                                        ${name !== "" ? html`<strong>${name}</strong><br/>` : nothing}
                                         ${alt}
                                     </details>
                                 </figcaption>`,
                             () => nothing
                     )}
-                    <img src=${largest.href ?? nothing}
+                    <img src=${iri ?? nothing}
                          title="${name ?? alt}" alt="${alt}"
                          srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
                 </figure>
