@@ -9,16 +9,16 @@ require (
 	git.sr.ht/~mariusor/wrapper v0.0.0-20250504120759-5fa47ac25e08
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.1
-	github.com/go-ap/activitypub v0.0.0-20250624113752-67e4989cab6d
-	github.com/go-ap/auth v0.0.0-20250624114409-1645a9e4dd98
-	github.com/go-ap/client v0.0.0-20250624114212-62552fca2801
+	github.com/go-ap/activitypub v0.0.0-20250707121747-61ebb8da72cd
+	github.com/go-ap/auth v0.0.0-20250707124621-3f46deb012d3
+	github.com/go-ap/client v0.0.0-20250707122259-92a40571f969
 	github.com/go-ap/errors v0.0.0-20250527110557-c8db454e53fd
-	github.com/go-ap/filters v0.0.0-20250624114123-8b0381a095ec
+	github.com/go-ap/filters v0.0.0-20250707122225-29d0a210d866
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250624114437-a999426b2960
-	github.com/go-ap/storage-fs v0.0.0-20250624114544-4880bc1630a9
+	github.com/go-ap/processing v0.0.0-20250707124712-d19f79e2349a
+	github.com/go-ap/storage-fs v0.0.0-20250707124729-eb08c778b5d7
 	github.com/go-chi/chi/v5 v5.2.2
-	github.com/go-chi/cors v1.2.1
+	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
 	github.com/mariusor/render v1.5.1-0.20221026090743-ab78c1b3aa95
 	github.com/microcosm-cc/bluemonday v1.0.27
@@ -35,7 +35,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect
-	github.com/go-ap/cache v0.0.0-20250624114002-22c47b1ed131 // indirect
+	github.com/go-ap/cache v0.0.0-20250707121823-a03eabe94686 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
