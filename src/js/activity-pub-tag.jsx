@@ -1,6 +1,7 @@
 import {html, nothing} from "lit";
 import {ActivityPubNote} from "./activity-pub-note";
 import {until} from "lit-html/directives/until.js";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class ActivityPubTag extends ActivityPubNote {
     static styles = ActivityPubNote.styles;
@@ -16,9 +17,7 @@ export class ActivityPubTag extends ActivityPubNote {
     }
 
     render() {
-        if (this.it == null) {
-            return nothing;
-        }
+        if (!ActivityPubItem.isValid(this.it)) return nothing;
         const rel = this.it.type === 'Mention' ? 'mention' : 'tag';
 
         if (this.showMetadata) {

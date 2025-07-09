@@ -1,6 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {relativeDate} from "./utils";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class ActivityPubTombstone extends ActivityPubObject {
     static styles = ActivityPubObject.styles;
@@ -10,6 +11,7 @@ export class ActivityPubTombstone extends ActivityPubObject {
     }
 
     renderDeleted() {
+        if (!ActivityPubItem.isValid(this.it)) return nothing;
         if (this.it.type !== "Tombstone") {
             return nothing;
         }

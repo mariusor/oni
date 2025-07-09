@@ -60,7 +60,7 @@ export class ActivityPubActivity extends ActivityPubObject {
     }
 
     render() {
-        if (!ActivityPubActivity.validForRender(this.it)) return nothing;
+        if (!ActivityPubActivity.isValid(this.it)) return nothing;
 
         return html`
             ${until(this.renderObject(false))}
@@ -68,8 +68,9 @@ export class ActivityPubActivity extends ActivityPubObject {
             <footer>${this.renderMetadata()}</footer>
         `;
     }
+
+    static isValid (it) {
+        return ActivityPubItem.isValid(it) && it.type === 'Create' && it.hasOwnProperty('object');
+    }
 }
 
-ActivityPubActivity.validForRender = function (it) {
-    return (it.type === 'Create') && it.hasOwnProperty('object');
-}

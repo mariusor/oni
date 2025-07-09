@@ -293,6 +293,7 @@ export class ActivityPubActor extends ActivityPubObject {
     };
 
     render() {
+        if (!ActivityPubItem.isValid(this.it)) return nothing;
         const style = html`<style>${until(this.renderPalette())}</style>`;
 
         const iri = this.it.iri();

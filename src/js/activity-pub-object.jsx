@@ -315,6 +315,10 @@ export class ActivityPubObject extends LitElement {
 
         return html`${until(ActivityPubObject.renderByType(this.it), html`Loading`)}${until(this.renderReplies())}`;
     }
+
+    static isValid(it) {
+        return ActivityPubItem.isValid(it) && ObjectTypes.indexOf(it.type) > 0;
+    }
 }
 
 ActivityPubObject.renderByMediaType = function (it, inline) {
@@ -385,6 +389,3 @@ ActivityPubObject.renderByType = async function (it, showMetadata) {
     return nothing;
 }
 
-ActivityPubObject.validForRender = function (it) {
-    return ObjectTypes.indexOf(it.type) > 0;
-}

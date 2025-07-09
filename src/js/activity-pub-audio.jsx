@@ -1,6 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {when} from "lit-html/directives/when.js";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class ActivityPubAudio extends ActivityPubObject {
     static styles = [css`
@@ -15,6 +16,7 @@ export class ActivityPubAudio extends ActivityPubObject {
     }
 
     render() {
+        if (!ActivityPubItem.isValid(this.it)) return nothing;
         const alt = this.it.getSummary();
         const metadata = this.renderMetadata();
         return html`

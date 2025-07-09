@@ -3,6 +3,7 @@ import {css, html, nothing} from "lit";
 import {until} from "lit-html/directives/until.js";
 import {isLocalIRI} from "./client";
 import {ActivityPubObject} from "./activity-pub-object";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class OniHeader extends ActivityPubActor {
 
@@ -55,6 +56,8 @@ export class OniHeader extends ActivityPubActor {
     }
 
     render() {
+        if (!ActivityPubItem.isValid(this.it)) return nothing;
+
         const iconName = html`<span>${this.renderIconName()}</span>`;
 
         return html`<style>${until(this.renderBgImage(), nothing)}</style>

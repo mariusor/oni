@@ -1,7 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ifDefined} from "lit-html/directives/if-defined.js";
-import {ActivityTypes, ActorTypes} from "./activity-pub-item";
+import {ActivityPubItem, ActivityTypes, ActorTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {ActivityPubActivity} from "./activity-pub-activity";
 import {until} from "lit-html/directives/until.js";
@@ -57,13 +57,13 @@ export class ActivityPubCollection extends ActivityPubObject {
 
             let renderedItem = unsafeHTML(`<!-- Unknown activity object ${type} -->`);
             if (ActivityTypes.indexOf(type) >= 0) {
-                if (!ActivityPubActivity.validForRender(it)) return nothing;
+                if (!ActivityPubActivity.isValid(it)) return nothing;
 
                 renderedItem = html`<oni-activity it=${JSON.stringify(it)}></oni-activity>`;
             } else if (ActorTypes.indexOf(type) >= 0) {
                 renderedItem = html`<oni-actor it=${JSON.stringify(it)} ?inline=${true}></oni-actor>`
             } else {
-                if (!ActivityPubObject.validForRender(it)) return nothing;
+                if (!ActivityPubObject.isValid(it)) return nothing;
 
                 renderedItem = ActivityPubObject.renderByType(it);
             }
@@ -73,6 +73,8 @@ export class ActivityPubCollection extends ActivityPubObject {
     }
 
     render() {
+        if (!ActivityPubItem.isValid(this.it)) return nothing;
+
         const collection = () => {
             if (this.it.getItems().length === 0) {
                 return nothing;

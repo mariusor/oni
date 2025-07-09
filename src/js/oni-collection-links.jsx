@@ -1,6 +1,7 @@
 import {css, html, LitElement, nothing} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {ActivityPubObject} from "./activity-pub-object";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class OniCollectionLinks extends LitElement {
     static styles = css`
@@ -102,6 +103,12 @@ export class OniCollectionLink extends ActivityPubObject {
     }
 
     render() {
+        if (!ActivityPubItem.isValid(this.it)) {
+            const iri= this.it;
+            const label = iri.split('/').at(-1);
+            return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${label}</a>`;
+        }
+
         const iri = this.it.iri();
         const label = this.label();
         return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${this.renderIcon()} ${label}</a>`;

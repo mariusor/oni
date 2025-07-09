@@ -1,6 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {when} from "lit-html/directives/when.js";
+import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
 
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`
@@ -73,6 +74,7 @@ export class ActivityPubImage extends ActivityPubObject {
     }
 
     render() {
+        if (!ActivityPubImage.isValid(this.it)) return nothing;
         if (this.inline) {
             return this.renderInline();
         }
@@ -121,5 +123,8 @@ export class ActivityPubImage extends ActivityPubObject {
                 ${this.renderTag()}
                 ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
         `;
+    }
+    static isValid(it) {
+        return ActivityPubItem.isValid(it) && it.type === 'Image';
     }
 }

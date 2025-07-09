@@ -300,7 +300,11 @@ export class ActivityPubItem {
         if (typeof it === "object") {
             raw = it;
         }
-        return new this(raw);
+        return it;
+    }
+
+    static isValid(it) {
+        return typeof it === 'object' && it !== null && it.hasOwnProperty('id') && it.hasOwnProperty('type') && it.id !== '' && it.type !== '';
     }
 }
 

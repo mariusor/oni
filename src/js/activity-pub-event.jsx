@@ -2,6 +2,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubNote} from "./activity-pub-note";
 import {css, html, nothing} from "lit";
 import {renderDuration, renderTimestamp} from "./utils";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class ActivityPubEvent extends ActivityPubNote {
     static styles = [
@@ -23,6 +24,7 @@ export class ActivityPubEvent extends ActivityPubNote {
     }
 
     render() {
+        if (!ActivityPubItem.isValid(this.it)) return nothing;
         const name = this.it.getName().length > 0 ? html`<h1>${this.renderName()}</h1>` : nothing;
         const summary = this.it.getSummary().length > 0 ? html`<h2>${this.renderSummary()}</h2>` : nothing;
         const header = this.it.getName().length+this.it.getSummary().length > 0 ? html`<header>${name}${summary}</header>` : nothing;
