@@ -275,30 +275,17 @@ export class ActivityPubItem {
     }
 
     static load(it) {
-        let raw = {};
-        if (typeof it === "string") {
-            if (URL.canParse(it) === true) {
-                const o = new this({id: it});
-                fetchActivityPubIRI(it)
-                    .then(value => {
-                        if (typeof value === 'undefined') { console.warn('invalid response received'); return;}
-                        if (!value.hasOwnProperty("id")) { console.warn(`invalid return structure`, value); return; }
-                        if (value.hasOwnProperty("errors")) {console.warn(value.errors);return;}
-                        o.loadFromObject(value);
-                        //console.info(`fetched ${raw} loaded object`, o);
-                    }).catch(e => console.warn(e));
-                return o;
-            } else {
+        if (typeof it === 'string') {
+            if (!URL.canParse(it)) {
                 try {
-                    raw = JSON.parse(it);
+                    it = JSON.parse(it);
                 } catch (e) {
-                    console.warn('unable to parse json string', e)
-                    raw = it;
+                    console.warn('unable to parse JSON', e)
                 }
             }
         }
         if (typeof it === "object") {
-            raw = it;
+            return new this(it);
         }
         return it;
     }

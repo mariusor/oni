@@ -4,6 +4,7 @@ import {pluralize, renderTimestamp} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
+import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -107,6 +108,27 @@ export class ActivityPubObject extends LitElement {
         inline: {type: Boolean},
     };
 
+    updated(changedProperties) {
+        if (!changedProperties.has('it')) return;
+        if (typeof this.it !== 'string') return;
+        if (this.it.at(0) === '"' && this.it.at(-1) === '"') {
+            this.it = this.it.replaceAll('"', '');
+        }
+        if (!URL.canParse(this.it)) return;
+        fetchActivityPubIRI(this.it)
+            .then(value => {
+                if (typeof value === 'undefined') {
+                    console.warn('invalid response received');
+                } else if (!value.hasOwnProperty("id")) {
+                    console.warn(`invalid return structure`, value);
+                } else if (value.hasOwnProperty("errors")) {
+                    console.warn(value.errors);
+                } else {
+                    this.it = new ActivityPubItem(value);
+                }
+            }).catch(console.warn);
+    }
+
     constructor(showMetadata) {
         super();
 
@@ -173,7 +195,10 @@ export class ActivityPubObject extends LitElement {
             if (!isLocalIRI(act.id)) {
                 username = `${username}@${new URL(act.id).hostname}`
             }
-            return html`<a href=${act.id}><oni-natural-language-values name="preferredUsername" it=${JSON.stringify(username)}></oni-natural-language-values></a>`
+            return html`<a href=${act.id}>
+                <oni-natural-language-values name="preferredUsername"
+                                             it=${JSON.stringify(username)}></oni-natural-language-values>
+            </a>`
         })}`;
     }
 
@@ -186,15 +211,18 @@ export class ActivityPubObject extends LitElement {
             tags = [tags];
         }
         return html`
-                <aside class="tag"><ul>
+            <aside class="tag">
+                <ul>
                     ${tags.map(
-                        value => html`<li>${until(ActivityPubObject.renderByType(value, false), html`Loading`)}</li>`
+                            value => html`
+                                <li>${until(ActivityPubObject.renderByType(value, false), html`Loading`)}</li>`
                     )}
-                </ul></aside>`;
+                </ul>
+            </aside>`;
     }
 
     showChildren(e) {
-        const self =e.target;
+        const self = e.target;
         const show = self.open;
         self.querySelectorAll('bandcamp-embed').forEach((it) => {
             it.show = show;
@@ -213,20 +241,23 @@ export class ActivityPubObject extends LitElement {
             <details @toggle=${this.showChildren}>
                 <summary>${pluralize(attachment.length, 'attachment')}</summary>
                 <aside class="attachment">
-                ${attachment.map(
-                        value => until(ActivityPubObject.renderByType(value), html`Loading`)
-                )}</aside>
+                    ${attachment.map(
+                            value => until(ActivityPubObject.renderByType(value), html`Loading`)
+                    )}
+                </aside>
             </details>`;
     }
 
     renderBookmark() {
         const hasName = this.it.getName().length > 0;
-        return !hasName ? html`<a href="${this.it.iri() ?? nothing}"><oni-icon alt="Bookmark this item" name="bookmark"></oni-icon></a>` : nothing
+        return !hasName ? html`<a href="${this.it.iri() ?? nothing}">
+            <oni-icon alt="Bookmark this item" name="bookmark"></oni-icon>
+        </a>` : nothing
     }
 
     renderMetadata() {
         if (!this.showMetadata) return nothing;
-        if (!this.it.hasOwnProperty("attributedTo") && !this.it.hasOwnProperty('actor'))  return nothing;
+        if (!this.it.hasOwnProperty("attributedTo") && !this.it.hasOwnProperty('actor')) return nothing;
 
         const auth = this.renderAuthor();
         let action = 'Published';
@@ -237,11 +268,12 @@ export class ActivityPubObject extends LitElement {
             action = 'Updated';
             published = updated;
         }
-        return html`<aside>
-            ${action} ${renderTimestamp(published)} ${until(auth)}
-            ${until(this.renderReplyCount())}
-            ${this.renderBookmark()}
-        </aside>`;
+        return html`
+            <aside>
+                ${action} ${renderTimestamp(published)} ${until(auth)}
+                ${until(this.renderReplyCount())}
+                ${this.renderBookmark()}
+            </aside>`;
     }
 
     renderName() {
@@ -250,7 +282,8 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
         return html`<a href=${this.it.iri() ?? nothing}>
-            <oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values><oni-icon alt="Avatar" name="bookmark"></oni-icon>
+            <oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values>
+            <oni-icon alt="Avatar" name="bookmark"></oni-icon>
         </a>`;
     }
 
@@ -259,7 +292,8 @@ export class ActivityPubObject extends LitElement {
         if (content.length === 0) {
             return nothing;
         }
-        return html`<oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
+        return html`
+            <oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
     }
 
     renderSummary() {
@@ -268,7 +302,8 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        return html`<oni-natural-language-values name="summary" it=${JSON.stringify(summary)}></oni-natural-language-values>`;
+        return html`
+            <oni-natural-language-values name="summary" it=${JSON.stringify(summary)}></oni-natural-language-values>`;
     }
 
     async renderReplyCount() {
@@ -301,7 +336,8 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        return html`<oni-collection it=${JSON.stringify(until(replies, []))}></oni-collection>`;
+        return html`
+            <oni-collection it=${JSON.stringify(until(replies, []))}></oni-collection>`;
     }
 
     inFocus() {
@@ -313,7 +349,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        return html`${until(ActivityPubObject.renderByType(this.it), html`Loading`)}${until(this.renderReplies())}`;
+        return html`${ActivityPubObject.renderByType(this.it)}, "Loading")}${until(this.renderReplies())}`;
     }
 
     static isValid(it) {

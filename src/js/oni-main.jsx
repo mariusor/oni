@@ -21,14 +21,17 @@ export class OniMain extends ActivityPubObject {
         return this._auth.authorized && isMainPage();
     }
 
+    renderHeader() {
+        return html`${when(
+            !isMainPage(),
+            () => html`<oni-header it="${JSON.stringify(this.it)}"></oni-header>`,
+        )}`;
+    }
+
     render() {
         const colors = html`${until(renderColors(this.it))}`
 
-        return html`
-            ${when(
-                !isMainPage(),
-                () => html`<oni-header it="${JSON.stringify(this.it)}"></oni-header>`,
-            )}
+        return html`${until(this.renderHeader())}
             <slot></slot>
             ${colors}
             `;

@@ -1,6 +1,7 @@
 import {authorization} from "./utils";
 
 export async function fetchActivityPubIRI(iri) {
+    if (typeof iri !== 'string') return new Promise((resolve, reject) => reject('invalid URL passed to function'));
     let headers = fetchHeaders;
     if (isLocalIRI(iri)) {
         const auth = authorization();
@@ -11,7 +12,7 @@ export async function fetchActivityPubIRI(iri) {
         // generate HTTP-signature for the actor
     }
     headers["Origin"] = window.location.hostname;
-    console.log(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI `, iri);
+    console.info(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI `, iri);
     const opts = {
         headers: headers,
         cache: 'force-cache',

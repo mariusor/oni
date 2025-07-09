@@ -199,6 +199,8 @@ function paletteIsValid(palette, imageURL, iconURL) {
 }
 
 export async function loadPalette(it) {
+    if (!ActivityPubItem.isValid(it)) return nothing;
+
     const imageURL = apURL(it.getImage());
     const iconURL = apURL(it.getIcon());
 

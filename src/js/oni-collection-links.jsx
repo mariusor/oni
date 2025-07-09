@@ -2,6 +2,7 @@ import {css, html, LitElement, nothing} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubItem} from "./activity-pub-item";
+import {until} from "lit-html/directives/until.js";
 
 export class OniCollectionLinks extends LitElement {
     static styles = css`
@@ -53,11 +54,11 @@ export class OniCollectionLinks extends LitElement {
             <nav>
                 <slot></slot>
                 <ul>
-                    ${this.it.map(value => html`
+                    ${until(this.it.map(value => html`
                         <li class=${classMap({'active': (value === window.location.href)})}>
                             <oni-collection-link it=${value}></oni-collection-link>
                         </li>`
-                    )}
+                    ), 'Loading')}
                 </ul>
             </nav>`;
     }
@@ -85,13 +86,16 @@ export class OniCollectionLink extends ActivityPubObject {
         super();
     }
 
+    collectionType() {
+        return this.it.iri().split('/').at(-1);
+    }
+
     label() {
         const name = this.it.getName();
         if (name.length > 0) {
             return name;
         }
-        const pieces = this.it.iri().split('/');
-        return pieces[pieces.length -1];
+        return this.collectionType()
     }
 
     renderIcon () {
@@ -99,7 +103,7 @@ export class OniCollectionLink extends ActivityPubObject {
         if (icon) {
             return html`<oni-image it=${JSON.stringify(icon)}></oni-image>`;
         }
-        return html`<oni-icon name=${this.label()}></oni-icon>`;
+        return html`<oni-icon name=${this.collectionType()}></oni-icon>`;
     }
 
     render() {
