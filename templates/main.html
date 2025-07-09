@@ -8,7 +8,7 @@
     {{- range $key, $value := URLS }}
     <link href="{{ $value }}" rel="me alternate">
     {{- end }}
-    {{- $curURL := CurrentURL  -}}
+    {{ $curURL := CurrentURL -}}
     {{- if ne $curURL "" }}
     <link rel="alternate" type="application/activity+json" href="{{ $curURL }}">
     {{- end }}
@@ -16,8 +16,9 @@
     <style>script { display: none; } </style>
 </head>
 <body>
-<oni-main it="{{ ONI | JSON }}">
-{{ yield -}}
+<oni-main>
+    <script type="application/json+ld">{{ ONI | JSON }}</script>
+    {{ yield }}
 </oni-main>
 <footer>
     <noscript>

@@ -30,7 +30,7 @@ export class ActivityPubItem {
         this[k] = v;
     }
 
-    loadFromObject(it, loaded) {
+    loadFromObject(it) {
         const setPropIfExists = (p) => {
             if (!it.hasOwnProperty(p)) return;
             this.setProp(p, it[p]);
@@ -116,7 +116,6 @@ export class ActivityPubItem {
         }
         return this.following;
     }
-
 
     getDeleted() {
         if (!this.hasOwnProperty('deleted')) {
@@ -254,7 +253,6 @@ export class ActivityPubItem {
         return items.sort(sortByPublished);
     }
 
-
     getEndPoints() {
         if (!this.hasOwnProperty('endpoints')) {
             return this.endpoints = {};
@@ -279,14 +277,9 @@ export class ActivityPubItem {
     static load(it) {
         let raw = {};
         if (typeof it === "string") {
-            try {
-                raw = JSON.parse(it);
-            } catch (e) {
-                raw = it;
-            }
-            if (URL.canParse(raw) === true) {
-                const o = new this({id: raw});
-                fetchActivityPubIRI(raw)
+            if (URL.canParse(it) === true) {
+                const o = new this({id: it});
+                fetchActivityPubIRI(it)
                     .then(value => {
                         if (typeof value === 'undefined') { console.warn('invalid response received'); return;}
                         if (!value.hasOwnProperty("id")) { console.warn(`invalid return structure`, value); return; }
@@ -295,6 +288,13 @@ export class ActivityPubItem {
                         //console.info(`fetched ${raw} loaded object`, o);
                     }).catch(e => console.warn(e));
                 return o;
+            } else {
+                try {
+                    raw = JSON.parse(it);
+                } catch (e) {
+                    console.warn('unable to parse json string', e)
+                    raw = it;
+                }
             }
         }
         if (typeof it === "object") {

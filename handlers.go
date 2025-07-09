@@ -643,10 +643,7 @@ func requestMatchesETag(h http.Header, eTag string) bool {
 }
 
 func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
-	templatePath := "components/person"
-	if !vocab.ActorTypes.Contains(it.GetType()) {
-		templatePath = "components/item"
-	}
+	templatePath := "components/item"
 
 	_ = cleanupMediaObjectFromItem(it)
 	updatedAt := time.Now()

@@ -55,17 +55,11 @@ var (
 				}
 				return "error"
 			},
-			"JSON": func(it any) template.HTMLAttr {
-				var res []byte
-				switch o := it.(type) {
-				case vocab.Item:
-					res, _ = vocab.MarshalJSON(o)
-				case vocab.NaturalLanguageValues:
-					res, _ = o.MarshalJSON()
-				default:
-					res, _ = json.Marshal(o)
-				}
-				return template.HTMLAttr(res)
+			"JSON": func(it any) template.HTML {
+				return template.HTML(renderJson(it))
+			},
+			"JSONAttr": func(it any) template.HTMLAttr {
+				return template.HTMLAttr(renderJson(it))
 			},
 			"HTTPErrors": errors.HttpErrors,
 		}},
@@ -74,3 +68,16 @@ var (
 	renderOptions = render.HTMLOptions{}
 	ren           = render.New(defaultRenderOptions)
 )
+
+func renderJson(it any) []byte {
+	var res []byte
+	switch o := it.(type) {
+	case vocab.Item:
+		res, _ = vocab.MarshalJSON(o)
+	case vocab.NaturalLanguageValues:
+		res, _ = o.MarshalJSON()
+	default:
+		res, _ = json.Marshal(o)
+	}
+	return res
+}

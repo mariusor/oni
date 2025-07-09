@@ -4,7 +4,6 @@ import {pluralize, renderTimestamp} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
-import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -100,21 +99,21 @@ export class ActivityPubObject extends LitElement {
         it: {
             type: ActivityPubItem,
             converter: {
-                toAttribute : (val, typ) => JSON.stringify(val),
-                fromAttribute : (val, typ) => ActivityPubItem.load(val, this.requestUpdate),
+                toAttribute: (val, typ) => JSON.stringify(val),
+                fromAttribute: (val, typ) => ActivityPubItem.load(val),
             },
         },
         showMetadata: {type: Boolean},
         inline: {type: Boolean},
     };
 
-    constructor(it, showMetadata) {
+    constructor(showMetadata) {
         super();
 
         this.showMetadata = showMetadata;
 
-        const json = this.querySelector('script')?.text;
-        if (json !== null && this.it === null) {
+        const json = (this.renderRoot?.querySelector('script') || this.querySelector('script'))?.text;
+        if (json) {
             this.it = ActivityPubItem.load(json);
         }
     }
@@ -334,7 +333,7 @@ ActivityPubObject.renderByMediaType = function (it, inline) {
     let src = it.getUrl();
     let name;
     if (typeof src === 'string') {
-        src = { href: src};
+        src = {href: src};
         name = src;
     }
     if (!name) {
