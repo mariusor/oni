@@ -13,8 +13,8 @@ export class OniMain extends ActivityPubObject {
 
     _auth = new AuthController(this);
 
-    constructor(it) {
-        super(it);
+    constructor() {
+        super();
     }
 
     get authorized() {

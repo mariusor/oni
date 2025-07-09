@@ -10,8 +10,8 @@ export class ActivityPubVideo extends ActivityPubObject {
             align-self: start;
         }`, ActivityPubObject.styles];
 
-    constructor(it) {
-        super(it);
+    constructor() {
+        super();
     }
 
     render() {

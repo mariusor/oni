@@ -80,8 +80,8 @@ export class OniCollectionLink extends ActivityPubObject {
 
     static properties = ActivityPubObject.properties;
 
-    constructor(it) {
-        super(it);
+    constructor() {
+        super();
     }
 
     label() {

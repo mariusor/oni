@@ -42,8 +42,8 @@ export class ActivityPubImage extends ActivityPubObject {
         }
         `, ActivityPubObject.styles];
 
-    constructor(it) {
-        super(it);
+    constructor() {
+        super();
     }
 
     renderNameText() {

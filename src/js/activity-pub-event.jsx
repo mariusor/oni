@@ -18,8 +18,8 @@ export class ActivityPubEvent extends ActivityPubNote {
         ActivityPubObject.styles
     ];
 
-    constructor(it) {
-        super(it);
+    constructor() {
+        super();
     }
 
     render() {

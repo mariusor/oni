@@ -21,8 +21,8 @@ export class ActivityPubCollection extends ActivityPubObject {
 
     static properties = ActivityPubObject.properties;
 
-    constructor(it) {
-        super(it);
+    constructor() {
+        super();
     }
 
     renderNext() {

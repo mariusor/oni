@@ -38,8 +38,9 @@ export class OniHeader extends ActivityPubActor {
         `,
         ActivityPubObject.styles
     ];
-    constructor(it) {
-        super(it);
+
+    constructor() {
+        super();
     }
 
     renderIconName() {

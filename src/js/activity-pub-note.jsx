@@ -35,8 +35,8 @@ export class ActivityPubNote extends ActivityPubObject {
     }
     `, ActivityPubObject.styles];
 
-    constructor(it) {
-        super(it);
+    constructor() {
+        super();
     }
 
     render() {

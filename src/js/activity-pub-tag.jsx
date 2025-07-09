@@ -5,8 +5,8 @@ import {until} from "lit-html/directives/until.js";
 export class ActivityPubTag extends ActivityPubNote {
     static styles = ActivityPubNote.styles;
 
-    constructor(it) {
-        super(it);
+    constructor() {
+        super();
     }
 
     renderNameText() {

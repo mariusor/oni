@@ -15,9 +15,8 @@ export class ActivityPubActivity extends ActivityPubObject {
         `,
     ];
 
-    constructor(it) {
-        super(it);
-        this.showMetadata = true;
+    constructor() {
+        super(true);
     }
 
     async renderActor() {

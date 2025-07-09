@@ -96,8 +96,8 @@ export class ActivityPubActor extends ActivityPubObject {
         }
     `,ActivityPubObject.styles];
 
-    constructor(it) {
-        super(it);
+    constructor() {
+        super();
 
         this.addEventListener('content.change', this.updateSelf)
     }

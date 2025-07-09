@@ -5,8 +5,8 @@ import {relativeDate} from "./utils";
 export class ActivityPubTombstone extends ActivityPubObject {
     static styles = ActivityPubObject.styles;
 
-    constructor(it) {
-        super(it);
+    constructor() {
+        super();
     }
 
     renderDeleted() {
