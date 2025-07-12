@@ -26,17 +26,21 @@ export class OniErrors extends LitElement {
 
     constructor() {
         super();
+
+        const json = (this.renderRoot?.querySelector('script') || this.querySelector('script'))?.text;
+        if (json) {
+            this.it = JSON.parse(json);
+        }
     }
 
-    renderErrorDetails(err) {
-        return html`
-            ${this.renderErrorTitle(err)}
-            <details>
-                <summary></summary>
-                ${when(Array.isArray(err.trace), () => html`
+    renderErrorTrace(err) {
+        if (!err || err.hasOwnProperty('trace') || !Array.isArray(err.trace)) return nothing;
+
+        return html `<details><summary></summary>
+            ${when(Array.isArray(err.trace), () => html`
                     ${map(err.trace, tr => html`<pre><code><strong>${tr.function}</strong>: ${tr.file}:${tr.line}</code></pre>`)}
                 `)}
-            </details>`
+        </details>`;
     }
 
     renderErrorTitle(err) {
@@ -44,7 +48,7 @@ export class OniErrors extends LitElement {
     }
 
     renderError(err) {
-        return Array.isArray(err.trace) ? this.renderErrorDetails(err) : this.renderErrorTitle(err);
+        return html`${this.renderErrorTitle(err)}${this.renderErrorTrace(err)}`
     }
 
     render() {
