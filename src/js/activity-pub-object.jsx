@@ -132,6 +132,8 @@ export class ActivityPubObject extends LitElement {
     constructor(showMetadata) {
         super();
 
+        if (typeof showMetadata === 'undefined') showMetadata = false;
+
         this.showMetadata = showMetadata;
 
         const json = (this.renderRoot?.querySelector('script') || this.querySelector('script'))?.text;

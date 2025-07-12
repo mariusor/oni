@@ -15,7 +15,37 @@ export class OniMain extends ActivityPubObject {
 
     constructor() {
         super();
+        //this.addEventListener('content.change', this.updateSelf)
     }
+
+    // async updateSelf(e) {
+    //     e.stopPropagation();
+    //
+    //     const outbox = this.it.getOutbox();
+    //
+    //     if (!outbox || !this.authorized) return;
+    //     let headers = {};
+    //     if (this.authorized) {
+    //         const auth = this._auth.authorization;
+    //         headers.Authorization = `${auth?.token_type} ${auth?.access_token}`;
+    //     }
+    //
+    //     const it = this.it;
+    //     const prop = e.detail.name;
+    //
+    //     it[prop] = e.detail.content;
+    //
+    //     const update = {
+    //         type: "Update",
+    //         actor: this.it.iri(),
+    //         object: it,
+    //     }
+    //
+    //     activity(outbox, update, headers)
+    //         .then(response => {
+    //             response.json().then((it) => this.it = new ActivityPubItem(it));
+    //         }).catch(console.error);
+    // }
 
     get authorized() {
         return this._auth.authorized && isMainPage();

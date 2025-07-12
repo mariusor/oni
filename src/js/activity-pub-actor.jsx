@@ -1,6 +1,6 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {activity, hostFromIRI, loadPalette} from "./utils";
+import {hostFromIRI, loadPalette} from "./utils";
 import {ActivityPubItem} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
 import {TinyColor} from "@ctrl/tinycolor";
@@ -112,37 +112,45 @@ export class ActivityPubActor extends ActivityPubObject {
 
     constructor() {
         super();
-
-        this.addEventListener('content.change', this.updateSelf)
     }
 
-    async updateSelf(e) {
-        e.stopPropagation();
-
-        const outbox = this.it.getOutbox();
-
-        if (!outbox || !this.authorized) return;
-        let headers = {};
-        if (this.authorized) {
-            const auth = this._auth.authorization;
-            headers.Authorization = `${auth?.token_type} ${auth?.access_token}`;
+    async renderBgImage() {
+        const palette = await loadPalette(this.it);
+        if (!palette) {
+            return nothing;
         }
 
-        const it = this.it;
-        const prop = e.detail.name;
-
-        it[prop] = e.detail.content;
-
-        const update = {
-            type: "Update",
-            actor: this.it.iri(),
-            object: it,
+        const col = tc(palette.bgColor);
+        const haveBgImg = palette.hasOwnProperty('bgImageURL') && palette.bgImageURL.length > 0;
+        if (!haveBgImg || !col) {
+            return nothing;
         }
 
-        activity(outbox, update, headers)
-            .then(response => {
-                response.json().then((it) => this.it = new ActivityPubItem(it));
-            }).catch(console.error);
+        const img = palette.bgImageURL;
+        return `:host header {
+            color: red !important;
+            background-size: cover;
+            background-clip: padding-box;
+            background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
+        }`;
+    }
+
+    async renderPalette() {
+        const palette = await loadPalette(this.it);
+        if (!palette) return nothing;
+
+        this.scheduleUpdate();
+        return html`
+            ${until(this.renderBgImage())}
+            :host header {
+                --bg-color: ${palette.bgColor};
+                --fg-color: ${palette.fgColor};
+                --link-color: ${palette.linkColor};
+                --link-visited-color: ${palette.linkVisitedColor};
+                --link-active-color: ${palette.linkActiveColor};
+                --accent-color: ${palette.accentColor};
+            }
+        `;
     }
 
     renderIcon() {
@@ -214,44 +222,6 @@ export class ActivityPubActor extends ActivityPubObject {
         return html`<oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
     }
 
-    async renderBgImage() {
-        const palette = await loadPalette(this.it);
-        if (!palette) {
-            return nothing;
-        }
-
-        const col = tc(palette.bgColor);
-        const haveBgImg = palette.hasOwnProperty('bgImageURL') && palette.bgImageURL.length > 0;
-        if (!haveBgImg || !col) {
-            return nothing;
-        }
-
-        const img = palette.bgImageURL;
-        return html`:host header {
-            background-size: cover;
-            background-clip: padding-box;
-            background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
-        }`;
-    }
-
-    async renderPalette() {
-        const palette = await loadPalette(this.it);
-        if (!palette) return nothing;
-
-        this.scheduleUpdate();
-        return html`
-            :host {
-                --bg-color: ${palette.bgColor};
-                --fg-color: ${palette.fgColor};
-                --link-color: ${palette.linkColor};
-                --link-visited-color: ${palette.linkVisitedColor};
-                --link-active-color: ${palette.linkActiveColor};
-                --accent-color: ${palette.accentColor};
-            }
-            ${until(this.renderBgImage(), nothing)}
-        `;
-    }
-
     collections() {
         let collections = super.collections();
         const inbox = this.it.getInbox();
@@ -304,9 +274,10 @@ export class ActivityPubActor extends ActivityPubObject {
         if (this.inline) return this.renderInline();
 
         const iri = this.it.iri();
+        const style = html`<style>${until(this.renderPalette())}</style>`;
 
         //console.info(`rendering and checking authorized: ${this.authorized}`,);
-        return html`<header>
+        return html`${style}<header>
             <a href=${iri}>${this.renderIcon()}</a>
             <section>
                 <h1><a href=${until(iri, "#")}>${this.renderPreferredUsername()}</a></h1>

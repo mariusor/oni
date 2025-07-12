@@ -69,16 +69,13 @@ export class OniHeader extends ActivityPubActor {
         return html`<oni-login-link authorizeURL=${authURL} tokenURL=${tokenURL}></oni-login-link>`;
     }
 
-
     render() {
         if (!ActivityPubItem.isValid(this.it)) return nothing;
 
         const iconName = html`<span>${this.renderIconName()}</span>`;
         const style = html`<style>${until(this.renderPalette())}</style>`;
 
-        return html`${style}
-            <style>${until(this.renderBgImage(), nothing)}</style>
-            <header>
+        return html`${style}<header>
                 ${this.renderOAuth()}
                 ${until(this.renderCollections(iconName), `<hr/>`)}
             </header>
