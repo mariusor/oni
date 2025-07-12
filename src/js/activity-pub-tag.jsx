@@ -17,7 +17,7 @@ export class ActivityPubTag extends ActivityPubNote {
     }
 
     render() {
-        if (!ActivityPubItem.isValid(this.it)) return nothing;
+        if (!ActivityPubTag.isValid(this.it)) return nothing;
         const rel = this.it.type === 'Mention' ? 'mention' : 'tag';
 
         if (this.showMetadata) {
@@ -32,5 +32,9 @@ export class ActivityPubTag extends ActivityPubNote {
                 ${until(this.renderReplies())}`;
         }
         return html`<a rel="${rel}" href="${this.it.iri()}">${this.renderNameText()}</a>`;
+    }
+
+    static isValid(it) {
+        return typeof it === 'object' && it !== null && it.hasOwnProperty('id') && it.hasOwnProperty('type') && it.id !== '';
     }
 }
