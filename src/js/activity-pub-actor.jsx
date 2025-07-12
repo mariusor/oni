@@ -151,11 +151,11 @@ export class ActivityPubActor extends ActivityPubObject {
             return nothing;
         }
         if (typeof icon == 'string') {
-            return html`<img src="${icon}" alt="icon"/>`;
+            return html`<img loading="lazy" src="${icon}" alt="icon"/>`;
         } else {
             const url = icon.id || icon.url;
             if (url) {
-                return html`<img src="${url}" alt="icon"/>`;
+                return html`<img loading="lazy" src="${url}" alt="icon"/>`;
             }
             const cont = new ActivityPubItem(icon).getContent().at(0);
             if (cont.length > 0) {

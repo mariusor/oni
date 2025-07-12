@@ -70,7 +70,7 @@ export class ActivityPubImage extends ActivityPubObject {
                 (prev, cur) => (cur?.width <= prev?.width) ? cur : prev
             ) :
             src;
-        return html`<img src=${smallest?.href ?? nothing} title="${alt}" alt="${alt}" class="small""/>`;
+        return html`<img loading="lazy" src=${smallest?.href ?? nothing} title="${alt}" alt="${alt}" class="small""/>`;
     }
 
     render() {
@@ -116,7 +116,7 @@ export class ActivityPubImage extends ActivityPubObject {
                                 </figcaption>`,
                             () => nothing
                     )}
-                    <img src=${iri ?? nothing}
+                    <img loading="lazy" src=${iri ?? nothing}
                          title="${name ?? alt}" alt="${alt}"
                          srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
                 </figure>
