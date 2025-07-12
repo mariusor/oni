@@ -11,10 +11,10 @@ export class OniErrors extends LitElement {
             font-size: .8em;
         }
         details[open] summary::before {
-            content: "Collapse";
+            content: "Hide";
         }
         details summary::before {
-            content: "Expand";
+            content: "Show";
         }
         pre {
             margin: 0 auto;
@@ -34,7 +34,10 @@ export class OniErrors extends LitElement {
     }
 
     renderErrorTrace(err) {
-        if (!err || err.hasOwnProperty('trace') || !Array.isArray(err.trace)) return nothing;
+        if (!err || !err.hasOwnProperty('trace')) return nothing;
+        if (!Array.isArray(err.trace)) {
+            err.trace = [err.trace];
+        }
 
         return html `<details><summary></summary>
             ${when(Array.isArray(err.trace), () => html`
