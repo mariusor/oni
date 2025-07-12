@@ -54,11 +54,11 @@ export class OniCollectionLinks extends LitElement {
             <nav>
                 <slot></slot>
                 <ul>
-                    ${until(this.it.map(value => html`
-                        <li class=${classMap({'active': (value === window.location.href)})}>
-                            <oni-collection-link it=${value}></oni-collection-link>
+                    ${this.it.map(iri => html`
+                        <li class=${classMap({'active': (iri === window.location.href)})}>
+                            <oni-collection-link it=${iri}></oni-collection-link>
                         </li>`
-                    ), 'Loading')}
+                    )}
                 </ul>
             </nav>`;
     }
@@ -66,10 +66,14 @@ export class OniCollectionLinks extends LitElement {
 
 const LinkStyle = css`
         :host a {
-            text-transform: capitalize;
+            text-transform: lowercase;
             text-decoration: none;
             color: var(--accent-color);
             text-shadow: 0 0 1em var(--accent-color), 0 0 .4em var(--bg-color);
+            display: inline-block;
+        }
+        :host a::first-letter {
+            text-transform: uppercase;
         }
         :host a.active, :host a:visited.active {
             color: var(--bg-color);
@@ -95,7 +99,7 @@ export class OniCollectionLink extends ActivityPubObject {
         if (name.length > 0) {
             return name;
         }
-        return this.collectionType()
+        return this.collectionType();
     }
 
     renderIcon () {
@@ -115,7 +119,9 @@ export class OniCollectionLink extends ActivityPubObject {
 
         const iri = this.it.iri();
         const label = this.label();
-        return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${this.renderIcon()} ${label}</a>`;
+        return html`
+            <a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${this.renderIcon()}</a>
+            <a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${label}</a>`;
     }
 }
 

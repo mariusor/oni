@@ -55,14 +55,32 @@ export class OniHeader extends ActivityPubActor {
             `;
     }
 
+    renderOAuth() {
+        const endPoints = this.it.getEndPoints();
+        if (!endPoints.hasOwnProperty('oauthAuthorizationEndpoint')) {
+            return nothing;
+        }
+        if (!endPoints.hasOwnProperty('oauthTokenEndpoint')) {
+            return nothing;
+        }
+        const authURL = new URL(endPoints.oauthAuthorizationEndpoint)
+        const tokenURL = endPoints.oauthTokenEndpoint;
+
+        return html`<oni-login-link authorizeURL=${authURL} tokenURL=${tokenURL}></oni-login-link>`;
+    }
+
+
     render() {
         if (!ActivityPubItem.isValid(this.it)) return nothing;
 
         const iconName = html`<span>${this.renderIconName()}</span>`;
+        const style = html`<style>${until(this.renderPalette())}</style>`;
 
-        return html`<style>${until(this.renderBgImage(), nothing)}</style>
+        return html`${style}
+            <style>${until(this.renderBgImage(), nothing)}</style>
             <header>
-                ${ until(this.renderCollections(iconName), html`<hr/>`)}
+                ${this.renderOAuth()}
+                ${until(this.renderCollections(iconName), `<hr/>`)}
             </header>
         `;
     }

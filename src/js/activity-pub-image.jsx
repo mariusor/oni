@@ -1,7 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {when} from "lit-html/directives/when.js";
-import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`

@@ -1,5 +1,5 @@
 import {css, html, LitElement, nothing} from "lit";
-import {fetchActivityPubIRI, isLocalIRI} from "./client.js";
+import {fetchActivityPubIRI} from "./client.js";
 import {pluralize, renderTimestamp} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
@@ -190,16 +190,7 @@ export class ActivityPubObject extends LitElement {
             act = [act];
         }
 
-        return html`by ${map(act, function (act, i) {
-            let username = act.getPreferredUsername();
-            if (!isLocalIRI(act.id)) {
-                username = `${username}@${new URL(act.id).hostname}`
-            }
-            return html`<a href=${act.id}>
-                <oni-natural-language-values name="preferredUsername"
-                                             it=${JSON.stringify(username)}></oni-natural-language-values>
-            </a>`
-        })}`;
+        return html`by ${map(act, act => html`<oni-actor class="no-avatar" it=${JSON.stringify(act)} inline="true"></oni-actor>`)}`;
     }
 
     renderTag() {
@@ -283,7 +274,7 @@ export class ActivityPubObject extends LitElement {
         }
         return html`<a href=${this.it.iri() ?? nothing}>
             <oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values>
-            <oni-icon alt="Avatar" name="bookmark"></oni-icon>
+            <oni-icon alt="Bookmark" name="bookmark"></oni-icon>
         </a>`;
     }
 

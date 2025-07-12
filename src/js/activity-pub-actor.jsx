@@ -1,10 +1,12 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {activity, loadPalette} from "./utils";
+import {activity, hostFromIRI, loadPalette} from "./utils";
 import {ActivityPubItem} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
 import {TinyColor} from "@ctrl/tinycolor";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
+import {classMap} from "lit-html/directives/class-map.js";
+import {isLocalIRI} from "./client";
 
 const tc = (c) => new TinyColor(c)
 
@@ -94,7 +96,19 @@ export class ActivityPubActor extends ActivityPubObject {
         :host oni-natural-language-values[name=summary] {
             font-size: .8em;
         }
-    `,ActivityPubObject.styles];
+        a.inline img {
+            max-height: 1.8rem;
+            vertical-align: bottom;
+        }
+        a.inline span {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            margin-left: .4rem;
+        }
+        a.inline span::before {
+            content: '@';
+        }
+    `, ActivityPubObject.styles];
 
     constructor() {
         super();
@@ -129,24 +143,6 @@ export class ActivityPubActor extends ActivityPubObject {
             .then(response => {
                 response.json().then((it) => this.it = new ActivityPubItem(it));
             }).catch(console.error);
-    }
-
-    renderOAuth() {
-        const endPoints = this.it.getEndPoints();
-        if (!endPoints.hasOwnProperty('oauthAuthorizationEndpoint')) {
-            return nothing;
-        }
-        if (!endPoints.hasOwnProperty('oauthTokenEndpoint')) {
-            return nothing;
-        }
-        const authURL = new URL(endPoints.oauthAuthorizationEndpoint)
-        const tokenURL = endPoints.oauthTokenEndpoint;
-
-        return html`
-            <oni-login-link
-                    authorizeURL=${authURL}
-                    tokenURL=${tokenURL}
-            ></oni-login-link>`;
     }
 
     renderIcon() {
@@ -232,10 +228,10 @@ export class ActivityPubActor extends ActivityPubObject {
 
         const img = palette.bgImageURL;
         return html`:host header {
-                background-size: cover;
-                background-clip: padding-box;
-                background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
-            }`;
+            background-size: cover;
+            background-clip: padding-box;
+            background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
+        }`;
     }
 
     async renderPalette() {
@@ -258,23 +254,21 @@ export class ActivityPubActor extends ActivityPubObject {
 
     collections() {
         let collections = super.collections();
-        if (this.authorized) {
-            const inbox = this.it.getInbox();
-            if (inbox !== null ) {
-                collections.push(inbox);
-            }
-            const liked = this.it.getLiked();
-            if (liked !== null) {
-                collections.push(liked);
-            }
-            const followers = this.it.getFollowers();
-            if (followers !== null) {
-                collections.push(followers);
-            }
-            const following = this.it.getFollowing();
-            if (following !== null) {
-                collections.push(following);
-            }
+        const inbox = this.it.getInbox();
+        if (inbox !== null) {
+            collections.push(inbox);
+        }
+        const liked = this.it.getLiked();
+        if (liked !== null) {
+            collections.push(liked);
+        }
+        const followers = this.it.getFollowers();
+        if (followers !== null) {
+            collections.push(followers);
+        }
+        const following = this.it.getFollowing();
+        if (following !== null) {
+            collections.push(following);
         }
         const outbox = this.it.getOutbox();
         if (outbox !== null) {
@@ -292,25 +286,36 @@ export class ActivityPubActor extends ActivityPubObject {
         return html`<oni-collection-links it=${JSON.stringify(c)}>${slot}</oni-collection-links>`;
     };
 
+    renderRemotePreferredUsername() {
+        const iri = this.it.iri();
+        return html`${this.renderPreferredUsername()}${!isLocalIRI(iri) ? html`<span>${hostFromIRI(iri)}</span>` : nothing}`;
+    }
+
+    renderInline() {
+        if (!ActivityPubItem.isValid(this.it)) return nothing;
+        const iri = this.it.iri();
+        // if parent is <aside> we're in the footer of an object - TODO(marius): come up with a better way of deciding this
+        const needsAvatar = this.parentNode.nodeName !== 'ASIDE';
+        return html`<a class=${classMap({'inline': this.inline})} href=${iri}>${ needsAvatar ? this.renderIcon() : nothing} ${this.renderRemotePreferredUsername()}</a>`;
+    }
+
     render() {
         if (!ActivityPubItem.isValid(this.it)) return nothing;
-        const style = html`<style>${until(this.renderPalette())}</style>`;
+        if (this.inline) return this.renderInline();
 
         const iri = this.it.iri();
 
         //console.info(`rendering and checking authorized: ${this.authorized}`,);
-        return html`${this.renderOAuth()}
-            ${style}
-            <header>
-                <a href=${iri}>${this.renderIcon()}</a>
-                <section>
-                    <h1><a href=${until(iri,"#")}>${this.renderPreferredUsername()}</a></h1>
-                    <h2>${this.renderSummary()}</h2>
-                    <nav>${this.renderUrl()}</nav>
-                </section>
-            </header>
-            <nav>${ until(this.renderCollections(), html`<hr/>`)}</nav>
-            ${this.renderContent()}
+        return html`<header>
+            <a href=${iri}>${this.renderIcon()}</a>
+            <section>
+                <h1><a href=${until(iri, "#")}>${this.renderPreferredUsername()}</a></h1>
+                <h2>${this.renderSummary()}</h2>
+                <nav>${this.renderUrl()}</nav>
+            </section>
+        </header>
+        <nav>${until(this.renderCollections(), `<hr/>`)}</nav>
+        ${this.renderContent()}
         `;
     }
 }

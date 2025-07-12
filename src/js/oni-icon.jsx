@@ -10,12 +10,14 @@ export class OniIcon extends LitElement {
         vertical-align: middle;
         margin: 0 .2rem;
     }
-    svg[name=icon-outbox] {
+    svg[data-name=outbox] {
         vertical-align: text-bottom;
     }
-    svg[name=icon-clock] {
-        margin: 0;
-        margin-right: -.2rem;
+    svg[data-name=clock] {
+        margin: -.1rem -.2rem 0 0;
+    }
+    svg[data-name=following] {
+        transform: rotateY(180deg);
     }
     `;
     static properties = {
@@ -29,6 +31,6 @@ export class OniIcon extends LitElement {
 
     render() {
         if (!this.name) return nothing;
-        return html`${unsafeSVG(`<svg aria-hidden="true"><use role="img" href="/icons.svg#icon-${this.name}"><title>${this.alt || this.name}</title></use></svg>`)}`
+        return html`${unsafeSVG(`<svg aria-hidden="true" data-name="${this.name}"><use role="img" href="/icons.svg#icon-${this.name}"><title>${this.alt || this.name}</title></use></svg>`)}`
     }
 }

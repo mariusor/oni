@@ -8,6 +8,7 @@
     --link-visited-color: #9370DB; /* mediumpurple */
     --link-active-color: var(--link-visited-color);
     --accent-color: var(--fg-color);
+    /* font-size: clamp(1rem, .97vw, 4.5rem); */
 }
 
 @media (prefers-color-scheme: light) {
@@ -47,7 +48,6 @@
 
 @media (max-width: 1200px) {
     :root {
-        /*max-width: unset;*/
         font-size: 1.6vw;
     }
 }
@@ -112,15 +112,21 @@ a {
 }
 
 a:hover {
-    text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
+    --link-hover-color: oklch(from var(--link-color) calc(l + .2) c h);
+    color: var(--link-hover-color);
+    text-shadow: 0 0 1rem var(--link-hover-color), 0 0 .3rem var(--bg-color);
 }
 
 a:visited {
+    --link-visited-color: oklch(from var(--link-color) calc(l + .2) c h);
     color: var(--link-visited-color);
+    text-shadow: 0 0 1rem var(--link-visited-color), 0 0 .3rem var(--bg-color);
 }
 
 a:active {
+    --link-active-color: oklch(from var(--link-color) calc(l + .2) c h);
     color: var(--link-active-color);
+    text-shadow: 0 0 1rem var(--link-active-color), 0 0 .3rem var(--bg-color);
 }
 
 a:has(oni-natural-language-values) {
@@ -178,4 +184,5 @@ oni-main > * {
     max-width: 90cqw;
     width: 82ch;
     margin: 1rem auto auto;
+    /*background-color: rgba(from var(--fg-color) R G B / 0.02);*/
 }

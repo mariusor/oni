@@ -63,7 +63,7 @@ export class ActivityPubActivity extends ActivityPubObject {
         if (!ActivityPubActivity.isValid(this.it)) return nothing;
 
         return html`
-            ${until(this.renderObject(false))}
+            ${until(this.renderObject(false), "Loading")}
             ${unsafeHTML(`<!-- by Actor ${until(this.renderActor())}-->`)}
             <footer>${this.renderMetadata()}</footer>
         `;

@@ -68,7 +68,7 @@ export class ActivityPubCollection extends ActivityPubObject {
                 renderedItem = ActivityPubObject.renderByType(it);
             }
 
-            return html` <li>${until(renderedItem, html`Loading`)}</li>`
+            return html` <li>${until(renderedItem)}</li>`
         })}`
     }
 
