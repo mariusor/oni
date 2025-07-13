@@ -37,6 +37,15 @@ export class OniCollectionLinks extends LitElement {
         :host li.active {
             background-color: var(--accent-color);
         }
+        @media (max-width: 576px) {
+            :host li {
+                line-height: 1.8rem;
+                max-width: 1.8rem;
+                margin: 0;
+                padding: 0;
+                overflow-x: clip;
+            }
+        }
     `
 
     static properties = {
@@ -66,18 +75,26 @@ export class OniCollectionLinks extends LitElement {
 
 const LinkStyle = css`
         :host a {
-            text-transform: lowercase;
+            font-size: 0.9rem;
+            text-transform: capitalize;
             text-decoration: none;
             color: var(--accent-color);
             text-shadow: 0 0 1em var(--accent-color), 0 0 .4em var(--bg-color);
             display: inline-block;
         }
-        :host a::first-letter {
-            text-transform: uppercase;
-        }
         :host a.active, :host a:visited.active {
             color: var(--bg-color);
             text-shadow: 0 0 1em var(--accent-color), 0 0 .4rem var(--bg-color);
+        }
+        @media (max-width: 576px) {
+            :host a {
+                font-size: 0px;
+                overflow: clip;
+                white-space: nowrap;
+            }
+            :host a oni-icon {
+                font-size: 0.9rem;
+            }
         }
     `;
 
@@ -114,14 +131,12 @@ export class OniCollectionLink extends ActivityPubObject {
         if (!ActivityPubItem.isValid(this.it)) {
             const iri= this.it;
             const label = iri.split('/').at(-1);
-            return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${label}</a>`;
+            return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}><oni-icon name=${label}></oni-icon> ${label}</a>`;
         }
 
         const iri = this.it.iri();
         const label = this.label();
-        return html`
-            <a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${this.renderIcon()}</a>
-            <a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${label}</a>`;
+        return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${this.renderIcon()} ${label}</a>`;
     }
 }
 

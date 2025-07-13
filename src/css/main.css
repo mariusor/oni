@@ -80,6 +80,9 @@
     :root {
         font-size: 2.8vw;
     }
+    oni-collection-link a {
+        font-size: 0;
+    }
 }
 
 @media (max-width: 480px) {
@@ -179,10 +182,12 @@ oni-main > oni-actor {
 }
 
 oni-main > * {
-    display: flex;
-    flex-direction: column;
     max-width: 90cqw;
     width: 82ch;
     margin: 1rem auto auto;
-    /*background-color: rgba(from var(--fg-color) R G B / 0.02);*/
+}
+
+oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-image, oni-tag {
+    display: flex;
+    flex-direction: column;
 }

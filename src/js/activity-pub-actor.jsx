@@ -128,7 +128,6 @@ export class ActivityPubActor extends ActivityPubObject {
 
         const img = palette.bgImageURL;
         return `:host header {
-            color: red !important;
             background-size: cover;
             background-clip: padding-box;
             background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});

@@ -58,7 +58,7 @@ export class ActivityPubObject extends LitElement {
         footer aside {
             font-size: 0.8em;
         }
-        oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-tag {
+        oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-image, oni-tag {
             display: flex;
             flex-direction: column;
         }
