@@ -65,8 +65,8 @@ export class ActivityPubObject extends LitElement {
         .attachment {
             display: flex;
             flex-wrap: wrap;
-            align-content: flex-start;
-            align-items: flex-start;
+            gap: .2rem;
+            justify-content: space-between;
         }
         .tag {
             display: inline-block;
@@ -91,8 +91,7 @@ export class ActivityPubObject extends LitElement {
         }
         .attachment > * {
             display: inline-block;
-            margin: 0 .2rem .2rem 0;
-            max-width: 32%;
+            width: 32%;
         }
     `;
 

@@ -4,11 +4,9 @@ export class BandCampEmbed extends LitElement {
     static styles = [css`
         :host {
             max-height: 2rlh;
-            margin: 0 .2rem .4rlh 0;
-            min-width: 480px;
         }
         iframe {
-            min-width: 480px;
+            max-width: 100%;
         }
     `]
 
