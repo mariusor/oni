@@ -46,14 +46,14 @@ export class ActivityPubActivity extends ActivityPubObject {
             if (!ob.hasOwnProperty('attributedTo')) {
                 ob.attributedTo = actor;
             }
-            if (!ob.hasOwnProperty('type')) {
+            if (!ob.hasOwnProperty('type') || ob.type === '') {
                 return html`<oni-tag it=${JSON.stringify(ob)} ?showMetadata=${showMetadata}></oni-tag>`;
             }
             if (ActorTypes.indexOf(ob.type) >= 0) {
                 return html`<oni-actor it=${JSON.stringify(ob)} ?showMetadata=${showMetadata}></oni-actor>`;
             }
             if (ObjectTypes.indexOf(ob.type) >= 0) {
-                return until(ActivityPubObject.renderByType(ob, showMetadata), html`Loading`);
+                return until(ActivityPubObject.renderByType(ob, showMetadata), `Loading`);
             }
             return unsafeHTML(`<!-- Unknown activity object ${ob.type} -->`);
         })}`
@@ -62,11 +62,7 @@ export class ActivityPubActivity extends ActivityPubObject {
     render() {
         if (!ActivityPubActivity.isValid(this.it)) return nothing;
 
-        return html`
-            ${until(this.renderObject(false), "Loading")}
-            ${unsafeHTML(`<!-- by Actor ${until(this.renderActor())}-->`)}
-            <footer>${this.renderMetadata()}</footer>
-        `;
+        return html`${until(this.renderObject(true), "Loading")}`;
     }
 
     static isValid (it) {
