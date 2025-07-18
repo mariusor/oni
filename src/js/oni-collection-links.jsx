@@ -2,7 +2,6 @@ import {css, html, LitElement, nothing} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubItem} from "./activity-pub-item";
-import {until} from "lit-html/directives/until.js";
 
 export class OniCollectionLinks extends LitElement {
     static styles = css`
@@ -64,7 +63,7 @@ export class OniCollectionLinks extends LitElement {
                 <slot></slot>
                 <ul>
                     ${this.it.map(iri => html`
-                        <li class=${classMap({'active': (iri === window.location.href)})}>
+                        <li class=${classMap({'active': isCurrentPage(iri)})}>
                             <oni-collection-link it=${iri}></oni-collection-link>
                         </li>`
                     )}
@@ -119,7 +118,7 @@ export class OniCollectionLink extends ActivityPubObject {
         return this.collectionType();
     }
 
-    renderIcon () {
+    renderIcon() {
         const icon = this.it.getIcon();
         if (icon) {
             return html`<oni-image it=${JSON.stringify(icon)}></oni-image>`;
@@ -129,14 +128,18 @@ export class OniCollectionLink extends ActivityPubObject {
 
     render() {
         if (!ActivityPubItem.isValid(this.it)) {
-            const iri= this.it;
+            const iri = this.it;
             const label = iri.split('/').at(-1);
-            return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}><oni-icon name=${label}></oni-icon> ${label}</a>`;
+            return html`<a href=${iri} class=${classMap({'active': isCurrentPage(iri)})}><oni-icon name=${label}></oni-icon>${label}</a>`;
         }
 
         const iri = this.it.iri();
         const label = this.label();
-        return html`<a href=${iri} class=${classMap({'active': (iri === window.location.href)})}>${this.renderIcon()} ${label}</a>`;
+        return html`<a href=${iri} class=${classMap({'active': isCurrentPage(iri)})}>${this.renderIcon()} ${label}</a>`;
     }
 }
 
+function isCurrentPage(iri) {
+    const u = new URL(iri)
+    return u.pathname === window.location.pathname;
+}
