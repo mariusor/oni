@@ -116,16 +116,15 @@ export function relativeDate(old) {
     }
     const [val, unit] = relativeDuration(seconds);
 
-    return `${pluralize(val, unit)} ${when}`;
+    return `${pluralize(Math.round(val), unit)} ${when}`;
 }
 
 export function pluralize(d, unit) {
-    d = Math.round(d);
     const l = unit.length;
-    if (l > 2 && unit[l - 1] === 'y' && isCons(unit[l - 2])) {
-        unit = `${unit.substring(0, l - 1)}ie`;
-    }
-    if (d > 1) {
+    if (d !== 1) {
+        if (unit[l - 1] === 'y' && isCons(unit[l - 2])) {
+            unit = `${unit.substring(0, l - 1)}ie`;
+        }
         unit = `${unit}s`
     }
     return `${d} ${unit}`;
@@ -363,7 +362,7 @@ export function renderDuration(seconds) {
         return nothing;
     }
     const [val, unit] = relativeDuration(seconds)
-    return html`<span>${pluralize(val, unit)}</span>`;
+    return html`<span>${pluralize(Math.round(val), unit)}</span>`;
 }
 
 function validColors(value, index, array) {
