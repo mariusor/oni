@@ -42,11 +42,7 @@ export class ActivityPubNote extends ActivityPubObject {
             gap: .12rem;
         }
         .tag li {
-            display: inline-block;
             list-style: none;
-        }
-        .tag oni-tag {
-            display: inline-block;
         }
         .attachment > * {
             display: inline-block;
