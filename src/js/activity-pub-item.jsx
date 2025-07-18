@@ -68,6 +68,20 @@ export class ActivityPubItem {
         return this.tag;
     }
 
+    getInReplyTo() {
+        if (!this.hasOwnProperty('inReplyTo')) {
+            this.inReplyTo = null;
+        }
+        return this.inReplyTo;
+    }
+
+    getAttributedTo() {
+        if (!this.hasOwnProperty('attributedTo')) {
+            this.attributedTo = null;
+        }
+        return this.attributedTo;
+    }
+
     getAttachment() {
         if (!this.hasOwnProperty('attachment')) {
             this.attachment = null;

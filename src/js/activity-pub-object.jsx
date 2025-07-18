@@ -218,17 +218,27 @@ export class ActivityPubObject extends LitElement {
             </details>`;
     }
 
+    renderInReplyTo() {
+        let replyTo =  this.it.getInReplyTo();
+        if (!replyTo || replyTo?.length === 0) return nothing;
+        if (!Array.isArray(replyTo)) {
+            replyTo = [replyTo];
+        }
+        return html` in reply to ${map(replyTo, reply => html`<a href="${reply ?? nothing}">
+            <oni-icon title="Go to parent" name="replies"></oni-icon>
+        </a>`)}`;
+    }
+
     renderBookmark() {
-        const hasName = this.it.getName().length > 0;
+        const hasName = this.it.getName()?.length > 0;
         return !hasName ? html`<a href="${this.it.iri() ?? nothing}">
-            <oni-icon alt="Bookmark this item" name="bookmark"></oni-icon>
+            <oni-icon title="Bookmark this item" name="bookmark"></oni-icon>
         </a>` : nothing
     }
 
     renderMetadata() {
         if (!this.showMetadata) return nothing;
         if (!this.it.hasOwnProperty("attributedTo") && !this.it.hasOwnProperty('actor')) return nothing;
-
         const auth = this.renderAuthor();
         let action = 'Published';
 
@@ -238,10 +248,12 @@ export class ActivityPubObject extends LitElement {
             action = 'Updated';
             published = updated;
         }
+
         return html`
             <aside>
                 ${action} ${renderTimestamp(published)} ${until(auth)}
                 ${until(this.renderReplyCount())}
+                ${this.renderInReplyTo()}
                 ${this.renderBookmark()}
             </aside>`;
     }
@@ -286,7 +298,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        if (!replies.hasOwnProperty('totalItems') || replies.totalItems == 0) {
+        if (!replies.hasOwnProperty('totalItems') || replies.totalItems === 0) {
             return nothing;
         }
 
@@ -327,14 +339,14 @@ export class ActivityPubObject extends LitElement {
     }
 }
 
-ActivityPubObject.renderByMediaType = function (it, inline) {
+ActivityPubObject.renderByMediaType = function (it, showMetadata, inline) {
     it = new ActivityPubItem(it);
     if (!it?.hasOwnProperty('mediaType')) {
         return nothing;
     }
 
     if (it.mediaType.indexOf('image/') === 0) {
-        return html`<oni-image it=${JSON.stringify(it)} ?inline=${inline}></oni-image>`;
+        return html`<oni-image it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-image>`;
     }
     if (it.mediaType.indexOf('text/html') === 0) {
         return unsafeHTML(it.content);
@@ -359,38 +371,53 @@ ActivityPubObject.renderByMediaType = function (it, inline) {
     return html`<div><a href=${src.href}>${unsafeHTML(name) ?? src.href}</a></div>`;
 }
 
-ActivityPubObject.renderByType = async function (it, showMetadata) {
+ActivityPubObject.renderByType = async function (it, showMetadata, inline) {
     if (it === null) {
         return nothing;
     }
-
     if (typeof it === 'string') {
         it = await fetchActivityPubIRI(it);
         if (it === null) return nothing;
     }
+    if (inline) {
+        showMetadata = false;
+    }
+    if (inline) {
+        let name = 'tag';
+        if (it.hasOwnProperty('type')) {
+            name = it.type;
+        }
+        if (it.hasOwnProperty('name')) {
+            name = it.name;
+        }
+        if (it.hasOwnProperty('preferredUsername')) {
+            name = it.preferredUsername;
+        }
+        return html`a <a href="${it.id}">${name}</a>`;
+    }
 
     if (!it.hasOwnProperty('type')) {
-        return html`<oni-tag it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-tag>`;
+        return html`<oni-tag it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-tag>`;
     }
 
     switch (it.type) {
         case 'Document':
-            return ActivityPubObject.renderByMediaType(it);
+            return ActivityPubObject.renderByMediaType(it, showMetadata, inline);
         case 'Video':
-            return html`<oni-video it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-video>`;
+            return html`<oni-video it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-video>`;
         case 'Audio':
-            return html`<oni-audio it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-audio>`;
+            return html`<oni-audio it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-audio>`;
         case 'Image':
-            return html`<oni-image it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-image>`;
+            return html`<oni-image it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-image>`;
         case 'Note':
         case 'Article':
-            return html`<oni-note it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-note>`;
+            return html`<oni-note it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-note>`;
         case 'Tombstone':
-            return html`<oni-tombstone it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-tombstone>`;
+            return html`<oni-tombstone it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-tombstone>`;
         case 'Mention':
-            return html`<oni-tag it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-tag>`;
+            return html`<oni-tag it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-tag>`;
         case 'Event':
-            return html`<oni-event it=${JSON.stringify(it)} ?showMetadata=${showMetadata}></oni-event>`;
+            return html`<oni-event it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-event>`;
     }
     return nothing;
 }
