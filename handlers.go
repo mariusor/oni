@@ -600,6 +600,9 @@ var validObjectTypes = vocab.ActivityVocabularyTypes{
 }
 
 func filtersCreateUpdate(ff filters.Checks) bool {
+	if len(ff) == 0 {
+		return true
+	}
 	for _, vv := range filters.ToValues(filters.TypeChecks(ff...)...) {
 		for _, v := range vv {
 			t := vocab.ActivityVocabularyType(v)
