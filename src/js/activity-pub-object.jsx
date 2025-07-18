@@ -26,9 +26,16 @@ export class ActivityPubObject extends LitElement {
         a:has(oni-natural-language-values) {
             text-decoration: none;
         }
-        p a[rel=mention], p a[rel=tag] {
-            font-size: .9rem;
+        a[rel=mention], a[rel=tag] {
+            font-size: .62rem;
             font-weight: bold;
+            padding: .1rem .3rem;
+            border-radius: .3rem;
+            border: .08rem solid color-mix(in srgb, var(--accent-color), transparent 10%);
+            background: color-mix(in srgb, var(--accent-color), transparent 70%);
+        }
+        :host a[rel=mention], :host a[rel=tag] {
+            vertical-align: .09rem;
         }
         article > * {
             margin: .1rem;

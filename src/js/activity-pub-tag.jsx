@@ -1,9 +1,15 @@
-import {html, nothing} from "lit";
+import {css, html, nothing} from "lit";
 import {ActivityPubNote} from "./activity-pub-note";
 import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubTag extends ActivityPubNote {
-    static styles = ActivityPubNote.styles;
+    static styles = [css`
+        :host h1 a[rel=tag], :host h1 a[rel=mention] {
+            font-size: unset;
+            border: unset;
+            background: unset;
+        }
+    `,ActivityPubNote.styles];
 
     constructor() {
         super();
