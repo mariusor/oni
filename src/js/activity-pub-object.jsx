@@ -177,12 +177,15 @@ export class ActivityPubObject extends LitElement {
         if (!Array.isArray(tags)) {
             tags = [tags];
         }
+        const allText = this.it.getContent().join();
+        tags = tags.filter(value => {
+            return !(value.hasOwnProperty('id') && allText.includes(value.id));
+        });
         return html`
             <aside class="tag">
                 <ul>
                     ${tags.map(
-                            value => html`
-                                <li>${until(ActivityPubObject.renderByType(value, false), html`Loading`)}</li>`
+                        value => html`<li>${until(ActivityPubObject.renderByType(value, false), html`Loading`)}</li>`
                     )}
                 </ul>
             </aside>`;
