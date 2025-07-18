@@ -27,6 +27,15 @@ export class NaturalLanguageValues extends LitElement {
         h1 + p, h2 + p, h3 + p {
             margin-top: 0;
         }
+        a[rel=mention], a[rel=tag] {
+            font-size: .62rem;
+            font-weight: bold;
+            padding: .1rem .3rem;
+            border-radius: .3rem;
+            border: .08rem solid color-mix(in srgb, var(--accent-color), transparent 10%);
+            background: color-mix(in srgb, var(--accent-color), transparent 70%);
+            vertical-align: .09rem;
+        }
     `, ActivityPubObject.styles];
 
     static properties = {

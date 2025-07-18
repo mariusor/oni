@@ -2,6 +2,7 @@ import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubItem} from "./activity-pub-item";
+import {ActivityPubNote} from "./activity-pub-note";
 
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`
@@ -41,7 +42,7 @@ export class ActivityPubImage extends ActivityPubObject {
             font-variant: small-caps;
             font-weight: bold;
         }
-        `, ActivityPubObject.styles];
+        `, ActivityPubNote.styles];
 
     constructor() {
         super();

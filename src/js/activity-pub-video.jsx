@@ -2,6 +2,7 @@ import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubItem} from "./activity-pub-item";
+import {ActivityPubNote} from "./activity-pub-note";
 
 export class ActivityPubVideo extends ActivityPubObject {
     static styles = [css`
@@ -9,7 +10,7 @@ export class ActivityPubVideo extends ActivityPubObject {
             max-width: 100%; 
             max-height: 12vw;
             align-self: start;
-        }`, ActivityPubObject.styles];
+        }`, ActivityPubNote.styles];
 
     constructor() {
         super();

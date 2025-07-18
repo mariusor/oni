@@ -10,7 +10,7 @@ export class ActivityPubNote extends ActivityPubObject {
         flex-direction: column;
         align-items: center;
     }
-    :host > * {
+    article > * {
         margin: .1rem;
     }
     article header h1 {
@@ -34,6 +34,24 @@ export class ActivityPubNote extends ActivityPubObject {
     p {
         margin: 0 .2rem;
     }
+        .tag ul {
+            display: inline-flex;
+            flex-wrap: wrap;
+            padding: 0;
+            margin: 0;
+            gap: .12rem;
+        }
+        .tag li {
+            display: inline-block;
+            list-style: none;
+        }
+        .tag oni-tag {
+            display: inline-block;
+        }
+        .attachment > * {
+            display: inline-block;
+            width: 32%;
+        }
     `, ActivityPubObject.styles];
 
     constructor() {

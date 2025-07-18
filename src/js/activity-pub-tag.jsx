@@ -9,7 +9,14 @@ export class ActivityPubTag extends ActivityPubNote {
             border: unset;
             background: unset;
         }
-    `,ActivityPubNote.styles];
+        :host a[rel=mention], :host a[rel=tag] {
+            font-weight: bold;
+            padding: .1rem .3rem;
+            border-radius: .3rem;
+            border: .08rem solid color-mix(in srgb, var(--accent-color), transparent 10%);
+            background: color-mix(in srgb, var(--accent-color), transparent 70%);
+        }
+    `, ActivityPubNote.styles];
 
     constructor() {
         super();

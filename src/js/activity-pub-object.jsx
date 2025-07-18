@@ -26,20 +26,6 @@ export class ActivityPubObject extends LitElement {
         a:has(oni-natural-language-values) {
             text-decoration: none;
         }
-        a[rel=mention], a[rel=tag] {
-            font-size: .62rem;
-            font-weight: bold;
-            padding: .1rem .3rem;
-            border-radius: .3rem;
-            border: .08rem solid color-mix(in srgb, var(--accent-color), transparent 10%);
-            background: color-mix(in srgb, var(--accent-color), transparent 70%);
-        }
-        :host a[rel=mention], :host a[rel=tag] {
-            vertical-align: .09rem;
-        }
-        article > * {
-            margin: .1rem;
-        }
         article header * {
             padding: 0;
             margin: 0;
@@ -81,24 +67,6 @@ export class ActivityPubObject extends LitElement {
             padding: 0;
             font-size: .8rem;
             line-height: 1rem;
-        }
-        .tag ul {
-            display: inline-flex;
-            flex-wrap: wrap;
-            padding: 0;
-            margin: 0;
-        }
-        .tag li {
-            display: inline-block;
-            list-style: none;
-            margin-right: .2rem;
-        }
-        .tag oni-tag {
-            display: inline-block;
-        }
-        .attachment > * {
-            display: inline-block;
-            width: 32%;
         }
     `;
 
