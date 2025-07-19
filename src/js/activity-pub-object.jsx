@@ -49,7 +49,10 @@ export class ActivityPubObject extends LitElement {
             max-width: fit-content;
         }
         footer aside {
-            font-size: 0.8em;
+            font-size: .8em;
+        }
+        details summary {
+            cursor: pointer;
         }
         oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-image, oni-tag {
             display: flex;
@@ -293,7 +296,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        const replies = await this.dereferenceProperty('replies');
+        const replies = await fetchActivityPubIRI(this.it.replies);
         if (replies === null) {
             return nothing;
         }
@@ -313,13 +316,15 @@ export class ActivityPubObject extends LitElement {
         if (!this.it.hasOwnProperty('replies')) {
             return nothing;
         }
-        const replies = this.dereferenceProperty('replies');
-        if (replies === null) {
+        this.it.replies = await fetchActivityPubIRI(this.it.replies);
+        if (this.it.replies.totalItems === 0) {
             return nothing;
         }
-
         return html`
-            <oni-collection it=${JSON.stringify(until(replies, []))}></oni-collection>`;
+            <details>
+                <summary>${pluralize(this.it.replies.totalItems, 'reply')}</summary>
+                <oni-collection it=${JSON.stringify(this.it.replies)} ?showMetadata=${true} ?threaded=${true}></oni-collection>
+            </details>`;
     }
 
     inFocus() {
@@ -331,7 +336,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        return html`${ActivityPubObject.renderByType(this.it)}, "Loading")}${until(this.renderReplies())}`;
+        return ActivityPubObject.renderByType(this.it);
     }
 
     static isValid(it) {

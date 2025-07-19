@@ -3,6 +3,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubItem} from "./activity-pub-item";
 import {ActivityPubNote} from "./activity-pub-note";
+import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`
@@ -30,14 +31,14 @@ export class ActivityPubImage extends ActivityPubObject {
             display: flex;
             align-items: start;
         }
-        details {
+        figure details {
             cursor: pointer;
             font-size: .8em;
             background-color: color-mix(in srgb, black, transparent 60%);
             padding: .1rem .4rem;
             border-radius: .4rem;
         }
-        summary {
+        figure summary {
             list-style-type: none;
             font-variant: small-caps;
             font-weight: bold;
@@ -123,6 +124,7 @@ export class ActivityPubImage extends ActivityPubObject {
                 </figure>
                 ${this.renderTag()}
                 ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
+                ${until(this.renderReplies())}
         `;
     }
     static isValid(it) {

@@ -41,7 +41,8 @@ export class ActivityPubTag extends ActivityPubNote {
             return html`
                 <article>${header} ${this.renderContent()}</article>
                 <footer>${this.renderMetadata()}</footer>
-                ${until(this.renderReplies())}`;
+                ${until(this.renderReplies())}
+            `;
         }
         return html`<a rel="${rel}" href="${this.it.iri()}">${this.renderNameText()}</a>`;
     }

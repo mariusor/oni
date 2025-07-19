@@ -3,6 +3,7 @@ import {ActivityPubNote} from "./activity-pub-note";
 import {css, html, nothing} from "lit";
 import {renderDuration, renderTimestamp} from "./utils";
 import {ActivityPubItem} from "./activity-pub-item";
+import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubEvent extends ActivityPubNote {
     static styles = [
@@ -43,6 +44,8 @@ export class ActivityPubEvent extends ActivityPubNote {
             ${this.renderContent()}
             <aside>${this.renderAttachment()}</aside>
         </article>
-        <footer>${this.renderMetadata()}</footer>`;
+        <footer>${this.renderMetadata()}</footer>
+        ${until(this.renderReplies())}
+        `;
     }
 }

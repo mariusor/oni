@@ -31,6 +31,12 @@ export class ActivityPubNote extends ActivityPubObject {
     article header h6 {
         font-size: .8rem;
     }
+    footer {
+        font-size: 0.8rem;
+    }
+    footer a {
+        text-decoration: none;
+    }
     p {
         margin: 0 .2rem;
     }
@@ -66,6 +72,9 @@ export class ActivityPubNote extends ActivityPubObject {
             ${this.renderContent()}
             ${this.renderTag()}
             ${this.renderAttachment()}
-        </article>${metadata}${until(this.renderReplies())}`;
+        </article>
+        ${metadata}
+        ${until(this.renderReplies())}
+        `;
     }
 }

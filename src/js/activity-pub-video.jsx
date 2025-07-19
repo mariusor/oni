@@ -3,6 +3,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {when} from "lit-html/directives/when.js";
 import {ActivityPubItem} from "./activity-pub-item";
 import {ActivityPubNote} from "./activity-pub-note";
+import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubVideo extends ActivityPubObject {
     static styles = [css`
@@ -31,7 +32,8 @@ export class ActivityPubVideo extends ActivityPubObject {
         )}
             </figure>
             ${this.renderTag()}
-            ${metadata != nothing ? html`<footer>${metadata}</footer>` : nothing}
+            ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
+            ${until(this.renderReplies())}
         `;
     }
 }
