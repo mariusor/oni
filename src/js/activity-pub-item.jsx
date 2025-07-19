@@ -1,5 +1,3 @@
-import {fetchActivityPubIRI} from "./client";
-
 export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', 'Mention', ''];
 export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
 export const ActivityTypes = ['Create', 'Update', 'Delete', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore'];
@@ -264,7 +262,7 @@ export class ActivityPubItem {
         } else if (this.hasOwnProperty('items')) {
             items = this['items'];
         }
-        return items.sort(sortByPublished);
+        return items
     }
 
     getEndPoints() {
@@ -307,15 +305,4 @@ export class ActivityPubItem {
     static isValid(it) {
         return typeof it === 'object' && it !== null && it.hasOwnProperty('id') && it.hasOwnProperty('type') && it.id !== '' && it.type !== '';
     }
-}
-
-function sortByPublished(a, b) {
-    const aHas = a.hasOwnProperty('published');
-    const bHas = b.hasOwnProperty('published');
-    if (!aHas && !bHas) {
-        return (a.id <= b.id) ? 1 : -1;
-    }
-    if (aHas && !bHas) return -1;
-    if (!aHas && bHas) return 1;
-    return Date.parse(b.published) - Date.parse(a.published);
 }

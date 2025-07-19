@@ -5,6 +5,7 @@ import {ActivityPubItem, ActivityTypes, ActorTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {ActivityPubActivity} from "./activity-pub-activity";
 import {until} from "lit-html/directives/until.js";
+import {ActivityPubActor} from "./activity-pub-actor";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = [css`
@@ -19,10 +20,22 @@ export class ActivityPubCollection extends ActivityPubObject {
         }
     `, ActivityPubObject.styles];
 
-    static properties = ActivityPubObject.properties;
+    static properties = {
+        it: {
+            type: ActivityPubItem,
+            converter: {
+                toAttribute: (val, typ) => JSON.stringify(val),
+                fromAttribute: (val, typ) => ActivityPubItem.load(val),
+            },
+        },
+        showMetadata: {type: Boolean},
+        inline: {type: Boolean},
+        threaded: {type: Boolean},
+    };
 
-    constructor() {
-        super();
+    constructor(showMetadata) {
+        super(showMetadata);
+        this.threaded = false;
     }
 
     renderNext() {
@@ -52,24 +65,33 @@ export class ActivityPubCollection extends ActivityPubObject {
     }
 
     renderItems() {
-        return html`${this.it.getItems().map(it => {
+        const items = this.it.getItems();
+
+        if (this.threaded) {
+            items.sort((a, b) => -1*sortByPublished(a, b))
+        }
+
+        return html`${items.map(it => {
             const type = it.hasOwnProperty('type')? it.type : 'unknown';
 
             let renderedItem = unsafeHTML(`<!-- Unknown activity object ${type} -->`);
             if (ActivityTypes.indexOf(type) >= 0) {
                 if (!ActivityPubActivity.isValid(it)) return nothing;
-
                 renderedItem = html`<oni-activity it=${JSON.stringify(it)}></oni-activity>`;
             } else if (ActorTypes.indexOf(type) >= 0) {
+                if (!ActivityPubActor.isValid(it)) return nothing;
                 renderedItem = html`<oni-actor it=${JSON.stringify(it)} ?inline=${true}></oni-actor>`
             } else {
                 if (!ActivityPubObject.isValid(it)) return nothing;
-
-                renderedItem = ActivityPubObject.renderByType(it);
+                renderedItem = ActivityPubObject.renderByType(it, this.showMetadata, this.inline);
             }
 
             return html` <li>${until(renderedItem)}</li>`
         })}`
+    }
+
+    isOrdered() {
+        return this.it.type.toLowerCase().includes('ordered');
     }
 
     render() {
@@ -80,7 +102,7 @@ export class ActivityPubCollection extends ActivityPubObject {
                 return nothing;
             }
 
-            const list = this.it.type.toLowerCase().includes('ordered')
+            const list = this.isOrdered()
                 ? html`
                         <ol>${this.renderItems()}</ol>`
                 : html`
@@ -93,4 +115,15 @@ export class ActivityPubCollection extends ActivityPubObject {
         }
         return html`${collection()}`;
     }
+}
+
+export function sortByPublished(a, b) {
+    const aHas = a.hasOwnProperty('published');
+    const bHas = b.hasOwnProperty('published');
+    if (!aHas && !bHas) {
+        return (a.id <= b.id) ? 1 : -1;
+    }
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+    return Date.parse(b.published) - Date.parse(a.published);
 }
