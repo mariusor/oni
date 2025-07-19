@@ -1,7 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {hostFromIRI, loadPalette} from "./utils";
-import {ActivityPubItem} from "./activity-pub-item";
+import {ActivityPubItem, ActorTypes, ObjectTypes} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
 import {TinyColor} from "@ctrl/tinycolor";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
@@ -287,5 +287,9 @@ export class ActivityPubActor extends ActivityPubObject {
         <nav>${until(this.renderCollections(), `<hr/>`)}</nav>
         ${this.renderContent()}
         `;
+    }
+
+    static isValid(it) {
+        return ActivityPubItem.isValid(it) && ActorTypes.indexOf(it.type) > 0;
     }
 }
