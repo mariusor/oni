@@ -233,8 +233,9 @@ export class ActivityPubObject extends LitElement {
     }
 
     renderBookmark() {
-        const hasName = this.it.getName()?.length > 0;
-        return !hasName ? html`<a href="${this.it.iri() ?? nothing}">
+        const textualObjectTypes = ['Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', 'Mention', ''];
+        const textualWithName = textualObjectTypes.indexOf(this.it.type) >= 0 && this.it.getName()?.length > 0;
+        return !textualWithName ? html`<a href="${this.it.iri() ?? nothing}">
             <oni-icon title="Bookmark this item" name="bookmark"></oni-icon>
         </a>` : nothing
     }

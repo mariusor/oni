@@ -101,7 +101,8 @@ export class ActivityPubActor extends ActivityPubObject {
             vertical-align: bottom;
         }
         a.inline span {
-            opacity: 0.92;
+            opacity: 0.7;
+            color: var(--fg-color);
         }
         a.inline span::before {
             content: '@';
