@@ -1,7 +1,6 @@
 import {css, html, LitElement} from "lit";
-import {classMap} from "lit-html/directives/class-map.js";
 import {when} from "lit-html/directives/when.js";
-import {handleServerError, isAuthorized} from "./utils.js";
+import {isAuthorized} from "./utils.js";
 import {AuthController} from "./auth-controller.js";
 import {OniCollectionLink} from "./oni-collection-links";
 
@@ -19,21 +18,15 @@ export class LoginLink extends LitElement {
             background-color: var(--bg-color);
             opacity: .9;
         }
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
         form input {
             width: 12rem;
         }
         form button {
             width: 12.4rem;
         }
-        .error {
-            text-align: center;
-            color: red;
-            font-size: .7em;
+        oni-errors {
+            color: var(--accent-color);
+            line-height: 1.4rem;
         }
     `, OniCollectionLink.styles];
 
@@ -41,7 +34,8 @@ export class LoginLink extends LitElement {
         authorizeURL: {type: String},
         tokenURL: {type: String},
         fetched: {type: Boolean},
-        error: {type: String},
+        error: {type: Object},
+        authorized: {type: Boolean},
     }
 
     _auth = new AuthController(this);
@@ -49,29 +43,32 @@ export class LoginLink extends LitElement {
     constructor() {
         super()
         this.fetched = false;
-        this.error = "";
+        this.authorized = isAuthorized();
     }
 
     showDialog(e) {
         e.preventDefault();
         e.stopPropagation();
 
-        const dialog = this.shadowRoot?.querySelector("dialog");
-        dialog?.showModal();
+        this.shadowRoot?.querySelector("dialog")?.showModal();
+        this.error = null;
     }
 
     hideDialog(e) {
-        const dialog = this.shadowRoot?.querySelector("dialog");
-        dialog?.close();
+        this.error = null;
+        this.shadowRoot?.querySelector("dialog")?.close();
     }
 
     logout() {
         this._auth.authorization = null;
+        eraseAuthCookie();
 
         this.dispatchEvent(new CustomEvent('logged.out', {
             bubbles: true,
             composed: true,
         }));
+        this.error = null;
+        this.authorized = isAuthorized();
     }
 
     login(e) {
@@ -82,7 +79,7 @@ export class LoginLink extends LitElement {
         const pw = form._pw.value
         form._pw.value = "";
 
-        this.authorizationToken(form.action, pw).then(() => console.info("success authorization"));
+        this.authorizationToken(form.action, pw);
     }
 
     async authorizationToken(targetURI, pw) {
@@ -96,18 +93,18 @@ export class LoginLink extends LitElement {
                 "Content-Type": "application/x-www-form-urlencoded",
             }
         };
-        this.error = "";
+
         fetch(targetURI, req)
             .then(response => {
-                response.json().then(value => {
-                    if (response.status === 200) {
-                        console.debug(`Obtained authorization code: ${value.code}`)
-                        this.accessToken(value.code, value.state);
-                    } else {
-                        this.error = handleServerError(value)
-                    }
-                }).catch(console.error);
-            }).catch(console.error);
+                    response.json().then(value => {
+                        if (response.status === 200) {
+                            console.debug(`Obtained authorization code: ${value.code}`)
+                            this.accessToken(value.code, value.state);
+                        } else {
+                            this.error = value
+                        }
+                }).catch(console.warn);
+            }).catch(console.warn)
     }
 
     async accessToken(code, state) {
@@ -140,10 +137,10 @@ export class LoginLink extends LitElement {
                         this.loginSuccessful();
                     } else {
                         this._auth.authorization = {};
-                        this.error = handleServerError(value)
+                        this.error = JSON.parse(value);
                     }
-                }).catch(console.error);
-            }).catch(console.error);
+                }).catch(console.warn);
+            }).catch(console.warn);
     }
 
     loginSuccessful() {
@@ -151,6 +148,9 @@ export class LoginLink extends LitElement {
             bubbles: true,
             composed: true,
         });
+        setAuthCookie(encodeURIComponent(JSON.stringify(this._auth.authorization)));
+        this.error = null;
+        this.authorized = isAuthorized();
         this.dispatchEvent(closeEvent);
         this.hideDialog(closeEvent);
     }
@@ -160,36 +160,40 @@ export class LoginLink extends LitElement {
             return;
         }
 
-        fetch(this.authorizeURL, { method: "GET", headers: {Accept: "application/json"}})
-            .then( cont => {
+        fetch(this.authorizeURL, {method: "GET", headers: {Accept: "application/json"}})
+            .then(cont => {
                 cont.json().then(login => {
                     this.authorizeURL = login.authorizeURL;
                     this.fetched = true;
-                }).catch(console.error);
-            })
-            .catch(console.error);
+                }).catch(console.warn);
+            }).catch(console.warn);
     }
 
     render() {
         this.getAuthURL();
         return html`
-            <nav>
-            ${when(
-                !isAuthorized(),
-                () => html`
-                            <a @click=${this.showDialog} href="#"><oni-icon alt="Authorize with OAuth2" name="sign-in"></oni-icon>Sign in</a>
-                            <dialog closedby="any">
-                                <div class=${classMap({error: (this.error.length > 0)})}>${this.error}</div>
-                                <form method="post" action=${this.authorizeURL} @submit="${this.login}">
-                                    <input type="password" id="_pw" name="_pw" placeholder="Password" autofocus required /><br/>
-                                    <button type="submit">Sign in</button>
-                                </form>
-                            </dialog>
-                        `,
+            <nav>${when(
+                    !isAuthorized(),
                     () => html`
-                        <a @click=${this.logout} href="#"><oni-icon alt="Sign out" name="sign-out"></oni-icon>Sign out</a>
-                    `
-            )}
-            </nav>`;
+                        <a @click=${this.showDialog} href="#"><oni-icon alt="Authorize with OAuth2" name="sign-in"></oni-icon>Sign in</a>
+                        <dialog closedby="any">
+                            <form method="post" action=${this.authorizeURL} @submit="${this.login}">
+                                <input type="password" id="_pw" name="_pw" placeholder="Password" autofocus required /><br/>
+                                <oni-errors it=${JSON.stringify(this.error?.errors)} ?inline=${true}></oni-errors>
+                                <button type="submit">Sign in</button>
+                            </form>
+                        </dialog>`,
+                    () => html`<a @click=${this.logout} href="#"><oni-icon alt="Sign out" name="sign-out"></oni-icon>Sign out</a>`
+            )}</nav>`;
     }
+}
+
+function setAuthCookie(value) {
+    const date = new Date();
+    date.setTime(date.getTime() + (7*24*60*60*1000));
+    document.cookie = `auth=${(value || "")}; expires=${date.toUTCString()}; path=/`;
+}
+
+function eraseAuthCookie() {
+    document.cookie = `auth=; expires=${new Date(0).toUTCString()}; path=/`;
 }

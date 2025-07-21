@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -24,13 +26,14 @@ import (
 	"github.com/go-ap/client/s2s"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
-	json "github.com/go-ap/jsonld"
+	"github.com/go-ap/jsonld"
 	"github.com/go-ap/processing"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/mariusor/render"
 	"github.com/microcosm-cc/bluemonday"
+	"golang.org/x/oauth2"
 )
 
 // NotFound is a generic method to return an 404 error HTTP handler that
@@ -399,7 +402,7 @@ const (
 func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 	_ = cleanupMediaObjectFromItem(it)
 
-	dat, err := json.WithContext(json.IRI(vocab.ActivityBaseURI), json.IRI(vocab.SecurityContextURI)).Marshal(it)
+	dat, err := jsonld.WithContext(jsonld.IRI(vocab.ActivityBaseURI), jsonld.IRI(vocab.SecurityContextURI)).Marshal(it)
 	if err != nil {
 		return o.Error(err)
 	}
@@ -419,7 +422,7 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 		} else {
 			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(objectCacheDuration.Seconds())))
 		}
-		w.Header().Set("Content-Type", json.ContentType)
+		w.Header().Set("Content-Type", jsonld.ContentType)
 		w.Header().Set("Vary", "Accept")
 		w.Header().Set("ETag", eTag)
 		if !updatedAt.IsZero() {
@@ -707,8 +710,20 @@ const authorizedActorCtxKey = "__authorizedActor"
 const blockedActorsCtxKey = "__blockedActors"
 
 func (o oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore ...vocab.IRI) (vocab.Actor, error) {
-	if act, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
+	act, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor)
+	if ok && !auth.AnonymousActor.Equals(act) {
 		return act, nil
+	}
+	if cookieAuth, _ := r.Cookie("auth"); cookieAuth != nil {
+		// NOTE(marius): try to load from encoded token cookie - this happens in the login-link success path
+		if rawJson, err := url.QueryUnescape(cookieAuth.Value); err == nil {
+			tok := new(oauth2.Token)
+			if err := json.Unmarshal([]byte(rawJson), tok); err == nil {
+				if act, err := auth.LoadActorFromOAuthToken(o.Storage, tok); err == nil && !auth.AnonymousActor.Equals(act) {
+					return act, nil
+				}
+			}
+		}
 	}
 
 	c := Client(auth.AnonymousActor, o.Storage, o.Logger)

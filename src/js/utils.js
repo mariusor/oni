@@ -141,23 +141,6 @@ export function authorization() {
     return JSON.parse(localStorage.getItem('authorization')) || {};
 }
 
-export function handleServerError(err) {
-    let errMessage;
-    if (err.hasOwnProperty('errors')) {
-        console.error(err.errors);
-        if (!Array.isArray(err.errors)) {
-            err.errors = [err.errors];
-        }
-        err.errors.forEach((err) => {
-            errMessage += ` ${err.message}`;
-        })
-    } else {
-        console.error(err);
-        errMessage += err.toString();
-    }
-    return errMessage;
-}
-
 export function activity(outbox, update, extraHeaders = {}, success = () => {}) {
     const headers = {
         'Content-Type': 'application/activity+json',
