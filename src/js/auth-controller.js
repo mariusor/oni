@@ -15,6 +15,7 @@ export class AuthController {
     set authorization(auth) {
         if (auth === null) {
             localStorage.removeItem('authorization');
+            return;
         }
         localStorage.setItem('authorization', JSON.stringify(auth))
         for (const host of AuthController.hosts) {
