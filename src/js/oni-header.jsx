@@ -4,6 +4,7 @@ import {until} from "lit-html/directives/until.js";
 import {isLocalIRI} from "./client";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubItem} from "./activity-pub-item";
+import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class OniHeader extends ActivityPubActor {
 
@@ -45,28 +46,12 @@ export class OniHeader extends ActivityPubActor {
     }
 
     renderIconName() {
-        let username = this.it.getPreferredUsername();
+        let username = unsafeHTML(this.it?.getPreferredUsername()?.at(0));
         const iri = this.it.iri();
         if (!isLocalIRI(iri)) {
             username = `${username}@${new URL(iri).hostname}`
         }
-        return html`
-                <a href=${iri}> ${this.renderIcon()} ${username}</a>
-            `;
-    }
-
-    renderOAuth() {
-        const endPoints = this.it.getEndPoints();
-        if (!endPoints.hasOwnProperty('oauthAuthorizationEndpoint')) {
-            return nothing;
-        }
-        if (!endPoints.hasOwnProperty('oauthTokenEndpoint')) {
-            return nothing;
-        }
-        const authURL = new URL(endPoints.oauthAuthorizationEndpoint)
-        const tokenURL = endPoints.oauthTokenEndpoint;
-
-        return html`<oni-login-link authorizeURL=${authURL} tokenURL=${tokenURL}></oni-login-link>`;
+        return html`<a href=${iri}> ${this.renderIcon()} ${username}</a>`;
     }
 
     render() {
@@ -75,10 +60,6 @@ export class OniHeader extends ActivityPubActor {
         const iconName = html`<span>${this.renderIconName()}</span>`;
         const style = html`<style>${until(this.renderPalette())}</style>`;
 
-        return html`${style}<header>
-                ${this.renderOAuth()}
-                ${until(this.renderCollections(iconName), `<hr/>`)}
-            </header>
-        `;
+        return html`${style}<header>${until(this.renderCollections(iconName), `<hr/>`)}</header>`;
     }
 }
