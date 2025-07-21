@@ -17,6 +17,7 @@ import {ActivityPubEvent} from "./activity-pub-event";
 import {BandCampEmbed} from "./bandcamp-embed";
 import {OniErrors} from "./oni-errors";
 import {OniHeader} from "./oni-header";
+import {LoginLink} from "./login-link";
 
 customElements.define('oni-main', OniMain);
 customElements.define('oni-errors', OniErrors);
@@ -41,10 +42,8 @@ customElements.define('oni-collection-link', OniCollectionLink);
 
 customElements.define('oni-icon', OniIcon);
 
-// customElements.define('oni-login-link', LoginLink);
-// customElements.define('oni-login-dialog', LoginDialog);
+customElements.define('oni-login-link', LoginLink);
 
-//customElements.define('oni-errors', OniErrors);
 customElements.define('bandcamp-embed', BandCampEmbed);
 
 OnReady(function () {

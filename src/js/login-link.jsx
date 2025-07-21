@@ -2,25 +2,22 @@ import {css, html, LitElement} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {when} from "lit-html/directives/when.js";
 import {handleServerError, isAuthorized} from "./utils.js";
-import {ref} from "lit-html/directives/ref.js";
 import {AuthController} from "./auth-controller.js";
+import {OniCollectionLink} from "./oni-collection-links";
 
-export class LoginDialog extends LitElement {
-    static styles = css`
-        dialog[opened] {
-            display: flex;
-            margin: auto;
-        }
+export class LoginLink extends LitElement {
+    static styles = [css`
         dialog {
-            opacity: 1;
-            display: none;
-            position: fixed;
             flex-direction: column;
             border: 2px outset var(--accent-color);
             background-color: var(--bg-color);
             padding: 1em;
-            margin: 1em;
+            margin: 1em auto;
             align-content: center;
+        }
+        dialog::backdrop {
+            background-color: var(--bg-color);
+            opacity: .9;
         }
         form {
             display: flex;
@@ -38,26 +35,12 @@ export class LoginDialog extends LitElement {
             color: red;
             font-size: .7em;
         }
-        .overlay {
-            background-color: var(--bg-color);
-            opacity: .8;
-            display: none;
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
-        .opened {
-            display: block;
-        }
-    `;
+    `, OniCollectionLink.styles];
 
     static properties = {
-        opened: {type: Boolean},
-        fetched: {type: Boolean},
         authorizeURL: {type: String},
         tokenURL: {type: String},
+        fetched: {type: Boolean},
         error: {type: String},
     }
 
@@ -65,16 +48,29 @@ export class LoginDialog extends LitElement {
 
     constructor() {
         super()
-        this.opened = false;
         this.fetched = false;
         this.error = "";
     }
 
-    close() {
-        this.opened = false;
+    showDialog(e) {
+        e.preventDefault();
+        e.stopPropagation();
 
-        this.dispatchEvent(new CustomEvent('dialog.closed', {
+        const dialog = this.shadowRoot?.querySelector("dialog");
+        dialog?.showModal();
+    }
+
+    hideDialog(e) {
+        const dialog = this.shadowRoot?.querySelector("dialog");
+        dialog?.close();
+    }
+
+    logout() {
+        this._auth.authorization = null;
+
+        this.dispatchEvent(new CustomEvent('logged.out', {
             bubbles: true,
+            composed: true,
         }));
     }
 
@@ -151,12 +147,12 @@ export class LoginDialog extends LitElement {
     }
 
     loginSuccessful() {
-        this.close();
-
-        this.dispatchEvent(new CustomEvent('logged.in', {
+        const closeEvent = new CustomEvent('logged.in', {
             bubbles: true,
             composed: true,
-        }));
+        });
+        this.dispatchEvent(closeEvent);
+        this.hideDialog(closeEvent);
     }
 
     async getAuthURL() {
@@ -172,98 +168,28 @@ export class LoginDialog extends LitElement {
                 }).catch(console.error);
             })
             .catch(console.error);
-
     }
 
     render() {
         this.getAuthURL();
-
-        const setFocus = (pw) => pw && pw.focus();
-
-        return html`
-            <div class=${classMap({overlay: true, opened: this.opened})} @click=${this.close}></div>
-            <dialog ?opened="${this.opened}">
-                <div class=${classMap({error: (this.error.length > 0)})}>${this.error}</div>
-                <form method="post" action=${this.authorizeURL} @submit="${this.login}">
-                    <input type="password" id="_pw" name="_pw" placeholder="Password" ${ref(setFocus)} /><br/>
-                    <button type="submit">Sign in</button>
-                </form>
-            </dialog>
-        `
-    }
-}
-
-export class LoginLink extends LitElement {
-    static styles = css`
-        :host {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-        }
-    `;
-
-    static properties = {
-        authorizeURL: {type: String},
-        tokenURL: {type: String},
-        dialogVisible: {type: Boolean},
-        loginVisible: {type: Boolean},
-    }
-
-    _auth = new AuthController(this);
-
-    constructor() {
-        super()
-        this.dialogVisible = false;
-        this.loginVisible = !isAuthorized();
-    }
-
-    showDialog(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.dialogVisible = true;
-    }
-
-    hideDialog(e) {
-        this.dialogVisible = false;
-        this.loginVisible = true;
-    }
-
-    logout() {
-        this._auth.authorization = null;
-
-        this.loginVisible = true;
-        this.dispatchEvent(new CustomEvent('logged.out', {
-            bubbles: true,
-            composed: true,
-        }));
-    }
-
-    render() {
         return html`
             <nav>
             ${when(
-                this.loginVisible,
+                !isAuthorized(),
                 () => html`
-                            <button @click="${this.showDialog}">
-                                <oni-icon name="lock"></oni-icon>
-                                Sign in
-                            </button>
-                            <oni-login-dialog
-                                    ?opened="${this.dialogVisible}"
-                                    authorizeURL=${this.authorizeURL}
-                                    tokenURL=${this.tokenURL}
-                                    @dialog.closed=${this.hideDialog}
-                                    @logged.in=${() => {this.loginVisible = false}}
-                            ></oni-login-dialog>
+                            <a @click=${this.showDialog} href="#"><oni-icon alt="Authorize with OAuth2" name="sign-in"></oni-icon>Sign in</a>
+                            <dialog closedby="any">
+                                <div class=${classMap({error: (this.error.length > 0)})}>${this.error}</div>
+                                <form method="post" action=${this.authorizeURL} @submit="${this.login}">
+                                    <input type="password" id="_pw" name="_pw" placeholder="Password" autofocus required /><br/>
+                                    <button type="submit">Sign in</button>
+                                </form>
+                            </dialog>
                         `,
                     () => html`
-                        <button @click="${this.logout}">
-                            Sign out
-                        </button>
+                        <a @click=${this.logout} href="#"><oni-icon alt="Sign out" name="sign-out"></oni-icon>Sign out</a>
                     `
             )}
-            </nav>
-            `;
+            </nav>`;
     }
 }

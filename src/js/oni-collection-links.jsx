@@ -2,6 +2,7 @@ import {css, html, LitElement, nothing} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubItem} from "./activity-pub-item";
+import {until} from "lit-html/directives/until.js";
 
 export class OniCollectionLinks extends LitElement {
     static styles = css`
@@ -62,6 +63,20 @@ export class OniCollectionLinks extends LitElement {
         this.it = null;
     }
 
+    renderOAuth() {
+        const endPoints = this.it.getEndPoints();
+        if (!endPoints.hasOwnProperty('oauthAuthorizationEndpoint')) {
+            return nothing;
+        }
+        if (!endPoints.hasOwnProperty('oauthTokenEndpoint')) {
+            return nothing;
+        }
+        const authURL = new URL(endPoints.oauthAuthorizationEndpoint)
+        const tokenURL = endPoints.oauthTokenEndpoint;
+
+        return html`<oni-login-link authorizeURL=${authURL} tokenURL=${tokenURL}></oni-login-link>`;
+    }
+
     get collections() {
         let collections = []
         const replies = this.it.getReplies();
@@ -101,10 +116,12 @@ export class OniCollectionLinks extends LitElement {
 
     render() {
         if (!Array.isArray(this.collections) || this.collections.length === 0) return nothing;
+        const oauth = this.renderOAuth();
         return html`
             <nav>
                 <slot></slot>
                 <ul>
+                    ${oauth !== nothing ? html`<li>${until(oauth)}</li>` : nothing}
                     ${this.collections.map(iri => html`
                         <li class=${classMap({'active': isCurrentPage(iri)})}>
                             <oni-collection-link it=${iri}></oni-collection-link>
