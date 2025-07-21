@@ -773,6 +773,14 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 	})
 }
 
+func hasPath(iri vocab.IRI) bool {
+	u, _ := iri.URL()
+	if u != nil {
+		return u.Path != "" && u.Path != "/"
+	}
+	return false
+}
+
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
 	colFilters := make(filters.Checks, 0)
@@ -818,7 +826,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 
 	it, err := loadItemFromStorage(o.Storage, iri, colFilters...)
 	if err != nil {
-		if errors.IsNotFound(err) && len(o.a) == 1 {
+		if errors.IsNotFound(err) && len(o.a) == 1 && !hasPath(iri) {
 			if a := o.a[0]; !a.ID.Equals(iri, true) {
 				if _, cerr := checkIRIResolvesLocally(a.ID); cerr == nil {
 					err = errors.NewTemporaryRedirect(err, a.ID.String())
