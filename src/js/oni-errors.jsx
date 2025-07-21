@@ -22,6 +22,7 @@ export class OniErrors extends LitElement {
     `;
     static properties = {
         it: {type: Object},
+        inline: {type: Boolean},
     };
 
     constructor() {
@@ -35,6 +36,7 @@ export class OniErrors extends LitElement {
 
     renderErrorTrace(err) {
         if (!err || !err.hasOwnProperty('trace')) return nothing;
+        if (this.inline) return nothing;
         if (!Array.isArray(err.trace)) {
             err.trace = [err.trace];
         }
@@ -47,6 +49,7 @@ export class OniErrors extends LitElement {
     }
 
     renderErrorTitle(err) {
+        if (this.inline) return html`${err.status ?? nothing} ${err.message}`;
         return html`<h2>${err.status ?? nothing} ${err.message}</h2>`
     }
 
@@ -55,10 +58,10 @@ export class OniErrors extends LitElement {
     }
 
     render() {
+        if (!this.it) return nothing;
         if (!Array.isArray(this.it)) {
             this.it = [this.it];
         }
-        return html`
-            <main>${map(this.it, err => this.renderError(err))}</main>`;
+        return html`<main>${map(this.it, err => this.renderError(err))}</main>`;
     }
 }
