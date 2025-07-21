@@ -48,21 +48,64 @@ export class OniCollectionLinks extends LitElement {
     `
 
     static properties = {
-        it: {type: Array}
+        it: {
+            type: ActivityPubItem,
+            converter: {
+                toAttribute: (val, typ) => JSON.stringify(val),
+                fromAttribute: (val, typ) => ActivityPubItem.load(val),
+            },
+        }
     }
 
     constructor() {
         super();
-        this.it = [];
+        this.it = null;
+    }
+
+    get collections() {
+        let collections = []
+        const replies = this.it.getReplies();
+        if (replies) {
+            collections.push(replies);
+        }
+        const likes = this.it.getLikes();
+        if (likes) {
+            collections.push(likes);
+        }
+        const shares = this.it.getShares();
+        if (shares) {
+            collections.push(shares);
+        }
+        const inbox = this.it.getInbox();
+        if (inbox !== null) {
+            collections.push(inbox);
+        }
+        const liked = this.it.getLiked();
+        if (liked !== null) {
+            collections.push(liked);
+        }
+        const followers = this.it.getFollowers();
+        if (followers !== null) {
+            collections.push(followers);
+        }
+        const following = this.it.getFollowing();
+        if (following !== null) {
+            collections.push(following);
+        }
+        const outbox = this.it.getOutbox();
+        if (outbox !== null) {
+            collections.push(outbox);
+        }
+        return collections;
     }
 
     render() {
-        if (!Array.isArray(this.it) || this.it.length === 0) return nothing;
+        if (!Array.isArray(this.collections) || this.collections.length === 0) return nothing;
         return html`
             <nav>
                 <slot></slot>
                 <ul>
-                    ${this.it.map(iri => html`
+                    ${this.collections.map(iri => html`
                         <li class=${classMap({'active': isCurrentPage(iri)})}>
                             <oni-collection-link it=${iri}></oni-collection-link>
                         </li>`

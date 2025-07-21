@@ -87,6 +87,27 @@ export class ActivityPubItem {
         return this.attachment;
     }
 
+    getShares() {
+        if (!this.hasOwnProperty('shares')) {
+            this.shares = null;
+        }
+        return this.shares;
+    }
+
+    getLikes() {
+        if (!this.hasOwnProperty('likes')) {
+            this.likes = null;
+        }
+        return this.likes;
+    }
+
+    getReplies() {
+        if (!this.hasOwnProperty('replies')) {
+            this.replies = null;
+        }
+        return this.replies;
+    }
+
     getInbox() {
         if (!this.hasOwnProperty('inbox')) {
             this.inbox = null;
@@ -106,13 +127,6 @@ export class ActivityPubItem {
             this.liked = null;
         }
         return this.liked;
-    }
-
-    getLikes() {
-        if (!this.hasOwnProperty('likes')) {
-            this.likes = null;
-        }
-        return this.likes;
     }
 
     getFollowers() {

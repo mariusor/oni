@@ -220,38 +220,9 @@ export class ActivityPubActor extends ActivityPubObject {
         return html`<oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
     }
 
-    collections() {
-        let collections = super.collections();
-        const inbox = this.it.getInbox();
-        if (inbox !== null) {
-            collections.push(inbox);
-        }
-        const liked = this.it.getLiked();
-        if (liked !== null) {
-            collections.push(liked);
-        }
-        const followers = this.it.getFollowers();
-        if (followers !== null) {
-            collections.push(followers);
-        }
-        const following = this.it.getFollowing();
-        if (following !== null) {
-            collections.push(following);
-        }
-        const outbox = this.it.getOutbox();
-        if (outbox !== null) {
-            collections.push(outbox);
-        }
-        return collections;
-    }
-
     renderCollections(slot) {
         slot = slot || html`<a href="#"></a>`;
-        const c = this.collections();
-        if (c.length === 0) {
-            return slot;
-        }
-        return html`<oni-collection-links it=${JSON.stringify(c)}>${slot}</oni-collection-links>`;
+        return html`<oni-collection-links it=${JSON.stringify(this.it)}>${slot}</oni-collection-links>`;
     };
 
     renderRemotePreferredUsername() {

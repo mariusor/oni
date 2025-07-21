@@ -119,21 +119,6 @@ export class ActivityPubObject extends LitElement {
         }
     }
 
-
-    collections() {
-        let collections = []
-        if (this.it.hasOwnProperty('replies')) {
-            collections.push(this.it.replies);
-        }
-        if (this.it.hasOwnProperty('likes')) {
-            collections.push(this.it.likes);
-        }
-        if (this.it.hasOwnProperty('shares')) {
-            collections.push(this.it.shares);
-        }
-        return collections;
-    }
-
     async dereferenceProperty(prop) {
         if (!this.it.hasOwnProperty(prop)) {
             return null;
