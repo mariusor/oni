@@ -3,6 +3,8 @@ import {classMap} from "lit-html/directives/class-map.js";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubItem} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
+import {fetchActivityPubIRI} from "./client";
+import {map} from "lit-html/directives/map.js";
 
 export class OniCollectionLinks extends LitElement {
     static styles = css`
@@ -55,12 +57,14 @@ export class OniCollectionLinks extends LitElement {
                 toAttribute: (val, typ) => JSON.stringify(val),
                 fromAttribute: (val, typ) => ActivityPubItem.load(val),
             },
-        }
+        },
+        collections: {type: Array}
     }
 
     constructor() {
         super();
         this.it = null;
+        this.collections = [];
     }
 
     renderOAuth() {
@@ -77,56 +81,62 @@ export class OniCollectionLinks extends LitElement {
         return html`<oni-login-link authorizeURL=${authURL} tokenURL=${tokenURL}></oni-login-link>`;
     }
 
-    get collections() {
-        let collections = []
+    buildCollections() {
         const replies = this.it.getReplies();
         if (replies) {
-            collections.push(replies);
+            this.collections.push(replies);
         }
         const likes = this.it.getLikes();
         if (likes) {
-            collections.push(likes);
+            this.collections.push(likes);
         }
         const shares = this.it.getShares();
         if (shares) {
-            collections.push(shares);
+            this.collections.push(shares);
         }
         const inbox = this.it.getInbox();
         if (inbox !== null) {
-            collections.push(inbox);
+            this.collections.push(inbox);
         }
         const liked = this.it.getLiked();
         if (liked !== null) {
-            collections.push(liked);
+            this.collections.push(liked);
         }
         const followers = this.it.getFollowers();
         if (followers !== null) {
-            collections.push(followers);
+            this.collections.push(followers);
         }
         const following = this.it.getFollowing();
         if (following !== null) {
-            collections.push(following);
+            this.collections.push(following);
         }
         const outbox = this.it.getOutbox();
         if (outbox !== null) {
-            collections.push(outbox);
+            this.collections.push(outbox);
         }
-        return collections;
+    }
+
+    renderCollectionItems() {
+        this.buildCollections();
+        if (this.collections.length === 0) return nothing;
+        return map(this.collections,(iri) => until(
+            fetchActivityPubIRI(iri)
+                .then(
+                    it => html`<li class=${classMap({'active': isCurrentPage(it.iri())})}>
+                                            <oni-collection-link it=${JSON.stringify(it)}></oni-collection-link>
+                                        </li>`
+                ))
+        )
     }
 
     render() {
-        if (!Array.isArray(this.collections) || this.collections.length === 0) return nothing;
         const oauth = this.renderOAuth();
         return html`
             <nav>
                 <slot></slot>
                 <ul>
                     ${oauth !== nothing ? html`<li>${until(oauth)}</li>` : nothing}
-                    ${this.collections.map(iri => html`
-                        <li class=${classMap({'active': isCurrentPage(iri)})}>
-                            <oni-collection-link it=${iri}></oni-collection-link>
-                        </li>`
-                    )}
+                    ${this.renderCollectionItems()}
                 </ul>
             </nav>`;
     }
@@ -187,12 +197,6 @@ export class OniCollectionLink extends ActivityPubObject {
     }
 
     render() {
-        if (!ActivityPubItem.isValid(this.it)) {
-            const iri = this.it;
-            const label = iri.split('/').at(-1);
-            return html`<a href=${iri} class=${classMap({'active': isCurrentPage(iri)})}><oni-icon name=${label}></oni-icon>${label}</a>`;
-        }
-
         const iri = this.it.iri();
         const label = this.label();
         return html`<a href=${iri} class=${classMap({'active': isCurrentPage(iri)})}>${this.renderIcon()} ${label}</a>`;
@@ -200,6 +204,7 @@ export class OniCollectionLink extends ActivityPubObject {
 }
 
 function isCurrentPage(iri) {
+    if (!URL.canParse(iri)) return false;
     const u = new URL(iri)
     return u.pathname === window.location.pathname;
 }

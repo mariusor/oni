@@ -1,4 +1,5 @@
 import {authorization} from "./utils";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export async function fetchActivityPubIRI(iri) {
     if (typeof iri !== 'string') return new Promise((resolve, reject) => reject('invalid URL passed to function'));
@@ -25,7 +26,7 @@ export async function fetchActivityPubIRI(iri) {
             if (response.status !== 200) {
                 reject(`Invalid status received ${response.statusText}`);
             } else {
-               response.json().then(resolve).catch(e => reject(e));
+                response.json().then(v => resolve(new ActivityPubItem(v))).catch(e => reject(e));
             }
         }).catch(e => reject(e))
     });

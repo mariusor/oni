@@ -22,27 +22,19 @@ export class ActivityPubActivity extends ActivityPubObject {
     async renderActor() {
         if (!this.it.hasOwnProperty('actor')) return nothing;
 
-        let act = await this.dereferenceProperty('actor');
-        if (act === null) {
-            return nothing;
-        }
-
-        this.it.actor = new ActivityPubItem(act);
+        await this.dereferenceProperty('actor');
         return this.it.actor.getName();
     }
 
     async renderObject(showMetadata) {
         if (!this.it.hasOwnProperty('object')) return nothing;
-        let raw = await this.dereferenceProperty('object');
-        if (raw === null) {
-            return nothing;
-        }
-        if (!Array.isArray(raw)) {
-            raw = [raw];
+        await this.dereferenceProperty('object');
+        if (!Array.isArray(this.it.object)) {
+            this.it.object = [this.it.object];
         }
 
         const actor = this.it.hasOwnProperty('actor')? this.it.actor : null;
-        return html`${map(raw, function (ob) {
+        return html`${map(this.it.object, function (ob) {
             if (!ob.hasOwnProperty('attributedTo')) {
                 ob.attributedTo = actor;
             }

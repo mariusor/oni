@@ -101,7 +101,7 @@ export class ActivityPubObject extends LitElement {
                 } else if (value.hasOwnProperty("errors")) {
                     console.warn(value.errors);
                 } else {
-                    this.it = new ActivityPubItem(value);
+                    this.it = value;
                 }
             }).catch(console.warn);
     }
@@ -123,27 +123,15 @@ export class ActivityPubObject extends LitElement {
         if (!this.it.hasOwnProperty(prop)) {
             return null;
         }
-        let it = this.it[prop];
-        if (typeof it === 'string') {
-            it = await fetchActivityPubIRI(it);
+        if (typeof this.it[prop] === 'string') {
+            fetchActivityPubIRI(this.it[prop]).then(it => this.it[prop] = it);
         }
-        return it;
     }
 
     async fetchAuthor() {
-        if (this.it.hasOwnProperty('actor')) {
-            this.it.actor = await this.dereferenceProperty('actor');
-            if (this.it.actor) {
-                return new ActivityPubItem(this.it.actor);
-            }
-        }
-        if (this.it.hasOwnProperty('attributedTo')) {
-            this.it.attributedTo = await this.dereferenceProperty('attributedTo');
-            if (this.it.attributedTo) {
-                return new ActivityPubItem(this.it.attributedTo);
-            }
-        }
-        return null;
+        await this.dereferenceProperty('actor')
+        await this.dereferenceProperty('attributedTo');
+        return this.it.actor || this.it.attributedTo;
     }
 
     async renderAuthor() {
