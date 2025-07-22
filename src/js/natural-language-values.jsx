@@ -28,7 +28,7 @@ export class NaturalLanguageValues extends LitElement {
         h1 + p, h2 + p, h3 + p {
             margin-top: 0;
         }
-        a[rel=mention], a[rel=tag] {
+        a[rel~=mention], a[rel~=tag] {
             font-size: .62rem;
             font-weight: bold;
             padding: .1rem .3rem;

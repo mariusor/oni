@@ -4,12 +4,12 @@ import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubTag extends ActivityPubNote {
     static styles = [css`
-        :host h1 a[rel=tag], :host h1 a[rel=mention] {
+        :host h1 a[rel~=tag], :host h1 a[rel~=mention] {
             font-size: unset;
             border: unset;
             background: unset;
         }
-        :host a[rel=mention], :host a[rel=tag] {
+        :host a[rel~=mention], :host a[rel~=tag] {
             font-weight: bold;
             padding: .1rem .3rem;
             border-radius: .3rem;
