@@ -16,8 +16,7 @@
     <style>script { display: none; } </style>
 </head>
 <body>
-<oni-main>
-    <script type="application/json+ld">{{ ONI | JSON }}</script>
+<oni-main it="{{ ONI | JSONAttr }}">
     {{ yield }}
 </oni-main>
 <footer>

@@ -5,7 +5,22 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 )
 
-var defaultSanitizePolicy = bluemonday.UGCPolicy()
+var (
+	extraAllowedTags      = []string{"style", "nav", "aside", "bandcamp-embed", "iframe"}
+	extraAllowedAttrs     = []string{"class", "rel", "src", "url"}
+	defaultSanitizePolicy = func() *bluemonday.Policy {
+		p := bluemonday.UGCPolicy().
+			AllowUnsafe(true).
+			AllowElements(extraAllowedTags...).
+			AllowAttrs(extraAllowedAttrs...).Globally()
+
+		//p.AllowStandardAttributes()
+		//p.AllowStandardURLs()
+		//p.AllowImages()
+		//p.AllowLists()
+		return p
+	}()
+)
 
 func sanitizeNaturalLanguageValues(val vocab.NaturalLanguageValues) vocab.NaturalLanguageValues {
 	for k, v := range val {
