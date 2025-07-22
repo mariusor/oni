@@ -7,11 +7,13 @@ export class BandCampEmbed extends LitElement {
         }
         iframe {
             max-width: 100%;
+            border: none;
         }
     `]
 
     static properties = {
         url: {type: String},
+        src: {type: String},
         show: {type: Boolean},
     }
 
@@ -21,10 +23,13 @@ export class BandCampEmbed extends LitElement {
     }
 
     render() {
-        if (!this.show || this.url === "") {
+        if (!this.show || this.src === "") {
             return nothing;
         }
-        return html`<iframe style="border: 0" src="${this.url}" seamless>
+        if (!this.src) {
+            this.src = this.url;
+        }
+        return html`<iframe src="${this.src}" seamless>
             <slot></slot>
         </iframe>`
     }
