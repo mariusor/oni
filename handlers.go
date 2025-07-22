@@ -215,6 +215,10 @@ var orderedCollectionTypes = vocab.ActivityVocabularyTypes{
 	vocab.OrderedCollectionPageType, vocab.OrderedCollectionType,
 }
 
+var collectionTypes = vocab.ActivityVocabularyTypes{
+	vocab.CollectionPageType, vocab.CollectionType,
+}
+
 func loadItemMetadataFromStorage(s MetadataStorage, it vocab.Item) (interface{ AddETag(w http.ResponseWriter) }, error) {
 	var (
 		m   any
@@ -652,6 +656,7 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 	templatePath := "components/item"
 
 	_ = cleanupMediaObjectFromItem(it)
+	_ = sanitizeItem(it)
 	updatedAt := time.Now()
 	_ = vocab.OnObject(it, func(o *vocab.Object) error {
 		updatedAt = o.Published
