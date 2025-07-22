@@ -1,6 +1,7 @@
 import {css, html, LitElement, nothing} from "lit";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {ActivityPubObject} from "./activity-pub-object";
+import DOMPurify from "dompurify";
 
 export class NaturalLanguageValues extends LitElement {
     static styles = [css`
@@ -60,7 +61,8 @@ export class NaturalLanguageValues extends LitElement {
                 value = this.it.getProperty(this.lang);
             }
         }
-        return value;
+
+        return DOMPurify.sanitize(value);
     }
 
     render() {

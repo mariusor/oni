@@ -5,6 +5,7 @@ import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
+import DOMPurify from "dompurify";
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -328,6 +329,7 @@ ActivityPubObject.renderByMediaType = function (it, showMetadata, inline) {
         return html`<oni-image it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-image>`;
     }
     if (it.mediaType.indexOf('text/html') === 0) {
+        it.content = DOMPurify.sanitize(it.content);
         return unsafeHTML(it.content);
     }
 
@@ -347,6 +349,7 @@ ActivityPubObject.renderByMediaType = function (it, showMetadata, inline) {
         name = it.getType();
     }
 
+    name = DOMPurify.sanitize(name);
     return html`<div><a href=${src.href}>${unsafeHTML(name) ?? src.href}</a></div>`;
 }
 
