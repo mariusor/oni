@@ -1,11 +1,10 @@
 import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI} from "./client.js";
-import {pluralize, renderTimestamp} from "./utils.js";
+import {pluralize, renderTimestamp, sanitize} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
-import DOMPurify from "dompurify";
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
@@ -114,6 +113,9 @@ export class ActivityPubObject extends LitElement {
 
         this.showMetadata = showMetadata;
 
+        // NOTE(marius): this method of loading the ActivityPub object from a script tag is not very robust,
+        // as if any of the textual properties (content, summary, etc) contain a </script> tag, the JSON.parse() of the
+        // tag content will fail. If anyone has a good solution for this, please drop a line on the mailing list.
         const json = (this.renderRoot?.querySelector('script') || this.querySelector('script'))?.text;
         if (json) {
             this.it = ActivityPubItem.load(json);
@@ -329,7 +331,7 @@ ActivityPubObject.renderByMediaType = function (it, showMetadata, inline) {
         return html`<oni-image it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-image>`;
     }
     if (it.mediaType.indexOf('text/html') === 0) {
-        it.content = DOMPurify.sanitize(it.content);
+        it.content = sanitize(it.content);
         return unsafeHTML(it.content);
     }
 
@@ -349,7 +351,7 @@ ActivityPubObject.renderByMediaType = function (it, showMetadata, inline) {
         name = it.getType();
     }
 
-    name = DOMPurify.sanitize(name);
+    name = sanitize(name);
     return html`<div><a href=${src.href}>${unsafeHTML(name) ?? src.href}</a></div>`;
 }
 

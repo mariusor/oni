@@ -5,7 +5,7 @@ import {isLocalIRI} from "./client";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubItem} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
-import DOMPurify from "dompurify";
+import {sanitize} from "./utils";
 
 export class OniHeader extends ActivityPubActor {
 
@@ -47,7 +47,7 @@ export class OniHeader extends ActivityPubActor {
     }
 
     renderIconName() {
-        let username = unsafeHTML(DOMPurify.sanitize(this.it?.getPreferredUsername()?.at(0)));
+        let username = unsafeHTML(sanitize(this.it?.getPreferredUsername()?.at(0)));
         const iri = this.it.iri();
         if (!isLocalIRI(iri)) {
             username = `${username}@${new URL(iri).hostname}`

@@ -3,6 +3,7 @@ import {average, prominent} from "color.js";
 import {ActivityPubItem} from "./activity-pub-item";
 import {html, nothing} from "lit";
 import {map} from "lit-html/directives/map.js";
+import DOMPurify from "dompurify";
 
 const tc = (c) => new TinyColor(c);
 export const contrast = readability;
@@ -396,4 +397,14 @@ export function colorDiff(c1, c2) {
     c2 = xyzToLab(toXYZ(tc(c2)?.toRgb()));
     return Math.sqrt(Math.pow(c2.a , 2) + Math.pow(c2.b , 2)) -
         Math.sqrt(Math.pow(c1.a , 2) + Math.pow(c1.b , 2))
+}
+
+const defaultSanitizerConfig = {
+    ADD_TAGS: ['bandcamp-embed'],
+    ADD_ATTR: ['src', 'url', 'class'],
+    FORCE_BODY: true,
+};
+
+export function sanitize(value) {
+    return DOMPurify.sanitize(value, defaultSanitizerConfig);
 }
