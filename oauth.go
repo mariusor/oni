@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"git.sr.ht/~mariusor/lw"
 	ct "github.com/elnormous/contenttype"
@@ -278,7 +279,13 @@ func (o *oni) redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http
 	}
 }
 
-const DefaultOAuth2ClientPw = "NotSoSecretPassword"
+const (
+	DefaultOAuth2ClientPw = "NotSoSecretPassword"
+	// DefaultOniAppRedirectURL is the default redirect URL used by the OAuth2 mechanism in the
+	// Flutter ONI Application: https://git.sr.ht/~mariusor/oni-app
+	// It makes use of the custom URI scheme 'org.oni.app://'
+	DefaultOniAppRedirectURL = "org.oni.app://oauth2redirect"
+)
 
 func (c *Control) CreateOAuth2ClientIfMissing(i vocab.IRI, pw string) error {
 	u, _ := i.URL()
@@ -287,10 +294,11 @@ func (c *Control) CreateOAuth2ClientIfMissing(i vocab.IRI, pw string) error {
 	if err == nil {
 		return nil
 	}
+	uris := []string{u.String(), DefaultOniAppRedirectURL}
 	cl = &osin.DefaultClient{
 		Id:          u.Host,
 		Secret:      pw,
-		RedirectUri: u.String(),
+		RedirectUri: strings.Join(uris, "\n"),
 		UserData:    i,
 	}
 	return c.Storage.CreateClient(cl)

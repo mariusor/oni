@@ -90,6 +90,12 @@ func (c *Control) CreateActor(iri vocab.IRI, maybePw string, withToken bool) (*v
 	o := DefaultActor(iri)
 	o.Followers = vocab.Followers.Of(iri)
 	o.Following = vocab.Following.Of(iri)
+	if withToken {
+		o.Endpoints = &vocab.Endpoints{
+			OauthAuthorizationEndpoint: o.GetLink().AddPath("oauth", "authorize"),
+			OauthTokenEndpoint:         o.GetLink().AddPath("oauth", "token"),
+		}
+	}
 
 	if it, err = c.Storage.Save(o); err != nil {
 		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to save main actor")

@@ -137,7 +137,7 @@ func CreateBlankInstance(o *oni) *vocab.Actor {
 		}
 	}
 
-	blank, err := o.CreateActor(blankIRI, "", false)
+	blank, err := o.CreateActor(blankIRI, "", true)
 	if err != nil {
 		o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Unable to create Actor")
 	}
