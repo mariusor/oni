@@ -160,16 +160,19 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 		} else {
 			if err := o.loadAccountFromPost(a, r); err != nil {
 				o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("wrong password")
-				errors.HandleError(errors.Unauthorizedf("Wrong password")).ServeHTTP(w, r)
-				return
+				resp.IsError = true
+				resp.ErrorStatusCode = errors.HttpStatus(err)
+				resp.SetError(osin.E_ACCESS_DENIED, "Wrong password")
+				resp.Type = osin.REDIRECT
+			} else {
+				ar.Authorized = true
+				ar.UserData = a.ID
+				if !acc.Equal(textHTML) {
+					resp.Type = osin.DATA
+				}
 			}
-			ar.Authorized = true
-			ar.UserData = a.ID
 			s.FinishAuthorizeRequest(resp, r, ar)
 		}
-	}
-	if !acc.Equal(textHTML) {
-		resp.Type = osin.DATA
 	}
 	o.redirectOrOutput(resp, w, r)
 }
@@ -243,11 +246,6 @@ func annotatedRsError(status int, old error, msg string, args ...interface{}) er
 }
 
 func (o *oni) redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http.Request) {
-	if rs.IsError {
-		err := annotatedRsError(rs.StatusCode, rs.InternalError, "Error processing OAuth2 request: %s", rs.StatusText)
-		o.Error(err).ServeHTTP(w, r)
-		return
-	}
 	// Add headers
 	for i, k := range rs.Headers {
 		for _, v := range k {
