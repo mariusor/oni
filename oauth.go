@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"git.sr.ht/~mariusor/lw"
+	"git.sr.ht/~mariusor/mask"
 	ct "github.com/elnormous/contenttype"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
@@ -73,7 +74,7 @@ func AuthorizeURL(actor vocab.Actor, state string) string {
 func (o *oni) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
 	pw := r.PostFormValue("_pw")
 
-	o.Logger.WithContext(lw.Ctx{"pass": pw}).Infof("Received")
+	o.Logger.WithContext(lw.Ctx{"pass": mask.S(pw)}).Infof("Received")
 
 	return o.Storage.PasswordCheck(actor, []byte(pw))
 }

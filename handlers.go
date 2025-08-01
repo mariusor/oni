@@ -515,7 +515,6 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 	return true, nil
 }
 
-var formURLEncoded, _ = ct.ParseMediaType("application/x-www-form-urlencoded")
 var jsonLD, _ = ct.ParseMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTypeJsonLD))
 var activityJson, _ = ct.ParseMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTypeActivityJson))
 var applicationJson, _ = ct.ParseMediaType("application/json;q=0.8")
