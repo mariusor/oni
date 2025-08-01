@@ -96,15 +96,19 @@ export class LoginLink extends LitElement {
 
         fetch(targetURI, req)
             .then(response => {
-                    response.json().then(value => {
-                        if (response.status === 200) {
-                            console.debug(`Obtained authorization code: ${value.code}`)
-                            this.accessToken(value.code, value.state);
-                        } else {
-                            this.error = value
-                        }
+                if (response.headers.has('Content-Type') && !response.headers.get('Content-Type').startsWith('application/json')) {
+                    throw Error(`invalid response received from authorization page`);
+                }
+                response.json().then(value => {
+                    if (response.status === 200) {
+                        console.debug(`Obtained authorization code: ${value.code}`)
+                        this.accessToken(value.code, value.state);
+                    } else {
+                        this.error = {errors: [{code: value['error'], message: value['error_description']}]};
+                    }
                 }).catch(console.warn);
-            }).catch(console.warn)
+            })
+            .catch((error) => this.error = handleError(error));
     }
 
     async accessToken(code, state) {
@@ -131,16 +135,19 @@ export class LoginLink extends LitElement {
 
         fetch(tokenURL, req)
             .then(response => {
+                if (response.headers.has('Content-Type') && !response.headers.get('Content-Type').startsWith('application/json')) {
+                    throw Error(`invalid response from token page`);
+                }
                 response.json().then(value => {
                     if (response.status === 200) {
                         this._auth.authorization = value;
                         this.loginSuccessful();
                     } else {
                         this._auth.authorization = {};
-                        this.error = JSON.parse(value);
+                        this.error = {errors: [{code: value['error'], message: value['error_description']}]};
                     }
                 }).catch(console.warn);
-            }).catch(console.warn);
+            }).catch((error) => this.error = handleError(error));
     }
 
     loginSuccessful() {
@@ -177,9 +184,9 @@ export class LoginLink extends LitElement {
                     () => html`
                         <a @click=${this.showDialog} href="#"><oni-icon alt="Authorize with OAuth2" name="sign-in"></oni-icon>Sign in</a>
                         <dialog closedby="any">
+                            <oni-errors it=${JSON.stringify(this.error?.errors)} ?inline=${true}></oni-errors>
                             <form method="post" action=${this.authorizeURL} @submit="${this.login}">
-                                <input type="password" id="_pw" name="_pw" placeholder="Password" autofocus required /><br/>
-                                <oni-errors it=${JSON.stringify(this.error?.errors)} ?inline=${true}></oni-errors>
+                                <input type="password" id="_pw" name="_pw" placeholder="Password" autofocus required/><br/>
                                 <button type="submit">Sign in</button>
                             </form>
                         </dialog>`,
@@ -188,9 +195,16 @@ export class LoginLink extends LitElement {
     }
 }
 
+function handleError(error) {
+    if (typeof error === 'object' && error.hasOwnProperty('name') && error.hasOwnProperty('message')) {
+        console.warn(error.name, error.message);
+        return {'errors': [{'code': error.name, 'message': error.message}]};
+    }
+}
+
 function setAuthCookie(value) {
     const date = new Date();
-    date.setTime(date.getTime() + (7*24*60*60*1000));
+    date.setTime(date.getTime() + (7 * 24 * 60 * 60 * 1000));
     document.cookie = `auth=${(value || "")}; expires=${date.toUTCString()}; path=/`;
 }
 

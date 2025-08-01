@@ -162,17 +162,17 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 				o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("wrong password")
 				resp.IsError = true
 				resp.ErrorStatusCode = errors.HttpStatus(err)
-				resp.SetError(osin.E_ACCESS_DENIED, "Wrong password")
-				resp.Type = osin.REDIRECT
+				resp.SetErrorUri(osin.E_ACCESS_DENIED, "Wrong password", resp.URL, ar.State)
 			} else {
 				ar.Authorized = true
 				ar.UserData = a.ID
-				if !acc.Equal(textHTML) {
-					resp.Type = osin.DATA
-				}
 			}
 			s.FinishAuthorizeRequest(resp, r, ar)
 		}
+	}
+	if acc.Equal(applicationJson) {
+		// NOTE(marius): overwrite the response type if client has explicitly asked for JSON content
+		resp.Type = osin.DATA
 	}
 	o.redirectOrOutput(resp, w, r)
 }
