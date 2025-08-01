@@ -5,6 +5,7 @@ import {ActivityPubItem} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
 import {fetchActivityPubIRI} from "./client";
 import {map} from "lit-html/directives/map.js";
+import {when} from "lit-html/directives/when.js";
 
 export class OniCollectionLinks extends LitElement {
     static styles = css`
@@ -134,10 +135,12 @@ export class OniCollectionLinks extends LitElement {
         return html`
             <nav>
                 <slot></slot>
-                <ul>
-                    ${oauth !== nothing ? html`<li>${until(oauth)}</li>` : nothing}
-                    ${this.renderCollectionItems()}
-                </ul>
+                ${when(!isAuthorizePage(),
+                    c => html`<ul>
+                            ${oauth !== nothing ? html`<li>${until(oauth)}</li>` : nothing}
+                            ${this.renderCollectionItems()}
+                        </ul>`
+                )}
             </nav>`;
     }
 }
@@ -208,3 +211,8 @@ function isCurrentPage(iri) {
     const u = new URL(iri)
     return u.pathname === window.location.pathname;
 }
+
+function isAuthorizePage() {
+    return window.location.pathname.startsWith('/oauth');
+}
+
