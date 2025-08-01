@@ -328,7 +328,7 @@ var authKey = func() []byte {
 	return b[:]
 }
 
-func backURL(r *http.Request) string {
+func backURL(r *http.Request) template.URL {
 	if r.URL == nil || r.URL.Query() == nil {
 		return ""
 	}
@@ -337,7 +337,7 @@ func backURL(r *http.Request) string {
 	q.Set("error_description", "user denied authorization request")
 	u, _ := url.QueryUnescape(r.URL.Query().Get("redirect_uri"))
 	u = fmt.Sprintf("%s?%s", u, q.Encode())
-	return u
+	return template.URL(u)
 }
 
 func (o *oni) renderTemplate(r *http.Request, w http.ResponseWriter, name string, m model) {
@@ -348,8 +348,8 @@ func (o *oni) renderTemplate(r *http.Request, w http.ResponseWriter, name string
 		"ONI":   func() vocab.Actor { return actor },
 		"URLS":  actorURLs(actor),
 		"Title": m.Title,
-		"CurrentURL": func() template.HTMLAttr {
-			return template.HTMLAttr(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
+		"CurrentURL": func() template.URL {
+			return template.URL(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
 		},
 	}
 
@@ -365,15 +365,15 @@ type login struct {
 	title   string
 	state   string
 	client  vocab.Item
-	backURL string
+	backURL template.URL
 }
 
 func (l login) Title() string {
 	return l.title
 }
 
-func (l login) BackURL() template.HTMLAttr {
-	return template.HTMLAttr(l.backURL)
+func (l login) BackURL() template.URL {
+	return l.backURL
 }
 
 func (l login) State() string {
