@@ -76,7 +76,7 @@ export class ActivityPubImage extends ActivityPubObject {
     }
 
     render() {
-        if (!ActivityPubImage.isValid(this.it)) return nothing;
+        if (!ActivityPubImage.isValid(this.it)) return unsafeHTML(`<!-- Invalid image object -->`);
         if (this.inline) {
             return this.renderInline();
         }
@@ -132,6 +132,10 @@ export class ActivityPubImage extends ActivityPubObject {
         `;
     }
     static isValid(it) {
-        return typeof it === 'object' && it !== null && it.hasOwnProperty('type') && it.type === 'Image';
+        return typeof it === 'object' && it !== null &&
+            (
+                (it.hasOwnProperty('type') && it.type === 'Image') ||
+                (it.hasOwnProperty('mediaType') && it.mediaType.startsWith('image/'))
+            );
     }
 }
