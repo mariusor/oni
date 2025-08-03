@@ -70,8 +70,8 @@ export class ActivityPubNote extends ActivityPubObject {
         return html`<article>
             ${header}
             ${this.renderContent()}
-            ${this.renderTag()}
-            ${this.renderAttachment()}
+            ${until(this.renderTag())}
+            ${until(this.renderAttachment())}
         </article>
         ${metadata}
         ${until(this.renderReplies())}

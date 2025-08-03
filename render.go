@@ -32,6 +32,10 @@ var (
 					switch {
 					case vocab.ActorTypes.Contains(t):
 						return "actor"
+					case vocab.CreateType == t:
+						return "create"
+					case vocab.AnnounceType == t:
+						return "announce"
 					case vocab.ActivityTypes.Contains(t), vocab.IntransitiveActivityTypes.Contains(t):
 						return "activity"
 					case vocab.CollectionTypes.Contains(t):

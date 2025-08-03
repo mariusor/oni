@@ -6,6 +6,7 @@ import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {ActivityPubActivity} from "./activity-pub-activity";
 import {until} from "lit-html/directives/until.js";
 import {ActivityPubActor} from "./activity-pub-actor";
+import {renderActivityByType, renderObjectByType} from "./utils";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = [css`
@@ -76,14 +77,14 @@ export class ActivityPubCollection extends ActivityPubObject {
 
             let renderedItem = unsafeHTML(`<!-- Unknown activity object ${type} -->`);
             if (ActivityTypes.indexOf(type) >= 0) {
-                if (!ActivityPubActivity.isValid(it)) return nothing;
-                renderedItem = html`<oni-activity it=${JSON.stringify(it)}></oni-activity>`;
+                if (!ActivityPubActivity.isValidForRender(it)) return nothing;
+                renderedItem = renderActivityByType(it, true, false);
             } else if (ActorTypes.indexOf(type) >= 0) {
                 if (!ActivityPubActor.isValid(it)) return nothing;
                 renderedItem = html`<oni-actor it=${JSON.stringify(it)} ?inline=${true}></oni-actor>`
             } else {
                 if (!ActivityPubObject.isValid(it)) return nothing;
-                renderedItem = ActivityPubObject.renderByType(it, this.showMetadata, this.inline);
+                renderedItem = renderObjectByType(it, this.showMetadata, this.inline);
             }
 
             return html` <li>${until(renderedItem)}</li>`

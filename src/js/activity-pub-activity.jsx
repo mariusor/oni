@@ -1,9 +1,11 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {until} from "lit-html/directives/until.js";
-import {ObjectTypes, ActorTypes, ActivityPubItem} from "./activity-pub-item";
+import {ObjectTypes, ActivityPubItem, ActivityTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {map} from "lit-html/directives/map.js";
+import {fetchActivityPubIRI} from "./client";
+import {renderObjectByType} from "./utils";
 
 export class ActivityPubActivity extends ActivityPubObject {
     static styles = [
@@ -19,7 +21,7 @@ export class ActivityPubActivity extends ActivityPubObject {
         super(true);
     }
 
-    async renderActor() {
+    async renderActor(showMetadata) {
         if (!this.it.hasOwnProperty('actor')) return nothing;
 
         await this.dereferenceProperty('actor');
@@ -35,30 +37,55 @@ export class ActivityPubActivity extends ActivityPubObject {
 
         const actor = this.it.hasOwnProperty('actor')? this.it.actor : null;
         return html`${map(this.it.object, function (ob) {
-            if (!ob.hasOwnProperty('attributedTo')) {
-                ob.attributedTo = actor;
-            }
-            if (!ob.hasOwnProperty('type') || ob.type === '') {
-                return html`<oni-tag it=${JSON.stringify(ob)} ?showMetadata=${showMetadata}></oni-tag>`;
-            }
-            if (ActorTypes.indexOf(ob.type) >= 0) {
-                return html`<oni-actor it=${JSON.stringify(ob)} ?showMetadata=${showMetadata}></oni-actor>`;
-            }
             if (ObjectTypes.indexOf(ob.type) >= 0) {
-                return until(ActivityPubObject.renderByType(ob, showMetadata), `Loading`);
+                return until(renderObjectByType(ob, showMetadata, true));
             }
             return unsafeHTML(`<!-- Unknown activity object ${ob.type} -->`);
-        })}`
+        })}`;
     }
 
     render() {
-        if (!ActivityPubActivity.isValid(this.it)) return nothing;
+        if (!ActivityPubActivity.isValidForRender(this.it)) return unsafeHTML(`<!-- Unknown Activity type ${this.it.type} -->`);
 
-        return html`${until(this.renderObject(true), "Loading")}`;
+        return html`${until(this.renderObject(false))}`;
     }
 
     static isValid (it) {
-        return ActivityPubItem.isValid(it) && it.type === 'Create' && it.hasOwnProperty('object');
+        return ActivityPubItem.isValid(it) && ActivityTypes.indexOf(it.type) >= 0 && it.hasOwnProperty('object');
+    }
+
+    static isValidForRender (it) {
+        return this.isValid(it) && renderableActivityTypes.indexOf(it.type) >= 0;
     }
 }
 
+const renderableActivityTypes = ['Create', 'Announce', /*'Delete', 'Like', 'Dislike', 'Follow'*/];
+
+ActivityPubActivity.renderByType = async function (it, showMetadata, inline) {
+    if (it === null) {
+        return nothing;
+    }
+    if (typeof it === 'string') {
+        it = await fetchActivityPubIRI(it);
+        if (it === null) return nothing;
+    }
+    let action = 'Unknown';
+    if (it.hasOwnProperty('type')) {
+        action = it.type;
+    }
+    switch (it.type) {
+    //     case 'Delete':
+    //         return html`<oni-delete it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-delete>`;
+        case 'Create':
+            return html`<oni-create it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-create>`;
+        case 'Announce':
+            return html`<oni-announce it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-announce>`;
+    //     case 'Follow':
+    //         return html`<oni-follow it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-follow>`;
+    //     case 'Like':
+    //         return html`<oni-like it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-like>`;
+    //     case 'Dislike':
+    //         return html`<oni-dislike it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-dislike>`;
+    }
+    return html`<oni-activity it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-activity>`;
+}

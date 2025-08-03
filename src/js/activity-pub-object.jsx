@@ -1,6 +1,6 @@
 import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI} from "./client.js";
-import {pluralize, renderTimestamp, sanitize} from "./utils.js";
+import {pluralize, renderActivityByType, renderTimestamp, sanitize} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
@@ -54,7 +54,8 @@ export class ActivityPubObject extends LitElement {
         details summary {
             cursor: pointer;
         }
-        oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-image, oni-tag {
+        oni-note, oni-event, oni-video, oni-audio, oni-image, oni-tag, 
+        oni-activity, oni-announce, oni-create {
             display: flex;
             flex-direction: column;
         }
@@ -62,7 +63,7 @@ export class ActivityPubObject extends LitElement {
             display: flex;
             flex-wrap: wrap;
             gap: .2rem;
-            justify-content: space-between;
+            justify-content: flex-start;
         }
         .tag {
             display: inline-block;
@@ -218,8 +219,11 @@ export class ActivityPubObject extends LitElement {
 
     renderMetadata() {
         if (!this.showMetadata) return nothing;
-        if (!this.it.hasOwnProperty("attributedTo") && !this.it.hasOwnProperty('actor')) return nothing;
-        const auth = this.renderAuthor();
+
+        let auth = nothing;
+        if (this.it.hasOwnProperty("attributedTo") || this.it.hasOwnProperty('actor')) {
+            auth = this.renderAuthor();
+        }
         let action = 'Published';
 
         let published = this.it.getPublished();
@@ -235,7 +239,7 @@ export class ActivityPubObject extends LitElement {
                 ${until(this.renderReplyCount())}
                 ${until(this.renderLikeCount())}
                 ${until(this.renderAnnounceCount())}
-                ${this.renderInReplyTo()}
+                ${until(this.renderInReplyTo())}
                 ${this.renderBookmark()}
             </aside>`;
     }
@@ -288,10 +292,6 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderAnnounceCount() {
-        if (this.inFocus()) {
-            return nothing;
-        }
-
         const shares = await fetchActivityPubIRI(this.it.shares);
         if (shares === null) {
             return nothing;
@@ -305,10 +305,6 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderLikeCount() {
-        if (this.inFocus()) {
-            return nothing;
-        }
-
         const likes = await fetchActivityPubIRI(this.it.likes);
         if (likes === null) {
             return nothing;
@@ -329,14 +325,15 @@ export class ActivityPubObject extends LitElement {
         if (!this.it.hasOwnProperty('replies')) {
             return nothing;
         }
-        this.it.replies = await fetchActivityPubIRI(this.it.replies);
-        if (this.it.replies.totalItems === 0) {
+        let replies = this.it.replies;
+        replies = await fetchActivityPubIRI(replies);
+        if (replies.totalItems === 0) {
             return nothing;
         }
         return html`
             <details>
-                <summary>${pluralize(this.it.replies.totalItems, 'reply')}</summary>
-                <oni-collection it=${JSON.stringify(this.it.replies)} ?showMetadata=${true} ?threaded=${true}></oni-collection>
+                <summary>${pluralize(replies.totalItems, 'reply')}</summary>
+                <oni-collection it=${JSON.stringify(replies)} ?showMetadata=${true} ?threaded=${true}></oni-collection>
             </details>`;
     }
 

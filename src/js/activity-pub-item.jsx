@@ -1,6 +1,6 @@
 export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', 'Mention', ''];
 export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
-export const ActivityTypes = ['Create', 'Update', 'Delete', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore'];
+export const ActivityTypes = ['Create', 'Update', 'Delete', 'Like', 'Dislike', 'Undo', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore'];
 export const CollectionTypes = ['Collection', 'CollectionPage', 'OrderedCollection', 'OrderedCollectionPage'];
 
 //const itemProperties = ['icon', 'image', 'actor', 'attachment', 'audience', 'attributedTo', 'context', 'generator', 'inReplyTo', 'location', 'preview', 'target', 'result', 'origin', 'instrument', 'object'];
@@ -317,6 +317,6 @@ export class ActivityPubItem {
     }
 
     static isValid(it) {
-        return typeof it === 'object' && it !== null && it.hasOwnProperty('id') && it.hasOwnProperty('type') && it.id !== '' && it.type !== '';
+        return it !== null && typeof it === 'object' && it.hasOwnProperty('id') && it.hasOwnProperty('type');
     }
 }

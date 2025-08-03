@@ -4,6 +4,9 @@ import {ActivityPubItem} from "./activity-pub-item";
 import {html, nothing} from "lit";
 import {map} from "lit-html/directives/map.js";
 import DOMPurify from "dompurify";
+import {ActivityPubObject} from "./activity-pub-object";
+import {ActivityPubActivity} from "./activity-pub-activity";
+import {ActivityPubActor} from "./activity-pub-actor";
 
 const tc = (c) => new TinyColor(c);
 export const contrast = readability;
@@ -141,6 +144,10 @@ function isCons(c) {
 export function authorization() {
     return JSON.parse(localStorage.getItem('authorization')) || {};
 }
+
+export const renderObjectByType = (it, showMetadata, inline) => ActivityPubObject.renderByType(it, showMetadata, inline);
+export const renderActivityByType = (it, showMetadata, inline) => ActivityPubActivity.renderByType(it, showMetadata, inline);
+export const renderActorByType = (it, showMetadata, inline) => ActivityPubActor.renderByType(it, showMetadata, inline);
 
 export function activity(outbox, update, extraHeaders = {}, success = () => {}) {
     const headers = {

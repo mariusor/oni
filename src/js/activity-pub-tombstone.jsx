@@ -1,4 +1,4 @@
-import {css, html, nothing} from "lit";
+import {html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {relativeDate} from "./utils";
 import {ActivityPubItem} from "./activity-pub-item";
