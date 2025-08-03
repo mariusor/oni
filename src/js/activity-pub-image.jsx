@@ -81,28 +81,31 @@ export class ActivityPubImage extends ActivityPubObject {
             return this.renderInline();
         }
 
-        const iri = this.it.iri();
-        const src = this.it.getUrl();
+        let src = this.it.iri();
+        const url = this.it.getUrl();
         const name = this.renderNameText();
         const alt = this.renderAltText();
         const metadata = this.renderMetadata();
 
-        let largest = typeof(src) === 'string' ? {href: src} : src;
+        let largest = typeof(url) === 'string' ? {href: url} : url;
         let sources = nothing;
         let sizes = nothing;
-        if (Array.isArray(src)) {
-            const sorted = src.sort((a, b) => a?.width - b?.width);
+        if (Array.isArray(url)) {
+            const sorted = url.sort((a, b) => a?.width - b?.width);
             largest = sorted.reduce((prev, cur) => (cur?.width >= prev?.width ? cur : prev));
             sources = (
-                src.length > 1 ?
+                url.length > 1 ?
                     sorted.map((u) => `${u?.href} ${u?.width}w`).join(", ") :
                     nothing
             );
             sizes = (
-                src.length > 1 ? sorted.map(
+                url.length > 1 ? sorted.map(
                         u => `(${u?.width === largest?.width ? "min" : "max"}-width: ${u?.width + 80}px)`).join(", ") :
                     nothing
             );
+        }
+        if (typeof url === 'string' && !src) {
+            src = url;
         }
 
         return html`
@@ -118,7 +121,7 @@ export class ActivityPubImage extends ActivityPubObject {
                                 </figcaption>`,
                             () => nothing
                     )}
-                    <img loading="lazy" src=${iri ?? nothing}
+                    <img loading="lazy" src=${src ?? nothing}
                          title="${name ?? alt}" alt="${alt}"
                          srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
                 </figure>
@@ -128,6 +131,6 @@ export class ActivityPubImage extends ActivityPubObject {
         `;
     }
     static isValid(it) {
-        return ActivityPubItem.isValid(it) && it.type === 'Image';
+        return typeof it === 'object' && it !== null && it.hasOwnProperty('type') && it.type === 'Image';
     }
 }
