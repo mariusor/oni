@@ -818,7 +818,10 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 
 			if accepts(textHTML) && (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
 				obFilters := make(filters.Checks, 0)
-				obFilters = append(obFilters, filters.Not(filters.NilID), filters.NilInReplyTo)
+				obFilters = append(obFilters, filters.Not(filters.NilID))
+				if vocab.Outbox == whichCollection {
+					obFilters = append(obFilters, filters.NilInReplyTo)
+				}
 				if filtersCreateUpdate(colFilters) && !iriHasObjectTypeFilter(iri) {
 					obFilters = append(obFilters, filters.HasType(validObjectTypes...))
 				}
