@@ -187,7 +187,8 @@ oni-main > * {
     margin: 1rem auto auto;
 }
 
-oni-activity, oni-note, oni-event, oni-video, oni-audio, oni-image, oni-tag {
+oni-note, oni-event, oni-video, oni-audio, oni-image, oni-tag,
+oni-activity, oni-announce, oni-create {
     display: flex;
     flex-direction: column;
 }
