@@ -135,7 +135,7 @@ export class ActivityPubImage extends ActivityPubObject {
         return typeof it === 'object' && it !== null &&
             (
                 (it.hasOwnProperty('type') && it.type === 'Image') ||
-                (it.hasOwnProperty('mediaType') && it.mediaType.startsWith('image/'))
+                (it.hasOwnProperty('mediaType') && it.mediaType.startsWith('image/')) // NOTE(marius): This is for Pixelfed attachments.
             );
     }
 }
