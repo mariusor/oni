@@ -1,9 +1,9 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {when} from "lit-html/directives/when.js";
-import {ActivityPubItem} from "./activity-pub-item";
 import {ActivityPubNote} from "./activity-pub-note";
 import {until} from "lit-html/directives/until.js";
+import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`
@@ -107,6 +107,7 @@ export class ActivityPubImage extends ActivityPubObject {
         if (typeof url === 'string' && !src) {
             src = url;
         }
+        if (!src) return unsafeHTML(`<!-- Unknown image object with missing id or url -->`);
 
         return html`
                 <figure>
