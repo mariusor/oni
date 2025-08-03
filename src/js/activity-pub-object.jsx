@@ -233,6 +233,8 @@ export class ActivityPubObject extends LitElement {
             <aside>
                 ${action} ${renderTimestamp(published)} ${until(auth)}
                 ${until(this.renderReplyCount())}
+                ${until(this.renderLikeCount())}
+                ${until(this.renderAnnounceCount())}
                 ${this.renderInReplyTo()}
                 ${this.renderBookmark()}
             </aside>`;
@@ -283,6 +285,40 @@ export class ActivityPubObject extends LitElement {
         }
 
         return html` - <span>${pluralize(replies.totalItems, 'reply')}</span>`;
+    }
+
+    async renderAnnounceCount() {
+        if (this.inFocus()) {
+            return nothing;
+        }
+
+        const shares = await fetchActivityPubIRI(this.it.shares);
+        if (shares === null) {
+            return nothing;
+        }
+
+        if (!shares.hasOwnProperty('totalItems') || shares.totalItems === 0) {
+            return nothing;
+        }
+
+        return html` - <span>${pluralize(shares.totalItems, 'share')}</span>`;
+    }
+
+    async renderLikeCount() {
+        if (this.inFocus()) {
+            return nothing;
+        }
+
+        const likes = await fetchActivityPubIRI(this.it.likes);
+        if (likes === null) {
+            return nothing;
+        }
+
+        if (!likes.hasOwnProperty('totalItems') || likes.totalItems === 0) {
+            return nothing;
+        }
+
+        return html` - <span>${pluralize(likes.totalItems, 'like')}</span>`;
     }
 
     async renderReplies() {
