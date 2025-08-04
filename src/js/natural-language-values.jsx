@@ -36,6 +36,7 @@ export class NaturalLanguageValues extends LitElement {
             border: .08rem solid color-mix(in srgb, var(--accent-color), transparent 10%);
             background: color-mix(in srgb, var(--accent-color), transparent 70%);
             vertical-align: .09rem;
+            word-break: unset;
         }
         /* This should take care of Mastodon links that have as content just the link href */
         a {
