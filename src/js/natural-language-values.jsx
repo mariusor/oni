@@ -37,6 +37,10 @@ export class NaturalLanguageValues extends LitElement {
             background: color-mix(in srgb, var(--accent-color), transparent 70%);
             vertical-align: .09rem;
         }
+        /* This should take care of Mastodon links that have as content just the link href */
+        a {
+            word-break: break-all;
+        }
     `, ActivityPubObject.styles];
 
     static properties = {

@@ -13,9 +13,6 @@ export class ActivityPubNote extends ActivityPubObject {
     article > * {
         margin: .1rem;
     }
-    article a {
-        word-break: break-all;
-    }
     article header h1 {
         font-size: 1.32rem;
     }
