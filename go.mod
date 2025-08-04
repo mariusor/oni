@@ -6,6 +6,7 @@ require (
 	git.sr.ht/~mariusor/cache v0.0.0-20250616110250-18a60a6f9473
 	git.sr.ht/~mariusor/lw v0.0.0-20250325163623-1639f3fb0e0d
 	git.sr.ht/~mariusor/mask v0.0.0-20250114195353-98705a6977b7
+	git.sr.ht/~mariusor/sizefmt v0.0.0-20250804142741-ae19eef1e9db
 	git.sr.ht/~mariusor/ssm v0.0.0-20250617180832-c3c0db41a98e
 	git.sr.ht/~mariusor/wrapper v0.0.0-20250504120759-5fa47ac25e08
 	github.com/elnormous/contenttype v1.0.4
@@ -16,7 +17,7 @@ require (
 	github.com/go-ap/errors v0.0.0-20250527110557-c8db454e53fd
 	github.com/go-ap/filters v0.0.0-20250707122225-29d0a210d866
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250803122953-209b3a8208df
+	github.com/go-ap/processing v0.0.0-20250803144816-b1c5fdd3a6ca
 	github.com/go-ap/storage-fs v0.0.0-20250717161717-c7f887139295
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/cors v1.2.2

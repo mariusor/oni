@@ -7,12 +7,17 @@ import (
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
+	bfmt "git.sr.ht/~mariusor/sizefmt"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
 func Log(l lw.Logger) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodOptions {
+				next.ServeHTTP(w, r)
+				return
+			}
 			entry := req(l, r)
 			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 
@@ -41,7 +46,7 @@ type reqLogger struct {
 func (r reqLogger) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
 	ctx := lw.Ctx{
 		"st":   status,
-		"size": bytes,
+		"size": bfmt.Size(bytes),
 	}
 	if elapsed > 0 {
 		ctx["elapsed"] = elapsed
@@ -51,15 +56,13 @@ func (r reqLogger) Write(status, bytes int, header http.Header, elapsed time.Dur
 
 	switch {
 	case status <= 0:
-		logFn = r.Logger.WithContext(ctx).Warnf
+		logFn = r.Logger.WithContext(ctx).Errorf
 	case status < 400: // for codes in 100s, 200s, 300s
 		logFn = r.Logger.WithContext(ctx).Infof
-	case status >= 400 && status < 500:
+	case status < 500:
 		logFn = r.Logger.WithContext(ctx).Warnf
-	case status >= 500:
-		logFn = r.Logger.WithContext(ctx).Errorf
 	default:
-		logFn = r.Logger.WithContext(ctx).Infof
+		logFn = r.Logger.WithContext(ctx).Errorf
 	}
 	logFn(http.StatusText(status))
 }
@@ -81,5 +84,5 @@ func req(l lw.Logger, r *http.Request) reqLogger {
 		ctx["ua"] = ua
 	}
 
-	return reqLogger{l.WithContext(ctx)}
+	return reqLogger{Logger: l.WithContext(ctx)}
 }
