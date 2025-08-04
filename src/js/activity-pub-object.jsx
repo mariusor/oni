@@ -1,5 +1,5 @@
 import {css, html, LitElement, nothing} from "lit";
-import {fetchActivityPubIRI} from "./client.js";
+import {fetchActivityPubIRI, isLocalIRI} from "./client.js";
 import {pluralize, renderActivityByType, renderTimestamp, sanitize} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
@@ -209,11 +209,13 @@ export class ActivityPubObject extends LitElement {
         </a>`)}`;
     }
 
-    renderBookmark() {
+    renderPermaLink(hideOnName = true) {
         const textualObjectTypes = ['Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', 'Mention', ''];
-        const textualWithName = textualObjectTypes.indexOf(this.it.type) >= 0 && this.it.getName()?.length > 0;
-        return !textualWithName ? html`<a href="${this.it.iri() ?? nothing}">
-            <oni-icon title="Bookmark this item" name="bookmark"></oni-icon>
+        const name = this.it.getName();
+        const textualWithName = textualObjectTypes.indexOf(this.it.type) >= 0 && (name?.length > 0 && hideOnName);
+        const icon = isLocalIRI(this.it.iri()) ? "bookmark" : "external-href";
+        return !textualWithName ? html`<a href="${this.it.iri() ?? nothing}" title=${name ?? nothing}>
+            <oni-icon title="Navigate to this item" name=${icon}></oni-icon>
         </a>` : nothing
     }
 
@@ -240,7 +242,7 @@ export class ActivityPubObject extends LitElement {
                 ${until(this.renderLikeCount())}
                 ${until(this.renderAnnounceCount())}
                 ${until(this.renderInReplyTo())}
-                ${this.renderBookmark()}
+                ${this.renderPermaLink()}
             </aside>`;
     }
 
@@ -251,7 +253,7 @@ export class ActivityPubObject extends LitElement {
         }
         return html`<a href=${this.it.iri() ?? nothing}>
             <oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values>
-            <oni-icon alt="Bookmark" name="bookmark"></oni-icon>
+            ${this.renderPermaLink(false)}
         </a>`;
     }
 
