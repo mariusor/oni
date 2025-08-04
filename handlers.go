@@ -42,8 +42,8 @@ func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *oni) Error(err error) http.HandlerFunc {
-	o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Rendering error")
 	return func(w http.ResponseWriter, r *http.Request) {
+		o.Logger.WithContext(lw.Ctx{"err": err.Error(), "url": irif(r)}).Errorf("Error")
 		acceptableMediaTypes := []ct.MediaType{textHTML, applicationJson}
 		accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
 		if !checkAcceptMediaType(accepted)(textHTML) || errors.IsRedirect(err) {
