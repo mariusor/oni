@@ -62,6 +62,11 @@ export class OniErrors extends LitElement {
         if (!Array.isArray(this.it)) {
             this.it = [this.it];
         }
+        this.it = this.it.filter(
+            (el, i) => !(typeof this.it.find(
+                (elem, index) => (index > i && elem.hasOwnProperty('message') && elem?.message === el?.message)
+            ) === 'undefined')
+        );
         return html`<main>${map(this.it, err => this.renderError(err))}</main>`;
     }
 }
