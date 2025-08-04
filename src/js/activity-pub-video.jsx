@@ -23,7 +23,7 @@ export class ActivityPubVideo extends ActivityPubObject {
         const metadata = this.renderMetadata();
         return html`
             <figure>
-                <video controls preload="metadata" src=${this.it.iri() ?? nothing}></video>
+                <video playsinline controls preload="metadata" src=${this.it.iri() ?? nothing}></video>
                 ${when(alt.length > 0,
             () => html`<figcaption>
                     <oni-natural-language-values name="summary" it=${JSON.stringify(alt)}></oni-natural-language-values>
