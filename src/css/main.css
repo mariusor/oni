@@ -24,43 +24,43 @@
 
 @media (min-width: 2201px) {
     :root {
-        font-size: .92vw;
+        font-size: .82vw;
     }
 }
 
 @media (max-width: 2200px) {
     :root {
-        font-size: .96vw;
+        font-size: .86vw;
     }
 }
 
 @media (max-width: 1800px) {
     :root {
-        font-size: 1.16vw;
+        font-size: 1vw;
     }
 }
 
 @media (max-width: 1500px) {
     :root {
-        font-size: 1.4vw;
+        font-size: 1.2vw;
     }
 }
 
 @media (max-width: 1200px) {
     :root {
-        font-size: 1.6vw;
+        font-size: 1.4vw;
     }
 }
 
 @media (max-width: 1050px) {
     :root {
-        font-size: 1.8vw;
+        font-size: 1.6vw;
     }
 }
 
 @media (max-width: 948px) {
     :root {
-        font-size: 2vw;
+        font-size: 1.8vw;
     }
 }
 
