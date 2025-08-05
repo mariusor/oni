@@ -184,8 +184,13 @@ const /* sort */ bySaturation = (a, b) => tc(b).toHsv().s - tc(a).toHsv().s;
 const /* sort */ byDiff = (base) => (a, b) => Math.abs(colorDiff(a, base)) - Math.abs(colorDiff(b, base));
 
 function paletteIsValid(palette, imageURL, iconURL) {
-    return ((!palette.hasOwnProperty('bgImageURL') && imageURL === '') || palette.bgImageURL === imageURL) &&
-    ((!palette.hasOwnProperty('iconURL') && iconURL === '') || palette.iconURL === iconURL)
+    return (
+        (imageURL === null && !palette.hasOwnProperty('bgImageURL')) ||
+        (palette.hasOwnProperty('bgImageURL') && palette.bgImageURL === imageURL)
+    ) && (
+        (iconURL === null && !palette.hasOwnProperty('iconURL')) ||
+        (palette.hasOwnProperty('iconURL') && palette.iconURL === iconURL)
+    );
 }
 
 export async function loadPalette(it) {
@@ -194,8 +199,9 @@ export async function loadPalette(it) {
     const imageURL = apURL(it.getImage());
     const iconURL = apURL(it.getIcon());
 
-    if (localStorage.getItem('palette')) {
-        const palette = JSON.parse(localStorage.getItem('palette'));
+    const storedPalette = localStorage.getItem('palette');
+    if (storedPalette) {
+        const palette = JSON.parse(storedPalette);
         if (paletteIsValid(palette, imageURL, iconURL)) return palette;
     }
     const root = document.documentElement;
