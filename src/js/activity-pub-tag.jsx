@@ -8,13 +8,16 @@ export class ActivityPubTag extends ActivityPubNote {
             font-size: unset;
             border: unset;
             background: unset;
+            text-decoration: none;
         }
         :host a[rel~=mention], :host a[rel~=tag] {
+            font-size: .72rem;
             font-weight: bold;
             padding: .1rem .3rem;
             border-radius: .3rem;
-            border: .08rem solid color-mix(in srgb, var(--accent-color), transparent 10%);
-            background: color-mix(in srgb, var(--accent-color), transparent 70%);
+            border: .08rem solid color-mix(in srgb, var(--accent-color), transparent 20%);
+            background: color-mix(in srgb, var(--accent-color), transparent 80%);
+            text-decoration: none;
         }
     `, ActivityPubNote.styles];
 
