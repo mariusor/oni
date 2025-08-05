@@ -145,9 +145,9 @@ export function authorization() {
     return JSON.parse(localStorage.getItem('authorization')) || {};
 }
 
-export const renderObjectByType = (it, showMetadata, inline) => ActivityPubObject.renderByType(it, showMetadata, inline);
-export const renderActivityByType = (it, showMetadata, inline) => ActivityPubActivity.renderByType(it, showMetadata, inline);
-export const renderActorByType = (it, showMetadata, inline) => ActivityPubActor.renderByType(it, showMetadata, inline);
+export const renderObjectByType = ActivityPubObject.renderByType;
+export const renderActivityByType = ActivityPubActivity.renderByType; //
+export const renderActorByType = ActivityPubActor.renderByType;
 
 export function activity(outbox, update, extraHeaders = {}, success = () => {}) {
     const headers = {

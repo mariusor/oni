@@ -93,6 +93,9 @@ export class ActivityPubObject extends LitElement {
             padding: 0;
             margin: 0;
         }
+        .reactions ul li a {
+            text-decoration: none;
+        }
     `;
 
     static properties = {
@@ -526,6 +529,7 @@ const groupActivities = (activities) =>
             return null;
         };
         return {
+            iri: activities.iri(),
             type: key.toLowerCase(),
             count: value.length,
             icon: getURL(value),
@@ -538,11 +542,19 @@ function renderActivityGroup (group) {
     if (group.hasOwnProperty('count')) {
         count = group.count;
     }
+    let iri = "#";
+    if (group.hasOwnProperty('iri')) {
+        iri = group.iri;
+    }
 
     const type = `icon-${group.type}`;
     let icon = html`<oni-icon name="${type}"></oni-icon>`;
     if (group?.icon) {
         icon = html`<oni-image it=${group.icon} ?inline=${true}></oni-image>`;
     }
-    return html`${icon} ${pluralize(count, group.type)}`;
+    const reactions = {
+        'announce': 'share',
+    }
+    const reaction = reactions[group.type] ?? group.type.toLowerCase();
+    return html`<a href="${iri}">${icon} ${pluralize(count, reaction)}</a>`;
 }
