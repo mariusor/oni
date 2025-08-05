@@ -107,6 +107,11 @@ export class ActivityPubActor extends ActivityPubObject {
         a.inline span::before {
             content: '@';
         }
+        @media (max-width: 1050px) {
+             a.inline span {
+                display: none;
+            }
+        }
     `, ActivityPubObject.styles];
 
     constructor() {
@@ -235,7 +240,8 @@ export class ActivityPubActor extends ActivityPubObject {
         const iri = this.it.iri();
         // if parent is <aside> we're in the footer of an object - TODO(marius): come up with a better way of deciding this
         const needsAvatar = this.parentNode.nodeName !== 'ASIDE';
-        return html`<a class=${classMap({'inline': this.inline})} href=${iri}>${ needsAvatar ? this.renderIcon() : nothing} ${this.renderRemotePreferredUsername()}</a>`;
+        const title = this.it.getPreferredUsername()[0] + '@' + hostFromIRI(iri);
+        return html`<a class=${classMap({'inline': this.inline})} title=${title} href=${iri}>${ needsAvatar ? this.renderIcon() : nothing} ${this.renderRemotePreferredUsername()}</a>`;
     }
 
     render() {
