@@ -80,6 +80,20 @@ export class ActivityPubItem {
         return this.attributedTo;
     }
 
+    getObject() {
+        if (!this.hasOwnProperty('object')) {
+            this.object = null;
+        }
+        return this.object;
+    }
+
+    getActor() {
+        if (!this.hasOwnProperty('actor')) {
+            this.actor = null;
+        }
+        return this.actor;
+    }
+
     getAttachment() {
         if (!this.hasOwnProperty('attachment')) {
             this.attachment = null;
@@ -277,6 +291,13 @@ export class ActivityPubItem {
             items = this['items'];
         }
         return items
+    }
+
+    getTotalItems() {
+        if (!this.hasOwnProperty('totalItems')) {
+            return this.totalItems = 0;
+        }
+        return this.totalItems;
     }
 
     getEndPoints() {

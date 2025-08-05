@@ -192,3 +192,7 @@ oni-activity, oni-announce, oni-create {
     display: flex;
     flex-direction: column;
 }
+oni-note footer, oni-event footer, oni-video footer, oni-audio footer, oni-image footer, oni-tag footer,
+oni-activity footer , oni-announce footer , oni-create footer {
+    align-self: end;
+}

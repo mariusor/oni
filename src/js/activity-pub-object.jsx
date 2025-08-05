@@ -1,6 +1,6 @@
 import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI, isLocalIRI} from "./client.js";
-import {pluralize, renderActivityByType, renderTimestamp, sanitize} from "./utils.js";
+import {pluralize, renderTimestamp, sanitize} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
@@ -59,6 +59,11 @@ export class ActivityPubObject extends LitElement {
             display: flex;
             flex-direction: column;
         }
+        oni-note[inline], oni-event[inline], oni-video[inline],
+        oni-audio[inline], oni-image[inline], oni-tag[inline], 
+        oni-activity[inline], oni-announce[inline], oni-create[inline] {
+            display: inline-block;
+        }
         .attachment {
             display: flex;
             flex-wrap: wrap;
@@ -66,11 +71,27 @@ export class ActivityPubObject extends LitElement {
             justify-content: flex-start;
         }
         .tag {
-            display: inline-block;
+            display: inline;
             margin: 0;
             padding: 0;
             font-size: .9rem;
             line-height: 1rem;
+        }
+        .reactions {
+            display: flex;
+            justify-content: flex-end;
+            font-size: .8rem;
+            line-height: 1rem;
+        }
+        .reactions ul {
+            display: inline-block;
+            padding: 0;
+            margin: 0;
+        }
+        .reactions ul li {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
     `;
 
@@ -239,8 +260,6 @@ export class ActivityPubObject extends LitElement {
             <aside>
                 ${action} ${renderTimestamp(published)} ${until(auth)}
                 ${until(this.renderReplyCount())}
-                ${until(this.renderLikeCount())}
-                ${until(this.renderAnnounceCount())}
                 ${until(this.renderInReplyTo())}
                 ${this.renderPermaLink()}
             </aside>`;
@@ -319,6 +338,50 @@ export class ActivityPubObject extends LitElement {
         return html` - <span>${pluralize(likes.totalItems, 'like')}</span>`;
     }
 
+    async renderReactions() {
+        return html`<aside class="reactions">
+            ${until(this.renderLikes())} ${until(this.renderAnnounces())}
+        </aside>`;
+    }
+
+    async renderAnnounces() {
+        if (!this.inFocus()) {
+            return nothing;
+        }
+
+        if (!this.it.hasOwnProperty('shares')) {
+            return nothing;
+        }
+        let shares = this.it.shares;
+        shares = await fetchActivityPubIRI(shares);
+        if (shares.totalItems === 0) {
+            return nothing;
+        }
+
+        return html`<ul class="shares">${map(groupActivities(shares),
+                g => html`<li>${renderActivityGroup(g)}</li>`
+        )}</ul>`;
+    }
+
+    async renderLikes() {
+        if (!this.inFocus()) {
+            return nothing;
+        }
+
+        if (!this.it.hasOwnProperty('likes')) {
+            return nothing;
+        }
+        let likes = this.it.likes;
+        likes = await fetchActivityPubIRI(likes);
+        if (likes.totalItems === 0) {
+            return nothing;
+        }
+
+        return html`<ul class="appreciations">${map(groupActivities(likes),
+                g => html`<li>${renderActivityGroup(g)}</li>`
+        )}</ul>`;
+    }
+
     async renderReplies() {
         if (!this.inFocus()) {
             return nothing;
@@ -390,14 +453,15 @@ ActivityPubObject.renderByMediaType = function (it, showMetadata, inline) {
     return html`<div><a href=${src.href}>${unsafeHTML(name) ?? src.href}</a></div>`;
 }
 
-ActivityPubObject.renderByType = async function (it, showMetadata, inline) {
+// TODO(marius): having these functions be async renders them as [object Promise] in the HTML
+ActivityPubObject.renderByType = /*async*/ function (it, showMetadata, inline) {
     if (it === null) {
         return nothing;
     }
-    if (typeof it === 'string') {
-        it = await fetchActivityPubIRI(it);
-        if (it === null) return nothing;
-    }
+    // if (typeof it === 'string') {
+    //     it = await fetchActivityPubIRI(it);
+    //     if (it === null) return nothing;
+    // }
     if (inline) {
         showMetadata = false;
     }
@@ -441,3 +505,44 @@ ActivityPubObject.renderByType = async function (it, showMetadata, inline) {
     return nothing;
 }
 
+const groupActivities = (activities) =>
+    Map.groupBy(activities.getItems(),
+        it => (it.hasOwnProperty('type') ? it.type : null)
+    ).entries().map((iter) => {
+        const key = iter[0];
+        const value = iter[1];
+
+        let actors = value.flatMap(appIt => {
+            if (!appIt.hasOwnProperty('actor') && !appIt.hasOwnProperty('attributedTo')) return null;
+            return appIt.actor??appIt.attributedTo;
+        });
+        actors = actors.filter((act, index) => actors.indexOf(act) === index)
+        const getURL = (value) => {
+            if (value.hasOwnProperty('url')) return value.url;
+            if (value.hasOwnProperty('icon')) return value.icon;
+            if (value.hasOwnProperty('image')) return value.image;
+            if (value.hasOwnProperty('name')) return value.name;
+            if (value.hasOwnProperty('content')) return value.content;
+            return null;
+        };
+        return {
+            type: key.toLowerCase(),
+            count: value.length,
+            icon: getURL(value),
+            actors: actors,
+        };
+    });
+
+function renderActivityGroup (group) {
+    let count = 1;
+    if (group.hasOwnProperty('count')) {
+        count = group.count;
+    }
+
+    const type = `icon-${group.type}`;
+    let icon = html`<oni-icon name="${type}"></oni-icon>`;
+    if (group?.icon) {
+        icon = html`<oni-image it=${group.icon} ?inline=${true}></oni-image>`;
+    }
+    return html`${icon} ${pluralize(count, group.type)}`;
+}

@@ -269,3 +269,16 @@ export class ActivityPubActor extends ActivityPubObject {
         return ActivityPubItem.isValid(it) && ActorTypes.indexOf(it.type) > 0;
     }
 }
+
+// NOTE(marius): we don't really render different actor types differently, but
+// here is where we want to do that when that happens.
+ActivityPubActor.renderByType = /*async*/ function (it, showMetadata, inline) {
+    if (it === null) {
+        return nothing;
+    }
+    // if (typeof it === 'string') {
+    //     it = await fetchActivityPubIRI(it);
+    //     if (it === null) return nothing;
+    // }
+    return until(html`<oni-actor it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-actor>`);
+}

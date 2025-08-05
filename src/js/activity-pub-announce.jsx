@@ -31,13 +31,21 @@ export class ActivityPubAnnounce extends ActivityPubCreate {
             </aside>`;
     }
 
-    renderPermaLink() {
+    renderPermaLink(hideOnName) {
         if (!this.it.hasOwnProperty('object')) return nothing;
         const ob = this.it.object;
         return html`<a href="${ob?.id ?? nothing}"><oni-icon title="Bookmark this item" name="external-href"></oni-icon></a>`;
     }
 
+    renderInline() {
+        if (!this.it.hasOwnProperty('actor')) return nothing;
+        return html`shared by <oni-actor it=${this.it.actor} ?inline=${true} ?showMetadata=${false}></oni-actor> ${renderTimestamp(this.it.getPublished(), true)}`;
+    }
+
     render() {
+        if (this.inline) {
+            return html`${this.renderInline()}`;
+        }
         const metadata = this.showMetadata ? html`<footer>${until(this.renderMetadata())}</footer>` : nothing;
         return html`${until(this.renderObject(false))} ${metadata}`;
     }

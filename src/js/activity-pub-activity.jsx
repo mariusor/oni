@@ -4,7 +4,6 @@ import {until} from "lit-html/directives/until.js";
 import {ObjectTypes, ActivityPubItem, ActivityTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {map} from "lit-html/directives/map.js";
-import {fetchActivityPubIRI} from "./client";
 import {renderObjectByType} from "./utils";
 
 export class ActivityPubActivity extends ActivityPubObject {
@@ -25,7 +24,7 @@ export class ActivityPubActivity extends ActivityPubObject {
         if (!this.it.hasOwnProperty('actor')) return nothing;
 
         await this.dereferenceProperty('actor');
-        return this.it.actor.getName();
+        return this.it.actor.getPreferredUsername() ?? this.it.actor.getName();
     }
 
     async renderObject(showMetadata) {
@@ -38,7 +37,7 @@ export class ActivityPubActivity extends ActivityPubObject {
         const actor = this.it.hasOwnProperty('actor')? this.it.actor : null;
         return html`${map(this.it.object, function (ob) {
             if (ObjectTypes.indexOf(ob.type) >= 0) {
-                return until(renderObjectByType(ob, showMetadata, true));
+                return renderObjectByType(ob, showMetadata, true);
             }
             return unsafeHTML(`<!-- Unknown activity object ${ob.type} -->`);
         })}`;
@@ -61,18 +60,15 @@ export class ActivityPubActivity extends ActivityPubObject {
 
 const renderableActivityTypes = ['Create', 'Announce', /*'Delete', 'Like', 'Dislike', 'Follow'*/];
 
-ActivityPubActivity.renderByType = async function (it, showMetadata, inline) {
+// TODO(marius): having these functions be async renders them as [object Promise] in the HTML
+ActivityPubActivity.renderByType = /*async*/ function (it, showMetadata, inline) {
     if (it === null) {
         return nothing;
     }
-    if (typeof it === 'string') {
-        it = await fetchActivityPubIRI(it);
-        if (it === null) return nothing;
-    }
-    let action = 'Unknown';
-    if (it.hasOwnProperty('type')) {
-        action = it.type;
-    }
+    // if (typeof it === 'string') {
+    //     it = await fetchActivityPubIRI(it);
+    //     if (it === null) return nothing;
+    // }
     switch (it.type) {
     //     case 'Delete':
     //         return html`<oni-delete it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-delete>`;
@@ -82,10 +78,10 @@ ActivityPubActivity.renderByType = async function (it, showMetadata, inline) {
             return html`<oni-announce it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-announce>`;
     //     case 'Follow':
     //         return html`<oni-follow it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-follow>`;
-    //     case 'Like':
-    //         return html`<oni-like it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-like>`;
-    //     case 'Dislike':
-    //         return html`<oni-dislike it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-dislike>`;
+        case 'Like':
+        case 'Dislike':
+            return html`<oni-appreciation it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-appreciation>`;
+        default:
+            return html`<oni-activity it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-activity>`;
     }
-    return html`<oni-activity it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-activity>`;
 }

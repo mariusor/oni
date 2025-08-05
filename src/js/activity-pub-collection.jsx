@@ -81,7 +81,7 @@ export class ActivityPubCollection extends ActivityPubObject {
                 renderedItem = renderActivityByType(it, true, false);
             } else if (ActorTypes.indexOf(type) >= 0) {
                 if (!ActivityPubActor.isValid(it)) return nothing;
-                renderedItem = html`<oni-actor it=${JSON.stringify(it)} ?inline=${true}></oni-actor>`
+                renderedItem = renderActorByType(it, this.showMetadata, this.inline);
             } else {
                 if (!ActivityPubObject.isValid(it)) return nothing;
                 renderedItem = renderObjectByType(it, this.showMetadata, this.inline);
