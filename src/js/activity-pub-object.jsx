@@ -82,11 +82,15 @@ export class ActivityPubObject extends LitElement {
             justify-content: flex-end;
             font-size: .8rem;
             line-height: 1rem;
+            gap: 1rem;
         }
         .reactions ul {
             display: inline-block;
             padding: 0;
             margin: 0;
+        }
+        .appreciations li {
+            margin-left: .4rem;
         }
         .reactions ul li {
             list-style: none;
@@ -547,8 +551,7 @@ function renderActivityGroup (group) {
         iri = group.iri;
     }
 
-    const type = `icon-${group.type}`;
-    let icon = html`<oni-icon name="${type}"></oni-icon>`;
+    let icon = html`<oni-icon name="${group.type}"></oni-icon>`;
     if (group?.icon) {
         icon = html`<oni-image it=${group.icon} ?inline=${true}></oni-image>`;
     }
