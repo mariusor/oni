@@ -49,7 +49,7 @@ export class ActivityPubObject extends LitElement {
             max-width: fit-content;
         }
         footer aside {
-            font-size: .8em;
+            font-size: .84rem;
         }
         details summary {
             cursor: pointer;
@@ -69,7 +69,7 @@ export class ActivityPubObject extends LitElement {
             display: inline-block;
             margin: 0;
             padding: 0;
-            font-size: .8rem;
+            font-size: .9rem;
             line-height: 1rem;
         }
     `;

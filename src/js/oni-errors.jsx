@@ -8,7 +8,7 @@ export class OniErrors extends LitElement {
             text-align: center;
         }
         details {
-            font-size: .8em;
+            font-size: .9rem;
         }
         details[open] summary::before {
             content: "Hide";

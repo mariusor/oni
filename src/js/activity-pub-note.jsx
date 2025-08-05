@@ -29,10 +29,10 @@ export class ActivityPubNote extends ActivityPubObject {
         font-size: 1rem;
     }
     article header h6 {
-        font-size: .8rem;
+        font-size: .9rem;
     }
     footer {
-        font-size: 0.8rem;
+        font-size: .9rem;
     }
     footer a {
         text-decoration: none;
