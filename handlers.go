@@ -105,7 +105,7 @@ func (o *oni) setupStaticRoutes(m chi.Router) {
 	m.Handle("/main.css", fsServe)
 	m.HandleFunc("/icons.svg", fsServe)
 	m.HandleFunc("/robots.txt", fsServe)
-	m.HandleFunc("/favicon.ico", o.NotFound)
+	m.HandleFunc("/favicon.ico", o.ServeFavIcon())
 }
 
 func (o *oni) setupWebfingerRoutes(m chi.Router) {
@@ -138,22 +138,25 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	})
 }
 
-func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
-	if vocab.IsNil(it) {
-		return o.Error(errors.NotFoundf("not found"))
-	}
-	var contentType string
-	var raw []byte
-	updatedAt := time.Now()
-	err := vocab.OnObject(it, func(ob *vocab.Object) error {
-		var err error
+func binDataFromItem(it vocab.Item, w io.Writer) (contentType ct.MediaType, updatedAt time.Time, err error) {
+	updatedAt = time.Now()
+	err = vocab.OnObject(it, func(ob *vocab.Object) error {
 		if !mediaTypes.Contains(ob.Type) {
 			return errors.NotSupportedf("invalid object")
 		}
 		if len(ob.Content) == 0 {
 			return errors.NotSupportedf("invalid object")
 		}
-		if contentType, raw, err = getBinData(ob.Content, ob.MediaType); err != nil {
+		typ, raw, err := getBinData(ob.Content, ob.MediaType)
+		if err != nil {
+			return err
+		}
+		_, err = w.Write(raw)
+		if err != nil {
+			return err
+		}
+		contentType, err = ct.ParseMediaType(typ)
+		if err != nil {
 			return err
 		}
 		updatedAt = ob.Published
@@ -162,12 +165,23 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 		}
 		return nil
 	})
+	return contentType, updatedAt, err
+}
+
+func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
+	if vocab.IsNil(it) {
+		return o.Error(errors.NotFoundf("not found"))
+	}
+	buf := bytes.Buffer{}
+	contentType, updatedAt, err := binDataFromItem(it, &buf)
 	if err != nil {
 		return o.Error(err)
 	}
+
+	raw := buf.Bytes()
 	eTag := fmt.Sprintf(`"%2x"`, md5.Sum(raw))
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", contentType)
+		w.Header().Set("Content-Type", contentType.String())
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(raw)))
 		w.Header().Set("Vary", "Accept")
 		w.Header().Set("ETag", eTag)
@@ -495,7 +509,7 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 		o.Logger.WithContext(lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
 	}
 
-	author := auth.AnonymousActor
+	var author vocab.Actor
 	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		author = loaded
 	} else {
@@ -520,6 +534,11 @@ var activityJson, _ = ct.ParseMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTy
 var applicationJson, _ = ct.ParseMediaType("application/json;q=0.8")
 var textHTML, _ = ct.ParseMediaType("text/html;q=1.0")
 var imageAny, _ = ct.ParseMediaType("image/*;q=1.0")
+var imageIco, _ = ct.ParseMediaType("image/vnd.microsoft.icon")
+var imageJpeg, _ = ct.ParseMediaType("image/jpeg")
+var imagePng, _ = ct.ParseMediaType("image/png")
+var imageGif, _ = ct.ParseMediaType("image/gif")
+var imageSvg, _ = ct.ParseMediaType("image/svg+xml")
 var audioAny, _ = ct.ParseMediaType("audio/*;q=1.0")
 var videoAny, _ = ct.ParseMediaType("video/*;q=1.0")
 var pdfDocument, _ = ct.ParseMediaType("application/pdf;q=1.0")
@@ -711,8 +730,10 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 	}
 }
 
-const authorizedActorCtxKey = "__authorizedActor"
-const blockedActorsCtxKey = "__blockedActors"
+type _ctxKey string
+
+const authorizedActorCtxKey _ctxKey = "__authorizedActor"
+const blockedActorsCtxKey _ctxKey = "__blockedActors"
 
 func (o oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore ...vocab.IRI) (vocab.Actor, error) {
 	act, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor)

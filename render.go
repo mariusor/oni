@@ -27,6 +27,8 @@ var (
 			},
 			"oniType": func(i any) template.HTML {
 				switch it := i.(type) {
+				case vocab.IRI:
+					return "iri"
 				case vocab.Item:
 					t := it.GetType()
 					switch {
@@ -45,8 +47,6 @@ var (
 					default:
 						return template.HTML(strings.ToLower(string(t)))
 					}
-				case vocab.IRI:
-					return "iri"
 				case vocab.NaturalLanguageValues:
 					return "natural-language-values"
 				case vocab.LangRefValue:
