@@ -1057,6 +1057,20 @@ func runWithRetry(fn ssm.Fn) ssm.Fn {
 	return ssm.After(300*time.Millisecond, ssm.Retry(retries, ssm.BackOff(baseWaitTime, ssm.Jitter(jitterDelay, ssm.Linear(multiplier)), fn)))
 }
 
+// actorsCacheClean replaces the matching actor in the cached list oni uses
+func (o *oni) actorsCacheClean(which vocab.Item) error {
+	for i, a := range o.a {
+		if !a.ID.Equals(which.GetID(), true) {
+			continue
+		}
+		return vocab.OnActor(which, func(actor *vocab.Actor) error {
+			o.a[i] = *actor
+			return nil
+		})
+	}
+	return nil
+}
+
 // ProcessActivity handles POST requests to an ActivityPub actor's inbox/outbox, based on the CollectionType
 func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	baseIRIs := make(vocab.IRIs, 0)
@@ -1140,17 +1154,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		if it.GetType() == vocab.UpdateType {
 			// NOTE(marius): if we updated one of the main actors, we replace it in the array
 			_ = vocab.OnActivity(it, func(upd *vocab.Activity) error {
-				ob := upd.Object
-				for i, a := range o.a {
-					if !a.ID.Equals(ob.GetID(), true) {
-						continue
-					}
-					_ = vocab.OnActor(ob, func(actor *vocab.Actor) error {
-						o.a[i] = *actor
-						return nil
-					})
-				}
-				return nil
+				return o.actorsCacheClean(upd.Object)
 			})
 		}
 
