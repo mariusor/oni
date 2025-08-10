@@ -6,13 +6,18 @@ import (
 )
 
 var (
-	extraAllowedTags      = []string{"style", "nav", "aside", "bandcamp-embed", "iframe"}
-	extraAllowedAttrs     = []string{"class", "rel", "src", "url"}
+	// NOTE(marius): for inline svg images like, the default icon
+	svgRelatedTags  = []string{"svg", "use"}
+	svgRelatedAttrs = []string{"aria-hidden", "name", "href", "width", "height"}
+
+	extraAllowedTags  = []string{"style", "nav", "aside", "bandcamp-embed", "iframe"}
+	extraAllowedAttrs = []string{"class", "rel", "src", "url"}
+
 	defaultSanitizePolicy = func() *bluemonday.Policy {
 		p := bluemonday.UGCPolicy().
 			AllowUnsafe(true).
-			AllowElements(extraAllowedTags...).
-			AllowAttrs(extraAllowedAttrs...).Globally()
+			AllowElements(append(svgRelatedTags, extraAllowedTags...)...).
+			AllowAttrs(append(svgRelatedAttrs, extraAllowedAttrs...)...).Globally()
 
 		//p.AllowStandardAttributes()
 		//p.AllowStandardURLs()
