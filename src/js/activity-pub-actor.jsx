@@ -1,7 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {hostFromIRI, loadPalette} from "./utils";
-import {ActivityPubItem, ActorTypes, ObjectTypes} from "./activity-pub-item";
+import {ActivityPubItem, ActorTypes} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
 import {TinyColor} from "@ctrl/tinycolor";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
@@ -169,7 +169,7 @@ export class ActivityPubActor extends ActivityPubObject {
                 return html`<img loading="lazy" src="${url}" alt="icon"/>`;
             }
             const cont = new ActivityPubItem(icon).getContent().at(0);
-            if (cont.length > 0) {
+            if (cont?.length > 0) {
                 try {
                     return unsafeHTML(cont);
                 } catch (e) {

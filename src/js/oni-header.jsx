@@ -47,10 +47,13 @@ export class OniHeader extends ActivityPubActor {
     }
 
     renderIconName() {
-        let username = unsafeHTML(sanitize(this.it?.getPreferredUsername()?.at(0)));
+        let username = "Anonymous";
+        if (this.it?.getPreferredUsername().length > 0) {
+            username = unsafeHTML(sanitize(this.it?.getPreferredUsername()?.at(0)));
+        }
         const iri = this.it.iri();
         if (!isLocalIRI(iri)) {
-            username = `${username}@${new URL(iri).hostname}`
+            username = `${username}@${URL.parse(iri).hostname}`
         }
         return html`<a href=${iri}> ${this.renderIcon()} ${username}</a>`;
     }
