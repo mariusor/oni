@@ -29,15 +29,15 @@ export class NaturalLanguageValues extends LitElement {
             margin-top: 0;
         }
         a[rel~=mention], a[rel~=tag] {
+            --tag-color: color-mix(in srgb, var(--accent-color), transparent 86%);
             font-size: .72rem;
-            font-weight: bold;
             padding: .1rem .3rem;
             border-radius: .3rem;
-            border: .08rem solid color-mix(in srgb, var(--accent-color), transparent 20%);
-            background: color-mix(in srgb, var(--accent-color), transparent 80%);
+            border: .06rem solid var(--tag-color);
+            background: var(--tag-color);
+            text-decoration: none;
             vertical-align: .09rem;
             word-break: unset;
-            text-decoration: none;
         }
         /* This should take care of Mastodon links that have as content just the link href */
         a {
