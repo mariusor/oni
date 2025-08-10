@@ -136,6 +136,10 @@ a:has(oni-natural-language-values) {
     text-decoration: none;
 }
 
+hr {
+    border-color: var(--acent-color);
+}
+
 body > footer {
     padding: .8rem 0;
     width: auto;
