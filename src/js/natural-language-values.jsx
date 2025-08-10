@@ -28,7 +28,9 @@ export class NaturalLanguageValues extends LitElement {
         h1 + p, h2 + p, h3 + p {
             margin-top: 0;
         }
-        a[rel~=mention], a[rel~=tag] {
+        a[rel~=mention], a[rel~=tag], 
+        /* NOTE(marius): include Mastodon tag and mention classes on links */
+        a[class~=mention], a[class~=hashtag] {
             --tag-color: color-mix(in srgb, var(--accent-color), transparent 86%);
             font-size: .72rem;
             padding: .1rem .3rem;
