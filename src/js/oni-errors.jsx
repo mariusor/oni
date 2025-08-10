@@ -62,10 +62,9 @@ export class OniErrors extends LitElement {
         if (!Array.isArray(this.it)) {
             this.it = [this.it];
         }
+        // NOTE(marius): filter out if another error has the same message but index is lower
         this.it = this.it.filter(
-            (el, i) => !(typeof this.it.find(
-                (elem, index) => (index > i && elem.hasOwnProperty('message') && elem?.message === el?.message)
-            ) === 'undefined')
+            (el, i) => !(typeof this.it.find((elem, index) => elem?.message === el?.message && index < i) === 'object')
         );
         return html`<main>${map(this.it, err => this.renderError(err))}</main>`;
     }
