@@ -137,7 +137,7 @@ a:has(oni-natural-language-values) {
 }
 
 hr {
-    border-color: var(--acent-color);
+    border-color: var(--accent-color);
 }
 
 body > footer {

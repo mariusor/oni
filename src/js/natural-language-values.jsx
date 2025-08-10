@@ -11,7 +11,7 @@ export class NaturalLanguageValues extends LitElement {
         :host p { text-align: justify; }
         :host div { display: inline-block; }
         :host([name=summary]) p, :host([name=name]) p, :host([name=preferredUsername]) p {
-            display: inline-block; 
+            display: inline-block;
             margin: 0;
         }
         aside {
@@ -42,6 +42,9 @@ export class NaturalLanguageValues extends LitElement {
         /* This should take care of Mastodon links that have as content just the link href */
         a {
             word-break: break-all;
+        }
+        hr {
+            border-color: var(--accent-color);
         }
     `, ActivityPubObject.styles];
 
