@@ -65,6 +65,7 @@ var (
 	version = "HEAD"
 
 	listen  string
+	pw      string
 	path    string
 	verbose bool
 )
@@ -72,6 +73,7 @@ var (
 func main() {
 	flag.StringVar(&listen, "listen", "127.0.0.1:60123", "Listen socket")
 	flag.StringVar(&path, "path", dataPath, "Path for ActivityPub storage")
+	flag.StringVar(&pw, "pass", oni.DefaultOAuth2ClientPw, "Default password to use for the main Oni actor")
 	flag.BoolVar(&verbose, "verbose", false, "Show verbose ll output")
 	flag.Parse()
 
@@ -110,6 +112,7 @@ func main() {
 	}
 
 	err = oni.Oni(
+		oni.WithPassword(pw),
 		oni.WithLogger(ll),
 		oni.WithStoragePath(path),
 		oni.LoadActor(urls...),

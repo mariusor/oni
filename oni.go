@@ -38,8 +38,9 @@ type oni struct {
 	TimeOut     time.Duration
 	PwHash      []byte
 
-	a []vocab.Actor
-	m http.Handler
+	a  []vocab.Actor
+	pw string
+	m  http.Handler
 }
 
 type optionFn func(o *oni)
@@ -137,7 +138,12 @@ func CreateBlankInstance(o *oni) *vocab.Actor {
 		}
 	}
 
-	blank, err := o.CreateActor(blankIRI, "", true)
+	pw := DefaultOAuth2ClientPw
+	if o.pw != "" {
+		pw = o.pw
+	}
+
+	blank, err := o.CreateActor(blankIRI, pw, true)
 	if err != nil {
 		o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Unable to create Actor")
 	}
@@ -194,7 +200,7 @@ func Oni(initFns ...optionFn) *oni {
 		}
 		_ = localURLs.Append(actor.GetLink())
 
-		if err = o.CreateOAuth2ClientIfMissing(actor.ID, DefaultOAuth2ClientPw); err != nil {
+		if err = o.CreateOAuth2ClientIfMissing(actor.ID, o.pw); err != nil {
 			o.Logger.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("Unable to save OAuth2 Client")
 		}
 
@@ -216,6 +222,11 @@ func Oni(initFns ...optionFn) *oni {
 
 func WithLogger(l lw.Logger) optionFn {
 	return func(o *oni) { o.Logger = l }
+}
+
+func WithPassword(pw string) optionFn {
+	// TODO(marius): this needs a password mechanism per IRI
+	return func(o *oni) { o.pw = pw }
 }
 
 func LoadActor(items ...vocab.Item) optionFn {

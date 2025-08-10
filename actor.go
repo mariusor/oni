@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	iconOni            = `<svg aria-hidden="true" name="icon-oni"> <use href="/icons.svg#icon-oni"><title>Oni</title></use> </svg>`
+	iconOni            = `<svg aria-hidden="true" name="icon-oni" width="192" height="192"><use href="/icons.svg#icon-oni"><title>Oni</title></use></svg>`
 	nameOni            = "<strong>Oni</strong>"
 	descriptionOni     = `Single user ActivityPub service.`
 	contentOniTemplate = template.Must(
@@ -27,6 +27,8 @@ var (
 <p>You have successfully started your default Oni server.<br/>
 You're currently running version <code>{{ .Version }}</code>.<br/>
 The server can be accessed at <a href="{{ .URL }}">{{ .URL }}</a>.<br/>
+<hr/>
+In order to interact with your instance, you need to use the <a href="https://git.sr.ht/~mariusor/box">BOX</a> CLI helper.<br/>
 </p>`))
 )
 
@@ -71,14 +73,9 @@ type Control struct {
 	Logger  lw.Logger
 }
 
-func (c *Control) CreateActor(iri vocab.IRI, maybePw string, withToken bool) (*vocab.Actor, error) {
-	pw := DefaultOAuth2ClientPw
-	if maybePw != "" {
-		pw = maybePw
-	}
-
+func (c *Control) CreateActor(iri vocab.IRI, pw string, withToken bool) (*vocab.Actor, error) {
 	it, err := c.Storage.Load(iri)
-	if err == nil || (!vocab.IsNil(it) && it.GetLink().Equals(iri, true)) {
+	if err == nil || (it != nil && !vocab.IsNil(it) && it.GetLink().Equals(iri, true)) {
 		if err != nil && !errors.IsNotFound(err) {
 			c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Warnf("Actor already exists")
 		} else {
@@ -110,6 +107,12 @@ func (c *Control) CreateActor(iri vocab.IRI, maybePw string, withToken bool) (*v
 		return nil, err
 	}
 
+	if err = c.Storage.PasswordSet(actor, []byte(pw)); err != nil {
+		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to set password for actor")
+		return nil, err
+	} else {
+		c.Logger.Infof("    Successfully set password: %s", pw)
+	}
 	u, _ := actor.ID.URL()
 	if err = c.CreateOAuth2ClientIfMissing(actor.ID, pw); err != nil {
 		c.Logger.WithContext(lw.Ctx{"host": u.Hostname(), "err": err.Error()}).Errorf("Unable to save OAuth2 Client")
