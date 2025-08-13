@@ -16,7 +16,7 @@ export class ActivityPubAppreciation extends ActivityPubActivity {
 
     renderInline() {
         if (!this.it.hasOwnProperty('actor')) return nothing;
-        return html`<oni-actor it=${this.it.actor} ?inline=${true} ?showMetadata=${false}></oni-actor> ${this.it.type} ${renderTimestamp(this.it.getPublished(), true)}`;
+        return html`<oni-actor it=${JSON.stringify(this.it.getActor())} ?inline=${true} ?showMetadata=${false}></oni-actor> ${this.it.type} ${renderTimestamp(this.it.getPublished(), true)}`;
     }
 
     render() {

@@ -39,7 +39,7 @@ export class ActivityPubAnnounce extends ActivityPubCreate {
 
     renderInline() {
         if (!this.it.hasOwnProperty('actor')) return nothing;
-        return html`shared by <oni-actor it=${this.it.actor} ?inline=${true} ?showMetadata=${false}></oni-actor> ${renderTimestamp(this.it.getPublished(), true)}`;
+        return html`shared by <oni-actor it=${JSON.stringify(this.it.getActor())} ?inline=${true} ?showMetadata=${false}></oni-actor> ${renderTimestamp(this.it.getPublished(), true)}`;
     }
 
     render() {
