@@ -235,8 +235,23 @@ export class ActivityPubActor extends ActivityPubObject {
         return html`${this.renderPreferredUsername()}${!isLocalIRI(iri) ? html`<span>${hostFromIRI(iri)}</span>` : nothing}`;
     }
 
+    renderInlineIRI() {
+        const iri = this.it.iri();
+        if (!iri) return nothing;
+
+        let name = iri;
+        const u = URL.parse(iri);
+        if (u) {
+            name = u.host + (u.pathname !== '/' ? u.pathname : '');
+        }
+
+        return html`<a class=${classMap({'inline': this.inline})} href=${iri}>${name}</a>`;
+    }
+
     renderInline() {
-        if (!ActivityPubItem.isValid(this.it)) return nothing;
+        if (!ActivityPubItem.isValid(this.it)) {
+            return this.renderInlineIRI();
+        }
         const iri = this.it.iri();
         // if parent is <aside> we're in the footer of an object - TODO(marius): come up with a better way of deciding this
         const needsAvatar = this.parentNode.nodeName !== 'ASIDE';
