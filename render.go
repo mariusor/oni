@@ -59,8 +59,8 @@ var (
 				}
 				return "error"
 			},
-			"JSON": func(it any) template.HTML {
-				return template.HTML(renderJson(it))
+			"JSON": func(it any) template.JS {
+				return template.JS(renderJson(it))
 			},
 			"JSONAttr": func(it any) template.HTMLAttr {
 				return template.HTMLAttr(renderJson(it))
