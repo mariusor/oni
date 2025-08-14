@@ -38,6 +38,7 @@ require (
 require (
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
+	github.com/alecthomas/kong v1.12.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.24.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.6 // indirect

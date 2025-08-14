@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"io/fs"
 	"oni"
@@ -12,6 +11,7 @@ import (
 	"strings"
 
 	"git.sr.ht/~mariusor/lw"
+	"github.com/alecthomas/kong"
 	vocab "github.com/go-ap/activitypub"
 )
 
@@ -30,7 +30,7 @@ var dataPath = func() string {
 func loadAccountsFromStorage(base string) (vocab.ItemCollection, error) {
 	urls := make(vocab.ItemCollection, 0)
 	err := filepath.WalkDir(base, func(file string, d fs.DirEntry, err error) error {
-		if maybeActor, ok := maybeLoadServiceActor(path, file); ok {
+		if maybeActor, ok := maybeLoadServiceActor(CLI.Path, file); ok {
 			urls = append(urls, maybeActor)
 		}
 		return nil
@@ -63,19 +63,31 @@ func maybeLoadServiceActor(base, path string) (*vocab.Actor, bool) {
 
 var (
 	version = "HEAD"
-
-	listen  string
-	pw      string
-	path    string
-	verbose bool
 )
 
+var CLI struct {
+	Listen  string `default:"127.0.0.1:60123" help:"Listen socket"`
+	Path    string `default:"${default_path}" help:"Path for ActivityPub storage"`
+	URL     string `default:"${default_url}" help:"Default URL for the instance actor"`
+	Pw      string `default:"${default_pw}" help:"Default password to use for the main Oni actor"`
+	Verbose bool   `default:"false" help:"Show verbose log output"`
+}
+
 func main() {
-	flag.StringVar(&listen, "listen", "127.0.0.1:60123", "Listen socket")
-	flag.StringVar(&path, "path", dataPath, "Path for ActivityPub storage")
-	flag.StringVar(&pw, "pw", oni.DefaultOAuth2ClientPw, "Default password to use for the main Oni actor")
-	flag.BoolVar(&verbose, "verbose", false, "Show verbose log output")
-	flag.Parse()
+	_ = kong.Parse(&CLI,
+		kong.Name("oni"),
+		kong.Description("Run the ONI server"),
+		kong.UsageOnError(),
+		kong.Vars{
+			"default_path": dataPath,
+			"default_url":  oni.DefaultURL,
+			"default_pw":   oni.DefaultOAuth2ClientPw,
+		},
+		kong.ConfigureHelp(kong.HelpOptions{
+			Compact: true,
+			Summary: true,
+		}),
+	)
 
 	if build, ok := debug.ReadBuildInfo(); ok && version == "HEAD" {
 		if build.Main.Version != "(devel)" {
@@ -93,30 +105,31 @@ func main() {
 
 	oni.Version = version
 	lvl := lw.DebugLevel
-	if verbose {
+	if CLI.Verbose {
 		lvl = lw.TraceLevel
 	}
 
 	ll := lw.Dev(lw.SetLevel(lvl))
 
-	err := mkDirIfNotExists(path)
+	err := mkDirIfNotExists(CLI.Path)
 	if err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to create path")
 		os.Exit(1)
 	}
 
-	urls, err := loadAccountsFromStorage(path)
+	urls, err := loadAccountsFromStorage(CLI.Path)
 	if err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to load accounts from storage")
 		os.Exit(1)
 	}
 
 	err = oni.Oni(
-		oni.WithPassword(pw),
+		oni.WithPassword(CLI.Pw),
 		oni.WithLogger(ll),
-		oni.WithStoragePath(path),
+		oni.WithStoragePath(CLI.Path),
 		oni.LoadActor(urls...),
-		oni.ListenOn(listen),
+		oni.ListenOn(CLI.Listen),
+		oni.WithDefaultURL(CLI.URL),
 	).Run(context.Background())
 	if err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to start server")
