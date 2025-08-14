@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"strings"
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
@@ -73,7 +74,7 @@ var blockInstanceCmd = &cli.Command{
 var ActorCmd = &cli.Command{
 	Name:        "actor",
 	Usage:       "Actor helper",
-	Subcommands: []*cli.Command{actorAddCmd, rotateKeyCmd},
+	Subcommands: []*cli.Command{actorAddCmd, actorMoveCmd, rotateKeyCmd},
 }
 
 var actorAddCmd = &cli.Command{
@@ -112,6 +113,97 @@ func addActorAct(ctl *Control) cli.ActionFunc {
 			if _, err := ctl.CreateActor(vocab.IRI(maybeURL), pw, context.Bool("with-token")); err != nil {
 				ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Unable to create new Actor")
 			}
+		}
+		return nil
+	}
+}
+
+var actorMoveCmd = &cli.Command{
+	Name:   "move",
+	Usage:  "Move a root actor to a new IRI",
+	Args:   true,
+	Action: moveActorAct(&ctl),
+}
+
+func moveActorAct(ctl *Control) cli.ActionFunc {
+	return func(context *cli.Context) error {
+		if context.NArg() < 2 {
+			return errors.Newf("expected two arguments: <from-IRI> <to-IRI>")
+		}
+		from := vocab.IRI(context.Args().Get(0))
+		to := vocab.IRI(context.Args().Get(1))
+		if from == vocab.EmptyIRI {
+			return errors.Newf("expected argument is missing: <from-IRI>")
+		}
+		it, err := ctl.Storage.Load(from)
+		if err != nil {
+			return errors.Newf("unable to load root actor with IRI: %s", from)
+		}
+		fromActor, err := vocab.ToActor(it)
+		if err != nil {
+			return errors.Annotatef(err, "invalid root actor at IRI: %s", from)
+		}
+		if to == vocab.EmptyIRI {
+			return errors.Newf("expected argument is missing: <to-IRI>")
+		}
+		toActor := new(vocab.Actor)
+		toActor.ID = fromActor.ID
+		_, err = vocab.CopyItemProperties(toActor, fromActor)
+		if err != nil {
+			return errors.Annotatef(err, "unable to clone from actor")
+		}
+		toActor.ID = to
+		if fromActor.Inbox != nil {
+			toActor.Inbox = vocab.Inbox.IRI(to)
+		}
+		if fromActor.Outbox != nil {
+			toActor.Outbox = vocab.Outbox.IRI(to)
+		}
+		if fromActor.Followers != nil {
+			toActor.Followers = vocab.Followers.IRI(to)
+		}
+		if fromActor.Following != nil {
+			toActor.Following = vocab.Following.IRI(to)
+		}
+		if fromActor.Liked != nil {
+			toActor.Liked = vocab.Liked.IRI(to)
+		}
+		if fromActor.Likes != nil {
+			toActor.Likes = vocab.Likes.IRI(to)
+		}
+		if fromActor.Shares != nil {
+			toActor.Shares = vocab.Shares.IRI(to)
+		}
+		if fromActor.PublicKey.ID != "" {
+			toActor.PublicKey.ID = vocab.IRI(strings.Replace(
+				string(toActor.PublicKey.ID),
+				string(from),
+				string(to),
+				1,
+			))
+		}
+		if toActor.PublicKey.Owner != "" {
+			toActor.PublicKey.Owner = vocab.IRI(strings.Replace(
+				string(toActor.PublicKey.Owner),
+				string(from),
+				string(to),
+				1,
+			))
+		}
+
+		pp := processing.New(
+			processing.WithStorage(ctl.Storage),
+			processing.WithLogger(ctl.Logger),
+		)
+		move := new(vocab.Activity)
+		move.Type = vocab.MoveType
+		move.Actor = fromActor
+		move.Origin = fromActor
+		move.Object = fromActor
+		move.Target = toActor
+		_, err = pp.ProcessClientActivity(move, *fromActor, vocab.Outbox.Of(fromActor).GetLink())
+		if err != nil {
+			return errors.Annotatef(err, "unable to move actor from %s to %s", from, to)
 		}
 		return nil
 	}
@@ -408,7 +500,7 @@ func main() {
 	app.Commands = []*cli.Command{ActorCmd, OAuth2Cmd, fixCollectionsCmd, blockInstanceCmd}
 
 	if err := app.Run(os.Args); err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error: %+s", err)
 		os.Exit(1)
 	}
 }
