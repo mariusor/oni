@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
+	"github.com/alecthomas/kong"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
 	storage "github.com/go-ap/storage-fs"
-	"github.com/urfave/cli/v2"
 )
 
 type Control struct {
@@ -26,187 +26,287 @@ type Control struct {
 	StoragePath string
 }
 
-var tokenCmd = &cli.Command{
-	Name:        "token",
-	Usage:       "OAuth2 authorization token management",
-	Subcommands: []*cli.Command{tokenAddCmd},
+var CLI struct {
+	Path           string         `default:"${default_path}" help:"Path for ActivityPub storage"`
+	Verbose        bool           `default:"false" help:"Show verbose log output"`
+	OAuth2         OAuth2         `cmd:"" name:"oauth" description:"OAuth2 client and access token helper"`
+	Actor          Actor          `cmd:"" description:"Actor helper"`
+	FixCollections FixCollections `cmd:"" description:"Fix collections"`
+	Block          Block          `cmd:"" description:"Block instances"`
 }
 
-var tokenAddCmd = &cli.Command{
-	Name:    "add",
-	Aliases: []string{"new"},
-	Usage:   "Adds an OAuth2 token",
-	Flags: []cli.Flag{&cli.StringFlag{
-		Name:     "client",
-		Required: true,
-	}},
-	Action: tokenAct(&ctl),
+type FixCollections struct {
+	URLs []string `arg:""`
 }
 
-var OAuth2Cmd = &cli.Command{
-	Name:        "oauth",
-	Usage:       "OAuth2 client and access token helper",
-	Subcommands: []*cli.Command{tokenCmd},
-}
-
-var fixCollectionsCmd = &cli.Command{
-	Name:   "fix-collections",
-	Usage:  "",
-	Action: fixCollectionsAct(&ctl),
-}
-
-var rotateKeyCmd = &cli.Command{
-	Name:   "rotate-key",
-	Usage:  "Rotate the actors' private and public key pair",
-	Action: rotateKey(&ctl),
-}
-
-var blockInstanceCmd = &cli.Command{
-	Name:  "block",
-	Usage: "Block instances",
-	Flags: []cli.Flag{&cli.StringFlag{
-		Name:     "client",
-		Required: true,
-	}},
-	Action: blockInstance(&ctl),
-}
-
-var ActorCmd = &cli.Command{
-	Name:        "actor",
-	Usage:       "Actor helper",
-	Subcommands: []*cli.Command{actorAddCmd, actorMoveCmd, rotateKeyCmd},
-}
-
-var actorAddCmd = &cli.Command{
-	Name:  "add",
-	Usage: "Add a new root actor",
-	Flags: []cli.Flag{
-		&cli.BoolFlag{
-			Name:  "with-token",
-			Value: true,
-		},
-		&cli.StringSliceFlag{Name: "pw"},
-	},
-	Action: addActorAct(&ctl),
-}
-
-func addActorAct(ctl *Control) cli.ActionFunc {
-	return func(context *cli.Context) error {
-		urls := context.Args().Slice()
-		pws := context.StringSlice("pw")
-
-		if context.NArg() == 0 {
-			ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
-			urls = append(urls, oni.DefaultURL)
-		}
-		for i, maybeURL := range urls {
-			if _, err := url.ParseRequestURI(maybeURL); err != nil {
-				ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Received invalid URL")
-				continue
-			}
-
-			pw := ""
-			if i < len(pws)-1 {
-				pw = pws[i]
-			}
-
-			if _, err := ctl.CreateActor(vocab.IRI(maybeURL), pw, context.Bool("with-token")); err != nil {
-				ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Unable to create new Actor")
-			}
-		}
-		return nil
+func (f FixCollections) Run(ctl *Control) error {
+	if len(f.URLs) == 0 {
+		ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
+		f.URLs = append(f.URLs, oni.DefaultURL)
 	}
-}
-
-var actorMoveCmd = &cli.Command{
-	Name:   "move",
-	Usage:  "Move a root actor to a new IRI",
-	Args:   true,
-	Action: moveActorAct(&ctl),
-}
-
-func moveActorAct(ctl *Control) cli.ActionFunc {
-	return func(context *cli.Context) error {
-		if context.NArg() < 2 {
-			return errors.Newf("expected two arguments: <from-IRI> <to-IRI>")
-		}
-		from := vocab.IRI(context.Args().Get(0))
-		to := vocab.IRI(context.Args().Get(1))
-		if from == vocab.EmptyIRI {
-			return errors.Newf("expected argument is missing: <from-IRI>")
-		}
-		it, err := ctl.Storage.Load(from)
+	for _, u := range f.URLs {
+		it, err := ctl.Storage.Load(vocab.IRI(u))
 		if err != nil {
-			return errors.Newf("unable to load root actor with IRI: %s", from)
+			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor URL")
+			continue
 		}
-		fromActor, err := vocab.ToActor(it)
+		actor, err := vocab.ToActor(it)
 		if err != nil {
-			return errors.Annotatef(err, "invalid root actor at IRI: %s", from)
+			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor found for URL")
+			continue
 		}
-		if to == vocab.EmptyIRI {
-			return errors.Newf("expected argument is missing: <to-IRI>")
-		}
-		toActor := new(vocab.Actor)
-		toActor.ID = fromActor.ID
-		_, err = vocab.CopyItemProperties(toActor, fromActor)
+		_, err = ctl.Storage.Save(actor)
 		if err != nil {
-			return errors.Annotatef(err, "unable to clone from actor")
+			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Unable to save main Actor")
+			continue
 		}
-		toActor.ID = to
-		if fromActor.Inbox != nil {
-			toActor.Inbox = vocab.Inbox.IRI(to)
-		}
-		if fromActor.Outbox != nil {
-			toActor.Outbox = vocab.Outbox.IRI(to)
-		}
-		if fromActor.Followers != nil {
-			toActor.Followers = vocab.Followers.IRI(to)
-		}
-		if fromActor.Following != nil {
-			toActor.Following = vocab.Following.IRI(to)
-		}
-		if fromActor.Liked != nil {
-			toActor.Liked = vocab.Liked.IRI(to)
-		}
-		if fromActor.Likes != nil {
-			toActor.Likes = vocab.Likes.IRI(to)
-		}
-		if fromActor.Shares != nil {
-			toActor.Shares = vocab.Shares.IRI(to)
-		}
-		if fromActor.PublicKey.ID != "" {
-			toActor.PublicKey.ID = vocab.IRI(strings.Replace(
-				string(toActor.PublicKey.ID),
-				string(from),
-				string(to),
-				1,
-			))
-		}
-		if toActor.PublicKey.Owner != "" {
-			toActor.PublicKey.Owner = vocab.IRI(strings.Replace(
-				string(toActor.PublicKey.Owner),
-				string(from),
-				string(to),
-				1,
-			))
-		}
-
-		pp := processing.New(
-			processing.WithStorage(ctl.Storage),
-			processing.WithLogger(ctl.Logger),
-		)
-		move := new(vocab.Activity)
-		move.Type = vocab.MoveType
-		move.Actor = fromActor
-		move.Origin = fromActor
-		move.Object = fromActor
-		move.Target = toActor
-		_, err = pp.ProcessClientActivity(move, *fromActor, vocab.Outbox.Of(fromActor).GetLink())
+		err = tryCreateCollection(ctl, actor.Outbox.GetLink())
 		if err != nil {
-			return errors.Annotatef(err, "unable to move actor from %s to %s", from, to)
+			ctl.Logger.WithContext(lw.Ctx{"iri": actor.ID, "err": err.Error()}).Errorf("Unable to save Outbox collection for main Actor")
+			continue
 		}
-		return nil
 	}
+	return nil
+}
+
+type Block struct {
+	Actor string   ``
+	URLs  []string `arg:""`
+}
+
+func (b Block) Run(ctl *Control) error {
+	if b.Actor == "" {
+		return errors.Newf("Need to provide the client id")
+	}
+	cl, err := ctl.Storage.Load(vocab.IRI(b.Actor))
+	if err != nil {
+		return err
+	}
+	act, err := vocab.ToActor(cl)
+	if err != nil {
+		return errors.Annotatef(err, "unable to load actor from the client IRI")
+	}
+	ctl.Service = *act
+
+	for _, u := range b.URLs {
+		toBlock, _ := ctl.Storage.Load(vocab.IRI(u))
+		if vocab.IsNil(toBlock) {
+			// NOTE(marius): if we don't have a local representation of the blocked item
+			// we invent an empty object that we can block.
+			// This probably needs more investigation to check if we should at least try to remote load.
+			ctl.Logger.Warnf("Unable to load instance to block %s: %s", u, err)
+			if toBlock, err = ctl.Storage.Save(vocab.Object{ID: vocab.IRI(u)}); err != nil {
+				ctl.Logger.Warnf("Unable to save locally the instance to block %s: %s", u, err)
+			}
+		}
+
+		blockedIRI := processing.BlockedCollection.IRI(ctl.Service)
+		col, _ := ctl.Storage.Load(blockedIRI)
+		if !vocab.IsObject(col) {
+			col = vocab.OrderedCollection{
+				ID:        blockedIRI,
+				Type:      vocab.OrderedCollectionType,
+				To:        vocab.ItemCollection{ctl.Service.ID},
+				Published: time.Now().UTC(),
+			}
+
+			if col, err = ctl.Storage.Save(col); err != nil {
+				ctl.Logger.Warnf("Unable to save the blocked collection %s: %s", blockedIRI, err)
+			}
+		}
+		if err := ctl.Storage.AddTo(blockedIRI, vocab.IRI(u)); err != nil {
+			ctl.Logger.Warnf("Unable to block instance %s: %s", u, err)
+		}
+	}
+	return nil
+}
+
+type OAuth2 struct {
+	Token Token `cmd:"" name:"token" description:"OAuth2 authorization token management"`
+}
+
+type Token struct {
+	Add Add `cmd:"" description:"Adds an OAuth2 authorization token" alias:"new"`
+}
+
+type Add struct {
+	For string `required:"" description:"Which ONI root actor to create the authorization token for."`
+}
+
+func (a Add) Run(c *Control) error {
+	clientID := a.For
+	if clientID == "" {
+		return errors.Newf("Need to provide the root actor URL")
+	}
+
+	actor := clientID
+	tok, err := c.GenAccessToken(clientID, actor, nil)
+	if err == nil {
+		fmt.Printf("Authorization: Bearer %s\n", tok)
+	}
+	return err
+}
+
+type Actor struct {
+	Add       AddActor  `cmd:"" description:"Add a new root actor"`
+	Move      Move      `cmd:""`
+	RotateKey RotateKey `cmd:""`
+}
+
+type AddActor struct {
+	URL       []string ``
+	Pw        []string ``
+	WithToken bool     `default:"true"`
+}
+
+func (a AddActor) Run(ctl *Control) error {
+	if len(a.URL) == 0 {
+		a.URL = append(a.URL, oni.DefaultURL)
+	}
+	for i, maybeURL := range a.URL {
+		if _, err := url.ParseRequestURI(maybeURL); err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Received invalid URL")
+			continue
+		}
+
+		pw := ""
+		if i < len(a.Pw)-1 {
+			pw = a.Pw[i]
+		}
+
+		if _, err := ctl.CreateActor(vocab.IRI(maybeURL), pw, a.WithToken); err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Unable to create new Actor")
+		}
+	}
+	return nil
+}
+
+type Move struct {
+	FromURL string `arg:""`
+	ToURL   string `arg:""`
+}
+
+func (m Move) Run(ctl *Control) error {
+	from := vocab.IRI(m.FromURL)
+	to := vocab.IRI(m.ToURL)
+	if from == vocab.EmptyIRI {
+		return errors.Newf("expected argument is missing: <from-IRI>")
+	}
+	it, err := ctl.Storage.Load(from)
+	if err != nil {
+		return errors.Newf("unable to load root actor with IRI: %s", from)
+	}
+	fromActor, err := vocab.ToActor(it)
+	if err != nil {
+		return errors.Annotatef(err, "invalid root actor at IRI: %s", from)
+	}
+	if to == vocab.EmptyIRI {
+		return errors.Newf("expected argument is missing: <to-IRI>")
+	}
+	toActor := new(vocab.Actor)
+	toActor.ID = fromActor.ID
+	_, err = vocab.CopyItemProperties(toActor, fromActor)
+	if err != nil {
+		return errors.Annotatef(err, "unable to clone from actor")
+	}
+	toActor.ID = to
+	if fromActor.Inbox != nil {
+		toActor.Inbox = vocab.Inbox.IRI(to)
+	}
+	if fromActor.Outbox != nil {
+		toActor.Outbox = vocab.Outbox.IRI(to)
+	}
+	if fromActor.Followers != nil {
+		toActor.Followers = vocab.Followers.IRI(to)
+	}
+	if fromActor.Following != nil {
+		toActor.Following = vocab.Following.IRI(to)
+	}
+	if fromActor.Liked != nil {
+		toActor.Liked = vocab.Liked.IRI(to)
+	}
+	if fromActor.Likes != nil {
+		toActor.Likes = vocab.Likes.IRI(to)
+	}
+	if fromActor.Shares != nil {
+		toActor.Shares = vocab.Shares.IRI(to)
+	}
+	if fromActor.PublicKey.ID != "" {
+		toActor.PublicKey.ID = vocab.IRI(strings.Replace(
+			string(toActor.PublicKey.ID),
+			string(from),
+			string(to),
+			1,
+		))
+	}
+	if toActor.PublicKey.Owner != "" {
+		toActor.PublicKey.Owner = vocab.IRI(strings.Replace(
+			string(toActor.PublicKey.Owner),
+			string(from),
+			string(to),
+			1,
+		))
+	}
+
+	pp := processing.New(
+		processing.WithStorage(ctl.Storage),
+		processing.WithLogger(ctl.Logger),
+	)
+	move := new(vocab.Activity)
+	move.Type = vocab.MoveType
+	move.Actor = fromActor
+	move.Origin = fromActor
+	move.Object = fromActor
+	move.Target = toActor
+	_, err = pp.ProcessClientActivity(move, *fromActor, vocab.Outbox.Of(fromActor).GetLink())
+	if err != nil {
+		return errors.Annotatef(err, "unable to move actor from %s to %s", from, to)
+	}
+	return nil
+}
+
+type RotateKey struct {
+	URLs []string `arg:""`
+}
+
+func (r RotateKey) Run(ctl *Control) error {
+	printKey := func(u string) {
+		pk, _ := ctl.Storage.LoadKey(vocab.IRI(u))
+		if pk != nil {
+			pkEnc, _ := x509.MarshalPKCS8PrivateKey(pk)
+			if pkEnc != nil {
+				pkPem := pem.EncodeToMemory(&pem.Block{
+					Type:  "PRIVATE KEY",
+					Bytes: pkEnc,
+				})
+				fmt.Printf("Private Key: %s\n", pkPem)
+			}
+		}
+	}
+
+	if len(r.URLs) == 0 {
+		ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
+		r.URLs = append(r.URLs, oni.DefaultURL)
+	}
+	for _, u := range r.URLs {
+		it, err := ctl.Storage.Load(vocab.IRI(u))
+		if err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor URL")
+			continue
+		}
+		actor, err := vocab.ToActor(it)
+		if err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor found for URL")
+			continue
+		}
+
+		if actor, err = ctl.UpdateActorKey(actor); err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Unable to update main Actor key")
+			continue
+		}
+		printKey(u)
+	}
+	return nil
 }
 
 func dataPath() string {
@@ -221,16 +321,16 @@ func dataPath() string {
 	return filepath.Join(dh, "oni")
 }
 
-func newOrderedCollection(id vocab.IRI) *vocab.OrderedCollection {
+func newOrderedCollection(id vocab.IRI, base vocab.IRI) *vocab.OrderedCollection {
 	return &vocab.OrderedCollection{
 		ID:        id,
 		Type:      vocab.OrderedCollectionType,
-		Generator: ctl.Service.GetLink(),
+		Generator: base,
 		Published: time.Now().UTC(),
 	}
 }
 
-func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
+func tryCreateCollection(ctl *Control, colIRI vocab.IRI) error {
 	var collection *vocab.OrderedCollection
 	items, err := ctl.Storage.Load(colIRI.GetLink())
 	if err != nil {
@@ -238,11 +338,7 @@ func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
 			ctl.Logger.Errorf("Unable to load %s: %s", colIRI, err)
 			return err
 		}
-		colSaver, ok := storage.(processing.CollectionStore)
-		if !ok {
-			return errors.Newf("Invalid storage type %T. Unable to handle collection operations.", storage)
-		}
-		it, err := colSaver.Create(newOrderedCollection(colIRI.GetLink()))
+		it, err := ctl.Storage.Create(newOrderedCollection(colIRI.GetLink(), ctl.Service.GetLink()))
 		if err != nil {
 			ctl.Logger.Errorf("Unable to create collection %s: %s", colIRI, err)
 			return err
@@ -259,7 +355,7 @@ func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
 	}
 
 	if !items.IsCollection() {
-		if _, err := storage.Save(items); err != nil {
+		if _, err := ctl.Storage.Save(items); err != nil {
 			ctl.Logger.Errorf("Unable to save object %s: %s", items.GetLink(), err)
 			return err
 		}
@@ -273,7 +369,7 @@ func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
 		collection.TotalItems = col.Count()
 		for _, it := range col.Collection() {
 			// Try saving objects in collection, which would create the collections if they exist
-			if _, err := storage.Save(it); err != nil {
+			if _, err := ctl.Storage.Save(it); err != nil {
 				ctl.Logger.Errorf("Unable to save object %s: %s", it.GetLink(), err)
 			}
 		}
@@ -281,7 +377,7 @@ func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
 	})
 
 	collection.OrderedItems = nil
-	_, err = storage.Save(collection)
+	_, err = ctl.Storage.Save(collection)
 	if err != nil {
 		ctl.Logger.Errorf("Unable to save collection with updated totalItems", err)
 		return err
@@ -290,189 +386,50 @@ func tryCreateCollection(storage oni.FullStorage, colIRI vocab.IRI) error {
 	return nil
 }
 
-func rotateKey(ctl *Control) cli.ActionFunc {
-	printKey := func(u string) {
-		pk, _ := ctl.Storage.LoadKey(vocab.IRI(u))
-		if pk != nil {
-			pkEnc, _ := x509.MarshalPKCS8PrivateKey(pk)
-			if pkEnc != nil {
-				pkPem := pem.EncodeToMemory(&pem.Block{
-					Type:  "PRIVATE KEY",
-					Bytes: pkEnc,
-				})
-				fmt.Printf("Private Key: %s\n", pkPem)
-			}
-		}
-	}
-	return func(context *cli.Context) error {
-		urls := context.Args().Slice()
-
-		if context.NArg() == 0 {
-			ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
-			urls = append(urls, oni.DefaultURL)
-		}
-		for _, u := range urls {
-			it, err := ctl.Storage.Load(vocab.IRI(u))
-			if err != nil {
-				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor URL")
-				continue
-			}
-			actor, err := vocab.ToActor(it)
-			if err != nil {
-				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor found for URL")
-				continue
-			}
-
-			if actor, err = ctl.UpdateActorKey(actor); err != nil {
-				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Unable to update main Actor key")
-				continue
-			}
-			printKey(u)
-		}
-		return nil
-	}
-}
-
-func fixCollectionsAct(ctl *Control) cli.ActionFunc {
-	return func(context *cli.Context) error {
-		urls := context.Args().Slice()
-
-		if context.NArg() == 0 {
-			ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
-			urls = append(urls, oni.DefaultURL)
-		}
-		for _, u := range urls {
-			it, err := ctl.Storage.Load(vocab.IRI(u))
-			if err != nil {
-				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor URL")
-				continue
-			}
-			actor, err := vocab.ToActor(it)
-			if err != nil {
-				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor found for URL")
-				continue
-			}
-			_, err = ctl.Storage.Save(actor)
-			if err != nil {
-				ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Unable to save main Actor")
-				continue
-			}
-			err = tryCreateCollection(ctl.Storage, actor.Outbox.GetLink())
-			if err != nil {
-				ctl.Logger.WithContext(lw.Ctx{"iri": actor.ID, "err": err.Error()}).Errorf("Unable to save Outbox collection for main Actor")
-				continue
-			}
-		}
-		return nil
-	}
-}
-
-func blockInstance(ctl *Control) cli.ActionFunc {
-	return func(ctx *cli.Context) error {
-		actorID := ctx.String("client")
-		if actorID == "" {
-			return errors.Newf("Need to provide the client id")
-		}
-		cl, err := ctl.Storage.Load(vocab.IRI(actorID))
-		if err != nil {
-			return err
-		}
-		act, err := vocab.ToActor(cl)
-		if err != nil {
-			return errors.Annotatef(err, "unable to load actor from the client IRI")
-		}
-		ctl.Service = *act
-
-		urls := ctx.Args()
-		for _, u := range urls.Slice() {
-			toBlock, _ := ctl.Storage.Load(vocab.IRI(u))
-			if vocab.IsNil(toBlock) {
-				// NOTE(marius): if we don't have a local representation of the blocked item
-				// we invent an empty object that we can block.
-				// This probably needs more investigation to check if we should at least try to remote load.
-				ctl.Logger.Warnf("Unable to load instance to block %s: %s", u, err)
-				if toBlock, err = ctl.Storage.Save(vocab.Object{ID: vocab.IRI(u)}); err != nil {
-					ctl.Logger.Warnf("Unable to save locally the instance to block %s: %s", u, err)
-				}
-			}
-
-			blockedIRI := processing.BlockedCollection.IRI(ctl.Service)
-			col, _ := ctl.Storage.Load(blockedIRI)
-			if !vocab.IsObject(col) {
-				col = vocab.OrderedCollection{
-					ID:        blockedIRI,
-					Type:      vocab.OrderedCollectionType,
-					To:        vocab.ItemCollection{ctl.Service.ID},
-					Published: time.Now().UTC(),
-				}
-
-				if col, err = ctl.Storage.Save(col); err != nil {
-					ctl.Logger.Warnf("Unable to save the blocked collection %s: %s", blockedIRI, err)
-				}
-			}
-			if err := ctl.Storage.AddTo(blockedIRI, vocab.IRI(u)); err != nil {
-				ctl.Logger.Warnf("Unable to block instance %s: %s", u, err)
-			}
-		}
-		return nil
-	}
-}
-
-func tokenAct(ctl *Control) cli.ActionFunc {
-	return func(c *cli.Context) error {
-		clientID := c.String("client")
-		if clientID == "" {
-			return errors.Newf("Need to provide the client id")
-		}
-
-		actor := clientID
-		tok, err := ctl.GenAccessToken(clientID, actor, nil)
-		if err == nil {
-			fmt.Printf("Authorization: Bearer %s\n", tok)
-		}
-		return err
-	}
-}
-
-var ctl Control
-
-func Before(c *cli.Context) error {
-	storagePath := c.Path("path")
+func setupCtl(storagePath string, verbose bool) (*Control, error) {
 	fields := lw.Ctx{"path": storagePath}
 
+	ctl := new(Control)
 	ll := lw.Dev().WithContext(fields)
 	ctl.Logger = ll
 
 	if err := mkDirIfNotExists(storagePath); err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to create path")
-		return err
+		return nil, err
 	}
 
 	conf := storage.Config{CacheEnable: true, Path: storagePath, Logger: ctl.Logger}
 	st, err := storage.New(conf)
 	if err != nil {
 		ctl.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to initialize storage")
-		return err
+		return nil, err
 	}
 
 	ctl.Storage = st
 	if opener, ok := ctl.Storage.(interface{ Open() error }); ok {
-		return opener.Open()
+		err = opener.Open()
 	}
-	return nil
-}
-
-func After(c *cli.Context) error {
-	defer ctl.Storage.Close()
-	return nil
+	return ctl, nil
 }
 
 var version = "HEAD"
 
 func main() {
-	app := cli.App{}
-	app.Name = "onictl"
-	app.Usage = "helper utility to manage an ONI instance"
+	ctx := kong.Parse(&CLI,
+		kong.Name("onictl"),
+		kong.Description("CLI helper to manage an ONI instances"),
+		kong.UsageOnError(),
+		kong.Vars{
+			"default_path": dataPath(),
+		},
+		kong.ConfigureHelp(kong.HelpOptions{Compact: true, Summary: true}),
+	)
+
+	ctl, err := setupCtl(CLI.Path, CLI.Verbose)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Error: %+s", err)
+		os.Exit(1)
+	}
 
 	if build, ok := debug.ReadBuildInfo(); ok && version == "HEAD" {
 		if build.Main.Version != "(devel)" {
@@ -487,19 +444,8 @@ func main() {
 			}
 		}
 	}
-	app.Version = version
 
-	app.Before = Before
-	app.After = After
-	app.Flags = []cli.Flag{
-		&cli.PathFlag{
-			Name:  "path",
-			Value: dataPath(),
-		},
-	}
-	app.Commands = []*cli.Command{ActorCmd, OAuth2Cmd, fixCollectionsCmd, blockInstanceCmd}
-
-	if err := app.Run(os.Args); err != nil {
+	if err = ctx.Run(ctl); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %+s", err)
 		os.Exit(1)
 	}
