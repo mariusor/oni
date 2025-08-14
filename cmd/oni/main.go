@@ -73,8 +73,8 @@ var (
 func main() {
 	flag.StringVar(&listen, "listen", "127.0.0.1:60123", "Listen socket")
 	flag.StringVar(&path, "path", dataPath, "Path for ActivityPub storage")
-	flag.StringVar(&pw, "pass", oni.DefaultOAuth2ClientPw, "Default password to use for the main Oni actor")
-	flag.BoolVar(&verbose, "verbose", false, "Show verbose ll output")
+	flag.StringVar(&pw, "pw", oni.DefaultOAuth2ClientPw, "Default password to use for the main Oni actor")
+	flag.BoolVar(&verbose, "verbose", false, "Show verbose log output")
 	flag.Parse()
 
 	if build, ok := debug.ReadBuildInfo(); ok && version == "HEAD" {
