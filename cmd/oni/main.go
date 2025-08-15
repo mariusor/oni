@@ -66,7 +66,7 @@ var (
 )
 
 var CLI struct {
-	Listen  string `default:"127.0.0.1:60123" help:"Listen socket"`
+	Listen  string `default:"127.0.0.1:60123" short:"l" help:"Listen socket"`
 	Path    string `default:"${default_path}" help:"Path for ActivityPub storage"`
 	URL     string `default:"${default_url}" help:"Default URL for the instance actor"`
 	Pw      string `default:"${default_pw}" help:"Default password to use for the main Oni actor"`

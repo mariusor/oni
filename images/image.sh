@@ -42,7 +42,7 @@ buildah copy --from "${_builder}" "${_image}" "/go/src/app/${_hostname}.crt" /et
 buildah copy --from "${_builder}" "${_image}" "/go/src/app/${_hostname}.pem" /etc/ssl/certs/
 
 buildah config --workingdir / "${_image}"
-buildah config --entrypoint "$(printf '["/bin/oni", "-listen", ":%s", "-path", "/storage"]' "${_listen_port}")" "${_image}"
+buildah config --entrypoint "$(printf '["/bin/oni", "--listen", ":%s", "--path", "/storage"]' "${_listen_port}")" "${_image}"
 
 # commit
 buildah commit "${_image}" "${_image_name}"
