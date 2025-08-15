@@ -19,7 +19,7 @@ import (
 
 var (
 	iconOni            = `<svg aria-hidden="true" name="icon-oni" width="192" height="192"><use href="/icons.svg#icon-oni"><title>Oni</title></use></svg>`
-	nameOni            = "<strong>Oni</strong>"
+	nameOni            = "Oni"
 	descriptionOni     = `Single user ActivityPub service.`
 	contentOniTemplate = template.Must(
 		template.New("content").
@@ -29,6 +29,7 @@ You're currently running version <code>{{ .Version }}</code>.<br/>
 The server can be accessed at <a href="{{ .URL }}">{{ .URL }}</a>.<br/>
 <hr/>
 In order to interact with your instance, you need to use the <a href="https://git.sr.ht/~mariusor/box">BOX</a> CLI helper.<br/>
+Some more help can be found on the <a href="https://man.sr.ht/~mariusor/go-activitypub/oni/index.md">official wiki</a>.
 </p>`))
 )
 
