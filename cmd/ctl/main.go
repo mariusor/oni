@@ -27,12 +27,11 @@ type Control struct {
 }
 
 var CLI struct {
-	Path           string         `default:"${default_path}" help:"Path for the ActivityPub storage"`
-	Verbose        bool           `default:"false" help:"Show verbose log output"`
-	OAuth2         OAuth2         `cmd:"" name:"oauth" description:"OAuth2 client and access token helper"`
-	Actor          Actor          `cmd:"" description:"Actor helper"`
-	FixCollections FixCollections `cmd:"" description:"Fix a root actor's collections"`
-	Block          Block          `cmd:"" description:"Block instances or actors"`
+	Path    string `default:"${default_path}" help:"Path for the ActivityPub storage"`
+	Verbose bool   `default:"false" help:"Show verbose log output"`
+	OAuth2  OAuth2 `cmd:"" name:"oauth" description:"OAuth2 client and access token helper"`
+	Actor   Actor  `cmd:"" description:"Actor helper"`
+	Block   Block  `cmd:"" description:"Block instances or actors"`
 }
 
 type FixCollections struct {
@@ -148,9 +147,10 @@ func (a Add) Run(c *Control) error {
 }
 
 type Actor struct {
-	Add       AddActor  `cmd:"" description:"Add a new root actor"`
-	Move      Move      `cmd:"" description:"Move an existing actor to a new URL"`
-	RotateKey RotateKey `cmd:"" description:"Rotate the public/private key pair for an actor"`
+	Add            AddActor       `cmd:"" description:"Add a new root actor"`
+	Move           Move           `cmd:"" description:"Move an existing actor to a new URL"`
+	FixCollections FixCollections `cmd:"" description:"Fix a root actor's collections"`
+	RotateKey      RotateKey      `cmd:"" description:"Rotate the public/private key pair for an actor"`
 }
 
 type AddActor struct {
