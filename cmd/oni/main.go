@@ -129,7 +129,6 @@ func main() {
 		oni.WithStoragePath(CLI.Path),
 		oni.LoadActor(urls...),
 		oni.ListenOn(CLI.Listen),
-		oni.WithDefaultURL(CLI.URL),
 	).Run(context.Background())
 	if err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to start server")

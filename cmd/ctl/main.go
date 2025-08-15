@@ -156,7 +156,7 @@ type Actor struct {
 type AddActor struct {
 	URL       string `description:"The URL for the new actor."`
 	Pw        string `default:"${default_pw}" description:"The password for the new actor."`
-	WithToken bool   `default:"true" description:"Create an OAuth2 token that can be used immediately."`
+	WithToken bool   `negatable:"without-token" description:"Create an OAuth2 token that can be used immediately."`
 }
 
 func (a AddActor) Run(ctl *Control) error {
@@ -170,9 +170,29 @@ func (a AddActor) Run(ctl *Control) error {
 			continue
 		}
 
-		if _, err := ctl.CreateActor(vocab.IRI(maybeURL), a.Pw, a.WithToken); err != nil {
+		actor, err := ctl.CreateActor(vocab.IRI(maybeURL), a.Pw)
+		if err != nil {
 			ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Unable to create new Actor")
 		}
+		if actor == nil {
+			// NOTE(marius): this is not going to happen
+			ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL}).Errorf("Unable to create new Actor, nil returned")
+			continue
+		}
+		u, err := actor.ID.URL()
+		if err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("New Actor has an invalid ID")
+			continue
+		}
+		if !a.WithToken {
+			continue
+		}
+		tok, err := ctl.GenAccessToken(u.Hostname(), string(actor.ID), nil)
+		if err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Unable to generate OAuth2 token")
+			continue
+		}
+		fmt.Printf("    Authorization: Bearer %s\n", tok)
 	}
 	return nil
 }

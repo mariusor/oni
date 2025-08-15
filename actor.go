@@ -73,7 +73,7 @@ type Control struct {
 	Logger  lw.Logger
 }
 
-func (c *Control) CreateActor(iri vocab.IRI, pw string, withToken bool) (*vocab.Actor, error) {
+func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 	it, err := c.Storage.Load(iri)
 	if err == nil || (it != nil && !vocab.IsNil(it) && it.GetLink().Equals(iri, true)) {
 		if err != nil && !errors.IsNotFound(err) {
@@ -81,24 +81,25 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string, withToken bool) (*vocab.
 		} else {
 			c.Logger.WithContext(lw.Ctx{"iri": iri}).Warnf("Actor already exists")
 		}
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+		return vocab.ToActor(it)
 	}
 
 	o := DefaultActor(iri)
 	o.Followers = vocab.Followers.Of(iri)
 	o.Following = vocab.Following.Of(iri)
-	if withToken {
-		o.Endpoints = &vocab.Endpoints{
-			OauthAuthorizationEndpoint: o.GetLink().AddPath("oauth", "authorize"),
-			OauthTokenEndpoint:         o.GetLink().AddPath("oauth", "token"),
-		}
+	o.Endpoints = &vocab.Endpoints{
+		OauthAuthorizationEndpoint: o.GetLink().AddPath("oauth", "authorize"),
+		OauthTokenEndpoint:         o.GetLink().AddPath("oauth", "token"),
 	}
 
 	if it, err = c.Storage.Save(o); err != nil {
 		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to save main actor")
 		return nil, err
 	} else {
-		c.Logger.WithContext(lw.Ctx{"iri": it.GetID()}).Infof("Created root actor")
+		c.Logger.WithContext(lw.Ctx{"iri": it.GetID()}).Debugf("Created root actor")
 	}
 
 	actor, err := vocab.ToActor(it)
@@ -118,20 +119,14 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string, withToken bool) (*vocab.
 		c.Logger.WithContext(lw.Ctx{"host": u.Hostname(), "err": err.Error()}).Errorf("Unable to save OAuth2 Client")
 		return nil, err
 	} else {
-		c.Logger.WithContext(lw.Ctx{"ClientID": actor.ID}).Infof("Created OAuth2 Client")
+		c.Logger.WithContext(lw.Ctx{"ClientID": actor.ID}).Debugf("Created OAuth2 Client")
 	}
 
-	if withToken {
-		clientID := u.Hostname()
-		if tok, err := c.GenAccessToken(clientID, actor.ID.String(), nil); err == nil {
-			c.Logger.Infof("    Authorization: Bearer %s", tok)
-		}
-	}
 	if addr, err := checkIRIResolvesLocally(actor.ID); err != nil {
-		c.Logger.WithContext(lw.Ctx{"err": err.Error(), "iri": actor.ID}).Warnf("Unable to resolve hostname to a valid address")
-		c.Logger.Warnf("Please make sure you configure your network is configured correctly.")
+		c.Logger.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Unable to resolve actor's hostname to a valid address")
+		c.Logger.WithContext(lw.Ctx{"host": u.Host}).Warnf("Please make sure your DNS is configured correctly to point the hostname to the socket oni listens to")
 	} else {
-		c.Logger.WithContext(lw.Ctx{"iri": actor.ID, "addr": addr.String()}).Debugf("Successfully resolved hostname to a valid address")
+		c.Logger.WithContext(lw.Ctx{"host": u.Host, "addr": addr.String()}).Debugf("Successfully resolved hostname to a valid address")
 	}
 
 	return actor, nil

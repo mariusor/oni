@@ -81,10 +81,6 @@ func (o *oni) setupOauthRoutes(m chi.Router) {
 func (o *oni) setupRoutes(actors []vocab.Actor) {
 	m := chi.NewMux()
 
-	if len(actors) == 0 {
-		m.HandleFunc("/", o.NotFound)
-		return
-	}
 	m.Use(o.OutOfOrderMw)
 	m.Use(Log(o.Logger))
 
@@ -822,8 +818,20 @@ func hasPath(iri vocab.IRI) bool {
 	return false
 }
 
+func requestForRoot(r *http.Request) bool {
+	return r.URL.Path == "/" || r.URL.Path == ""
+}
+
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
+
+	if requestForRoot(r) {
+		if actor := o.oniActor(r); actor.Equals(auth.AnonymousActor) {
+			actor = CreateBlankActor(o, iri)
+			o.Logger.WithContext(lw.Ctx{"iri": iri}).Infof("Created new root actor")
+		}
+	}
+
 	colFilters := make(filters.Checks, 0)
 
 	if vocab.ValidCollectionIRI(iri) {

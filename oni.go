@@ -128,26 +128,14 @@ func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
 	return actor, nil
 }
 
-func CreateBlankInstance(o *oni) *vocab.Actor {
-	blankIRI := vocab.IRI(DefaultURL)
-	if it, err := o.Storage.Load(blankIRI); err == nil {
-		if blank, err := vocab.ToActor(it); err == nil {
-			return blank
-		} else {
-			o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Invalid type %T for expected blank actor", it)
-		}
-	}
-
-	pw := DefaultOAuth2ClientPw
-	if o.pw != "" {
-		pw = o.pw
-	}
-
-	blank, err := o.CreateActor(blankIRI, pw, true)
+func CreateBlankActor(o *oni, id vocab.IRI) vocab.Actor {
+	ctl := Control{Storage: o.Storage, Logger: o.Logger}
+	blank, err := ctl.CreateActor(id, o.pw)
 	if err != nil {
-		o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Unable to create Actor")
+		o.Logger.WithContext(lw.Ctx{"err": err.Error(), "iri": id}).Warnf("unable to create root actor")
+		return auth.AnonymousActor
 	}
-	return blank
+	return *blank
 }
 
 func checkIRIResolvesLocally(iri vocab.IRI) (*net.TCPAddr, error) {
@@ -182,9 +170,7 @@ func Oni(initFns ...optionFn) *oni {
 	}
 
 	if len(o.a) == 0 {
-		if blank := CreateBlankInstance(o); blank != nil {
-			o.a = append(o.a, *blank)
-		}
+		o.Logger.Warnf("Storage does not contain any actors.")
 	}
 	localURLs := make(vocab.IRIs, 0, len(o.a))
 	for i, act := range o.a {
