@@ -27,24 +27,24 @@ type Control struct {
 }
 
 var CLI struct {
-	Path           string         `default:"${default_path}" help:"Path for ActivityPub storage"`
+	Path           string         `default:"${default_path}" help:"Path for the ActivityPub storage"`
 	Verbose        bool           `default:"false" help:"Show verbose log output"`
 	OAuth2         OAuth2         `cmd:"" name:"oauth" description:"OAuth2 client and access token helper"`
 	Actor          Actor          `cmd:"" description:"Actor helper"`
-	FixCollections FixCollections `cmd:"" description:"Fix collections"`
-	Block          Block          `cmd:"" description:"Block instances"`
+	FixCollections FixCollections `cmd:"" description:"Fix a root actor's collections"`
+	Block          Block          `cmd:"" description:"Block instances or actors"`
 }
 
 type FixCollections struct {
-	URLs []string `arg:""`
+	For []string `arg:"" description:"The root actors we want to run the operation for."`
 }
 
 func (f FixCollections) Run(ctl *Control) error {
-	if len(f.URLs) == 0 {
+	if len(f.For) == 0 {
 		ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
-		f.URLs = append(f.URLs, oni.DefaultURL)
+		f.For = append(f.For, oni.DefaultURL)
 	}
-	for _, u := range f.URLs {
+	for _, u := range f.For {
 		it, err := ctl.Storage.Load(vocab.IRI(u))
 		if err != nil {
 			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor URL")
@@ -70,15 +70,15 @@ func (f FixCollections) Run(ctl *Control) error {
 }
 
 type Block struct {
-	Actor string   ``
-	URLs  []string `arg:""`
+	For string   `description:"Which root actor to block for."`
+	URL []string `arg:"" description:"The URL of the instances or actors we want to block."`
 }
 
 func (b Block) Run(ctl *Control) error {
-	if b.Actor == "" {
+	if b.For == "" {
 		return errors.Newf("Need to provide the client id")
 	}
-	cl, err := ctl.Storage.Load(vocab.IRI(b.Actor))
+	cl, err := ctl.Storage.Load(vocab.IRI(b.For))
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (b Block) Run(ctl *Control) error {
 	}
 	ctl.Service = *act
 
-	for _, u := range b.URLs {
+	for _, u := range b.URL {
 		toBlock, _ := ctl.Storage.Load(vocab.IRI(u))
 		if vocab.IsNil(toBlock) {
 			// NOTE(marius): if we don't have a local representation of the blocked item
@@ -149,32 +149,28 @@ func (a Add) Run(c *Control) error {
 
 type Actor struct {
 	Add       AddActor  `cmd:"" description:"Add a new root actor"`
-	Move      Move      `cmd:""`
-	RotateKey RotateKey `cmd:""`
+	Move      Move      `cmd:"" description:"Move an existing actor to a new URL"`
+	RotateKey RotateKey `cmd:"" description:"Rotate the public/private key pair for an actor"`
 }
 
 type AddActor struct {
-	URL       []string ``
-	Pw        []string ``
-	WithToken bool     `default:"true"`
+	URL       string `description:"The URL for the new actor."`
+	Pw        string `default:"${default_pw}" description:"The password for the new actor."`
+	WithToken bool   `default:"true" description:"Create an OAuth2 token that can be used immediately."`
 }
 
 func (a AddActor) Run(ctl *Control) error {
 	if len(a.URL) == 0 {
-		a.URL = append(a.URL, oni.DefaultURL)
+		a.URL = oni.DefaultURL
 	}
-	for i, maybeURL := range a.URL {
+	urls := []string{a.URL}
+	for _, maybeURL := range urls {
 		if _, err := url.ParseRequestURI(maybeURL); err != nil {
 			ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Received invalid URL")
 			continue
 		}
 
-		pw := ""
-		if i < len(a.Pw)-1 {
-			pw = a.Pw[i]
-		}
-
-		if _, err := ctl.CreateActor(vocab.IRI(maybeURL), pw, a.WithToken); err != nil {
+		if _, err := ctl.CreateActor(vocab.IRI(maybeURL), a.Pw, a.WithToken); err != nil {
 			ctl.Logger.WithContext(lw.Ctx{"iri": maybeURL, "err": err.Error()}).Errorf("Unable to create new Actor")
 		}
 	}
@@ -266,7 +262,7 @@ func (m Move) Run(ctl *Control) error {
 }
 
 type RotateKey struct {
-	URLs []string `arg:""`
+	URL []string `arg:""`
 }
 
 func (r RotateKey) Run(ctl *Control) error {
@@ -284,11 +280,11 @@ func (r RotateKey) Run(ctl *Control) error {
 		}
 	}
 
-	if len(r.URLs) == 0 {
+	if len(r.URL) == 0 {
 		ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
-		r.URLs = append(r.URLs, oni.DefaultURL)
+		r.URL = append(r.URL, oni.DefaultURL)
 	}
-	for _, u := range r.URLs {
+	for _, u := range r.URL {
 		it, err := ctl.Storage.Load(vocab.IRI(u))
 		if err != nil {
 			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor URL")
@@ -421,6 +417,7 @@ func main() {
 		kong.UsageOnError(),
 		kong.Vars{
 			"default_path": dataPath(),
+			"default_pw":   oni.DefaultOAuth2ClientPw,
 		},
 		kong.ConfigureHelp(kong.HelpOptions{Compact: true, Summary: true}),
 	)
