@@ -1,6 +1,6 @@
 module oni
 
-go 1.24.0
+go 1.25
 
 require (
 	git.sr.ht/~mariusor/cache v0.0.0-20250616110250-18a60a6f9473
@@ -13,13 +13,13 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.1
 	github.com/go-ap/activitypub v0.0.0-20250810115208-cb73b20a1742
-	github.com/go-ap/auth v0.0.0-20250810115438-39f5a0c2803b
+	github.com/go-ap/auth v0.0.0-20250817095740-f19b763d2723
 	github.com/go-ap/client v0.0.0-20250810115406-535063f251fa
 	github.com/go-ap/errors v0.0.0-20250527110557-c8db454e53fd
 	github.com/go-ap/filters v0.0.0-20250810115343-b996bd3d3865
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250813093018-cc572da55f7a
-	github.com/go-ap/storage-fs v0.0.0-20250812195404-46df5d98aec3
+	github.com/go-ap/processing v0.0.0-20250815144424-c60889835717
+	github.com/go-ap/storage-fs v0.0.0-20250817093002-ce04c8087791
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/cors v1.2.2
 	github.com/goburrow/cache v0.1.4
