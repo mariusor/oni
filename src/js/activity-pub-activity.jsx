@@ -58,7 +58,7 @@ export class ActivityPubActivity extends ActivityPubObject {
     }
 }
 
-const renderableActivityTypes = ['Create', 'Announce', /*'Delete', 'Like', 'Dislike', 'Follow'*/];
+const renderableActivityTypes = ['Create', 'Announce', 'Like', 'Dislike', 'Delete' , 'Follow'];
 
 // TODO(marius): having these functions be async renders them as [object Promise] in the HTML
 ActivityPubActivity.renderByType = /*async*/ function (it, showMetadata, inline) {
@@ -76,8 +76,8 @@ ActivityPubActivity.renderByType = /*async*/ function (it, showMetadata, inline)
             return html`<oni-create it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-create>`;
         case 'Announce':
             return html`<oni-announce it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-announce>`;
-    //     case 'Follow':
-    //         return html`<oni-follow it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-follow>`;
+        case 'Follow':
+            return html`<oni-follow it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-follow>`;
         case 'Like':
         case 'Dislike':
             return html`<oni-appreciation it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-appreciation>`;

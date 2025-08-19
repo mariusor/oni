@@ -1,13 +1,13 @@
 import {css, html, nothing} from "lit";
-import {until} from "lit-html/directives/until.js";
 import {ActivityPubCreate} from "./activity-pub-create";
-import {renderTimestamp} from "./utils";
-import {ActivityPubNote} from "./activity-pub-note";
+import {pastensify, renderActorByType, renderObjectByType, renderTimestamp} from "./utils";
+import {ActivityPubActivity} from "./activity-pub-activity";
+import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubAnnounce extends ActivityPubCreate {
     static styles = [
         css``,
-        ActivityPubNote.styles,
+        ActivityPubActivity.styles,
     ];
 
     constructor() {
@@ -21,7 +21,7 @@ export class ActivityPubAnnounce extends ActivityPubCreate {
         if (this.it.hasOwnProperty("attributedTo") || this.it.hasOwnProperty('actor')) {
             auth = this.renderAuthor();
         }
-        let action = 'Shared';
+        let action = pastensify(this.it.type);
 
         let published = this.it.getPublished();
         return html`
@@ -39,7 +39,11 @@ export class ActivityPubAnnounce extends ActivityPubCreate {
 
     renderInline() {
         if (!this.it.hasOwnProperty('actor')) return nothing;
-        return html`shared by <oni-actor it=${JSON.stringify(this.it.getActor())} ?inline=${true} ?showMetadata=${false}></oni-actor> ${renderTimestamp(this.it.getPublished(), true)}`;
+        const action = pastensify(this.it.type, true);
+        return html`
+            ${renderObjectByType(this.it.getObject(), false, true)}
+            ${action} by ${renderActorByType(this.it.getActor(), false, true)}
+            ${renderTimestamp(this.it.getPublished(), true)}`;
     }
 
     render() {

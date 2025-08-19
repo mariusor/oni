@@ -37,13 +37,19 @@ export function baseIRI(iri) {
     }
 }
 
-export function pastensify(verb) {
+export function pastensify(verb, lowercase = false) {
     if (typeof verb !== 'string') return verb;
-    if (verb === 'Undo') {
-        return 'Reverted';
+    if (verb.toLowerCase() === 'undo') {
+        verb = 'Revert';
     }
-    if (verb === 'Create') {
-        return 'Published';
+    if (verb.toLowerCase() === 'create') {
+        verb = 'Publish';
+    }
+    if (verb.toLowerCase() === 'announce') {
+        verb = 'Share';
+    }
+    if (lowercase) {
+        verb = verb.toLowerCase();
     }
     if (verb[verb.length - 1] === 'e') return `${verb}d`;
     return `${verb}ed`;

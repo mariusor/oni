@@ -38,6 +38,12 @@ var (
 						return "create"
 					case vocab.AnnounceType == t:
 						return "announce"
+					case vocab.LikeType == t:
+						fallthrough
+					case vocab.DislikeType == t:
+						return "appreciation"
+					case vocab.FollowType == t:
+						return "follow"
 					case vocab.ActivityTypes.Contains(t), vocab.IntransitiveActivityTypes.Contains(t):
 						return "activity"
 					case vocab.CollectionTypes.Contains(t):

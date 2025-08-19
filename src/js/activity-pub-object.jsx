@@ -123,8 +123,8 @@ export class ActivityPubObject extends LitElement {
     updated(changedProperties) {
         if (!changedProperties.has('it')) return;
         if (typeof this.it !== 'string') return;
-        if (this.it.at(0) === '"' && this.it.at(-1) === '"') {
-            this.it = this.it.replaceAll('"', '');
+        if (this.it?.at(0) === '"' && this.it.at(-1) === '"') {
+            this.it = this.it?.replaceAll('"', '');
         }
         if (!URL.canParse(this.it)) return;
         fetchActivityPubIRI(this.it)
@@ -146,13 +146,16 @@ export class ActivityPubObject extends LitElement {
 
         if (typeof showMetadata === 'undefined') showMetadata = false;
 
-        this.showMetadata = showMetadata;
+        this.showMetadata = showMetadata ?? true;
+        this.inline = false;
 
         // NOTE(marius): this method of loading the ActivityPub object from a script tag is not very robust,
         // as if any of the textual properties (content, summary, etc) contain a </script> tag, the JSON.parse() of the
         // tag content will fail. If anyone has a good solution for this, please drop a line on the mailing list.
         const json = (this.renderRoot?.querySelector('script') || this.querySelector('script'))?.text;
         if (json) {
+            this.inline = false;
+            this.showMetadata = true;
             this.it = ActivityPubItem.load(json);
         }
     }
@@ -489,7 +492,7 @@ ActivityPubObject.renderByType = /*async*/ function (it, showMetadata, inline) {
         if (it.hasOwnProperty('preferredUsername')) {
             name = it.preferredUsername;
         }
-        return html`a <a href="${it.id}">${name}</a>`;
+        return html`<a href="${it.id}">${name}</a>`;
     }
 
     if (!it.hasOwnProperty('type')) {

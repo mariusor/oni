@@ -6,7 +6,7 @@ import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {ActivityPubActivity} from "./activity-pub-activity";
 import {until} from "lit-html/directives/until.js";
 import {ActivityPubActor} from "./activity-pub-actor";
-import {renderActivityByType, renderObjectByType} from "./utils";
+import {renderActivityByType, renderActorByType, renderObjectByType} from "./utils";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = [css`
@@ -71,6 +71,7 @@ export class ActivityPubCollection extends ActivityPubObject {
         if (this.threaded) {
             items.sort((a, b) => -1*sortByPublished(a, b))
         }
+        let itemsInline = this.inline || !(this.it.iri()?.includes('inbox') || this.it.iri()?.includes('outbox'));
 
         return html`${items.map(it => {
             const type = it.hasOwnProperty('type')? it.type : 'unknown';
@@ -78,13 +79,13 @@ export class ActivityPubCollection extends ActivityPubObject {
             let renderedItem = unsafeHTML(`<!-- Unknown activity object ${type} -->`);
             if (ActivityTypes.indexOf(type) >= 0) {
                 if (!ActivityPubActivity.isValidForRender(it)) return nothing;
-                renderedItem = renderActivityByType(it, true, false);
+                renderedItem = renderActivityByType(it, true, itemsInline);
             } else if (ActorTypes.indexOf(type) >= 0) {
                 if (!ActivityPubActor.isValid(it)) return nothing;
-                renderedItem = renderActorByType(it, this.showMetadata, this.inline);
+                renderedItem = renderActorByType(it, this.showMetadata, itemsInline);
             } else {
                 if (!ActivityPubObject.isValid(it)) return nothing;
-                renderedItem = renderObjectByType(it, this.showMetadata, this.inline);
+                renderedItem = renderObjectByType(it, this.showMetadata, itemsInline);
             }
 
             return html` <li>${until(renderedItem)}</li>`

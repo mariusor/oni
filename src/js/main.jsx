@@ -21,6 +21,7 @@ import {LoginLink} from "./login-link";
 import {ActivityPubCreate} from "./activity-pub-create";
 import {ActivityPubAnnounce} from "./activity-pub-announce";
 import {ActivityPubAppreciation} from "./activity-pub-appreciation";
+import {ActivityPubFollow} from "./activity-pub-follow";
 
 customElements.define('oni-main', OniMain);
 customElements.define('oni-errors', OniErrors);
@@ -41,6 +42,7 @@ customElements.define('oni-activity', ActivityPubActivity);
 customElements.define('oni-create', ActivityPubCreate);
 customElements.define('oni-announce', ActivityPubAnnounce);
 customElements.define('oni-appreciation', ActivityPubAppreciation);
+customElements.define('oni-follow', ActivityPubFollow);
 
 customElements.define('oni-natural-language-values', NaturalLanguageValues);
 

@@ -1,4 +1,4 @@
 {{ $type := . | oniType }}
-<oni-{{$type}} showMetadata="true">
+<oni-{{$type}}>
 <script type="application/ld+json">{{ . | JSON }}</script>
 </oni-{{$type}}>

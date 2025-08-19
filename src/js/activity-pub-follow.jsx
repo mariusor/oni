@@ -2,7 +2,7 @@ import {css, html, nothing} from "lit";
 import {pastensify, renderActorByType, renderObjectByType, renderTimestamp} from "./utils";
 import {ActivityPubActivity} from "./activity-pub-activity";
 
-export class ActivityPubAppreciation extends ActivityPubActivity {
+export class ActivityPubFollow extends ActivityPubActivity {
     static styles = [
         css``,
         ActivityPubActivity.styles,
@@ -18,7 +18,7 @@ export class ActivityPubAppreciation extends ActivityPubActivity {
         return html`
             ${renderObjectByType(this.it.getObject(), false, true)}
             ${action} by ${renderActorByType(this.it.getActor(), false, true)}
-        ${renderTimestamp(this.it.getPublished(), true)}`;
+            ${renderTimestamp(this.it.getPublished(), true)}`;
     }
 
     render() {
