@@ -11,6 +11,7 @@ sources:
   - https://git.sr.ht/~mariusor/oni
 environment:
   BUILDAH_ISOLATION: chroot
+  GOTOOLCHAIN: go1.25.0
 tasks:
   - setup: |
       cd oni && make download && go mod vendor
