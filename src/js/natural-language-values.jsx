@@ -14,7 +14,7 @@ export class NaturalLanguageValues extends LitElement {
             display: inline-block;
             margin: 0;
         }
-        aside + p {
+        aside > p {
             display: inline-block;
             border: 1px solid var(--fg-color);
             padding: .4rem;
