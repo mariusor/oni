@@ -38,6 +38,7 @@ type oni struct {
 	TimeOut     time.Duration
 	PwHash      []byte
 
+	mu sync.Mutex
 	a  []vocab.Actor
 	pw string
 	m  http.Handler
@@ -132,9 +133,13 @@ func CreateBlankActor(o *oni, id vocab.IRI) vocab.Actor {
 	ctl := Control{Storage: o.Storage, Logger: o.Logger}
 	blank, err := ctl.CreateActor(id, o.pw)
 	if err != nil {
+		if errors.Is(err, os.ErrExist) && blank != nil {
+			return *blank
+		}
 		o.Logger.WithContext(lw.Ctx{"err": err.Error(), "iri": id}).Warnf("unable to create root actor")
 		return auth.AnonymousActor
 	}
+	o.Logger.WithContext(lw.Ctx{"iri": id}).Infof("Created new root actor")
 	return *blank
 }
 

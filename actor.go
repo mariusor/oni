@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/url"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -76,16 +77,18 @@ type Control struct {
 
 func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 	it, err := c.Storage.Load(iri)
-	if err == nil || (it != nil && !vocab.IsNil(it) && it.GetLink().Equals(iri, true)) {
-		if err != nil && !errors.IsNotFound(err) {
-			c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Warnf("Actor already exists")
-		} else {
-			c.Logger.WithContext(lw.Ctx{"iri": iri}).Warnf("Actor already exists")
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return nil, err
 		}
+	}
+	if it != nil && !vocab.IsNil(it) && it.GetLink().Equals(iri, true) {
+		act, err := vocab.ToActor(it)
 		if err != nil {
 			return nil, err
 		}
-		return vocab.ToActor(it)
+		c.Logger.WithContext(lw.Ctx{"iri": iri}).Warnf("Actor already exists")
+		return act, errors.Annotatef(os.ErrExist, "actor exists")
 	}
 
 	o := DefaultActor(iri)
@@ -99,8 +102,6 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 	if it, err = c.Storage.Save(o); err != nil {
 		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to save main actor")
 		return nil, err
-	} else {
-		c.Logger.WithContext(lw.Ctx{"iri": it.GetID()}).Debugf("Created root actor")
 	}
 
 	actor, err := vocab.ToActor(it)
@@ -113,7 +114,7 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to set password for actor")
 		return nil, err
 	} else {
-		c.Logger.Infof("    Successfully set password: %s", pw)
+		c.Logger.WithContext(lw.Ctx{"secret": pw}).Infof("Successfully set password")
 	}
 	u, _ := actor.ID.URL()
 	if err = c.CreateOAuth2ClientIfMissing(actor.ID, pw); err != nil {

@@ -827,8 +827,11 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 
 	if requestForRoot(r) {
 		if actor := o.oniActor(r); actor.Equals(auth.AnonymousActor) {
-			actor = CreateBlankActor(o, iri)
-			o.Logger.WithContext(lw.Ctx{"iri": iri}).Infof("Created new root actor")
+			if actor = CreateBlankActor(o, iri); !actor.Equals(auth.AnonymousActor) {
+				o.mu.Lock()
+				o.a = append(o.a, actor)
+				o.mu.Unlock()
+			}
 		}
 	}
 
