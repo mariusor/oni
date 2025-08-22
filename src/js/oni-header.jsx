@@ -18,18 +18,18 @@ export class OniHeader extends ActivityPubActor {
                 align-items: end;
             }
             header a img, header a svg { 
-                max-height: 2.2em;
-                max-width: 2.2em;
-                border: .1vw solid var(--accent-color);
+                border: .01rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
                 border-radius: 0 20% 20% 20%;
                 shape-outside: margin-box;
-                box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
+                box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
                 background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
-                margin-bottom: -.4rem;
+                max-height: 2rem;
+                max-width: 2rem;
+                margin-bottom: -.74rem;
             }
             header a, header a:visited, header a:hover {
                 color: var(--accent-color);
-                text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
+                text-shadow: 0 0 2rem var(--accent-color), 0 0 .3rem var(--accent-color);
             }
             header a {
                 min-width: 0;

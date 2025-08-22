@@ -36,16 +36,16 @@ export class ActivityPubActor extends ActivityPubObject {
         }
         section h1 a oni-natural-language-values {
             color: var(--accent-color);
-            text-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
+            text-shadow: 0 0 2rem var(--accent-color), 0 0 .3rem var(--accent-color);
         }
         header > a svg {
             color: var(--accent-color);
         }
         header > a img, header > a svg {
-            border: .1vw solid var(--accent-color);
+            border: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
             border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
-            box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--bg-color);
+            box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
             max-height: 10em;
             max-width: 10em;
