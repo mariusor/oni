@@ -129,7 +129,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	})
 	c.Log = corsLogger(o.Logger.WithContext(lw.Ctx{"log": "cors"}).Tracef)
 	m.Group(func(m chi.Router) {
-		m.Use(c.Handler, o.StopBlocked)
+		m.Use(c.Handler, o.MaybeCreateRootActor, o.StopBlocked)
 		m.HandleFunc("/*", o.ActivityPubItem)
 	})
 }
@@ -785,23 +785,39 @@ func (o *oni) loadBlockedActors(of vocab.Item) vocab.IRIs {
 	return blocked
 }
 
+func rootIRI(r *http.Request) vocab.IRI {
+	return vocab.IRI("https://" + r.Host)
+}
+
+func (o *oni) MaybeCreateRootActor(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if actor := o.oniActor(r); actor.Equals(auth.AnonymousActor) {
+			if actor = CreateBlankActor(o, rootIRI(r)); !actor.Equals(auth.AnonymousActor) {
+				o.mu.Lock()
+				o.a = append(o.a, actor)
+				o.mu.Unlock()
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (o *oni) StopBlocked(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		oniActor := o.oniActor(r)
 
-		blocked := o.loadBlockedActors(oniActor)
-		act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor, blocked...)
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, authorizedActorCtxKey, act)
-		ctx = context.WithValue(ctx, blockedActorsCtxKey, blocked)
-		r = r.WithContext(ctx)
-		if len(blocked) > 0 {
-			if !vocab.PublicNS.Equals(act.ID, true) {
+		if !oniActor.Equals(auth.AnonymousActor) {
+			blocked := o.loadBlockedActors(oniActor)
+			act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor, blocked...)
+			ctx := r.Context()
+			ctx = context.WithValue(ctx, authorizedActorCtxKey, act)
+			ctx = context.WithValue(ctx, blockedActorsCtxKey, blocked)
+			r = r.WithContext(ctx)
+			if !act.Equals(auth.AnonymousActor) {
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
-						o.Logger.WithContext(lw.Ctx{"actor": act.ID}).Warnf("Blocked")
-						o.Error(errors.Gonef("nothing to see here, please move along")).ServeHTTP(w, r)
-						return
+						o.Logger.WithContext(lw.Ctx{"actor": act.ID, "by": oniActor.ID}).Warnf("Blocked")
+						next = o.Error(errors.Gonef("nothing to see here, please move along"))
 					}
 				}
 			}
@@ -818,22 +834,8 @@ func hasPath(iri vocab.IRI) bool {
 	return false
 }
 
-func requestForRoot(r *http.Request) bool {
-	return r.URL.Path == "/" || r.URL.Path == ""
-}
-
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
-
-	if requestForRoot(r) {
-		if actor := o.oniActor(r); actor.Equals(auth.AnonymousActor) {
-			if actor = CreateBlankActor(o, iri); !actor.Equals(auth.AnonymousActor) {
-				o.mu.Lock()
-				o.a = append(o.a, actor)
-				o.mu.Unlock()
-			}
-		}
-	}
 
 	colFilters := make(filters.Checks, 0)
 
