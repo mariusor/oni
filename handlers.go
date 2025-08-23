@@ -323,18 +323,10 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 	if vocab.IsIRI(it) && !it.GetLink().Equals(iri, true) {
 		it, err = loadItemFromStorage(s, it.GetLink())
 	}
-	if !vocab.IsItemCollection(it) {
-		if err != nil {
-			return it, errors.NewMovedPermanently(err, it.GetLink().String())
-		}
-		propIRI := it.GetLink()
-		if propIRI != "" {
-			return it, errors.MovedPermanently(it.GetLink().String())
-		} else {
-			return it, nil
-		}
+	if err != nil {
+		return it, errors.NewMovedPermanently(err, it.GetLink().String())
 	}
-	return it, err
+	return it, nil
 }
 
 var propertiesThatMightBeObjects = []string{"object", "actor", "target", "icon", "image", "attachment"}
@@ -505,7 +497,7 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 		o.Logger.WithContext(lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
 	}
 
-	var author vocab.Actor
+	author := auth.AnonymousActor
 	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		author = loaded
 	} else {
@@ -518,7 +510,7 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 		*r = *r.WithContext(context.WithValue(r.Context(), authorizedActorCtxKey, author))
 	}
 
-	if auth.AnonymousActor.ID.Equals(author.ID, true) {
+	if author.Equals(auth.AnonymousActor) {
 		return false, errors.Unauthorizedf("authorized Actor is invalid")
 	}
 
@@ -731,7 +723,7 @@ type _ctxKey string
 const authorizedActorCtxKey _ctxKey = "__authorizedActor"
 const blockedActorsCtxKey _ctxKey = "__blockedActors"
 
-func (o oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore ...vocab.IRI) (vocab.Actor, error) {
+func (o *oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore ...vocab.IRI) (vocab.Actor, error) {
 	act, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor)
 	if ok && !auth.AnonymousActor.Equals(act) {
 		return act, nil
@@ -810,10 +802,9 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 			blocked := o.loadBlockedActors(oniActor)
 			act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor, blocked...)
 			ctx := r.Context()
-			ctx = context.WithValue(ctx, authorizedActorCtxKey, act)
 			ctx = context.WithValue(ctx, blockedActorsCtxKey, blocked)
-			r = r.WithContext(ctx)
 			if !act.Equals(auth.AnonymousActor) {
+				ctx = context.WithValue(ctx, authorizedActorCtxKey, act)
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
 						o.Logger.WithContext(lw.Ctx{"actor": act.ID, "by": oniActor.ID}).Warnf("Blocked")
@@ -821,6 +812,8 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 					}
 				}
 			}
+
+			r = r.WithContext(ctx)
 		}
 		next.ServeHTTP(w, r)
 	})
