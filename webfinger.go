@@ -155,7 +155,7 @@ func LoadIRI(db processing.ReadStore, what vocab.IRI, checkFns ...func(actor voc
 	return found, err
 }
 
-func loadActorFromStorage(o oni, checkFns ...func(actor vocab.Actor) bool) (vocab.Item, error) {
+func (o *oni) loadActorFromStorage(checkFns ...func(actor vocab.Actor) bool) (vocab.Item, error) {
 	for _, act := range o.a {
 		var found *vocab.Actor
 		err := vocab.OnActor(act, func(a *vocab.Actor) error {
@@ -166,8 +166,11 @@ func loadActorFromStorage(o oni, checkFns ...func(actor vocab.Actor) bool) (voca
 			}
 			return nil
 		})
+		if err != nil {
+			return nil, errors.NewNotFound(err, "no matching actor found")
+		}
 		if !vocab.IsNil(found) {
-			return found, err
+			return found, nil
 		}
 	}
 	return nil, errors.NotFoundf("no matching actor found")
@@ -208,7 +211,7 @@ func (h handler) findMatchingStorage(hosts ...string) (vocab.Actor, processing.R
 }
 
 // HandleWebFinger serves /.well-known/webfinger/
-func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
+func HandleWebFinger(o *oni) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res := r.URL.Query().Get("resource")
 		if res == "" {
@@ -245,7 +248,7 @@ func HandleWebFinger(o oni) func(w http.ResponseWriter, r *http.Request) {
 			filterFn = AllTrue(CheckActorName(handle), filterFn)
 		}
 		if typ == "acct" {
-			a, err := loadActorFromStorage(o, filterFn)
+			a, err := o.loadActorFromStorage(filterFn)
 			if err != nil {
 				handleErr(o.Logger)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
 				return
@@ -645,7 +648,7 @@ func (o *oni) AddActor(p *vocab.Person, pw []byte, author vocab.Actor) (*vocab.P
 	return p, o.Storage.PasswordSet(p.GetLink(), pw)
 }
 
-func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Request) {
+func HandleOauthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			o.Error(errors.MethodNotAllowedf("HTTP method not allowed")).ServeHTTP(w, r)
@@ -658,7 +661,7 @@ func HandleOauthClientRegistration(o oni) func(w http.ResponseWriter, r *http.Re
 			o.Error(errors.NewNotValid(err, "unable to read request body")).ServeHTTP(w, r)
 			return
 		}
-		defer logRequest(&o, r.Header, body)
+		defer logRequest(o, r.Header, body)
 
 		regReq := ClientRegistrationRequest{}
 		if err := json.Unmarshal(body, &regReq); err != nil {
@@ -888,7 +891,7 @@ type OauthAuthorizationMetadata struct {
 	ResponseTypesSupported                     []string `json:"response_types_supported,omitempty"`
 }
 
-func HandleOauthAuthorizationServer(o oni) func(w http.ResponseWriter, r *http.Request) {
+func HandleOauthAuthorizationServer(o *oni) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		actor := o.oniActor(r)
 		if actor.Equals(auth.AnonymousActor) {
@@ -915,7 +918,7 @@ func HandleOauthAuthorizationServer(o oni) func(w http.ResponseWriter, r *http.R
 }
 
 // HandleHostMeta serves /.well-known/host-meta
-func HandleHostMeta(o oni) func(w http.ResponseWriter, r *http.Request) {
+func HandleHostMeta(o *oni) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		hm := node{
 			Subject: "",

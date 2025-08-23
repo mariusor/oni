@@ -75,7 +75,7 @@ func (o *oni) Error(err error) http.HandlerFunc {
 func (o *oni) setupOauthRoutes(m chi.Router) {
 	m.HandleFunc("/oauth/authorize", o.Authorize)
 	m.HandleFunc("/oauth/token", o.Token)
-	m.HandleFunc("/oauth/client", HandleOauthClientRegistration(*o))
+	m.HandleFunc("/oauth/client", HandleOauthClientRegistration(o))
 }
 
 func (o *oni) setupRoutes(actors []vocab.Actor) {
@@ -106,9 +106,9 @@ func (o *oni) setupStaticRoutes(m chi.Router) {
 
 func (o *oni) setupWebfingerRoutes(m chi.Router) {
 	// TODO(marius): we need the nodeinfo handlers also
-	m.HandleFunc("/.well-known/webfinger", HandleWebFinger(*o))
-	m.HandleFunc("/.well-known/host-meta", HandleHostMeta(*o))
-	m.HandleFunc("/.well-known/oauth-authorization-server", HandleOauthAuthorizationServer(*o))
+	m.HandleFunc("/.well-known/webfinger", HandleWebFinger(o))
+	m.HandleFunc("/.well-known/host-meta", HandleHostMeta(o))
+	m.HandleFunc("/.well-known/oauth-authorization-server", HandleOauthAuthorizationServer(o))
 }
 
 type corsLogger func(string, ...any)

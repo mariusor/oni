@@ -102,7 +102,7 @@ export class LoginLink extends LitElement {
                 response.json().then(value => {
                     if (response.status === 200) {
                         console.debug(`Obtained authorization code: ${value.code}`)
-                        this.accessToken(value.code, value.state);
+                        this.accessToken(value.code, value.state, pw);
                     } else {
                         this.error = {errors: [{code: value['error'], message: value['error_description']}]};
                     }
@@ -111,7 +111,7 @@ export class LoginLink extends LitElement {
             .catch((error) => this.error = handleError(error));
     }
 
-    async accessToken(code, state) {
+    async accessToken(code, state, pw) {
         const tokenURL = this.tokenURL;
 
         const client = window.location.hostname;
@@ -122,7 +122,7 @@ export class LoginLink extends LitElement {
             client_id: client,
         });
 
-        const basicAuth = btoa(`${client}:NotSoSecretPassword`);
+        const basicAuth = btoa(`${client}:${pw}`);
         const req = {
             method: 'POST',
             body: l.toString(),
