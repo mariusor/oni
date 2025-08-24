@@ -281,6 +281,8 @@ func (o *oni) redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http
 // DefaultOAuth2ClientPw is the default password used by the main actor
 var DefaultOAuth2ClientPw = base64.RawStdEncoding.EncodeToString([]byte(fmt.Sprintf("%2x", rand.Int63())))
 
+var ExtraRedirectURL = ""
+
 const (
 	// DefaultOniAppRedirectURL is the default redirect URL used by the OAuth2 mechanism in the
 	// Flutter ONI Application: https://git.sr.ht/~mariusor/oni-app
@@ -301,7 +303,10 @@ func (c *Control) CreateOAuth2ClientIfMissing(i vocab.IRI, pw string) error {
 	if err == nil {
 		return nil
 	}
-	uris := []string{u.String(), DefaultOniAppRedirectURL, DefaultBOXAppRedirectURL}
+	uris := append(
+		[]string{u.String(), DefaultOniAppRedirectURL, DefaultBOXAppRedirectURL},
+		strings.Split(ExtraRedirectURL, "\n")...,
+	)
 	cl = &osin.DefaultClient{
 		Id:          u.Host,
 		Secret:      pw,
