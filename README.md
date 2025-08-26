@@ -23,7 +23,7 @@ The application supports text posts, image, audio and video uploads.
 # yarn install
 # npm install
 $ go mod tidy
-$ go generate frontend.go
+$ go generate assets.go
 $ go build -trimpath -a -ldflags '-s -w -extldflags "-static"' -o $(go env GOPATH)/bin/oni ./cmd/oni/main.go
 ```
 
