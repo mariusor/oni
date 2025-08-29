@@ -20,7 +20,7 @@ require (
 	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
 	github.com/go-ap/processing v0.0.0-20250819123906-31d8fe7abc23
 	github.com/go-ap/storage-fs v0.0.0-20250818111942-46c35ac43472
-	github.com/go-chi/chi/v5 v5.2.2
+	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
 	github.com/goburrow/cache v0.1.4
 	github.com/google/uuid v1.6.0
