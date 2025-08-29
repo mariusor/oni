@@ -71,7 +71,7 @@ export class ActivityPubCollection extends ActivityPubObject {
         if (this.threaded) {
             items.sort((a, b) => -1*sortByPublished(a, b))
         }
-        let itemsInline = this.inline || !(this.it.iri()?.includes('inbox') || this.it.iri()?.includes('outbox'));
+        let itemsInline = this.inline || this.it.iri()?.includes('shares') || this.it.iri()?.includes('following');
 
         return html`${items.map(it => {
             const type = it.hasOwnProperty('type')? it.type : 'unknown';
