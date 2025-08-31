@@ -284,7 +284,6 @@ var DefaultOAuth2ClientPw = base64.RawStdEncoding.EncodeToString([]byte(fmt.Spri
 var ExtraRedirectURL = ""
 
 const (
-	DefaultOOBRedirectURL = "urn:ietf:wg:oauth:2.0:oob"
 	// DefaultOniAppRedirectURL is the default redirect URL used by the OAuth2 mechanism in the
 	// Flutter ONI Application: https://git.sr.ht/~mariusor/oni-app
 	// It makes use of the custom URI scheme 'org.oni.app://'
@@ -305,7 +304,7 @@ func (c *Control) CreateOAuth2ClientIfMissing(i vocab.IRI, pw string) error {
 		return nil
 	}
 	uris := append(
-		[]string{u.String(), DefaultOniAppRedirectURL, DefaultBOXAppRedirectURL, DefaultOOBRedirectURL},
+		[]string{u.String(), DefaultOniAppRedirectURL, DefaultBOXAppRedirectURL, processing.OAuthOOBRedirectURN},
 		strings.Split(ExtraRedirectURL, "\n")...,
 	)
 	cl = &osin.DefaultClient{
