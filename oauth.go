@@ -114,9 +114,9 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	acceptableMediaTypes := []ct.MediaType{textHTML, applicationJson}
+	acceptableMediaTypes := []ct.MediaType{acceptableTextHTML, acceptableApplicationJson}
 	acc, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
-	if r.Method == http.MethodGet && !acc.EqualsMIME(textHTML) {
+	if r.Method == http.MethodGet && !acc.EqualsMIME(acceptableTextHTML) {
 		state := base64.URLEncoding.EncodeToString(authKey())
 		m := authModel{
 			AuthorizeURL: AuthorizeURL(a, state),
@@ -171,7 +171,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 			s.FinishAuthorizeRequest(resp, r, ar)
 		}
 	}
-	if acc.Equal(applicationJson) {
+	if acc.Equal(acceptableApplicationJson) {
 		// NOTE(marius): overwrite the response type if client has explicitly asked for JSON content
 		resp.Type = osin.DATA
 	}
@@ -223,8 +223,8 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 		s.FinishAccessRequest(resp, r, ar)
 	}
 
-	acc, _, _ := ct.GetAcceptableMediaType(r, []ct.MediaType{textHTML, applicationJson})
-	if !acc.Equal(textHTML) {
+	acc, _, _ := ct.GetAcceptableMediaType(r, []ct.MediaType{acceptableTextHTML, acceptableApplicationJson})
+	if !acc.Equal(acceptableTextHTML) {
 		resp.Type = osin.DATA
 	}
 	o.redirectOrOutput(resp, w, r)

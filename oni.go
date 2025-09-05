@@ -208,7 +208,7 @@ func Oni(initFns ...optionFn) *oni {
 		}
 	}
 
-	o.setupRoutes(o.a)
+	o.setupRoutes()
 	return o
 }
 

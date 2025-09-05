@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"time"
 
+	ct "github.com/elnormous/contenttype"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
 	"github.com/nfnt/resize"
@@ -38,6 +39,13 @@ func svgDecode(in io.Reader) (image.Image, error) {
 }
 
 const maxFaviconSize = 192
+
+var (
+	imageJpeg = ct.NewMediaType("image/jpeg")
+	imagePng  = ct.NewMediaType("image/png")
+	imageGif  = ct.NewMediaType("image/gif")
+	imageSvg  = ct.NewMediaType("image/svg+xml")
+)
 
 func (o *oni) ServeFavIcon(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {

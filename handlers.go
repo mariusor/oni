@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -41,15 +40,18 @@ func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
 	o.Error(errors.NotFoundf("%s not found", r.URL.Path)).ServeHTTP(w, r)
 }
 
+var acceptableErrorMediaTypes = []ct.MediaType{acceptableTextHTML, acceptableApplicationJson}
+
 func (o *oni) Error(err error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		o.Logger.WithContext(lw.Ctx{"err": err.Error(), "url": irif(r)}).Errorf("Error")
-		acceptableMediaTypes := []ct.MediaType{textHTML, applicationJson}
-		accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
-		if !checkAcceptMediaType(accepted)(textHTML) || errors.IsRedirect(err) {
+		defer o.Logger.WithContext(lw.Ctx{"err": err.Error(), "url": irif(r)}).Errorf("Error")
+
+		accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableErrorMediaTypes)
+		if accepted.Type == "" || errors.IsRedirect(err) {
 			errors.HandleError(err).ServeHTTP(w, r)
 			return
 		}
+
 		errs := errors.HttpErrors(err)
 		status := errors.HttpStatus(err)
 		if status == 0 {
@@ -78,7 +80,7 @@ func (o *oni) setupOauthRoutes(m chi.Router) {
 	m.HandleFunc("/oauth/client", HandleOauthClientRegistration(o))
 }
 
-func (o *oni) setupRoutes(actors []vocab.Actor) {
+func (o *oni) setupRoutes() {
 	m := chi.NewMux()
 
 	m.Use(o.OutOfOrderMw)
@@ -176,35 +178,7 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 
 	raw := buf.Bytes()
 	eTag := fmt.Sprintf(`"%2x"`, md5.Sum(raw))
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", contentType.String())
-		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(raw)))
-		w.Header().Set("Vary", "Accept")
-		w.Header().Set("ETag", eTag)
-		if vocab.ActivityTypes.Contains(it.GetType()) {
-			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(activityCacheDuration.Seconds())))
-		} else {
-			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(objectCacheDuration.Seconds())))
-		}
-		if !updatedAt.IsZero() {
-			w.Header().Set("Last-Modified", updatedAt.Format(time.RFC1123))
-		}
-
-		status := http.StatusOK
-		uaHasItem := requestMatchesETag(r.Header, eTag) || requestMatchesLastModified(r.Header, updatedAt)
-		if uaHasItem {
-			status = http.StatusNotModified
-		} else {
-			if it.GetType() == vocab.TombstoneType {
-				status = http.StatusGone
-			}
-		}
-
-		w.WriteHeader(status)
-		if r.Method == http.MethodGet && !uaHasItem {
-			_, _ = w.Write(raw)
-		}
-	}
+	return writeResponse(raw, it.GetType(), updatedAt, contentType, eTag)
 }
 
 func sameishIRI(check, colIRI vocab.IRI) bool {
@@ -227,22 +201,6 @@ var orderedCollectionTypes = vocab.ActivityVocabularyTypes{
 
 var collectionTypes = vocab.ActivityVocabularyTypes{
 	vocab.CollectionPageType, vocab.CollectionType,
-}
-
-func loadItemMetadataFromStorage(s MetadataStorage, it vocab.Item) (interface{ AddETag(w http.ResponseWriter) }, error) {
-	var (
-		m   any
-		iri = it.GetLink()
-	)
-	m = new(auth.Metadata)
-	if err := s.LoadMetadata(iri, m); err != nil {
-		return nil, err
-	}
-	etagMeta, ok := m.(interface{ AddETag(w http.ResponseWriter) })
-	if !ok {
-		return nil, errors.Newf("unsupported metadata type: %T", m)
-	}
-	return etagMeta, nil
 }
 
 func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.Item, error) {
@@ -422,39 +380,36 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 		}
 		return nil
 	})
+	return writeResponse(dat, it.GetType(), updatedAt, acceptableJsonLD, eTag)
+}
+
+func writeResponse(raw []byte, typ vocab.ActivityVocabularyType, updatedAt time.Time, contentType ct.MediaType, eTag string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if vocab.ActivityTypes.Contains(it.GetType()) {
+		if vocab.ActivityTypes.Contains(typ) {
 			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(activityCacheDuration.Seconds())))
 		} else {
 			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(objectCacheDuration.Seconds())))
 		}
-		w.Header().Set("Content-Type", jsonld.ContentType)
 		w.Header().Set("Vary", "Accept")
-		w.Header().Set("ETag", eTag)
 		if !updatedAt.IsZero() {
 			w.Header().Set("Last-Modified", updatedAt.Format(time.RFC1123))
 		}
-
+		w.Header().Set("Content-Type", contentType.String())
+		w.Header().Set("ETag", eTag)
 		status := http.StatusOK
 		uaHasItem := requestMatchesETag(r.Header, eTag) || requestMatchesLastModified(r.Header, updatedAt)
 		if uaHasItem {
 			status = http.StatusNotModified
 		} else {
-			if it.GetType() == vocab.TombstoneType {
+			if typ == vocab.TombstoneType {
 				status = http.StatusGone
 			}
 		}
 
 		w.WriteHeader(status)
 		if r.Method == http.MethodGet && !uaHasItem {
-			_, _ = w.Write(dat)
+			_, _ = w.Write(raw)
 		}
-	}
-}
-
-func notAcceptable(err error) func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
-	return func(receivedIn vocab.IRI, r *http.Request) (vocab.Item, int, error) {
-		return nil, http.StatusNotAcceptable, errors.NewMethodNotAllowed(err, "current instance does not federate")
 	}
 }
 
@@ -517,37 +472,23 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 	return true, nil
 }
 
-var jsonLD, _ = ct.ParseMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTypeJsonLD))
-var activityJson, _ = ct.ParseMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTypeActivityJson))
-var applicationJson, _ = ct.ParseMediaType("application/json;q=0.8")
-var textHTML, _ = ct.ParseMediaType("text/html;q=1.0")
-var imageAny, _ = ct.ParseMediaType("image/*;q=1.0")
-var imageIco, _ = ct.ParseMediaType("image/vnd.microsoft.icon")
-var imageJpeg, _ = ct.ParseMediaType("image/jpeg")
-var imagePng, _ = ct.ParseMediaType("image/png")
-var imageGif, _ = ct.ParseMediaType("image/gif")
-var imageSvg, _ = ct.ParseMediaType("image/svg+xml")
-var audioAny, _ = ct.ParseMediaType("audio/*;q=1.0")
-var videoAny, _ = ct.ParseMediaType("video/*;q=1.0")
-var pdfDocument, _ = ct.ParseMediaType("application/pdf;q=1.0")
+var (
+	acceptableJsonActivity    = ct.NewMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTypeActivityJson))
+	acceptableJsonLD          = ct.NewMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTypeJsonLD))
+	acceptableApplicationJson = ct.NewMediaType("application/json;q=0.8")
+	acceptableTextHTML        = ct.NewMediaType("text/html;q=0.9")
 
-func getWeight(m ct.MediaType) int {
-	q, ok := m.Parameters["q"]
-	if !ok {
-		return 0
-	}
-	w, err := strconv.ParseFloat(q, 32)
-	if err != nil {
-		return 0
-	}
-	return int(w * 1000)
-}
+	imageAny    = ct.NewMediaType("image/*")
+	audioAny    = ct.NewMediaType("audio/*")
+	videoAny    = ct.NewMediaType("video/*")
+	pdfDocument = ct.NewMediaType("application/pdf")
+)
 
 func checkAcceptMediaType(accepted ct.MediaType) func(check ...ct.MediaType) bool {
-	return func(check ...ct.MediaType) bool {
-		for _, c := range check {
-			if accepted.Type == c.Type && (c.Subtype == "*" || accepted.Subtype == c.Subtype) {
-				return getWeight(c) >= getWeight(accepted)
+	return func(toCheck ...ct.MediaType) bool {
+		for _, checked := range toCheck {
+			if accepted.Type == "*" || (accepted.Type == checked.Type && (checked.Subtype == "*" || accepted.Subtype == checked.Subtype)) {
+				return true
 			}
 		}
 		return false
@@ -559,7 +500,7 @@ var iriNotFound = func(iri vocab.IRI) error {
 }
 
 func getRequestAcceptedContentType(r *http.Request) func(...ct.MediaType) bool {
-	acceptableMediaTypes := []ct.MediaType{textHTML, jsonLD, activityJson, applicationJson}
+	acceptableMediaTypes := []ct.MediaType{acceptableTextHTML, acceptableJsonLD, acceptableJsonActivity, acceptableApplicationJson}
 	accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
 	return checkAcceptMediaType(accepted)
 }
@@ -570,17 +511,17 @@ func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct
 	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
 		if ob.MediaType != "" {
 			if mt, err := ct.ParseMediaType(string(ob.MediaType)); err == nil {
-				mt.Parameters["q"] = "1.0"
 				acceptableMediaTypes = append([]ct.MediaType{mt}, acceptableMediaTypes...)
 			}
 		}
+		acceptableMediaTypes = append(acceptableMediaTypes, acceptableTextHTML)
 		return nil
 	})
-	acceptableMediaTypes = append(acceptableMediaTypes, textHTML, jsonLD, activityJson, applicationJson)
+	acceptableMediaTypes = append(acceptableMediaTypes, acceptableJsonLD, acceptableJsonActivity, acceptableApplicationJson)
 
 	accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
 	if accepted.Type == "" {
-		accepted = textHTML
+		accepted = acceptableTextHTML
 	}
 	return checkAcceptMediaType(accepted)
 }
@@ -840,8 +781,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		colFilters = filters.FromValues(r.URL.Query())
 		if vocab.ValidActivityCollection(whichCollection) {
 			accepts := getRequestAcceptedContentType(r)
-
-			if accepts(textHTML) && (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
+			if accepts(acceptableTextHTML) && (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
 				obFilters := make(filters.Checks, 0)
 				obFilters = append(obFilters, filters.Not(filters.NilID))
 				if vocab.Outbox == whichCollection {
@@ -856,6 +796,10 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 				}
 				colFilters = append(colFilters, filters.Actor(filters.Not(filters.NilID)))
 			}
+		}
+		if vocab.ValidObjectCollection(whichCollection) {
+			colFilters = append(colFilters, filters.NilInReplyTo)
+			colFilters = append(colFilters, filters.HasType(validObjectTypes...))
 		}
 
 		if u, err := iri.URL(); err == nil {
@@ -884,15 +828,14 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
+
 	it = vocab.CleanRecipients(it)
 	accepts := getItemAcceptedContentType(it, r)
 	switch {
-	case accepts(jsonLD, activityJson, applicationJson):
-		o.ServeActivityPubItem(it).ServeHTTP(w, r)
-	case accepts(imageAny), accepts(audioAny), accepts(videoAny), accepts(pdfDocument):
+	case accepts(imageAny, audioAny, videoAny, pdfDocument):
 		o.ServeBinData(it).ServeHTTP(w, r)
-	case accepts(textHTML):
-		fallthrough
+	case accepts(acceptableJsonLD, acceptableJsonActivity, acceptableApplicationJson):
+		o.ServeActivityPubItem(it).ServeHTTP(w, r)
 	default:
 		o.ServeHTML(it).ServeHTTP(w, r)
 	}
@@ -951,22 +894,6 @@ func titleFromItem(actor vocab.Actor, m vocab.Item, r *http.Request) func() temp
 	return func() template.HTML {
 		return template.HTML(title)
 	}
-}
-
-func col(r *http.Request) vocab.CollectionPath {
-	if r.URL == nil || len(r.URL.Path) == 0 {
-		return vocab.Unknown
-	}
-	col := vocab.Unknown
-	pathElements := strings.Split(r.URL.Path[1:], "/") // Skip first /
-	for i := len(pathElements) - 1; i >= 0; i-- {
-		col = vocab.CollectionPath(pathElements[i])
-		if vocab.ValidObjectCollection(col) || vocab.ValidActivityCollection(col) {
-			return col
-		}
-	}
-
-	return col
 }
 
 const MaxItems = 20
