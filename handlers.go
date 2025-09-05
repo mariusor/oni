@@ -573,12 +573,10 @@ func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct
 				mt.Parameters["q"] = "1.0"
 				acceptableMediaTypes = append([]ct.MediaType{mt}, acceptableMediaTypes...)
 			}
-		} else {
-			acceptableMediaTypes = append(acceptableMediaTypes, textHTML)
 		}
 		return nil
 	})
-	acceptableMediaTypes = append(acceptableMediaTypes, jsonLD, activityJson, applicationJson)
+	acceptableMediaTypes = append(acceptableMediaTypes, textHTML, jsonLD, activityJson, applicationJson)
 
 	accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
 	if accepted.Type == "" {
