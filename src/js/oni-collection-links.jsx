@@ -126,7 +126,7 @@ export class OniCollectionLinks extends LitElement {
                     it => html`<li class=${classMap({'active': isCurrentPage(it.iri())})}>
                                             <oni-collection-link it=${JSON.stringify(it)}></oni-collection-link>
                                         </li>`
-                ))
+                ).catch(console.warn))
         )
     }
 

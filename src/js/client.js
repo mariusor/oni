@@ -14,14 +14,15 @@ export async function fetchActivityPubIRI(iri) {
     }
     return new Promise((resolve, reject) => {
         headers["Origin"] = 'https://'+window.location.hostname;
-        console.info(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI `, iri);
+        console.debug(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI `, iri);
         const opts = {
             headers: headers,
             cache: 'force-cache',
         };
         fetch(iri, opts).then(response => {
             if (response.hasOwnProperty("headers") && response.headers["Content-Type"] !== jsonLDContentType) {
-                reject(`invalid response Content-Type ${response.headers["Content-Type"]}`)
+                reject(`invalid response Content-Type ${response.headers["Content-Type"]}`);
+                return;
             }
             if (response.status !== 200) {
                 reject(`Invalid status received ${response.statusText}`);

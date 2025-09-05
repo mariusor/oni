@@ -32,6 +32,8 @@ var (
 				case vocab.Item:
 					t := it.GetType()
 					switch {
+					case vocab.CollectionOfItems == t:
+						return "items"
 					case vocab.ActorTypes.Contains(t):
 						return "actor"
 					case vocab.CreateType == t:

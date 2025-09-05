@@ -65,57 +65,17 @@ export class ActivityPubCollection extends ActivityPubObject {
             </nav>`;
     }
 
-    renderItems() {
-        const items = this.it.getItems();
-
-        if (this.threaded) {
-            items.sort((a, b) => -1*sortByPublished(a, b))
-        }
-        let itemsInline = this.inline || this.it.iri()?.includes('shares') || this.it.iri()?.includes('following');
-
-        return html`${items.map(it => {
-            const type = it.hasOwnProperty('type')? it.type : 'unknown';
-
-            let renderedItem = unsafeHTML(`<!-- Unknown activity object ${type} -->`);
-            if (ActivityTypes.indexOf(type) >= 0) {
-                if (!ActivityPubActivity.isValidForRender(it)) return nothing;
-                renderedItem = renderActivityByType(it, true, itemsInline);
-            } else if (ActorTypes.indexOf(type) >= 0) {
-                if (!ActivityPubActor.isValid(it)) return nothing;
-                renderedItem = renderActorByType(it, this.showMetadata, itemsInline);
-            } else {
-                if (!ActivityPubObject.isValid(it)) return nothing;
-                renderedItem = renderObjectByType(it, this.showMetadata, itemsInline);
-            }
-
-            return html` <li>${until(renderedItem)}</li>`
-        })}`
-    }
-
     isOrdered() {
-        return this.it.type.toLowerCase().includes('ordered');
+        return this.it.type?.toLowerCase()?.includes('ordered') ?? false;
     }
 
     render() {
         if (!ActivityPubItem.isValid(this.it)) return nothing;
 
-        const collection = () => {
-            if (this.it.getItems().length === 0) {
-                return nothing;
-            }
-
-            const list = this.isOrdered()
-                ? html`
-                        <ol>${this.renderItems()}</ol>`
-                : html`
-                        <ul>${this.renderItems()}</ul>`;
-
-            return html`
-                    ${list}
-                    ${this.renderPrevNext()}
-                `;
-        }
-        return html`${collection()}`;
+        let itemsInline = this.inline || this.it.iri()?.includes('shares') || this.it.iri()?.includes('following');
+        return html`<oni-items it=${JSON.stringify(this.it.getItems())} ?ordered=${this.isOrdered()} ?inline=${itemsInline}></oni-items>
+        ${this.renderPrevNext()}
+        `;
     }
 }
 

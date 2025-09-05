@@ -143,6 +143,7 @@ export class ActivityPubObject extends LitElement {
 
     constructor(showMetadata) {
         super();
+        this.it = [];
 
         if (typeof showMetadata === 'undefined') showMetadata = false;
 
@@ -156,7 +157,13 @@ export class ActivityPubObject extends LitElement {
         if (json) {
             this.inline = false;
             this.showMetadata = true;
-            this.it = ActivityPubItem.load(json);
+            // NOTE(marius): we're expecting an array here
+            const it = JSON.parse(json);
+            if (Array.isArray(it)) {
+                this.it = it.map(data => ActivityPubItem.load(data));
+            } else {
+                this.it = ActivityPubItem.load(it);
+            }
         }
     }
 
