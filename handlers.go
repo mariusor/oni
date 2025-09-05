@@ -269,6 +269,8 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 				it = ob.Image
 			case "attachment":
 				it = ob.Attachment
+			case "tag":
+				it = ob.Tag
 			default:
 				return iriNotFound(it.GetLink())
 			}
@@ -485,9 +487,10 @@ var (
 )
 
 func checkAcceptMediaType(accepted ct.MediaType) func(check ...ct.MediaType) bool {
+	matchFn := accepted.Matches
 	return func(toCheck ...ct.MediaType) bool {
 		for _, checked := range toCheck {
-			if accepted.Type == "*" || (accepted.Type == checked.Type && (checked.Subtype == "*" || accepted.Subtype == checked.Subtype)) {
+			if matchFn(checked) {
 				return true
 			}
 		}
@@ -511,12 +514,14 @@ func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct
 	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
 		if ob.MediaType != "" {
 			if mt, err := ct.ParseMediaType(string(ob.MediaType)); err == nil {
-				acceptableMediaTypes = append([]ct.MediaType{mt}, acceptableMediaTypes...)
+				acceptableMediaTypes = append(acceptableMediaTypes, mt)
 			}
 		}
-		acceptableMediaTypes = append(acceptableMediaTypes, acceptableTextHTML)
 		return nil
 	})
+	if len(acceptableMediaTypes) == 0 {
+		acceptableMediaTypes = append(acceptableMediaTypes, acceptableTextHTML)
+	}
 	acceptableMediaTypes = append(acceptableMediaTypes, acceptableJsonLD, acceptableJsonActivity, acceptableApplicationJson)
 
 	accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
