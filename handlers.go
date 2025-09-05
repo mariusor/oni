@@ -857,22 +857,24 @@ func titleFromItem(actor vocab.Actor, m vocab.Item, r *http.Request) func() temp
 	title := bluemonday.StripTagsPolicy().Sanitize(vocab.NameOf(m))
 	details := ""
 	name := bluemonday.StripTagsPolicy().Sanitize(vocab.PreferredNameOf(actor))
-	path := filepath.Base(r.URL.Path)
-	switch {
-	case path == "/":
-		if vocab.ActorTypes.Contains(m.GetType()) {
-			details = "profile page"
-			title = fmt.Sprintf("%s :: fediverse %s", name, details)
+	if r != nil {
+		path := filepath.Base(r.URL.Path)
+		if path == "/" {
+			if vocab.ActorTypes.Contains(m.GetType()) {
+				details = "profile page"
+				title = fmt.Sprintf("%s :: fediverse %s", name, details)
+			}
 		}
-	default:
+		if vocab.ActivityPubCollections.Contains(vocab.CollectionPath(path)) {
+			details = "fediverse " + strings.TrimPrefix(r.URL.Path, "/")
+		}
+	} else {
 		currentName := vocab.NameOf(m)
 		if currentName != "" {
 			details = currentName
 		} else {
 			details = string(m.GetType())
-			if vocab.ActivityPubCollections.Contains(vocab.CollectionPath(path)) {
-				details = "fediverse " + strings.TrimPrefix(r.URL.Path, "/")
-			} else if createTypes.Contains(m.GetType()) {
+			if createTypes.Contains(m.GetType()) {
 				_ = vocab.OnActivity(m, func(act *vocab.Activity) error {
 					if act.Object == nil {
 						return nil
