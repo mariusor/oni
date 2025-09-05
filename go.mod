@@ -12,14 +12,14 @@ require (
 	github.com/alecthomas/kong v1.12.1
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.1
-	github.com/go-ap/activitypub v0.0.0-20250831121713-4e61cc722305
-	github.com/go-ap/auth v0.0.0-20250901111642-9c28c88fa5d6
-	github.com/go-ap/client v0.0.0-20250831121842-86170bce4a07
-	github.com/go-ap/errors v0.0.0-20250527110557-c8db454e53fd
-	github.com/go-ap/filters v0.0.0-20250901111556-f5075cc1c0c4
-	github.com/go-ap/jsonld v0.0.0-20221030091449-f2a191312c73
-	github.com/go-ap/processing v0.0.0-20250901111706-507a03f35612
-	github.com/go-ap/storage-fs v0.0.0-20250901111719-3b081b65d37e
+	github.com/go-ap/activitypub v0.0.0-20250905102448-e9df599e4528
+	github.com/go-ap/auth v0.0.0-20250905102747-eef12469cd1b
+	github.com/go-ap/client v0.0.0-20250905102653-674f86aded3d
+	github.com/go-ap/errors v0.0.0-20250905102357-4480b47a00c4
+	github.com/go-ap/filters v0.0.0-20250905102619-f401bfda17dc
+	github.com/go-ap/jsonld v0.0.0-20250905102310-8480b0fe24d9
+	github.com/go-ap/processing v0.0.0-20250905111632-bcb8fde5398a
+	github.com/go-ap/storage-fs v0.0.0-20250905112030-6810f7e5e121
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
 	github.com/goburrow/cache v0.1.4
@@ -40,7 +40,7 @@ require (
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.24.0 // indirect
-	github.com/go-ap/cache v0.0.0-20250831121752-c44fafe4041e // indirect
+	github.com/go-ap/cache v0.0.0-20250905102525-152e952d5d86 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
