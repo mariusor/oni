@@ -8,18 +8,11 @@ import {fetchActivityPubIRI} from "./client";
 
 export class ActivityPubItems extends ActivityPubObject {
     static styles = [css`
+        ul, ol { width: 100%; }
         :host(.attachment) ul {
             display: flex;
-            flex-wrap: wrap;
             gap: .2rem;
             justify-content: flex-start;
-        }
-        :host(.tag) ul {
-            display: inline;
-            margin: 0;
-            padding: 0;
-            font-size: .9rem;
-            line-height: 1rem;
         }
         :host ul, :host ol {
             padding: 0;
@@ -29,6 +22,13 @@ export class ActivityPubItems extends ActivityPubObject {
         :host li {
             overflow: hidden;
             border-bottom: 1px solid var(--fg-color);
+        }
+        :host(.tag) ul {
+            display: inline;
+            margin: 0;
+            padding: 0;
+            font-size: .9rem;
+            line-height: 1rem;
         }
         :host(.attachment) li, :host(.tag) li {
             border: 0;
@@ -43,9 +43,12 @@ export class ActivityPubItems extends ActivityPubObject {
         :host(.tag) li {
             list-style: none;
         }
-        :host(.attachment) ul > * {
+        :host(.attachment) ul > li {
             display: inline-block;
             width: 32%;
+        }
+        :host(.attachment) ul > li:has(bandcamp-embed) {
+            width: 380px;
         }
     `, ActivityPubObject.styles];
 
