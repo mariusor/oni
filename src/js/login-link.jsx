@@ -116,7 +116,7 @@ export class LoginLink extends LitElement {
 
         const client = window.location.hostname;
         const l = new URLSearchParams({
-            grant_type: 'authorization_code',
+            grant_type: 'client_credentials',
             code: code,
             state: state,
             client_id: client,

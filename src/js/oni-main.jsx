@@ -15,7 +15,8 @@ export class OniMain extends ActivityPubObject {
 
     constructor() {
         super();
-        //this.addEventListener('content.change', this.updateSelf)
+        this.addEventListener('logged.in', () => window.location.reload());
+        this.addEventListener('logged.out', () => window.location.reload());
     }
 
     // async updateSelf(e) {
