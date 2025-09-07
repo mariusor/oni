@@ -33,12 +33,13 @@ export class ActivityPubImage extends ActivityPubObject {
         }
         figure details {
             cursor: pointer;
-            font-size: .9rem;
+            font-size: .75rem;
             background-color: color-mix(in srgb, black, transparent 60%);
             padding: .1rem .4rem;
             border-radius: .4rem;
         }
         figure summary {
+            font-size: .8rem;
             list-style-type: none;
             font-variant: small-caps;
             font-weight: bold;
