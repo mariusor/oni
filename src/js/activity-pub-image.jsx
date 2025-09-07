@@ -46,8 +46,12 @@ export class ActivityPubImage extends ActivityPubObject {
         }
         `, ActivityPubNote.styles];
 
+    static properties = {
+        _showAlt: {type: Boolean},
+    };
+
     constructor() {
-        super();
+        super(false);
     }
 
     renderNameText() {
@@ -62,6 +66,13 @@ export class ActivityPubImage extends ActivityPubObject {
         return alt.innerText.trim();
     }
 
+    renderAltLabel() {
+        if (this._showAlt && this.it.getName()?.length > 0) {
+            return this.renderNameText();
+        }
+        return 'alt';
+    }
+
     renderInline() {
         const src = this.it.getUrl() || [{href : this.it.iri()}];
         if (src?.length === 0) {
@@ -74,6 +85,10 @@ export class ActivityPubImage extends ActivityPubObject {
             ) :
             src;
         return html`<img loading="lazy" src=${smallest?.href ?? nothing} title="${alt}" alt="${alt}" class="small""/>`;
+    }
+
+    toggleAltLabel(ev) {
+        this._showAlt = !this._showAlt;
     }
 
     render() {
@@ -109,15 +124,13 @@ export class ActivityPubImage extends ActivityPubObject {
             src = url;
         }
         if (!src) return unsafeHTML(`<!-- Unknown image object with missing id or url -->`);
-
         return html`
                 <figure>
                     ${when(alt.length > 0,
                             () => html`
                                 <figcaption>
-                                    <details>
-                                        <summary>alt</summary>
-                                        ${name !== "" ? html`<strong>${name}</strong><br/>` : nothing}
+                                    <details @toggle=${this.toggleAltLabel}>
+                                        <summary>${this.renderAltLabel()}</summary>
                                         ${alt}
                                     </details>
                                 </figcaption>`,
@@ -133,6 +146,7 @@ export class ActivityPubImage extends ActivityPubObject {
                 ${until(this.renderReplies())}
         `;
     }
+
     static isValid(it) {
         return typeof it === 'object' && it !== null &&
             (

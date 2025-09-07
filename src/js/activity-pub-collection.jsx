@@ -1,12 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ifDefined} from "lit-html/directives/if-defined.js";
-import {ActivityPubItem, ActivityTypes, ActorTypes} from "./activity-pub-item";
-import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
-import {ActivityPubActivity} from "./activity-pub-activity";
-import {until} from "lit-html/directives/until.js";
-import {ActivityPubActor} from "./activity-pub-actor";
-import {renderActivityByType, renderActorByType, renderObjectByType} from "./utils";
+import {ActivityPubItem} from "./activity-pub-item";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = [css`
@@ -22,15 +17,6 @@ export class ActivityPubCollection extends ActivityPubObject {
     `, ActivityPubObject.styles];
 
     static properties = {
-        it: {
-            type: ActivityPubItem,
-            converter: {
-                toAttribute: (val, typ) => JSON.stringify(val),
-                fromAttribute: (val, typ) => ActivityPubItem.load(val),
-            },
-        },
-        showMetadata: {type: Boolean},
-        inline: {type: Boolean},
         threaded: {type: Boolean},
     };
 
