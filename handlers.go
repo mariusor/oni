@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -203,6 +204,14 @@ var collectionTypes = vocab.ActivityVocabularyTypes{
 	vocab.CollectionPageType, vocab.CollectionType,
 }
 
+func isActivityProp(prop string) bool {
+	return slices.Contains(activitiesProps, prop)
+}
+
+func isObjectProp(prop string) bool {
+	return slices.Contains(objectProps, prop)
+}
+
 func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.Item, error) {
 	var isObjProperty bool
 	var prop string
@@ -246,7 +255,7 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 		return it, nil
 	}
 
-	if vocab.ActivityTypes.Contains(typ) {
+	if isActivityProp(prop) {
 		err = vocab.OnActivity(it, func(act *vocab.Activity) error {
 			switch prop {
 			case "object":
@@ -260,7 +269,7 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 			}
 			return nil
 		})
-	} else {
+	} else if isObjectProp(prop) {
 		err = vocab.OnObject(it, func(ob *vocab.Object) error {
 			switch prop {
 			case "icon":
@@ -289,7 +298,12 @@ func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Che
 	return it, nil
 }
 
-var propertiesThatMightBeObjects = []string{"object", "actor", "target", "icon", "image", "attachment"}
+var (
+	activitiesProps = []string{"object", "actor", "target"}
+	objectProps     = []string{"icon", "image", "attachment", "tag"}
+
+	propertiesThatMightBeObjects = append(activitiesProps, objectProps...)
+)
 
 func propNameInIRI(iri vocab.IRI) (bool, string) {
 	u, _ := iri.URL()
