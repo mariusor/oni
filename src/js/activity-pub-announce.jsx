@@ -24,6 +24,9 @@ export class ActivityPubAnnounce extends ActivityPubCreate {
         let action = pastensify(this.it.type);
 
         let published = this.it.getPublished();
+        if ((!auth || auth === nothing) && !published) {
+            return nothing;
+        }
         return html`
             <aside>
                 ${action} ${renderTimestamp(published)} ${until(auth)}

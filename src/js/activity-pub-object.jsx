@@ -278,6 +278,9 @@ export class ActivityPubObject extends LitElement {
             action = 'Updated';
             published = updated;
         }
+        if ((!auth || auth === nothing) && !published) {
+            return nothing;
+        }
 
         return html`
             <aside>
