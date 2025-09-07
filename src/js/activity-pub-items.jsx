@@ -1,15 +1,26 @@
 import {ActivityPubObject} from "./activity-pub-object";
 import {css, html, nothing} from "lit";
-import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
-import {ActivityPubItem, ActivityTypes, ActorTypes} from "./activity-pub-item";
-import {ActivityPubActivity} from "./activity-pub-activity";
+import {ActivityTypes, ActorTypes} from "./activity-pub-item";
 import {renderActivityByType, renderActorByType, renderObjectByType} from "./utils";
-import {ActivityPubActor} from "./activity-pub-actor";
 import {until} from "lit-html/directives/until.js";
 import {sortByPublished} from "./activity-pub-collection";
+import {fetchActivityPubIRI} from "./client";
 
 export class ActivityPubItems extends ActivityPubObject {
     static styles = [css`
+        :host(.attachment) ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .2rem;
+            justify-content: flex-start;
+        }
+        :host(.tag) ul {
+            display: inline;
+            margin: 0;
+            padding: 0;
+            font-size: .9rem;
+            line-height: 1rem;
+        }
         :host ul, :host ol {
             padding: 0;
             margin: 0;
@@ -19,12 +30,27 @@ export class ActivityPubItems extends ActivityPubObject {
             overflow: hidden;
             border-bottom: 1px solid var(--fg-color);
         }
+        :host(.attachment) li, :host(.tag) li {
+            border: 0;
+        }
+        :host(.tag) ul {
+            display: inline-flex;
+            flex-wrap: wrap;
+            padding: 0;
+            margin: 0;
+            gap: .12rem;
+        }
+        :host(.tag) li {
+            list-style: none;
+        }
+        :host(.attachment) ul > * {
+            display: inline-block;
+            width: 32%;
+        }
     `, ActivityPubObject.styles];
 
     static properties = {
-        it: {
-            type: Array,
-        },
+        it: {type: Array},
         showMetadata: {type: Boolean},
         inline: {type: Boolean},
         threaded: {type: Boolean},
@@ -38,46 +64,53 @@ export class ActivityPubItems extends ActivityPubObject {
         this.inline = false;
     }
 
-    renderItems() {
-        const items = this.it;
-
-        if (this.threaded) {
-            items.sort((a, b) => -1*sortByPublished(a, b))
+    async renderItems() {
+        if (!Array.isArray(this.it)) {
+            this.it = [this.it];
         }
-        let itemsInline = this.inline;
+        if (this.threaded) {
+            this.it.sort((a, b) => -1 * sortByPublished(a, b))
+        }
 
-        return html`${items.map(it => {
-            const type = it.hasOwnProperty('type') ? it.type : 'unknown';
-
-            let renderedItem = unsafeHTML(`<!-- Unknown activity object ${type} -->`);
-            if (ActivityTypes.indexOf(type) >= 0) {
-                if (!ActivityPubActivity.isValidForRender(it)) return nothing;
-                renderedItem = renderActivityByType(it, true, itemsInline);
-            } else if (ActorTypes.indexOf(type) >= 0) {
-                if (!ActivityPubActor.isValid(it)) return nothing;
-                renderedItem = renderActorByType(it, this.showMetadata, itemsInline);
-            } else {
-                if (!ActivityPubObject.isValid(it)) return nothing;
-                renderedItem = renderObjectByType(it, this.showMetadata, itemsInline);
+        for (let i = 0; i < this.it.length; i++) {
+            let it = this.it[i];
+            if (typeof it !== 'object') {
+                this.it[i] = await fetchActivityPubIRI(it);
             }
+        }
 
-            return html` <li>${until(renderedItem)}</li>`
+        return html`${this.it.map((it, i) => {
+            return until(this.renderItem(it, i, this.inline));
         })}`
     }
 
-    render() {
-        const collection = () => {
-            if (this.it.length === 0) {
-                return nothing;
-            }
+    renderItem(it, i, itemsInline) {
+        const type = it.hasOwnProperty('type') ? it.type : 'unknown';
 
-            const list = this.ordered ?
-                html`<ol>${this.renderItems()}</ol>` :
-                html`<ul>${this.renderItems()}</ul>`;
-
-            return html`${list}`;
+        let renderedItem;
+        if (ActivityTypes.indexOf(type) >= 0) {
+            renderedItem = renderActivityByType(it, true, itemsInline);
+        } else if (ActorTypes.indexOf(type) >= 0) {
+            renderedItem = renderActorByType(it, this.showMetadata, itemsInline);
+        } else {
+            renderedItem = renderObjectByType(it, this.showMetadata, itemsInline);
         }
-        return html`${collection()}`;
+
+        return html`<li>${renderedItem}</li>`
+    }
+
+    render() {
+        if (this.it.length === 0) {
+            return nothing;
+        }
+
+        const list = this.ordered ?
+            html`
+                <ol>${until(this.renderItems())}</ol>` :
+            html`
+                <ul>${until(this.renderItems())}</ul>`;
+
+        return html`${list}`;
     }
 }
 

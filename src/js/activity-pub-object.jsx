@@ -106,6 +106,9 @@ export class ActivityPubObject extends LitElement {
         .reactions ul li a {
             text-decoration: none;
         }
+        .replies {
+            font-size: 0.8rem;
+        }
     `;
 
     static properties = {
@@ -206,12 +209,8 @@ export class ActivityPubObject extends LitElement {
             return !(value.hasOwnProperty('id') && allText.includes(value.id));
         });
         return html`
-            <aside class="tag">
-                <ul>
-                    ${tags.map(
-                        value => html`<li>${until(ActivityPubObject.renderByType(value, false), html`Loading`)}</li>`
-                    )}
-                </ul>
+            <aside>
+                <oni-items class="tag" it=${JSON.stringify(tags)} ?showMetadata=${false}></oni-items>
             </aside>`;
     }
 
@@ -234,10 +233,8 @@ export class ActivityPubObject extends LitElement {
         return html`
             <details @toggle=${this.showChildren}>
                 <summary>${pluralize(attachment.length, 'attachment')}</summary>
-                <aside class="attachment">
-                    ${attachment.map(
-                            value => until(ActivityPubObject.renderByType(value), html`Loading`)
-                    )}
+                <aside>
+                    <oni-items class="attachment" it=${JSON.stringify(attachment)}></oni-items>
                 </aside>
             </details>`;
     }
@@ -322,7 +319,11 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderReplyCount() {
+        if(!this.it.hasOwnProperty('replies') || !this.it.replies) {
+            return nothing;
+        }
         if (this.inFocus()) {
+            // NOTE(marius): we're showing the replies list instead
             return nothing;
         }
 
@@ -422,7 +423,7 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
         return html`
-            <details>
+            <details class="replies">
                 <summary>${pluralize(replies.totalItems, 'reply')}</summary>
                 <oni-collection it=${JSON.stringify(replies)} ?showMetadata=${true} ?inline=${false} ?threaded=${true}></oni-collection>
             </details>`;
@@ -488,9 +489,13 @@ ActivityPubObject.renderByType = /*async*/ function (it, showMetadata, inline) {
     //     it = await fetchActivityPubIRI(it);
     //     if (it === null) return nothing;
     // }
+    if (!it.hasOwnProperty('type') || !it.type) {
+        return html`<oni-tag it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-tag>`;
+    }
     if (inline) {
         showMetadata = false;
     }
+
     if (inline) {
         let name = 'tag';
         if (it.hasOwnProperty('type')) {
@@ -503,10 +508,6 @@ ActivityPubObject.renderByType = /*async*/ function (it, showMetadata, inline) {
             name = it.preferredUsername;
         }
         return html`<a href="${it.id}">${name}</a>`;
-    }
-
-    if (!it.hasOwnProperty('type')) {
-        return html`<oni-tag it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-tag>`;
     }
 
     switch (it.type) {

@@ -40,20 +40,6 @@ export class ActivityPubNote extends ActivityPubObject {
     p {
         margin: 0 .2rem;
     }
-    .tag ul {
-        display: inline-flex;
-        flex-wrap: wrap;
-        padding: 0;
-        margin: 0;
-        gap: .12rem;
-    }
-    .tag li {
-        list-style: none;
-    }
-    .attachment > * {
-        display: inline-block;
-        width: 32%;
-    }
     `, ActivityPubObject.styles];
 
     constructor() {

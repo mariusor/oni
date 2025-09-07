@@ -152,7 +152,7 @@ export function authorization() {
 }
 
 export const renderObjectByType = ActivityPubObject.renderByType;
-export const renderActivityByType = ActivityPubActivity.renderByType; //
+export const renderActivityByType = ActivityPubActivity.renderByType;
 export const renderActorByType = ActivityPubActor.renderByType;
 
 export function activity(outbox, update, extraHeaders = {}, success = () => {}) {
