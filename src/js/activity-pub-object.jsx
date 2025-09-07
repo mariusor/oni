@@ -106,7 +106,7 @@ export class ActivityPubObject extends LitElement {
         .reactions ul li a {
             text-decoration: none;
         }
-        .replies {
+        .replies, .attachments {
             font-size: 0.8rem;
         }
     `;
