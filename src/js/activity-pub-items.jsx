@@ -13,6 +13,7 @@ export class ActivityPubItems extends ActivityPubObject {
             display: flex;
             gap: .2rem;
             justify-content: flex-start;
+            flex-wrap: wrap;
         }
         :host ul, :host ol {
             padding: 0;
