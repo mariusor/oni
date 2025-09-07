@@ -2,12 +2,10 @@ import {css, html, LitElement, nothing} from "lit";
 
 export class BandCampEmbed extends LitElement {
     static styles = [css`
-        :host {
-            max-height: 2rlh;
-        }
         iframe {
             max-width: 100%;
             border: none;
+            max-height: 2.4rlh;
         }
     `]
 

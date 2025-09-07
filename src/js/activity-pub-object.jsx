@@ -1,6 +1,6 @@
 import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI, isLocalIRI} from "./client.js";
-import {pluralize, renderTimestamp, sanitize} from "./utils.js";
+import {pluralize, renderTimestamp, sanitize, showBandCampEmbeds} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
@@ -214,14 +214,6 @@ export class ActivityPubObject extends LitElement {
             </aside>`;
     }
 
-    showChildren(e) {
-        const self = e.target;
-        const show = self.open;
-        self.querySelectorAll('bandcamp-embed').forEach((it) => {
-            it.show = show;
-        });
-    }
-
     renderAttachment() {
         let attachment = this.it.getAttachment();
         if (!attachment) {
@@ -231,7 +223,7 @@ export class ActivityPubObject extends LitElement {
             attachment = [attachment];
         }
         return html`
-            <details @toggle=${this.showChildren}>
+            <details @toggle=${showBandCampEmbeds} class="attachments">
                 <summary>${pluralize(attachment.length, 'attachment')}</summary>
                 <aside>
                     <oni-items class="attachment" it=${JSON.stringify(attachment)}></oni-items>

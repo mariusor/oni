@@ -427,3 +427,12 @@ const defaultSanitizerConfig = {
 export function sanitize(value) {
     return DOMPurify.sanitize(value, defaultSanitizerConfig);
 }
+
+export function showBandCampEmbeds(e) {
+    const self = e.target;
+    const show = self.open;
+    const items = self.querySelector('oni-items')?.shadowRoot;
+    items?.querySelectorAll('bandcamp-embed').forEach((it) => {
+        it.show = show;
+    });
+}
