@@ -32,6 +32,7 @@ func buildJS(prod bool) {
 		opt.MinifyIdentifiers = true
 		opt.MinifySyntax = true
 		opt.Sourcemap = api.SourceMapLinked
+		opt.TreeShaking = api.TreeShakingTrue
 	}
 	// JS
 	result := api.Build(opt)
