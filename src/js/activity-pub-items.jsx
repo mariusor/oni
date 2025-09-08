@@ -9,20 +9,21 @@ import {fetchActivityPubIRI} from "./client";
 export class ActivityPubItems extends ActivityPubObject {
     static styles = [css`
         ul, ol { width: 100%; }
-        :host(.attachment) ul {
-            display: flex;
-            gap: .2rem;
-            justify-content: flex-start;
-            flex-wrap: wrap;
-        }
         :host ul, :host ol {
             padding: 0;
             margin: 0;
             list-style: none;
         }
         :host li {
+            margin-top: .4rem;
             overflow: hidden;
             border-bottom: 1px solid var(--fg-color);
+        }
+        :host(.attachment) ul {
+            display: flex;
+            gap: .2rem;
+            justify-content: flex-start;
+            flex-wrap: wrap;
         }
         :host(.tag) ul {
             display: inline;

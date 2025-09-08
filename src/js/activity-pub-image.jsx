@@ -1,6 +1,5 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {when} from "lit-html/directives/when.js";
 import {ActivityPubNote} from "./activity-pub-note";
 import {until} from "lit-html/directives/until.js";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
@@ -54,24 +53,9 @@ export class ActivityPubImage extends ActivityPubObject {
         super(false);
     }
 
-    renderNameText() {
-        const name = document.createElement('div');
-        name.innerHTML = this.it.getName();
-        return name.innerText.trim();
-    }
+    renderNameText = () => renderHtmlText(this.it.getName());
 
-    renderAltText() {
-        const alt = document.createElement('div');
-        alt.innerHTML = this.it.getSummary();
-        return alt.innerText.trim();
-    }
-
-    renderAltLabel() {
-        if (this._showAlt && this.it.getName()?.length > 0) {
-            return this.renderNameText();
-        }
-        return 'alt';
-    }
+    renderAltText = () => renderHtmlText(this.it.getSummary());
 
     renderInline() {
         const src = this.it.getUrl() || [{href : this.it.iri()}];
@@ -85,10 +69,6 @@ export class ActivityPubImage extends ActivityPubObject {
             ) :
             src;
         return html`<img loading="lazy" src=${smallest?.href ?? nothing} title="${alt}" alt="${alt}" class="small""/>`;
-    }
-
-    toggleAltLabel(ev) {
-        this._showAlt = !this._showAlt;
     }
 
     render() {
@@ -124,27 +104,35 @@ export class ActivityPubImage extends ActivityPubObject {
             src = url;
         }
         if (!src) return unsafeHTML(`<!-- Unknown image object with missing id or url -->`);
+
+        const altElement = this.renderAlt(name, renderHtml(this.it.getSummary()));
         return html`
-                <figure>
-                    ${when(alt.length > 0,
-                            () => html`
-                                <figcaption>
-                                    <details @toggle=${this.toggleAltLabel}>
-                                        <summary>${this.renderAltLabel()}</summary>
-                                        ${alt}
-                                    </details>
-                                </figcaption>`,
-                            () => nothing
-                    )}
-                    <img loading="lazy" src=${src ?? nothing}
-                         title="${name ?? alt}" alt="${alt}"
-                         srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
-                </figure>
-                ${this.renderTag()}
-                ${until(this.renderReactions())}
-                ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
-                ${until(this.renderReplies())}
+            <figure>
+                ${altElement}
+                <img loading="lazy" src=${src ?? nothing}
+                     title="${name ?? alt}" alt="${alt}"
+                     srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
+            </figure>
+            ${this.renderTag()}
+            ${until(this.renderReactions())}
+            ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
+            ${until(this.renderReplies())}
         `;
+    }
+
+    renderAlt(name, alt) {
+        if (alt?.length === 0) return nothing;
+        let summary = 'alt';
+        if (this._showAlt && name?.length > 0) summary = name;
+
+        return html`
+            <figcaption>
+                <details @toggle=${() => this._showAlt = !this._showAlt}>
+                    <summary>${summary}</summary>
+                    ${unsafeHTML(alt)}
+                </details>
+            </figcaption>`;
+
     }
 
     static isValid(it) {
@@ -154,4 +142,18 @@ export class ActivityPubImage extends ActivityPubObject {
                 (it.hasOwnProperty('mediaType') && it.mediaType.startsWith('image/')) // NOTE(marius): This is for Pixelfed attachments.
             );
     }
+}
+
+function renderHtml(n) {
+    if (n?.length === 0) return null;
+    const el = document.createElement('div');
+    el.innerHTML = n;
+    return el.innerHTML.trim();
+}
+
+function renderHtmlText(n) {
+    if (n?.length === 0) return null;
+    const el = document.createElement('div');
+    el.innerHTML = n;
+    return el.innerText.trim();
 }
