@@ -822,14 +822,10 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if u, err := iri.URL(); err == nil {
-			if after := u.Query().Get("after"); after != "" {
-				colFilters = append(colFilters, filters.After(filters.SameID(vocab.IRI(after))))
-			}
-			if after := u.Query().Get("before"); after != "" {
-				colFilters = append(colFilters, filters.Before(filters.SameID(vocab.IRI(after))))
+			if !u.Query().Has("maxItems") {
+				colFilters = append(colFilters, filters.WithMaxCount(MaxItems))
 			}
 		}
-		colFilters = append(colFilters, filters.WithMaxCount(MaxItems))
 	}
 	if authActor, _ := o.loadAuthorizedActor(r, auth.AnonymousActor); authActor.ID != "" {
 		colFilters = append(colFilters, filters.Authorized(authActor.ID))
