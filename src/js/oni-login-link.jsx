@@ -4,7 +4,7 @@ import {isAuthorized} from "./utils.js";
 import {AuthController} from "./auth-controller.js";
 import {OniCollectionLink} from "./oni-collection-links";
 
-export class LoginLink extends LitElement {
+export class OniLoginLink extends LitElement {
     static styles = [css`
         dialog {
             flex-direction: column;
@@ -179,7 +179,7 @@ export class LoginLink extends LitElement {
     render() {
         this.getAuthURL();
         return html`
-            <nav>${when(
+            ${when(
                     !isAuthorized(),
                     () => html`
                         <a @click=${this.showDialog} href="#"><oni-icon alt="Authorize with OAuth2" name="sign-in"></oni-icon>Sign in</a>
@@ -191,7 +191,7 @@ export class LoginLink extends LitElement {
                             </form>
                         </dialog>`,
                     () => html`<a @click=${this.logout} href="#"><oni-icon alt="Sign out" name="sign-out"></oni-icon>Sign out</a>`
-            )}</nav>`;
+            )}`;
     }
 }
 

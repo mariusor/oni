@@ -18,7 +18,7 @@ import {ActivityPubEvent} from "./activity-pub-event";
 import {BandCampEmbed} from "./bandcamp-embed";
 import {OniErrors} from "./oni-errors";
 import {OniHeader} from "./oni-header";
-import {LoginLink} from "./login-link";
+import {OniLoginLink} from "./oni-login-link";
 import {ActivityPubCreate} from "./activity-pub-create";
 import {ActivityPubAnnounce} from "./activity-pub-announce";
 import {ActivityPubAppreciation} from "./activity-pub-appreciation";
@@ -53,7 +53,7 @@ customElements.define('oni-collection-link', OniCollectionLink);
 
 customElements.define('oni-icon', OniIcon);
 
-customElements.define('oni-login-link', LoginLink);
+customElements.define('oni-login-link', OniLoginLink);
 
 customElements.define('bandcamp-embed', BandCampEmbed);
 

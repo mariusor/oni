@@ -18,7 +18,7 @@ export class OniCollectionLinks extends LitElement {
             align-self: start;
         }
         :host ul {
-            margin: 0 .8rem 0;
+            margin: .2rem .4rem 0;
             padding: 0;
             align-self: end;
         }
@@ -27,12 +27,11 @@ export class OniCollectionLinks extends LitElement {
             border-style: solid; 
             border-color: var(--accent-color);
             border-bottom-width: 0;
-            min-width: 8vw;
             text-align: center;
             list-style: none;
             display: inline-block;
             line-height: 2.2rem;
-            padding: 0 .4rem;
+            padding: 0 1rem 0 .6rem;
             margin: 0 .2rem;
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
             text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
@@ -43,7 +42,6 @@ export class OniCollectionLinks extends LitElement {
         @media (max-width: 576px) {
             :host li {
                 line-height: 1.8rem;
-                max-width: 1.8rem;
                 margin: 0;
                 padding: 0;
                 overflow-x: clip;
@@ -137,7 +135,7 @@ export class OniCollectionLinks extends LitElement {
                 <slot></slot>
                 ${when(!isAuthorizePage(),
                     c => html`<ul>
-                            ${oauth !== nothing ? html`<li>${until(oauth)}</li>` : nothing}
+                            ${oauth !== nothing ? html`<li>${oauth}</li>` : nothing}
                             ${this.renderCollectionItems()}
                         </ul>`
                 )}
@@ -147,7 +145,7 @@ export class OniCollectionLinks extends LitElement {
 
 const LinkStyle = css`
         :host a {
-            font-size: 0.9rem;
+            font-size: .9rem;
             text-transform: capitalize;
             text-decoration: none;
             color: var(--accent-color);
@@ -158,14 +156,22 @@ const LinkStyle = css`
             color: var(--bg-color);
             text-shadow: 0 0 1em var(--accent-color), 0 0 .4rem var(--bg-color);
         }
-        @media (max-width: 576px) {
+        @media (max-width: 860px) {
             :host a {
-                font-size: 0px;
+                font-size: .7rem;
                 overflow: clip;
                 white-space: nowrap;
             }
+        }
+        @media (max-width: 576px) {
+            :host a {
+                font-size: 0;
+            }
+            :host a:hover {
+                font-size: .8rem;
+            }
             :host a oni-icon {
-                font-size: 0.9rem;
+                font-size: .9rem;
             }
         }
     `;
