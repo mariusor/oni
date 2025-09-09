@@ -1120,6 +1120,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 }
 
 var InMaintenanceMode bool = false
+var InDebugMode bool = false
 
 func (o *oni) OutOfOrderMw(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -196,6 +196,9 @@ func irif(r *http.Request) vocab.IRI {
 }
 
 func logRequest(o *oni, h http.Header, body []byte) {
+	if !InDebugMode {
+		return
+	}
 	fn := fmt.Sprintf("%s/%s.req", o.StoragePath, time.Now().UTC().Format(time.RFC3339))
 	all := bytes.Buffer{}
 	_ = h.Write(&all)

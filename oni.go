@@ -341,6 +341,12 @@ func (o *oni) Run(c context.Context) error {
 				o.Logger.WithContext(lw.Ctx{"maintenance": InMaintenanceMode}).Debugf("SIGUSR1 received")
 			}
 		},
+		syscall.SIGUSR2: func(_ chan<- error) {
+			InDebugMode = !InDebugMode
+			if o.Logger != nil {
+				o.Logger.WithContext(lw.Ctx{"maintenance": InDebugMode}).Debugf("SIGUSR2 received")
+			}
+		},
 		syscall.SIGINT: func(exit chan<- error) {
 			if o.Logger != nil {
 				o.Logger.Debugf("SIGINT received, stopping")
