@@ -424,6 +424,21 @@ const defaultSanitizerConfig = {
     FORCE_BODY: true,
 };
 
+
+export function renderHtml(n) {
+    if (!(n?.length > 0)) return null;
+    const el = document.createElement('div');
+    el.innerHTML = sanitize(n);
+    return el.innerHTML.trim();
+}
+
+export function renderHtmlText(n) {
+    if (!(n?.length > 0)) return null;
+    const el = document.createElement('div');
+    el.innerHTML = n;
+    return el.innerText.trim();
+}
+
 export function sanitize(value) {
     return DOMPurify.sanitize(value, defaultSanitizerConfig);
 }

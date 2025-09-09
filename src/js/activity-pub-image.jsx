@@ -3,6 +3,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubNote} from "./activity-pub-note";
 import {until} from "lit-html/directives/until.js";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
+import {renderHtml, renderHtmlText} from "./utils";
 
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`
@@ -142,18 +143,4 @@ export class ActivityPubImage extends ActivityPubObject {
                 (it.hasOwnProperty('mediaType') && it.mediaType.startsWith('image/')) // NOTE(marius): This is for Pixelfed attachments.
             );
     }
-}
-
-function renderHtml(n) {
-    if (!(n?.length > 0)) return null;
-    const el = document.createElement('div');
-    el.innerHTML = n;
-    return el.innerHTML.trim();
-}
-
-function renderHtmlText(n) {
-    if (!(n?.length > 0)) return null;
-    const el = document.createElement('div');
-    el.innerHTML = n;
-    return el.innerText.trim();
 }

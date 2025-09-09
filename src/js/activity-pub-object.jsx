@@ -1,6 +1,6 @@
 import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI, isLocalIRI} from "./client.js";
-import {pluralize, renderTimestamp, sanitize, showBandCampEmbeds} from "./utils.js";
+import {pluralize, renderHtml, renderHtmlText, renderTimestamp, sanitize, showBandCampEmbeds} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
@@ -452,17 +452,16 @@ ActivityPubObject.renderByMediaType = function (it, showMetadata, inline) {
         src = {href: src};
         name = src;
     }
-    if (!name) {
-        name = it.getSummary()[0];
+    if (!(name?.length > 0)) {
+        name = renderHtml(it.getSummary());
     }
-    if (!name) {
-        name = it.getName()[0];
+    if (!(name?.length > 0)) {
+        name = renderHtml(it.getName());
     }
-    if (!name) {
+    if (!(name?.length > 0)) {
         name = it.getType();
     }
 
-    name = sanitize(name);
     return html`<div><a href=${src.href}>${unsafeHTML(name) ?? src.href}</a></div>`;
 }
 
