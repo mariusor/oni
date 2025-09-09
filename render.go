@@ -36,7 +36,7 @@ var (
 						return "items"
 					case vocab.ActorTypes.Contains(t):
 						return "actor"
-					case vocab.CreateType == t:
+					case vocab.ActivityVocabularyTypes{vocab.CreateType, vocab.UpdateType}.Contains(t):
 						return "create"
 					case vocab.AnnounceType == t:
 						return "announce"
