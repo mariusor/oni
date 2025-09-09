@@ -5,6 +5,7 @@ import {renderActivityByType, renderActorByType, renderObjectByType} from "./uti
 import {until} from "lit-html/directives/until.js";
 import {sortByPublished} from "./activity-pub-collection";
 import {fetchActivityPubIRI} from "./client";
+import {ActivityPubActivity} from "./activity-pub-activity";
 
 export class ActivityPubItems extends ActivityPubObject {
     static styles = [css`
@@ -104,10 +105,28 @@ export class ActivityPubItems extends ActivityPubObject {
         return html`<li>${renderedItem}</li>`
     }
 
+    filterActivitiesByObjectIds() {
+        if (!(this.it?.length > 0)) return;
+
+        let objectsIds = [];
+        this.it = this.it.filter(it => {
+            if (!ActivityPubActivity.isValid(it)) return true;
+            if (it.hasOwnProperty('object')) {
+                if (objectsIds.indexOf(it.object.id) < 0) {
+                    objectsIds.push(it.object.id);
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
     render() {
         if (!(this.it?.length > 0)) {
             return nothing;
         }
+
+        this.filterActivitiesByObjectIds();
 
         const list = this.ordered ?
             html`

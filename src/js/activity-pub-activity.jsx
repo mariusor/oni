@@ -72,6 +72,7 @@ ActivityPubActivity.renderByType = /*async*/ function (it, showMetadata, inline)
     switch (it.type) {
     //     case 'Delete':
     //         return html`<oni-delete it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-delete>`;
+        case 'Update':
         case 'Create':
             return html`<oni-create it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-create>`;
         case 'Announce':

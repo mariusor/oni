@@ -809,7 +809,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 				if filtersCreateUpdate(colFilters) && !iriHasObjectTypeFilter(iri) {
 					obFilters = append(obFilters, filters.HasType(validObjectTypes...))
 				}
-				colFilters = append(colFilters, filters.HasType(vocab.CreateType, vocab.AnnounceType))
+				colFilters = append(colFilters, filters.HasType(vocab.CreateType, vocab.UpdateType, vocab.AnnounceType))
 				if len(obFilters) > 0 {
 					colFilters = append(colFilters, filters.Object(obFilters...))
 				}

@@ -34,18 +34,16 @@ var (
 					switch {
 					case vocab.CollectionOfItems == t:
 						return "items"
+					case vocab.FollowType == t:
+						return "follow"
 					case vocab.ActorTypes.Contains(t):
 						return "actor"
 					case vocab.ActivityVocabularyTypes{vocab.CreateType, vocab.UpdateType}.Contains(t):
 						return "create"
 					case vocab.AnnounceType == t:
 						return "announce"
-					case vocab.LikeType == t:
-						fallthrough
-					case vocab.DislikeType == t:
+					case vocab.ActivityVocabularyTypes{vocab.LikeType, vocab.DislikeType}.Contains(t):
 						return "appreciation"
-					case vocab.FollowType == t:
-						return "follow"
 					case vocab.ActivityTypes.Contains(t), vocab.IntransitiveActivityTypes.Contains(t):
 						return "activity"
 					case vocab.CollectionTypes.Contains(t):
