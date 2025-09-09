@@ -41,9 +41,9 @@ export class OniCollectionLinks extends LitElement {
         }
         @media (max-width: 576px) {
             :host li {
-                line-height: 1.8rem;
-                margin: 0;
-                padding: 0;
+                line-height: 1.2rem;
+                padding: .2rem .4rem 0;
+                margin: 0 .1rem;
                 overflow-x: clip;
             }
         }
@@ -166,9 +166,8 @@ const LinkStyle = css`
         @media (max-width: 576px) {
             :host a {
                 font-size: 0;
-            }
-            :host a:hover {
-                font-size: .8rem;
+                overflow: clip;
+                white-space: nowrap;
             }
             :host a oni-icon {
                 font-size: .9rem;
