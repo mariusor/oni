@@ -13,13 +13,13 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.9
 	github.com/go-ap/activitypub v0.0.0-20250905102448-e9df599e4528
-	github.com/go-ap/auth v0.0.0-20250905102747-eef12469cd1b
+	github.com/go-ap/auth v0.0.0-20250909130627-7ba95f863264
 	github.com/go-ap/client v0.0.0-20250905102653-674f86aded3d
 	github.com/go-ap/errors v0.0.0-20250905102357-4480b47a00c4
-	github.com/go-ap/filters v0.0.0-20250905102619-f401bfda17dc
+	github.com/go-ap/filters v0.0.0-20250909130221-883df1a722e4
 	github.com/go-ap/jsonld v0.0.0-20250905102310-8480b0fe24d9
-	github.com/go-ap/processing v0.0.0-20250905111632-bcb8fde5398a
-	github.com/go-ap/storage-fs v0.0.0-20250905112030-6810f7e5e121
+	github.com/go-ap/processing v0.0.0-20250909130701-94814c8f7f96
+	github.com/go-ap/storage-fs v0.0.0-20250909130728-97c1ca4b19c3
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
 	github.com/goburrow/cache v0.1.4
@@ -53,8 +53,8 @@ require (
 	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/sergeymakinen/go-bmp v1.0.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
-	golang.org/x/image v0.30.0 // indirect
+	golang.org/x/crypto v0.42.0 // indirect
+	golang.org/x/image v0.31.0 // indirect
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
