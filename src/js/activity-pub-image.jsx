@@ -59,7 +59,7 @@ export class ActivityPubImage extends ActivityPubObject {
 
     renderInline() {
         const src = this.it.getUrl() || [{href : this.it.iri()}];
-        if (src?.length === 0) {
+        if (!(src?.length > 0)) {
             return nothing;
         }
         const alt = this.renderAltText();
@@ -121,7 +121,7 @@ export class ActivityPubImage extends ActivityPubObject {
     }
 
     renderAlt(name, alt) {
-        if (alt?.length === 0) return nothing;
+        if (!(alt?.length > 0) && !(name?.length > 0)) return nothing;
         let summary = 'alt';
         if (this._showAlt && name?.length > 0) summary = name;
 
@@ -145,14 +145,14 @@ export class ActivityPubImage extends ActivityPubObject {
 }
 
 function renderHtml(n) {
-    if (n?.length === 0) return null;
+    if (!(n?.length > 0)) return null;
     const el = document.createElement('div');
     el.innerHTML = n;
     return el.innerHTML.trim();
 }
 
 function renderHtmlText(n) {
-    if (n?.length === 0) return null;
+    if (!(n?.length > 0)) return null;
     const el = document.createElement('div');
     el.innerHTML = n;
     return el.innerText.trim();

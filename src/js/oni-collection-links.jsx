@@ -119,7 +119,7 @@ export class OniCollectionLinks extends LitElement {
 
     renderCollectionItems() {
         this.buildCollections();
-        if (this.collections.length === 0) return nothing;
+        if (!(this.collections?.length > 0)) return nothing;
         return map(this.collections,(iri) => until(
             fetchActivityPubIRI(iri)
                 .then(

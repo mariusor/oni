@@ -233,7 +233,7 @@ export class ActivityPubObject extends LitElement {
 
     renderInReplyTo() {
         let replyTo =  this.it.getInReplyTo();
-        if (!replyTo || replyTo?.length === 0) return nothing;
+        if (!(replyTo?.length > 0)) return nothing;
         if (!Array.isArray(replyTo)) {
             replyTo = [replyTo];
         }
@@ -282,9 +282,7 @@ export class ActivityPubObject extends LitElement {
 
     renderName() {
         const name = this.it.getName();
-        if (name.length === 0) {
-            return nothing;
-        }
+        if (!(name?.length > 0)) return nothing;
         return html`<a href=${this.it.iri() ?? nothing}>
             <oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values>
             ${this.renderPermaLink(false)}
@@ -293,18 +291,14 @@ export class ActivityPubObject extends LitElement {
 
     renderContent() {
         const content = this.it.getContent();
-        if (content.length === 0) {
-            return nothing;
-        }
+        if (!(content?.length > 0)) return nothing;
         return html`
             <oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
     }
 
     renderSummary() {
         const summary = this.it.getSummary();
-        if (summary.length === 0) {
-            return nothing;
-        }
+        if (!(summary.length > 0)) return nothing;
 
         return html`
             <oni-natural-language-values name="summary" it=${JSON.stringify(summary)}></oni-natural-language-values>`;

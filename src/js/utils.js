@@ -310,7 +310,7 @@ function getAccentColor(palette, colors) {
             accentColors[index] = tc(value).saturate().toHexString()
         });
     }
-    if (accentColors.length === 0) {
+    if (!(accentColors.length > 0)) {
         return "";
     }
     return mostReadable(palette.bgColor, accentColors)?.toHexString();

@@ -202,26 +202,20 @@ export class ActivityPubActor extends ActivityPubObject {
 
     renderPreferredUsername() {
         const name = this.it.getPreferredUsername();
-        if (name.length === 0) {
-            return nothing;
-        }
+        if (!(name?.length > 0)) return nothing;
         return html`<oni-natural-language-values name="preferredUsername" it=${JSON.stringify(name)}></oni-natural-language-values>`;
     }
 
     renderSummary() {
         const summary = this.it.getSummary();
-        if (summary.length === 0) {
-            return nothing;
-        }
+        if (!(summary?.length > 0)) return nothing;
 
         return html`<oni-natural-language-values name="summary" it=${JSON.stringify(summary)}></oni-natural-language-values>`;
     }
 
     renderContent() {
         const content = this.it.getContent();
-        if (content.length === 0) {
-            return nothing;
-        }
+        if (!(content?.length > 0)) return nothing;
         return html`<oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
     }
 

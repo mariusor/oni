@@ -105,7 +105,7 @@ export class ActivityPubItems extends ActivityPubObject {
     }
 
     render() {
-        if (this.it.length === 0) {
+        if (!(this.it?.length > 0)) {
             return nothing;
         }
 
