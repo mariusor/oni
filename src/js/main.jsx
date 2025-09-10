@@ -58,8 +58,6 @@ customElements.define('oni-login-link', OniLoginLink);
 customElements.define('bandcamp-embed', BandCampEmbed);
 
 OnReady(function () {
-    //console.debug(`Loading ${window.location}`);
-
     const root = document.documentElement;
     if (localStorage.getItem('palette')) {
         const palette = JSON.parse(localStorage.getItem('palette'));
@@ -70,4 +68,7 @@ OnReady(function () {
         root.style.setProperty('--link-active-color', palette.linkActiveColor);
         root.style.setProperty('--accent-color', palette.accentColor);
     }
+
+    document.addEventListener('logged.in', () => window.location.reload());
+    document.addEventListener('logged.out', () => window.location.reload());
 });
