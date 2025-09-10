@@ -25,7 +25,7 @@ export class OniHeader extends ActivityPubActor {
                 background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
                 max-height: 2rem;
                 max-width: 2rem;
-                margin-bottom: -.74rem;
+                margin-bottom: -.4rem;
             }
             header a, header a:visited, header a:hover {
                 color: var(--accent-color);
