@@ -23,7 +23,7 @@ export class NaturalLanguageValues extends LitElement {
         }
         pre {
             max-width: 100%;
-            overflow-x: scroll;
+            overflow-x: auto;
         }
         h1 + p, h2 + p, h3 + p {
             margin-top: 0;

@@ -1,4 +1,4 @@
-import {TinyColor, readability, mostReadable} from "@ctrl/tinycolor";
+import {mostReadable, readability, TinyColor} from "@ctrl/tinycolor";
 import {average, prominent} from "color.js";
 import {ActivityPubItem} from "./activity-pub-item";
 import {html, nothing} from "lit";
@@ -138,6 +138,7 @@ function isCons(c) {
     function isVowel(v) {
         return ['a', 'e', 'i', 'o', 'u'].indexOf(v) >= 0;
     }
+
     return !isVowel(c);
 }
 
@@ -164,7 +165,7 @@ export function showError(e) {
     alert(e);
 }
 
-function colorsFromImage (url) {
+function colorsFromImage(url) {
     return prominent(url, {amount: 30, group: 40, format: 'hex', sample: 8})
 }
 
@@ -180,14 +181,27 @@ const /* sort */ bySaturation = (a, b) => tc(b).toHsv().s - tc(a).toHsv().s;
 const /* sort */ byDiff = (base) => (a, b) => Math.abs(colorDiff(a, base)) - Math.abs(colorDiff(b, base));
 
 function paletteIsValid(palette, imageURL, iconURL) {
-    return (
-        (imageURL === null && !palette.hasOwnProperty('bgImageURL')) ||
-        (palette.hasOwnProperty('bgImageURL') && palette.bgImageURL === imageURL)
-    ) && (
-        (iconURL === null && !palette.hasOwnProperty('iconURL')) ||
-        (palette.hasOwnProperty('iconURL') && palette.iconURL === iconURL)
-    );
+    if (!imageURL && !iconURL) return false;
+
+    const imageIsNull = (!palette.hasOwnProperty('bgImageURL') || palette?.bgImageURL?.length === 0) && !imageURL;
+    const imageIsSame = palette.hasOwnProperty('bgImageURL') && palette.bgImageURL === imageURL;
+    const imageValid = imageIsNull || imageIsSame;
+
+    const iconIsNull = (!palette.hasOwnProperty('iconURL') || palette?.iconURL?.length === 0) && !iconURL;
+    const iconIsSame = (palette.hasOwnProperty('iconURL') && palette.iconURL === iconURL);
+    const iconValid = iconIsNull || iconIsSame;
+
+    return imageValid && iconValid;
 }
+
+const defaultPalette = {
+    bgColor: '#232627',
+    fgColor: '#EFF0F1',
+    linkColor: '#1E90FF', /* dodgerblue */
+    linkVisitedColor: '#9370DB', /* mediumpurple */
+    linkActiveColor: '#9370DB',
+    accentColor: '#EFF0F1',
+};
 
 export async function loadPalette(it) {
     if (!ActivityPubItem.isValid(it)) return nothing;
@@ -258,9 +272,9 @@ export async function loadPalette(it) {
         palette.linkActiveColor = getClosestColor(palette, iconColors, palette.linkColor) || palette.linkActiveColor;
     }
 
-    if (imageColors.length+iconColors.length > 0) {
+    if (imageColors.length + iconColors.length > 0) {
         console.debug(`loaded image colors:`, imageColors);
-        palette.fgColor = getFgColor(palette, imageColors+iconColors) || palette.fgColor;
+        palette.fgColor = getFgColor(palette, imageColors + iconColors) || palette.fgColor;
         root.style.setProperty('--fg-color', palette.fgColor);
     }
 
@@ -317,16 +331,28 @@ export function renderColors() {
             const color = mostReadable(value, [palette.bgColor, palette.fgColor]);
             return html`
                 <div style="padding: .2rem 1rem; background-color: ${value}; color: ${color}; font-size:.8em;">
-                        <small>
+                    <small>
                         ${value}
-                        : <data value="${colorDiff(value, palette.bgColor)}" title="diff">${colorDiff(value, palette.bgColor).toFixed(2)}</data>
-                        : <data value="${contrast(value, palette.bgColor)}" title="contrast bg">${contrast(value, palette.bgColor).toFixed(2)}</data>
-                        : <data value="${contrast(value, palette.fgColor)}" title="contrast fg">${contrast(value, palette.fgColor).toFixed(2)}</data>
-                        : <data value="${tc(value).toHsl().h}" title="hue">${tc(value).toHsl().h.toFixed(2)}</data>
-                        : <data value="${tc(value).toHsl().s}" title="saturation">${tc(value).toHsl().s.toFixed(2)}</data>
-                        : <data value="${tc(value).toHsl().l}" title="luminance">${tc(value).toHsl().l.toFixed(2)} </data>
-                        </small>
-                    </div>
+                        :
+                        <data value="${colorDiff(value, palette.bgColor)}" title="diff">
+                            ${colorDiff(value, palette.bgColor).toFixed(2)}
+                        </data>
+                        :
+                        <data value="${contrast(value, palette.bgColor)}" title="contrast bg">
+                            ${contrast(value, palette.bgColor).toFixed(2)}
+                        </data>
+                        :
+                        <data value="${contrast(value, palette.fgColor)}" title="contrast fg">
+                            ${contrast(value, palette.fgColor).toFixed(2)}
+                        </data>
+                        :
+                        <data value="${tc(value).toHsl().h}" title="hue">${tc(value).toHsl().h.toFixed(2)}</data>
+                        :
+                        <data value="${tc(value).toHsl().s}" title="saturation">${tc(value).toHsl().s.toFixed(2)}</data>
+                        :
+                        <data value="${tc(value).toHsl().l}" title="luminance">${tc(value).toHsl().l.toFixed(2)}</data>
+                    </small>
+                </div>
             `
         })}
     `;
@@ -345,8 +371,10 @@ export function renderTimestamp(published, relative = true) {
     if (!published) {
         return nothing;
     }
-    return html`<time datetime=${published.toUTCString()} title=${published.toUTCString()}>
-            <oni-icon name="clock"></oni-icon> ${relative ? relativeDate(published) : published.toLocaleString()}
+    return html`
+        <time datetime=${published.toUTCString()} title=${published.toUTCString()}>
+            <oni-icon name="clock"></oni-icon>
+            ${relative ? relativeDate(published) : published.toLocaleString()}
         </time>`;
 }
 
@@ -359,7 +387,7 @@ export function renderDuration(seconds) {
 }
 
 function validColors(value, index, array) {
-    const notDark = not('#000000',2)(value);
+    const notDark = not('#000000', 2)(value);
     const notLight = not('#ffffff', 2)(value);
     return notDark && notLight;
 }
@@ -373,7 +401,7 @@ function toXYZ(col) {
         b: col.b / 255,
     }
 
-    const convVal = (v) => 100*(v > 0.04045 ? Math.pow((v + 0.055) / 1.055, 2.4) : v / 12.92);
+    const convVal = (v) => 100 * (v > 0.04045 ? Math.pow((v + 0.055) / 1.055, 2.4) : v / 12.92);
 
     return {
         x: convVal(col.r) * 0.4124 + convVal(col.g) * 0.3576 + convVal(col.b) * 0.1805,
@@ -388,7 +416,7 @@ function xyzToLab(col) {
     const refY = 100;
     const refZ = 108.88;
 
-    const convVal = (v) => (v > 0.008856) ? Math.pow(v , 1/3) : (7.787 * v) + (16 / 116);
+    const convVal = (v) => (v > 0.008856) ? Math.pow(v, 1 / 3) : (7.787 * v) + (16 / 116);
 
     let x = convVal(col.x / refX);
     let y = convVal(col.y / refY);
@@ -404,8 +432,8 @@ function xyzToLab(col) {
 export function colorDiff(c1, c2) {
     c1 = xyzToLab(toXYZ(tc(c1)?.toRgb()));
     c2 = xyzToLab(toXYZ(tc(c2)?.toRgb()));
-    return Math.sqrt(Math.pow(c2.a , 2) + Math.pow(c2.b , 2)) -
-        Math.sqrt(Math.pow(c1.a , 2) + Math.pow(c1.b , 2))
+    return Math.sqrt(Math.pow(c2.a, 2) + Math.pow(c2.b, 2)) -
+        Math.sqrt(Math.pow(c1.a, 2) + Math.pow(c1.b, 2))
 }
 
 const defaultSanitizerConfig = {

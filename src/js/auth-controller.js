@@ -7,7 +7,6 @@ export class AuthController {
     }
 
     set authorization(auth) {
-        console.debug('setting authorization', auth);
         if (auth === null) {
             localStorage.removeItem('authorization');
             return;

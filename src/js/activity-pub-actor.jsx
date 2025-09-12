@@ -118,11 +118,9 @@ export class ActivityPubActor extends ActivityPubObject {
         super();
     }
 
-    async renderBgImage() {
-        const palette = await loadPalette(this.it);
-        if (!palette) {
-            return nothing;
-        }
+    renderBgImage(palette) {
+        if (!palette) return nothing;
+        if (!palette?.bgColor) return nothing;
 
         const col = tc(palette.bgColor);
         const haveBgImg = palette.hasOwnProperty('bgImageURL') && palette.bgImageURL.length > 0;
@@ -144,7 +142,7 @@ export class ActivityPubActor extends ActivityPubObject {
 
         this.scheduleUpdate();
         return html`
-            ${until(this.renderBgImage())}
+            ${this.renderBgImage(palette)}
             :host header {
                 --bg-color: ${palette.bgColor};
                 --fg-color: ${palette.fgColor};
@@ -260,7 +258,6 @@ export class ActivityPubActor extends ActivityPubObject {
         const iri = this.it.iri();
         const style = html`<style>${until(this.renderPalette())}</style>`;
 
-        //console.info(`rendering and checking authorized: ${this.authorized}`,);
         return html`${style}<header>
             <a href=${iri}>${this.renderIcon()}</a>
             <section>
