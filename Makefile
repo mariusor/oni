@@ -54,7 +54,7 @@ go.sum: go.mod
 	$(GO) mod tidy
 	$(GO) get oni
 
-$(PROJECT_NAME): go.mod bin/$(PROJECT_NAME)
+$(PROJECT_NAME): static/* go.sum bin/$(PROJECT_NAME)
 bin/$(PROJECT_NAME): cmd/oni/main.go $(GO_SOURCES) go.mod go.sum static/main.css static/main.js static/icons.svg
 	$(BUILD) -o $@ cmd/oni/main.go
 ifneq ($(ENV),dev)
@@ -62,7 +62,7 @@ ifneq ($(ENV),dev)
 endif
 
 ctl: bin/ctl
-bin/ctl: go.mod go.sum cmd/ctl/main.go $(GO_SOURCES)
+bin/ctl: go.sum cmd/ctl/main.go $(GO_SOURCES)
 	$(BUILD) -o $@ cmd/ctl/main.go
 ifneq ($(ENV),dev)
 	$(UPX) -q --mono --no-progress --best $@ || true
@@ -97,7 +97,7 @@ images: ## Build podman images.
 	$(MAKE) -C images $@
 
 test: TEST_TARGET := ./...
-test: download go.sum ## Run unit tests for the service.
+test: go.sum ## Run unit tests for the service.
 	$(TEST) $(TEST_FLAGS) $(TEST_TARGET)
 
 coverage: TEST_TARGET := .
