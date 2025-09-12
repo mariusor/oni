@@ -1,14 +1,12 @@
-import {authorization} from "./utils";
 import {ActivityPubItem} from "./activity-pub-item";
+import {AuthController} from "./auth-controller";
 
 export async function fetchActivityPubIRI(iri) {
+    const auth = new AuthController(null);
     if (typeof iri !== 'string') return new Promise((resolve, reject) => reject('invalid URL passed to function'));
     let headers = fetchHeaders;
     if (isLocalIRI(iri)) {
-        const auth = authorization();
-        if (auth.hasOwnProperty('token_type') && auth.hasOwnProperty('access_token')) {
-            headers.Authorization = `${auth.token_type} ${auth.access_token}`;
-        }
+          auth.addHeader(headers);
     } else {
         // generate HTTP-signature for the actor
     }

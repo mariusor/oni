@@ -1,6 +1,5 @@
 import {css, html, LitElement} from "lit";
 import {when} from "lit-html/directives/when.js";
-import {isAuthorized} from "./utils.js";
 import {AuthController} from "./auth-controller.js";
 import {OniCollectionLink} from "./oni-collection-links";
 
@@ -43,7 +42,7 @@ export class OniLoginLink extends LitElement {
     constructor() {
         super()
         this.fetched = false;
-        this.authorized = isAuthorized();
+        this.authorized = this._auth.authorized;
     }
 
     showDialog(e) {
@@ -68,7 +67,7 @@ export class OniLoginLink extends LitElement {
             composed: true,
         }));
         this.error = null;
-        this.authorized = isAuthorized();
+        this.authorized = this._auth.authorized;
     }
 
     login(e) {
@@ -157,7 +156,7 @@ export class OniLoginLink extends LitElement {
         });
         setAuthCookie(encodeURIComponent(JSON.stringify(this._auth.authorization)));
         this.error = null;
-        this.authorized = isAuthorized();
+        this.authorized = this._auth.authorized;
         this.dispatchEvent(closeEvent);
         this.hideDialog(closeEvent);
     }
@@ -180,7 +179,7 @@ export class OniLoginLink extends LitElement {
         this.getAuthURL();
         return html`
             ${when(
-                    !isAuthorized(),
+                    !this._auth.authorized,
                     () => html`
                         <a @click=${this.showDialog} href="#"><oni-icon alt="Authorize with OAuth2" name="sign-in"></oni-icon>Sign in</a>
                         <dialog closedby="any">

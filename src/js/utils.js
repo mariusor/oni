@@ -64,12 +64,6 @@ function splitCollectionIRI(iri) {
     return [u.toString(), col];
 }
 
-export function isAuthorized() {
-    const auth = authorization();
-    return auth.hasOwnProperty('access_token') && auth.hasOwnProperty('token_type') &&
-        auth.access_token.length > 0 && auth.token_type.length > 0;
-}
-
 export function isMainPage() {
     return window.location.pathname === '/';
 }
@@ -145,10 +139,6 @@ function isCons(c) {
         return ['a', 'e', 'i', 'o', 'u'].indexOf(v) >= 0;
     }
     return !isVowel(c);
-}
-
-export function authorization() {
-    return JSON.parse(localStorage.getItem('authorization')) || {};
 }
 
 export const renderObjectByType = ActivityPubObject.renderByType;

@@ -1,26 +1,18 @@
 export class AuthController {
     _authorization = {};
 
-    static _hosts = [];
-
-    static get hosts() {
-        return this._hosts;
-    }
-
     get authorization() {
         this._authorization = JSON.parse(localStorage.getItem('authorization')) || {};
         return this._authorization;
     }
 
     set authorization(auth) {
+        console.debug('setting authorization', auth);
         if (auth === null) {
             localStorage.removeItem('authorization');
             return;
         }
         localStorage.setItem('authorization', JSON.stringify(auth))
-        for (const host of AuthController.hosts) {
-            host.requestUpdate();
-        }
     }
 
     get authorized() {
@@ -29,13 +21,14 @@ export class AuthController {
     }
 
     constructor(host) {
+        if (!host) return;
         host.addController(this);
-        AuthController.hosts.push(host);
+    }
 
-        // this is a poor man's update on the slot content for the oni-mail oni-natural-language-values name="content"
-        const content = host.querySelector('oni-natural-language-values[name=content]');
-        if (content !== null) {
-            AuthController.hosts.push(content);
+    addHeader(hdrs) {
+        if (!hdrs || !(this._authorization.hasOwnProperty('token_type') && this._authorization.hasOwnProperty('access_token'))) {
+            return;
         }
+        hdrs.Authorization = `${this._authorization.token_type} ${this._authorization.access_token}`;
     }
 }
