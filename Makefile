@@ -54,8 +54,8 @@ go.sum: go.mod
 	$(GO) mod tidy
 	$(GO) get oni
 
-$(PROJECT_NAME): static/* go.sum bin/$(PROJECT_NAME)
-bin/$(PROJECT_NAME): cmd/oni/main.go $(GO_SOURCES) go.mod go.sum static/main.css static/main.js static/icons.svg
+$(PROJECT_NAME): go.sum bin/$(PROJECT_NAME)
+bin/$(PROJECT_NAME): cmd/oni/main.go $(GO_SOURCES) go.sum static/main.css static/main.js static/icons.svg
 	$(BUILD) -o $@ cmd/oni/main.go
 ifneq ($(ENV),dev)
 	$(UPX) -q --mono --no-progress --best $@ || true
