@@ -15,7 +15,6 @@ export async function fetchActivityPubIRI(iri) {
         console.debug(`fetching ${isLocalIRI(iri) ? 'local' : 'remote'} IRI `, iri);
         const opts = {
             headers: headers,
-            cache: 'force-cache',
         };
         fetch(iri, opts).then(response => {
             if (response.hasOwnProperty("headers") && response.headers["Content-Type"] !== jsonLDContentType) {
