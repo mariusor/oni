@@ -123,22 +123,6 @@ export class ActivityPubItems extends ActivityPubObject {
         return html`<li>${renderedItem}</li>`
     }
 
-    filterActivitiesByObjectIds() {
-        if (!(this.it?.length > 0)) return;
-
-        let objectsIds = [];
-        this.it = this.it.filter(it => {
-            if (!ActivityPubActivity.isValid(it)) return true;
-            if (it.hasOwnProperty('object')) {
-                if (objectsIds.indexOf(it.object.id) < 0) {
-                    objectsIds.push(it.object.id);
-                    return true;
-                }
-            }
-            return false;
-        });
-    }
-
     render() {
         if (!(this.it?.length > 0)) {
             return nothing;
