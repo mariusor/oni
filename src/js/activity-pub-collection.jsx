@@ -18,11 +18,13 @@ export class ActivityPubCollection extends ActivityPubObject {
 
     static properties = {
         threaded: {type: Boolean},
+        parent: {type: String},
     };
 
     constructor(showMetadata) {
         super(showMetadata);
         this.threaded = false;
+        this.parent = null;
     }
 
     renderNext() {
@@ -59,7 +61,13 @@ export class ActivityPubCollection extends ActivityPubObject {
         if (!ActivityPubItem.isValid(this.it)) return nothing;
 
         let itemsInline = this.inline || this.it.iri()?.includes('shares') || this.it.iri()?.includes('following');
-        return html`<oni-items it=${JSON.stringify(this.it.getItems())} ?ordered=${this.isOrdered()} ?inline=${itemsInline}></oni-items>
+        return html`<oni-items 
+                it=${JSON.stringify(this.it.getItems())} 
+                ?ordered=${this.isOrdered()} 
+                ?inline=${itemsInline} 
+                ?threaded=${this.threaded}
+                parent=${this.parent ?? nothing}
+        ></oni-items>
         ${this.renderPrevNext()}
         `;
     }
@@ -73,5 +81,5 @@ export function sortByPublished(a, b) {
     }
     if (aHas && !bHas) return -1;
     if (!aHas && bHas) return 1;
-    return Date.parse(b.published) - Date.parse(a.published);
+    return Date.parse(b?.published) - Date.parse(a?.published);
 }

@@ -411,7 +411,13 @@ export class ActivityPubObject extends LitElement {
         return html`
             <details class="replies">
                 <summary>${pluralize(replies.totalItems, 'reply')}</summary>
-                <oni-collection it=${JSON.stringify(replies)} ?showMetadata=${true} ?inline=${false} ?threaded=${true}></oni-collection>
+                <oni-collection 
+                        it=${JSON.stringify(replies)} 
+                        ?showMetadata=${true} 
+                        ?inline=${false} 
+                        ?threaded=${true}
+                        parent=${this.it.iri()}
+                ></oni-collection>
             </details>`;
     }
 

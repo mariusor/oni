@@ -61,6 +61,7 @@ export class ActivityPubItems extends ActivityPubObject {
         inline: {type: Boolean},
         threaded: {type: Boolean},
         ordered: {type: Boolean},
+        parent: {type: String}
     };
 
     constructor(showMetadata) {
@@ -68,6 +69,23 @@ export class ActivityPubItems extends ActivityPubObject {
         this.threaded = false;
         this.ordered = false;
         this.inline = false;
+        this.parent = null;
+    }
+
+    filterActivitiesByObjectIds() {
+        if (!(this.it?.length > 0)) return;
+
+        let objectsIds = [];
+        this.it = this.it.filter(it => {
+            if (!ActivityPubActivity.isValid(it)) return true;
+            if (it.hasOwnProperty('object')) {
+                if (objectsIds.indexOf(it.object.id) < 0) {
+                    objectsIds.push(it.object.id);
+                    return true;
+                }
+            }
+            return false;
+        });
     }
 
     async renderItems() {
