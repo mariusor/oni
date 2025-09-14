@@ -33,16 +33,18 @@ export class ActivityPubImage extends ActivityPubObject {
         }
         figure details {
             cursor: pointer;
-            font-size: .75rem;
+            font-size: .7rem;
+            line-height: 1rem;
             background-color: color-mix(in srgb, black, transparent 60%);
             padding: .1rem .4rem;
             border-radius: .4rem;
         }
         figure summary {
-            font-size: .8rem;
+            font-size: .75rem;
             list-style-type: none;
             font-variant: small-caps;
             font-weight: bold;
+            padding: .2rem 0;
         }
         `, ActivityPubNote.styles];
 
@@ -54,22 +56,19 @@ export class ActivityPubImage extends ActivityPubObject {
         super(false);
     }
 
-    renderNameText = () => renderHtmlText(this.it.getName());
-
-    renderAltText = () => renderHtmlText(this.it.getSummary());
-
     renderInline() {
         const src = this.it.getUrl() || [{href : this.it.iri()}];
         if (!(src?.length > 0)) {
             return nothing;
         }
-        const alt = this.renderAltText();
+        const name = renderHtmlText(this.it.getName());
+        const alt = renderHtmlText(this.it.getSummary());
         const smallest = Array.isArray(src) ?
             src.reduce(
                 (prev, cur) => (cur?.width <= prev?.width) ? cur : prev
             ) :
             src;
-        return html`<img loading="lazy" src=${smallest?.href ?? nothing} title="${alt}" alt="${alt}" class="small""/>`;
+        return html`<img loading="lazy" src=${smallest?.href ?? nothing} title="${name ?? alt}" alt="${alt ?? nothing}" class="small""/>`;
     }
 
     render() {
@@ -80,8 +79,6 @@ export class ActivityPubImage extends ActivityPubObject {
 
         let src = this.it.iri();
         const url = this.it.getUrl();
-        const name = this.renderNameText();
-        const alt = this.renderAltText();
         const metadata = this.renderMetadata();
 
         let largest = typeof(url) === 'string' ? {href: url} : url;
@@ -106,12 +103,15 @@ export class ActivityPubImage extends ActivityPubObject {
         }
         if (!src) return unsafeHTML(`<!-- Unknown image object with missing id or url -->`);
 
-        const altElement = this.renderAlt(name, renderHtml(this.it.getSummary()));
+        const name = renderHtmlText(this.it.getName());
+        const alt = renderHtmlText(this.it.getSummary());
+
+        const altElement = this.renderAlt(name, alt);
         return html`
             <figure>
                 ${altElement}
                 <img loading="lazy" src=${src ?? nothing}
-                     title="${name ?? alt}" alt="${alt}"
+                     title="${name ?? alt}" alt="${alt ?? nothing}"
                      srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
             </figure>
             ${this.renderTag()}
@@ -123,13 +123,20 @@ export class ActivityPubImage extends ActivityPubObject {
 
     renderAlt(name, alt) {
         if (!(alt?.length > 0) && !(name?.length > 0)) return nothing;
-        let summary = 'alt';
-        if (this._showAlt && name?.length > 0) summary = name;
+
+        let expando = 'alt';
+        if (!(alt?.length > 0)) {
+            alt = name;
+        } else {
+            if (this._showAlt && name?.length > 0) {
+                expando = name;
+            }
+        }
 
         return html`
             <figcaption>
                 <details @toggle=${() => this._showAlt = !this._showAlt}>
-                    <summary>${summary}</summary>
+                    <summary>${expando}</summary>
                     ${unsafeHTML(alt)}
                 </details>
             </figcaption>`;
