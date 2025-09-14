@@ -146,7 +146,7 @@ export class ActivityPubObject extends LitElement {
 
     constructor(showMetadata) {
         super();
-        this.it = [];
+        this.it = {};
 
         if (typeof showMetadata === 'undefined') showMetadata = false;
 

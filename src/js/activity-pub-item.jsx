@@ -229,33 +229,30 @@ export class ActivityPubItem {
         if (!this.hasOwnProperty('name')) {
             this.name = [];
         }
-        let s = this.name;
-        if (!Array.isArray(s)) {
-            s = [s];
+        if (!Array.isArray(this.name)) {
+            this.name = [this.name];
         }
-        return s;
+        return this.name;
     }
 
     getSummary() {
         if (!this.hasOwnProperty('summary')) {
             this.summary = [];
         }
-        let s = this.summary;
-        if (!Array.isArray(s)) {
-            s = [s];
+        if (!Array.isArray(this.summary)) {
+            this.summary = [this.summary];
         }
-        return s;
+        return this.summary;
     }
 
     getContent() {
         if (!this.hasOwnProperty('content')) {
             this.content = [];
         }
-        let s = this.content;
-        if (!Array.isArray(s)) {
-            s = [s];
+        if (!Array.isArray(this.content)) {
+            this.content = [this.content];
         }
-        return s;
+        return this.content;
     }
 
     getIcon() {

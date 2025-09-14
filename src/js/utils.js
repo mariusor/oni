@@ -454,7 +454,7 @@ export function renderHtmlText(n) {
     if (!(n?.length > 0)) return null;
     const el = document.createElement('div');
     el.innerHTML = n;
-    return el.innerText.trim();
+    return el.innerText.trim() ?? '';
 }
 
 export function sanitize(value) {
