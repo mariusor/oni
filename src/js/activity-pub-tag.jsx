@@ -1,6 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubNote} from "./activity-pub-note";
 import {until} from "lit-html/directives/until.js";
+import {renderHtml, renderHtmlText} from "./utils";
 
 export class ActivityPubTag extends ActivityPubNote {
     static styles = [css`
@@ -25,12 +26,6 @@ export class ActivityPubTag extends ActivityPubNote {
         super();
     }
 
-    renderNameText() {
-        const name = document.createElement('div');
-        name.innerHTML = this.it.getName();
-        return name.innerText.trim();
-    }
-
     render() {
         if (!ActivityPubTag.isValid(this.it)) return nothing;
         const rel = this.it.type === 'Mention' ? 'mention' : 'tag';
@@ -47,7 +42,8 @@ export class ActivityPubTag extends ActivityPubNote {
                 ${until(this.renderReplies())}
             `;
         }
-        return html`<a rel="${rel}" href="${this.it.iri()}">${this.renderNameText()}</a>`;
+        const name = renderHtmlText(this.it.getName());
+        return html`<a rel="${rel}" href="${this.it.iri()}">${name}</a>`;
     }
 
     static isValid(it) {
