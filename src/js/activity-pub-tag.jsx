@@ -29,9 +29,13 @@ export class ActivityPubTag extends ActivityPubNote {
     render() {
         if (!ActivityPubTag.isValid(this.it)) return nothing;
         const rel = this.it.type === 'Mention' ? 'mention' : 'tag';
+        let iri = this.it.iri();
+        if (!iri && this.it.hasOwnProperty('href')) {
+            iri = this.it.href;
+        }
 
         if (this.showMetadata) {
-            const name = html`<h1><a rel="${rel}" href="${this.it.iri()}">${this.renderName()}</a></h1>`;
+            const name = html`<h1><a rel="${rel}" href="${iri}">${this.renderName()}</a></h1>`;
             const summary = this.it.getSummary().length > 0 ? html`<h2>${this.renderSummary()}</h2>` : nothing;
             const header = this.it.getName().length + this.it.getSummary().length > 0 ? html`
             <header>${name}${summary}</header>` : nothing;
@@ -43,10 +47,10 @@ export class ActivityPubTag extends ActivityPubNote {
             `;
         }
         const name = renderHtmlText(this.it.getName());
-        return html`<a rel="${rel}" href="${this.it.iri()}">${name}</a>`;
+        return html`<a rel="${rel}" href="${iri}">${name}</a>`;
     }
 
     static isValid(it) {
-        return typeof it === 'object' && it !== null && it.hasOwnProperty('id') && it.hasOwnProperty('type') && it.id !== '';
+        return it !== null && typeof it === 'object' && it.hasOwnProperty('type');
     }
 }
