@@ -1,11 +1,13 @@
 import {ActivityPubObject} from "./activity-pub-object";
 import {css, html, nothing} from "lit";
-import {ActivityTypes, ActorTypes} from "./activity-pub-item";
-import {renderActivityByType, renderActorByType, renderObjectByType} from "./utils";
+import {ActivityPubItem, ActivityTypes, ActorTypes} from "./activity-pub-item";
+import {pluralize, renderActivityByType, renderActorByType, renderObjectByType} from "./utils";
 import {until} from "lit-html/directives/until.js";
-import {sortByPublished} from "./activity-pub-collection";
 import {fetchActivityPubIRI} from "./client";
 import {ActivityPubActivity} from "./activity-pub-activity";
+import {Thread} from "./items-threading";
+import {sortByPublished} from "./activity-pub-collection";
+import {when} from "lit-html/directives/when.js";
 
 export class ActivityPubItems extends ActivityPubObject {
     static styles = [css`
@@ -14,11 +16,6 @@ export class ActivityPubItems extends ActivityPubObject {
             padding: 0;
             margin: 0;
             list-style: none;
-        }
-        :host li {
-            margin-top: .4rem;
-            overflow: hidden;
-            border-bottom: 1px solid var(--fg-color);
         }
         :host(.attachment) ul {
             display: flex;
@@ -53,6 +50,13 @@ export class ActivityPubItems extends ActivityPubObject {
         :host(.attachment) ul > li:has(bandcamp-embed) {
             width: 380px;
         }
+        :host ul details summary {
+            margin-left: -.8rem;
+        }
+        :host ul details {
+            padding-left: 1.2rem;
+            border-left: .2rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
+        }
     `, ActivityPubObject.styles];
 
     static properties = {
@@ -66,6 +70,7 @@ export class ActivityPubItems extends ActivityPubObject {
 
     constructor(showMetadata) {
         super(showMetadata);
+        this.it = [];
         this.threaded = false;
         this.ordered = false;
         this.inline = false;
@@ -89,13 +94,6 @@ export class ActivityPubItems extends ActivityPubObject {
     }
 
     async renderItems() {
-        if (!Array.isArray(this.it)) {
-            this.it = [this.it];
-        }
-        if (this.threaded) {
-            this.it.sort((a, b) => -1 * sortByPublished(a, b))
-        }
-
         for (let i = 0; i < this.it.length; i++) {
             let it = this.it[i];
             if (typeof it !== 'object') {
@@ -103,12 +101,16 @@ export class ActivityPubItems extends ActivityPubObject {
             }
         }
 
-        return html`${this.it.map((it, i) => {
+        const items = html`${this.it.map((it, i) => {
             return until(this.renderItem(it, i, this.inline));
-        })}`
+        })}`;
+
+        return until(this.ordered ? html`
+            <ol>${items}</ol>` : html`
+            <ul>${items}</ul>`);
     }
 
-    renderItem(it, i, itemsInline) {
+    renderItem(it, i, itemsInline, slot) {
         const type = it.hasOwnProperty('type') ? it.type : 'unknown';
 
         let renderedItem;
@@ -120,23 +122,52 @@ export class ActivityPubItems extends ActivityPubObject {
             renderedItem = renderObjectByType(it, this.showMetadata, itemsInline);
         }
 
-        return html`<li>${renderedItem}</li>`
+        return html`
+            <li>${until(renderedItem)}${slot}</li>`
     }
 
     render() {
+        if (!Array.isArray(this.it)) {
+            this.it = [this.it];
+        }
         if (!(this.it?.length > 0)) {
             return nothing;
         }
 
         this.filterActivitiesByObjectIds();
 
-        const list = this.ordered ?
-            html`
-                <ol>${until(this.renderItems())}</ol>` :
-            html`
-                <ul>${until(this.renderItems())}</ul>`;
+        return html`${
+            until(
+                when(
+                    this.threaded,
+                    () => this.renderThreadedItems(),
+                    () => this.renderItems()
+                )
+            )}`;
+    }
 
-        return html`${list}`;
+    renderThreaded(thread) {
+        return html`
+            ${thread.map((node, i) => {
+                const slot = html`${when(
+                    node.children.length > 0,
+                    () => html`<details open><summary>${pluralize(node.children.length, 'reply')}</summary><ul>${until(this.renderThreaded(node.children))}</ul></details>`,
+                )}`;
+
+                if (node.item === null) return html`${slot}`;
+                return until(this.renderItem(node.item, i, this.inline, slot));
+            })}
+        `;
+    }
+
+    async renderThreadedItems() {
+        this.it.map(it => new ActivityPubItem(it));
+        this.it.sort(sortByPublished);
+
+        return html`
+            <ul class="threaded">
+                ${this.renderThreaded(Thread(this.it))}
+            </ul> `;
     }
 }
 
