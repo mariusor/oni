@@ -8,7 +8,11 @@ export class NaturalLanguageValues extends LitElement {
         :host {
             display: inline
         }
-        :host p { text-align: justify; }
+        :host p {
+            text-align: justify; 
+            margin-block-start: .2rem;
+            margin-block-end: .2rem;
+        }
         :host div { display: inline-block; }
         :host([name=summary]) p, :host([name=name]) p, :host([name=preferredUsername]) p {
             display: inline-block;
