@@ -33,6 +33,9 @@ export class ActivityPubItems extends ActivityPubObject {
         :host(.attachment) li, :host(.tag) li {
             border: 0;
         }
+        :host(.attachment) li *, :host(.tag) li * {
+            border: 0;
+        }
         :host(.tag) ul {
             display: inline-flex;
             flex-wrap: wrap;
@@ -55,11 +58,11 @@ export class ActivityPubItems extends ActivityPubObject {
         }
         :host ul details {
             padding-left: 1.2rem;
-            //border-left: .2rem solid color-mix(in srgb, var(--accent-color), transparent 60%);
         }
         :host li > oni-note, :host li > oni-event, :host li > oni-video, :host li > oni-audio, :host li > oni-image, :host li > oni-tag,
         :host li > oni-activity, :host li > oni-announce, :host li > oni-create {
             border-bottom: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
+            margin-top: .3rem;
         }
     `, ActivityPubObject.styles];
 
