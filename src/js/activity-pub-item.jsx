@@ -329,7 +329,7 @@ export class ActivityPubItem {
             }
         }
         if (typeof it === "object") {
-            return new this(it);
+            return new ActivityPubItem(it);
         }
         return it;
     }
