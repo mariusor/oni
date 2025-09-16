@@ -107,6 +107,12 @@ export class ActivityPubObject extends LitElement {
         .replies *, .attachments * {
             font-size: .9rem;
         }
+        @media(max-width: 480px) {
+            :host footer {
+                display: inline-block;
+                text-align: right;
+            }
+        }
     `;
 
     static properties = {

@@ -50,9 +50,6 @@ export class ActivityPubItems extends ActivityPubObject {
             display: inline-block;
             flex: 1 1 32%;
         }
-        :host(.attachment) ul > li:has(bandcamp-embed) {
-            width: 380px;
-        }
         :host ul details summary {
             margin-left: -.8rem;
         }
