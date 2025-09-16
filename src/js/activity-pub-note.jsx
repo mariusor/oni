@@ -11,7 +11,7 @@ export class ActivityPubNote extends ActivityPubObject {
         align-items: center;
     }
     article > * {
-        margin: .1rem;
+        margin-top: .2rem;
     }
     article header h1 {
         font-size: 1.32rem;
@@ -33,6 +33,7 @@ export class ActivityPubNote extends ActivityPubObject {
     }
     footer {
         font-size: .9rem;
+        line-height: 1.3rem;
     }
     footer a {
         text-decoration: none;

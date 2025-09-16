@@ -1,6 +1,6 @@
 import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI, isLocalIRI} from "./client.js";
-import {pluralize, renderHtml, renderHtmlText, renderTimestamp, sanitize, showBandCampEmbeds} from "./utils.js";
+import {pluralize, renderHtml, renderTimestamp, sanitize, showBandCampEmbeds} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
@@ -48,14 +48,12 @@ export class ActivityPubObject extends LitElement {
         }
         :host footer {
             align-self: end;
+            font-size: .84rem;
         }
         figure {
             margin-bottom: 0;
             position: relative;
             max-width: fit-content;
-        }
-        footer aside {
-            font-size: .84rem;
         }
         details summary {
             cursor: pointer;
@@ -106,8 +104,8 @@ export class ActivityPubObject extends LitElement {
         .reactions ul li a {
             text-decoration: none;
         }
-        .replies, .attachments {
-            font-size: 0.8rem;
+        .replies *, .attachments * {
+            font-size: .9rem;
         }
     `;
 
@@ -148,9 +146,7 @@ export class ActivityPubObject extends LitElement {
         super();
         this.it = {};
 
-        if (typeof showMetadata === 'undefined') showMetadata = false;
-
-        this.showMetadata = showMetadata ?? true;
+        this.showMetadata = !!showMetadata;
         this.inline = false;
 
         // NOTE(marius): this method of loading the ActivityPub object from a script tag is not very robust,

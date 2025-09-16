@@ -68,7 +68,6 @@ export class ActivityPubItems extends ActivityPubObject {
 
     static properties = {
         it: {type: Array},
-        showMetadata: {type: Boolean},
         inline: {type: Boolean},
         threaded: {type: Boolean},
         ordered: {type: Boolean},
@@ -129,6 +128,7 @@ export class ActivityPubItems extends ActivityPubObject {
             renderedItem = renderObjectByType(it, this.showMetadata, itemsInline);
         }
 
+        // NOTE(marius): slot is used for rendering child comments in a threaded items list
         return html`
             <li>${until(renderedItem)}${slot}</li>`
     }

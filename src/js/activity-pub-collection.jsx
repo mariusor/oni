@@ -64,6 +64,7 @@ export class ActivityPubCollection extends ActivityPubObject {
         return html`<oni-items 
                 it=${JSON.stringify(this.it.getItems())} 
                 ?ordered=${this.isOrdered()} 
+                ?showMetadata=${this.showMetadata}
                 ?inline=${itemsInline} 
                 ?threaded=${this.threaded}
                 parent=${this.parent ?? nothing}
