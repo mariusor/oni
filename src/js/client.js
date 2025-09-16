@@ -37,7 +37,7 @@ export function isLocalIRI(iri) {
     if (typeof iri !== 'string') {
         return false;
     }
-    return iri.indexOf(window.location.hostname) > 0;
+    return iri.indexOf(window.location.hostname) >= 0;
 }
 
 

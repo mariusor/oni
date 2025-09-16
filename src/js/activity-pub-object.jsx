@@ -434,7 +434,7 @@ export class ActivityPubObject extends LitElement {
     }
 
     static isValid(it) {
-        return ActivityPubItem.isValid(it) && ObjectTypes.indexOf(it.type) > 0;
+        return ActivityPubItem.isValid(it) && ObjectTypes.indexOf(it.type) >= 0;
     }
 }
 

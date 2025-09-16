@@ -272,7 +272,7 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     static isValid(it) {
-        return ActivityPubItem.isValid(it) && ActorTypes.indexOf(it.type) > 0;
+        return ActivityPubItem.isValid(it) && ActorTypes.indexOf(it.type) >= 0;
     }
 }
 
