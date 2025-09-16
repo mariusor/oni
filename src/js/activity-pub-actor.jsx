@@ -1,6 +1,6 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {hostFromIRI, loadPalette} from "./utils";
+import {hostFromIRI, loadPalette, urlText} from "./utils";
 import {ActivityPubItem, ActorTypes} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
 import {TinyColor} from "@ctrl/tinycolor";
@@ -231,13 +231,7 @@ export class ActivityPubActor extends ActivityPubObject {
         const iri = this.it.iri();
         if (!iri) return nothing;
 
-        let name = iri;
-        const u = URL.parse(iri);
-        if (u) {
-            name = u.host + (u.pathname !== '/' ? u.pathname : '');
-        }
-
-        return html`<a class=${classMap({'inline': this.inline})} href=${iri}>${name}</a>`;
+        return html`<a class=${classMap({'inline': this.inline})} href=${iri}>${urlText(iri)}</a>`;
     }
 
     renderInline() {
@@ -252,6 +246,9 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     render() {
+        if (typeof this.it === 'string') {
+            return html`<a class='inline' href=${this.it}>${urlText(this.it)}</a>`;
+        }
         if (!ActivityPubItem.isValid(this.it)) return nothing;
         if (this.inline) return this.renderInline();
 

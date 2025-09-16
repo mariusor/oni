@@ -335,6 +335,6 @@ export class ActivityPubItem {
     }
 
     static isValid(it) {
-        return it !== null && typeof it === 'object' && it.hasOwnProperty('id') && it.hasOwnProperty('type');
+        return !!(it) && typeof it === 'object' && it.hasOwnProperty('id') && it.hasOwnProperty('type');
     }
 }

@@ -204,7 +204,7 @@ const defaultPalette = {
 };
 
 export async function loadPalette(it) {
-    if (!ActivityPubItem.isValid(it)) return nothing;
+    if (!ActivityPubItem.isValid(it)) return null;
 
     const imageURL = apURL(it.getImage());
     const iconURL = apURL(it.getIcon());
@@ -469,3 +469,10 @@ export function showBandCampEmbeds(e) {
         it.show = show;
     });
 }
+
+export function urlText(iri) {
+    if (!URL.canParse(iri)) return iri;
+    const u = URL.parse(iri)
+    return `${u?.host}${(u?.pathname !== '/' ? u.pathname : '')}`;
+}
+
