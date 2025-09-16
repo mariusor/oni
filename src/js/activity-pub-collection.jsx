@@ -61,12 +61,13 @@ export class ActivityPubCollection extends ActivityPubObject {
         if (!ActivityPubItem.isValid(this.it)) return nothing;
 
         let itemsInline = this.inline || this.it.iri()?.includes('shares') || this.it.iri()?.includes('following');
+        let threaded = this.threaded || this.it.iri()?.includes('replies');
         return html`<oni-items 
                 it=${JSON.stringify(this.it.getItems())} 
                 ?ordered=${this.isOrdered()} 
                 ?showMetadata=${this.showMetadata}
                 ?inline=${itemsInline} 
-                ?threaded=${this.threaded}
+                ?threaded=${threaded}
                 parent=${this.parent ?? nothing}
         ></oni-items>
         ${this.renderPrevNext()}

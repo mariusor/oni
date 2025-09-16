@@ -45,7 +45,6 @@ export class ActivityPubEvent extends ActivityPubNote {
             <aside>${this.renderAttachment()}</aside>
         </article>
         <footer>${this.renderMetadata()}</footer>
-        ${until(this.renderReplies())}
         `;
     }
 }

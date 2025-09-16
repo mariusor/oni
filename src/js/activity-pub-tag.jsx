@@ -43,7 +43,6 @@ export class ActivityPubTag extends ActivityPubNote {
             return html`
                 <article>${header} ${this.renderContent()}</article>
                 <footer>${this.renderMetadata()}</footer>
-                ${until(this.renderReplies())}
             `;
         }
         const name = renderHtmlText(this.it.getName());

@@ -58,11 +58,9 @@ export class ActivityPubNote extends ActivityPubObject {
             ${header}
             ${this.renderContent()}
             ${until(this.renderTag())}
-            ${until(this.renderReactions())}
             ${until(this.renderAttachment())}
         </article>
         ${metadata}
-        ${until(this.renderReplies())}
         `;
     }
 }

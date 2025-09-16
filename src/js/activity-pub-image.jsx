@@ -115,9 +115,7 @@ export class ActivityPubImage extends ActivityPubObject {
                      srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
             </figure>
             ${this.renderTag()}
-            ${until(this.renderReactions())}
             ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
-            ${until(this.renderReplies())}
         `;
     }
 

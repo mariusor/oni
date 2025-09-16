@@ -49,10 +49,14 @@ export class ActivityPubObject extends LitElement {
         :host footer {
             align-self: end;
             font-size: .84rem;
+            line-height: 1rem;
             margin-top: .3rem;
             width: 100%;
             text-align: right;
             border-bottom: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
         }
         figure {
             margin-bottom: 0;
@@ -86,27 +90,19 @@ export class ActivityPubObject extends LitElement {
             line-height: 1rem;
         }
         .reactions {
-            display: flex;
-            justify-content: flex-end;
-            font-size: .8rem;
-            line-height: 1rem;
-            gap: 1rem;
-        }
-        .reactions ul {
             display: inline-block;
             padding: 0;
             margin: 0;
         }
-        .appreciations li {
-            margin-left: .4rem;
-        }
-        .reactions ul li {
+        .reactions li {
             list-style: none;
+            display: inline-block;
             padding: 0;
             margin: 0;
         }
-        .reactions ul li a {
+        .reactions li a {
             text-decoration: none;
+            color: var(--fg-color);
         }
         .replies *, .attachments * {
             font-size: .9rem;
@@ -232,13 +228,17 @@ export class ActivityPubObject extends LitElement {
     }
 
     renderInReplyTo() {
+        if (window.location.toString().includes('replies')) {
+            // NOTE(marius): ugly way to not render reply icons when in the replies page
+            return nothing;
+        }
         let replyTo =  this.it.getInReplyTo();
         if (!(replyTo?.length > 0)) return nothing;
         if (!Array.isArray(replyTo)) {
             replyTo = [replyTo];
         }
         return html` in reply to ${map(replyTo, reply => html`<a href="${reply ?? nothing}">
-            <oni-icon title="Go to parent" name="replies"></oni-icon>
+            <oni-icon title="Go to parent" name="reply"></oni-icon>
         </a>`)}`;
     }
 
@@ -272,9 +272,9 @@ export class ActivityPubObject extends LitElement {
         }
 
         return html`
+            ${until(this.renderReactions())}
             <aside>
                 ${action} ${renderTimestamp(published)} ${until(auth)}
-                ${until(this.renderReplyCount())}
                 ${until(this.renderInReplyTo())}
                 ${this.renderPermaLink()}
             </aside>`;
@@ -304,60 +304,15 @@ export class ActivityPubObject extends LitElement {
             <oni-natural-language-values name="summary" it=${JSON.stringify(summary)}></oni-natural-language-values>`;
     }
 
-    async renderReplyCount() {
-        if(!this.it.hasOwnProperty('replies') || !this.it.replies) {
-            return nothing;
-        }
-        if (this.inFocus()) {
-            // NOTE(marius): we're showing the replies list instead
-            return nothing;
-        }
-
-        const replies = await fetchActivityPubIRI(this.it.replies);
-        if (replies === null) {
-            return nothing;
-        }
-
-        if (!replies.hasOwnProperty('totalItems') || replies.totalItems === 0) {
-            return nothing;
-        }
-
-        return html` - <span>${pluralize(replies.totalItems, 'reply')}</span>`;
-    }
-
-    async renderAnnounceCount() {
-        const shares = await fetchActivityPubIRI(this.it.shares);
-        if (shares === null) {
-            return nothing;
-        }
-
-        if (!shares.hasOwnProperty('totalItems') || shares.totalItems === 0) {
-            return nothing;
-        }
-
-        return html` - <span>${pluralize(shares.totalItems, 'share')}</span>`;
-    }
-
-    async renderLikeCount() {
-        const likes = await fetchActivityPubIRI(this.it.likes);
-        if (likes === null) {
-            return nothing;
-        }
-
-        if (!likes.hasOwnProperty('totalItems') || likes.totalItems === 0) {
-            return nothing;
-        }
-
-        return html` - <span>${pluralize(likes.totalItems, 'like')}</span>`;
-    }
-
     async renderReactions() {
-        return html`<aside class="reactions">
-            ${until(this.renderLikes())} ${until(this.renderAnnounces())}
-        </aside>`;
+        return html`<ul class="reactions">
+            ${until(this.renderReactionsLikes())} 
+            ${until(this.renderReactionsAnnounces())}
+            ${until(this.renderReactionsReplies())}
+        </ul>`;
     }
 
-    async renderAnnounces() {
+    async renderReactionsAnnounces() {
         if (!this.inFocus()) {
             return nothing;
         }
@@ -371,12 +326,31 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        return html`<ul class="shares">${map(groupActivities(shares),
+        return html`${map(groupActivities(shares),
                 g => html`<li>${renderActivityGroup(g)}</li>`
-        )}</ul>`;
+        )}`;
     }
 
-    async renderLikes() {
+    async renderReactionsReplies() {
+        if (!this.inFocus()) {
+            return nothing;
+        }
+
+        if (!this.it.hasOwnProperty('replies')) {
+            return nothing;
+        }
+        let replies = this.it.replies;
+        replies = await fetchActivityPubIRI(replies);
+        if (replies.totalItems === 0) {
+            return nothing;
+        }
+
+        return html`${map(groupActivities(replies),
+                g => html`<li>${renderActivityGroup(g)}</li>`
+        )}`;
+    }
+
+    async renderReactionsLikes() {
         if (!this.inFocus()) {
             return nothing;
         }
@@ -390,35 +364,9 @@ export class ActivityPubObject extends LitElement {
             return nothing;
         }
 
-        return html`<ul class="appreciations">${map(groupActivities(likes),
+        return html`${map(groupActivities(likes),
                 g => html`<li>${renderActivityGroup(g)}</li>`
-        )}</ul>`;
-    }
-
-    async renderReplies() {
-        if (!this.inFocus()) {
-            return nothing;
-        }
-
-        if (!this.it.hasOwnProperty('replies')) {
-            return nothing;
-        }
-        let replies = this.it.replies;
-        replies = await fetchActivityPubIRI(replies);
-        if (replies.totalItems === 0) {
-            return nothing;
-        }
-        return html`
-            <details class="replies">
-                <summary>${pluralize(replies.totalItems, 'reply')}</summary>
-                <oni-collection 
-                        it=${JSON.stringify(replies)} 
-                        ?showMetadata=${true} 
-                        ?inline=${false} 
-                        ?threaded=${true}
-                        parent=${this.it.iri()}
-                ></oni-collection>
-            </details>`;
+        )}`;
     }
 
     inFocus() {
@@ -523,10 +471,8 @@ ActivityPubObject.renderByType = /*async*/ function (it, showMetadata, inline) {
     return nothing;
 }
 
-const groupActivities = (activities) =>
-    Map.groupBy(activities.getItems(),
-        it => (it.hasOwnProperty('type') ? it.type : null)
-    ).entries().map((iter) => {
+const groupActivities = (items) =>
+    Map.groupBy(items.getItems(), groupReactTypes).entries().map((iter) => {
         const key = iter[0];
         const value = iter[1];
 
@@ -544,13 +490,22 @@ const groupActivities = (activities) =>
             return null;
         };
         return {
-            iri: activities.iri(),
+            iri: items.iri(),
             type: key.toLowerCase(),
             count: value.length,
             icon: getURL(value),
             actors: actors,
         };
     });
+
+
+function groupReactTypes (it) {
+    if (!it?.hasOwnProperty('type')) return null;
+    if (ObjectTypes.indexOf(it.type) >= 0) {
+        return 'reply'; // NOTE(marius): this is a bit suspect
+    }
+    return it?.type;
+}
 
 function renderActivityGroup (group) {
     let count = 1;
@@ -568,6 +523,7 @@ function renderActivityGroup (group) {
     }
     const reactions = {
         'announce': 'share',
+        'object': 'reply',
     }
     const reaction = reactions[group.type] ?? group.type.toLowerCase();
     return html`<a href="${iri}">${icon} ${pluralize(count, reaction)}</a>`;

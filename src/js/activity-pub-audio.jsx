@@ -32,9 +32,7 @@ export class ActivityPubAudio extends ActivityPubObject {
                 )}
             </figure>
             ${this.renderTag()}
-            ${until(this.renderReactions())}
             ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
-            ${until(this.renderReplies())}
         `;
     }
 }
