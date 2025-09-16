@@ -28,6 +28,7 @@ export class ActivityPubAnnounce extends ActivityPubCreate {
             return nothing;
         }
         return html`
+            ${until(this.renderReactions())}
             <aside>
                 ${action} ${renderTimestamp(published)} ${until(auth)}
                 ${this.renderPermaLink()}

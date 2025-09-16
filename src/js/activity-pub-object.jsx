@@ -47,14 +47,14 @@ export class ActivityPubObject extends LitElement {
             align-self: start;
         }
         :host footer {
-            align-self: end;
+            border-bottom: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
             font-size: .84rem;
             line-height: 1rem;
             margin-top: .3rem;
             width: 100%;
-            text-align: right;
-            border-bottom: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
             display: flex;
+            flex-direction: row;
+            align-self: end;
             justify-content: space-between;
             gap: 1rem;
         }
