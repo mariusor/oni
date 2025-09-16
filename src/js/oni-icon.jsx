@@ -16,6 +16,9 @@ export class OniIcon extends LitElement {
     svg[data-name=clock], svg[data-name=announce], svg[data-name=like], svg[data-name=dislike] {
         margin: -.1rem -.2rem 0 0;
     }
+    svg[data-name=external-href], svg[data-name=bookmark] {
+        margin: -.1rem -.2rem 0 0;
+    }
     svg[data-name=following] {
         transform: rotateY(180deg);
     }

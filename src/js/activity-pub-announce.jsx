@@ -31,14 +31,7 @@ export class ActivityPubAnnounce extends ActivityPubCreate {
             ${until(this.renderReactions())}
             <aside>
                 ${action} ${renderTimestamp(published)} ${until(auth)}
-                ${this.renderPermaLink()}
             </aside>`;
-    }
-
-    renderPermaLink(hideOnName) {
-        if (!this.it.hasOwnProperty('object')) return nothing;
-        const ob = this.it.object;
-        return html`<a href="${ob?.id ?? nothing}"><oni-icon title="Bookmark this item" name="external-href"></oni-icon></a>`;
     }
 
     renderInline() {

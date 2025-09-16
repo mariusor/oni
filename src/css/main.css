@@ -145,6 +145,7 @@ body > footer {
     width: auto;
     align-self: end;
     text-align: end;
+    margin: 0 1rem;
 }
 
 body > footer ul {

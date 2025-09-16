@@ -1,6 +1,6 @@
 import {css, html, LitElement, nothing} from "lit";
 import {fetchActivityPubIRI, isLocalIRI} from "./client.js";
-import {pluralize, renderHtml, renderTimestamp, sanitize, showBandCampEmbeds} from "./utils.js";
+import {pluralize, renderHtml, renderHtmlText, renderTimestamp, sanitize, showBandCampEmbeds} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
 import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
@@ -248,16 +248,6 @@ export class ActivityPubObject extends LitElement {
         </a>`)}`;
     }
 
-    renderPermaLink(hideOnName = true) {
-        const textualObjectTypes = ['Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', 'Mention', ''];
-        const name = this.it.getName();
-        const textualWithName = textualObjectTypes.indexOf(this.it.type) >= 0 && (name?.length > 0 && hideOnName);
-        const icon = isLocalIRI(this.it.iri()) ? "bookmark" : "external-href";
-        return !textualWithName ? html`<a href="${this.it.iri() ?? nothing}" title=${name ?? nothing}>
-            <oni-icon title="Navigate to this item" name=${icon}></oni-icon>
-        </a>` : nothing
-    }
-
     renderMetadata() {
         if (!this.showMetadata) return nothing;
 
@@ -282,16 +272,17 @@ export class ActivityPubObject extends LitElement {
             <aside>
                 ${action} ${renderTimestamp(published)} ${until(auth)}
                 ${until(this.renderInReplyTo())}
-                ${this.renderPermaLink()}
             </aside>`;
     }
 
     renderName() {
         const name = this.it.getName();
         if (!(name?.length > 0)) return nothing;
+
+        const icon = isLocalIRI(this.it.iri()) ? "bookmark" : "external-href";
         return html`<a href=${this.it.iri() ?? nothing}>
             <oni-natural-language-values name="name" it=${JSON.stringify(name)}></oni-natural-language-values>
-            ${this.renderPermaLink(false)}
+            <oni-icon title="Navigate to '${renderHtmlText(name)}'" name=${icon}></oni-icon>
         </a>`;
     }
 
