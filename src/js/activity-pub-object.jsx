@@ -49,6 +49,10 @@ export class ActivityPubObject extends LitElement {
         :host footer {
             align-self: end;
             font-size: .84rem;
+            margin-top: .3rem;
+            width: 100%;
+            text-align: right;
+            border-bottom: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
         }
         figure {
             margin-bottom: 0;
