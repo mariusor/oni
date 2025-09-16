@@ -272,7 +272,16 @@ export class ActivityPubObject extends LitElement {
             <aside>
                 ${action} ${renderTimestamp(published)} ${until(auth)}
                 ${until(this.renderInReplyTo())}
+                ${this.renderBookmark()}
             </aside>`;
+    }
+
+    renderBookmark() {
+        const icon = isLocalIRI(this.it.iri()) ? "bookmark" : "external-href";
+        const name = this.it.getName();
+        return html`<a href="${this.it.iri() ?? nothing}" title=${name ?? nothing}>
+            <oni-icon title="Navigate ${renderHtmlText(name) ?? 'to this item'}" name=${icon}></oni-icon>
+        </a>`;
     }
 
     renderName() {

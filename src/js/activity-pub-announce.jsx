@@ -27,10 +27,12 @@ export class ActivityPubAnnounce extends ActivityPubCreate {
         if ((!auth || auth === nothing) && !published) {
             return nothing;
         }
+        // NOTE(marius): we render reactions here too, in order to avoid metadata being aligned to the left
         return html`
             ${until(this.renderReactions())}
             <aside>
                 ${action} ${renderTimestamp(published)} ${until(auth)}
+                ${this.renderBookmark()}
             </aside>`;
     }
 
