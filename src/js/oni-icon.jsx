@@ -7,6 +7,7 @@ export class OniIcon extends LitElement {
         max-width: 1em;
         max-height: 1.2em;
         fill: currentColor;
+        color: currentColor;
         vertical-align: middle;
         margin: 0 .2rem;
     }
@@ -15,6 +16,9 @@ export class OniIcon extends LitElement {
     }
     svg[data-name=clock], svg[data-name=announce], svg[data-name=like], svg[data-name=dislike] {
         margin: -.1rem -.2rem 0 0;
+    }
+    svg[data-name=external-href] {
+        margin: -.1rem -.2rem .2rem 0;
     }
     svg[data-name=external-href], svg[data-name=bookmark] {
         margin: -.1rem -.2rem 0 0;
