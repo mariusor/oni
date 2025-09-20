@@ -206,23 +206,27 @@ export class ActivityPubObject extends LitElement {
         if (!Array.isArray(tags)) {
             tags = [tags];
         }
-        const allText = this.it.getContent().join();
+        const allText = `${this.it.getContent().join()}${this.it.getSummary().join()}`;
         tags = tags.filter(value => {
             let href;
-            if (value.hasOwnProperty('href')){
-                href = value.href;
-            }
-            if (value.hasOwnProperty('url')){
-                href = value.url;
-            }
-            if (value.hasOwnProperty('id')){
-                href = value.id;
+            if (typeof value === 'object') {
+                if (value.hasOwnProperty('href')){
+                    href = value.href;
+                }
+                if (value.hasOwnProperty('url')){
+                    href = value.url;
+                }
+                if (value.hasOwnProperty('id')){
+                    href = value.id;
+                }
+            } else {
+                href = value;
             }
             return !allText.includes(href);
         });
         return html`
             <aside>
-                <oni-items class="tag" it=${JSON.stringify(tags)} ?showMetadata=${false}></oni-items>
+                <oni-items class="tag" it=${JSON.stringify(tags)} ?showMetadata=${false} ?inline=${false}></oni-items>
             </aside>`;
     }
 
