@@ -208,7 +208,17 @@ export class ActivityPubObject extends LitElement {
         }
         const allText = this.it.getContent().join();
         tags = tags.filter(value => {
-            return !(value.hasOwnProperty('id') && allText.includes(value.id));
+            let href;
+            if (value.hasOwnProperty('href')){
+                href = value.href;
+            }
+            if (value.hasOwnProperty('url')){
+                href = value.url;
+            }
+            if (value.hasOwnProperty('id')){
+                href = value.id;
+            }
+            return !allText.includes(href);
         });
         return html`
             <aside>
