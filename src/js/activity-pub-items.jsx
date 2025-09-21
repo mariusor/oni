@@ -79,6 +79,8 @@ export class ActivityPubItems extends ActivityPubObject {
         if (!(this.it?.length > 0)) return;
 
         let objectsIds = [];
+        // NOTE(marius): if we have multiple activities operating on the same object,
+        // we filter out all but the first
         this.it = this.it.filter(it => {
             if (!ActivityPubActivity.isValid(it)) return true;
             if (it.hasOwnProperty('object')) {
@@ -133,6 +135,8 @@ export class ActivityPubItems extends ActivityPubObject {
             return nothing;
         }
 
+        this.it.map(it => new ActivityPubItem(it));
+
         this.filterActivitiesByObjectIds();
 
         return html`${
@@ -160,7 +164,6 @@ export class ActivityPubItems extends ActivityPubObject {
     }
 
     async renderThreadedItems() {
-        this.it.map(it => new ActivityPubItem(it));
         this.it.sort(sortByPublished);
 
         return html`
