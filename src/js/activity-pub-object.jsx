@@ -226,6 +226,8 @@ export class ActivityPubObject extends LitElement {
                 return !allText.includes(href);
             });
         }
+        if (tags.length === 0) return nothing;
+
         return html`
             <aside>
                 <oni-items class="tag" it=${JSON.stringify(tags)} ?showMetadata=${false} ?inline=${false}></oni-items>
