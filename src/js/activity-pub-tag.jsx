@@ -66,7 +66,7 @@ const getIRI = (it) => {
     if (it.hasOwnProperty('href')) {
         iri = first(it.href);
     }
-    if (it.hasOwnProperty('id')) {
+    if (it.hasOwnProperty('id') && it.id.length > 0) {
         iri = it.id;
     }
     return iri;
