@@ -1,7 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubNote} from "./activity-pub-note";
 import {renderHtmlText} from "./utils";
-import {getIRI} from "./activity-pub-item";
+import {getHref} from "./activity-pub-item";
 
 export class ActivityPubTag extends ActivityPubNote {
     static styles = [css`
@@ -29,7 +29,7 @@ export class ActivityPubTag extends ActivityPubNote {
     render() {
         if (!ActivityPubTag.isValid(this.it)) return nothing;
         const rel = this.it.type === 'Mention' ? 'mention' : 'tag';
-        const iri = getIRI(this.it);
+        const iri = getHref(this.it);
 
         if (this.showMetadata) {
             const name = html`<h1><a rel="${rel}" href="${iri}">${this.renderName()}</a></h1>`;

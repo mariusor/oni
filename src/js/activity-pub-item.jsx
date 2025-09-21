@@ -344,7 +344,7 @@ export class ActivityPubItem {
     }
 }
 
-export function getIRI (it) {
+export function getHref (it) {
     if (typeof it === 'string' && URL.canParse(it)) return it;
     const first = (val) => {
         if (Array.isArray(val) && val.length > 1) {
@@ -355,11 +355,13 @@ export function getIRI (it) {
     let iri;
     if (it.hasOwnProperty('url')) {
         iri = first(it.url);
+        if (iri.length > 0) return iri;
     }
     if (it.hasOwnProperty('href')) {
         iri = first(it.href);
+        if (iri.length > 0) return iri;
     }
-    if (it.hasOwnProperty('id') && it.id.length > 0) {
+    if (it.hasOwnProperty('id')) {
         iri = it.id;
     }
     return iri;
