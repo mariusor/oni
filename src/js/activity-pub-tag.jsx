@@ -29,10 +29,7 @@ export class ActivityPubTag extends ActivityPubNote {
     render() {
         if (!ActivityPubTag.isValid(this.it)) return nothing;
         const rel = this.it.type === 'Mention' ? 'mention' : 'tag';
-        let iri = this.it.iri();
-        if (!iri && this.it.hasOwnProperty('href')) {
-            iri = this.it.href;
-        }
+        const iri = getIRI(this.it);
 
         if (this.showMetadata) {
             const name = html`<h1><a rel="${rel}" href="${iri}">${this.renderName()}</a></h1>`;
@@ -52,4 +49,25 @@ export class ActivityPubTag extends ActivityPubNote {
     static isValid(it) {
         return it !== null && typeof it === 'object' && it.hasOwnProperty('type');
     }
+}
+
+const getIRI = (it) => {
+    if (typeof it === 'string' && URL.canParse(it)) return it;
+    const first = (val) => {
+        if (Array.isArray(val) && val.length > 1) {
+            return val[0];
+        }
+        return val;
+    }
+    let iri;
+    if (it.hasOwnProperty('url')) {
+        iri = first(it.url);
+    }
+    if (it.hasOwnProperty('href')) {
+        iri = first(it.href);
+    }
+    if (it.hasOwnProperty('id')) {
+        iri = it.id;
+    }
+    return iri;
 }
