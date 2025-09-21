@@ -3,7 +3,7 @@ import {fetchActivityPubIRI, isLocalIRI} from "./client.js";
 import {pluralize, renderHtml, renderHtmlText, renderTimestamp, sanitize, showBandCampEmbeds} from "./utils.js";
 import {until} from "lit-html/directives/until.js";
 import {map} from "lit-html/directives/map.js";
-import {ActivityPubItem, ObjectTypes} from "./activity-pub-item";
+import {ActivityPubItem, getIRI, ObjectTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubObject extends LitElement {
@@ -208,21 +208,8 @@ export class ActivityPubObject extends LitElement {
         }
         if (textualObjectTypes.indexOf(this.it.type) >= 0) {
             const allText = `${this.it.getContent().join()}${this.it.getSummary().join()}`;
-            tags = tags.filter(value => {
-                let href;
-                if (typeof value === 'object') {
-                    if (value.hasOwnProperty('href')){
-                        href = value.href;
-                    }
-                    if (value.hasOwnProperty('url')){
-                        href = value.url;
-                    }
-                    if (value.hasOwnProperty('id')){
-                        href = value.id;
-                    }
-                } else {
-                    href = value;
-                }
+            tags = tags.filter(tag => {
+                const href = getIRI(tag);
                 return !allText.includes(href);
             });
         }

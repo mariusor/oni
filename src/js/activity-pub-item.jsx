@@ -343,3 +343,24 @@ export class ActivityPubItem {
         return !!(it) && typeof it === 'object' && it.hasOwnProperty('id') && it.hasOwnProperty('type');
     }
 }
+
+export function getIRI (it) {
+    if (typeof it === 'string' && URL.canParse(it)) return it;
+    const first = (val) => {
+        if (Array.isArray(val) && val.length > 1) {
+            return val[0];
+        }
+        return val;
+    }
+    let iri;
+    if (it.hasOwnProperty('url')) {
+        iri = first(it.url);
+    }
+    if (it.hasOwnProperty('href')) {
+        iri = first(it.href);
+    }
+    if (it.hasOwnProperty('id') && it.id.length > 0) {
+        iri = it.id;
+    }
+    return iri;
+}

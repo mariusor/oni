@@ -1,7 +1,7 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubNote} from "./activity-pub-note";
-import {until} from "lit-html/directives/until.js";
-import {renderHtml, renderHtmlText} from "./utils";
+import {renderHtmlText} from "./utils";
+import {getIRI} from "./activity-pub-item";
 
 export class ActivityPubTag extends ActivityPubNote {
     static styles = [css`
@@ -49,25 +49,4 @@ export class ActivityPubTag extends ActivityPubNote {
     static isValid(it) {
         return it !== null && typeof it === 'object' && it.hasOwnProperty('type');
     }
-}
-
-const getIRI = (it) => {
-    if (typeof it === 'string' && URL.canParse(it)) return it;
-    const first = (val) => {
-        if (Array.isArray(val) && val.length > 1) {
-            return val[0];
-        }
-        return val;
-    }
-    let iri;
-    if (it.hasOwnProperty('url')) {
-        iri = first(it.url);
-    }
-    if (it.hasOwnProperty('href')) {
-        iri = first(it.href);
-    }
-    if (it.hasOwnProperty('id') && it.id.length > 0) {
-        iri = it.id;
-    }
-    return iri;
 }
