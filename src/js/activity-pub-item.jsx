@@ -1,10 +1,12 @@
-export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', 'Mention', ''];
+export const LinkTypes = ['Mention'];
+export const ObjectTypes = ['Image', 'Audio', 'Video', 'Note', 'Article', 'Page', 'Document', 'Tombstone', 'Event', ''];
 export const ActorTypes = ['Person', 'Group', 'Application', 'Service'];
 export const ActivityTypes = ['Create', 'Update', 'Delete', 'Like', 'Dislike', 'Undo', 'Announce', 'Accept', 'Reject', 'TentativeAccept', 'TentativeReject', 'Follow', 'Block', 'Ignore'];
 export const CollectionTypes = ['Collection', 'CollectionPage', 'OrderedCollection', 'OrderedCollectionPage'];
 
 //const itemProperties = ['icon', 'image', 'actor', 'attachment', 'audience', 'attributedTo', 'context', 'generator', 'inReplyTo', 'location', 'preview', 'target', 'result', 'origin', 'instrument', 'object'];
 
+const linkProperties = ['id', 'type', 'name', 'rel', 'href', 'mediaType', 'height', 'width', 'preview', 'hrefLang'];
 const objectProperties = ['id', 'type', 'icon', 'image', 'summary', 'name', 'content', 'attachment', 'audience', 'attributedTo', 'context', 'mediaType', 'endTime', 'generator', 'inReplyTo', 'location', 'preview', 'published', 'updated', 'startTime', 'tag', 'to', 'bto', 'cc', 'bcc', 'duration', 'source', 'url', 'replies', 'likes', 'shares'];
 const tombstoneProperties = ['deleted', 'formerType'];
 const actorProperties = ['preferredUsername', 'publicKey', 'endpoints', 'streams', 'inbox', 'outbox', 'liked', 'shared', 'followers', 'following'];
@@ -45,6 +47,9 @@ export class ActivityPubItem {
         }
         if (CollectionTypes.indexOf(this.type) >= 0) {
             collectionProperties.forEach(setPropIfExists);
+        }
+        if (LinkTypes.indexOf(this.type) >= 0) {
+            linkProperties.forEach(setPropIfExists)
         }
     }
 
