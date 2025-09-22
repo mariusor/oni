@@ -59,8 +59,8 @@ customElements.define('bandcamp-embed', BandCampEmbed);
 
 OnReady(function () {
     const root = document.documentElement;
-    if (localStorage.getItem('palette')) {
-        const palette = JSON.parse(localStorage.getItem('palette'));
+    const palette = JSON.parse(localStorage.getItem('palette'));
+    if (palette) {
         root.style.setProperty('--fg-color', palette.fgColor);
         root.style.setProperty('--bg-color', palette.bgColor);
         root.style.setProperty('--link-color', palette.linkColor);
