@@ -476,3 +476,8 @@ export function urlText(iri) {
     return `${u?.host}${(u?.pathname !== '/' ? u.pathname : '')}`;
 }
 
+export function urlRoot(iri) {
+    if (typeof iri === 'string') iri = URL.parse(iri)
+    iri.pathname = '';
+    return iri.toString()
+}

@@ -639,6 +639,12 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 			"CurrentURL": func() template.HTMLAttr {
 				return template.HTMLAttr(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
 			},
+			"oniCollectionParent": func() vocab.IRI {
+				if maybeParent, col := vocab.Split(it.GetID()); col != vocab.Unknown {
+					return maybeParent
+				}
+				return ""
+			},
 		}
 		wrt := bytes.Buffer{}
 		if err := ren.HTML(&wrt, http.StatusOK, templatePath, it, render.HTMLOptions{Funcs: oniFn}); err != nil {

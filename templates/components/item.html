@@ -1,4 +1,5 @@
 {{ $type := . | oniType }}
-<oni-{{$type}}>
+{{ $parent := oniCollectionParent }}
+<oni-{{$type}} {{- if eq $type "collection" }} parent="{{ $parent }}"{{ end -}}>
 <script type="application/ld+json">{{ . | JSON }}</script>
 </oni-{{$type}}>

@@ -2,6 +2,9 @@ import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ifDefined} from "lit-html/directives/if-defined.js";
 import {ActivityPubItem} from "./activity-pub-item";
+import {urlRoot} from "./utils";
+import {until} from "lit-html/directives/until.js";
+import {fetchActivityPubIRI} from "./client";
 
 export class ActivityPubCollection extends ActivityPubObject {
     static styles = [css`
@@ -60,9 +63,17 @@ export class ActivityPubCollection extends ActivityPubObject {
     render() {
         if (!ActivityPubItem.isValid(this.it)) return nothing;
 
+        let renderedParent = nothing;
+        if (this.parent !== urlRoot(window.location.toString())) {
+            if (typeof this.parent === 'string') {
+                 fetchActivityPubIRI(this.parent).then(it => this.parent = it);
+             }
+            renderedParent = html`${until(ActivityPubObject.renderByType(this.parent, true, false))}`;
+        }
+
         let itemsInline = this.inline || this.it.iri()?.includes('shares') || this.it.iri()?.includes('following');
         let threaded = this.threaded || this.it.iri()?.includes('replies');
-        return html`<oni-items 
+        return html`${renderedParent}<oni-items 
                 it=${JSON.stringify(this.it.getItems())} 
                 ?ordered=${this.isOrdered()} 
                 ?showMetadata=${this.showMetadata}

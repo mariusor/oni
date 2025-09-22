@@ -316,6 +316,10 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderReactions() {
+        if (!this.inFocus()) {
+            return html`<ul></ul>`;
+        }
+
         return html`<ul class="reactions">
             ${until(this.renderReactionsLikes())} 
             ${until(this.renderReactionsAnnounces())}
@@ -324,10 +328,6 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderReactionsAnnounces() {
-        if (!this.inFocus()) {
-            return nothing;
-        }
-
         if (!this.it.hasOwnProperty('shares')) {
             return nothing;
         }
@@ -343,10 +343,6 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderReactionsReplies() {
-        if (!this.inFocus()) {
-            return nothing;
-        }
-
         if (!this.it.hasOwnProperty('replies')) {
             return nothing;
         }
@@ -362,10 +358,6 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderReactionsLikes() {
-        if (!this.inFocus()) {
-            return nothing;
-        }
-
         if (!this.it.hasOwnProperty('likes')) {
             return nothing;
         }
@@ -381,7 +373,7 @@ export class ActivityPubObject extends LitElement {
     }
 
     inFocus() {
-        return this.it.iri() === window.location.href;
+        return true;//this.it.iri() === window.location.href;
     }
 
     render() {
