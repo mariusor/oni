@@ -185,7 +185,7 @@ export class OniLoginLink extends LitElement {
                         <dialog closedby="any">
                             <oni-errors it=${JSON.stringify(this.error?.errors)} ?inline=${true}></oni-errors>
                             <form method="post" action=${this.authorizeURL} @submit="${this.login}">
-                                <input type="password" id="_pw" name="_pw" placeholder="Password" autofocus required/><br/>
+                                <input type="password" id="_pw" name="_pw" placeholder="Password" autofocus required autocomplete="current-password"/><br/>
                                 <button type="submit">Sign in</button>
                             </form>
                         </dialog>`,
