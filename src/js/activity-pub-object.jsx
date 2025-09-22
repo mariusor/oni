@@ -317,6 +317,8 @@ export class ActivityPubObject extends LitElement {
 
     async renderReactions() {
         if (!this.inFocus()) {
+            // NOTE(marius): I don't like the logic of this. Ideally we'd like the rendering of the reactions
+            // to be done for all items, not only on their own page.
             return html`<ul></ul>`;
         }
 
@@ -373,7 +375,7 @@ export class ActivityPubObject extends LitElement {
     }
 
     inFocus() {
-        return true;//this.it.iri() === window.location.href;
+        return this.it.iri() === decodeURI(window.location.href);
     }
 
     render() {
