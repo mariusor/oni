@@ -2,6 +2,8 @@
 
 Is a single user ActivityPub server compatible with Mastodon and the rest of the Fediverse.
 
+It is part of the tools built for and with the help with of the [GoActivityPub](https://github.com/go-ap) library.
+
 ## Getting the source
 
 ```sh
@@ -56,6 +58,14 @@ $ onictl block --client https://johndoe.example.com https://naughty.social
 
 ## Interacting with ONI instances using BOX cli helper
 
+### Documentation
+
+Further reading on how to use ONI can be found on
+the [SourceHut wiki](https://man.sr.ht/~mariusor/go-activitypub/oni/index.md).
+
+The wiki also contains [more examples](https://man.sr.ht/~mariusor/go-activitypub/oni/box-cli-examples.md) than the ones
+detailed here about how to use BOX for managing an ONI instance.
+
 ### Authorization
 
 ```sh
@@ -86,3 +96,10 @@ $ box upload --as https://johndoe.example.com --id https://johndoe.example.com/u
 ```sh
 $ box block --as https://johndoe.example.com --reason "Naughty, naughty!" https://naughty.social
 ```
+
+## Contact and feedback
+
+If you have problems, questions, ideas or suggestions, please contact us by posting to
+the [discussions mailing list](https://lists.sr.ht/~mariusor/go-activitypub-discuss), or
+on [GitHub](https://github.com/mariusor/oni/issues).
+For quicker feedback the mailing list is preferred, as the GitHub issues are not checked very often.
