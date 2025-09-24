@@ -88,7 +88,7 @@ static/robots.txt: $(ROBOTS_TXT)
 clean: ## Cleanup the build workspace.
 	-$(RM) bin/*
 	-$(RM) -r ./node_modules yarn.lock
-	-$(RM) static/*.{js,css,map,svg}
+	-$(RM) static/*.{js,css,map,svg,txt}
 	-$(RM) $(PROJECT_NAME).coverprofile
 	$(GO) clean
 	$(MAKE) -C images $@
