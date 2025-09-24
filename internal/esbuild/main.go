@@ -6,18 +6,23 @@ import (
 	"strings"
 
 	"github.com/evanw/esbuild/pkg/api"
+	"github.com/go-ap/errors"
 )
 
 func main() {
 	env := os.Getenv("ENV")
 	isProd := strings.HasPrefix(strings.ToLower(env), "prod") || strings.HasPrefix(strings.ToLower(env), "qa")
 
-	buildJS(isProd)
-	buildCSS(isProd)
+	if err := buildJS(isProd); err != nil {
+		os.Exit(1)
+	}
+	if err := buildCSS(isProd); err != nil {
+		os.Exit(1)
+	}
 	copyOthers()
 }
 
-func buildJS(prod bool) {
+func buildJS(prod bool) error {
 	opt := api.BuildOptions{
 		LogLevel:    api.LogLevelDebug,
 		EntryPoints: []string{"src/js/main.jsx"},
@@ -38,11 +43,16 @@ func buildJS(prod bool) {
 	result := api.Build(opt)
 
 	if len(result.Errors) > 0 {
-		_, _ = fmt.Fprintf(os.Stderr, "%v", result.Errors)
+		errs := make([]error, 0, len(result.Errors))
+		for _, msg := range result.Errors {
+			errs = append(errs, errors.Newf("%s: %s %s:%d", msg.PluginName, msg.Text, msg.Location.File, msg.Location.Line))
+		}
+		return errors.Join(errs...)
 	}
+	return nil
 }
 
-func buildCSS(prod bool) {
+func buildCSS(prod bool) error {
 	opt := api.BuildOptions{
 		LogLevel:    api.LogLevelDebug,
 		EntryPoints: []string{"src/css/main.css"},
@@ -62,8 +72,13 @@ func buildCSS(prod bool) {
 	result := api.Build(opt)
 
 	if len(result.Errors) > 0 {
-		_, _ = fmt.Fprintf(os.Stderr, "%v", result.Errors)
+		errs := make([]error, 0, len(result.Errors))
+		for _, msg := range result.Errors {
+			errs = append(errs, errors.Newf("%s: %s %s:%d", msg.PluginName, msg.Text, msg.Location.File, msg.Location.Line))
+		}
+		return errors.Join(errs...)
 	}
+	return nil
 }
 
 var others = []string{
