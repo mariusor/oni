@@ -57,6 +57,10 @@ export class ActivityPubItem {
         return this.id;
     }
 
+    getType() {
+        return this.type;
+    }
+
     getUrl() {
         if (!this.hasOwnProperty('url')) {
             this.url = null;
