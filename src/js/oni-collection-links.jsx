@@ -1,7 +1,7 @@
 import {css, html, LitElement, nothing} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {ActivityPubObject} from "./activity-pub-object";
-import {ActivityPubItem} from "./activity-pub-item";
+import {ActivityPubItem, ActorTypes} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
 import {fetchActivityPubIRI} from "./client";
 import {map} from "lit-html/directives/map.js";
@@ -81,37 +81,18 @@ export class OniCollectionLinks extends LitElement {
     }
 
     buildCollections() {
-        const replies = this.it.getReplies();
-        if (replies) {
-            this.collections.push(replies);
+        let whichCollections = objectCollections;
+        if (ActorTypes.indexOf(this.it?.type) >= 0) {
+            whichCollections = actorCollections;
         }
-        const likes = this.it.getLikes();
-        if (likes) {
-            this.collections.push(likes);
-        }
-        const shares = this.it.getShares();
-        if (shares) {
-            this.collections.push(shares);
-        }
-        const inbox = this.it.getInbox();
-        if (inbox !== null) {
-            this.collections.push(inbox);
-        }
-        const liked = this.it.getLiked();
-        if (liked !== null) {
-            this.collections.push(liked);
-        }
-        const followers = this.it.getFollowers();
-        if (followers !== null) {
-            this.collections.push(followers);
-        }
-        const following = this.it.getFollowing();
-        if (following !== null) {
-            this.collections.push(following);
-        }
-        const outbox = this.it.getOutbox();
-        if (outbox !== null) {
-            this.collections.push(outbox);
+        for (const i in whichCollections) {
+            const colName = whichCollections[i];
+            if (this.it.hasOwnProperty(colName)){
+                const collection = this.it[colName];
+                if (collection) {
+                    this.collections.push(collection);
+                }
+            }
         }
     }
 
@@ -221,3 +202,5 @@ function isAuthorizePage() {
     return window.location.pathname.startsWith('/oauth');
 }
 
+const actorCollections = ['following', 'followers', 'inbox', 'outbox'];
+const objectCollections = ['likes', 'shares', 'replies'];
