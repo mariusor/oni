@@ -99,7 +99,7 @@ export class ActivityPubActor extends ActivityPubObject {
         a.inline img {
             max-height: 1.2rem;
             vertical-align: middle;
-            margin: .1rem -.2rem .1rem 0;
+            margin: -.14rem -.2rem .1rem 0;
             border: .01rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
         }
         a.inline span {

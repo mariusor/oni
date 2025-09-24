@@ -176,6 +176,7 @@ export class ActivityPubObject extends LitElement {
         if (!this.it.hasOwnProperty(prop)) {
             return null;
         }
+        // TODO(marius): need to take into account if the prop is an array of strings, or an array of ActivityPubItems
         if (typeof this.it[prop] === 'string') {
             fetchActivityPubIRI(this.it[prop]).then(it => this.it[prop] = it);
         }

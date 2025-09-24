@@ -56,11 +56,13 @@ export class ActivityPubItems extends ActivityPubObject {
         :host ul details {
             padding-left: 1.2rem;
         }
+        li > oni-image, li > oni-audio, li > oni-video {
+            margin-top: .6rem;
+        }
     `, ActivityPubObject.styles];
 
     static properties = {
         it: {type: Array},
-        inline: {type: Boolean},
         threaded: {type: Boolean},
         ordered: {type: Boolean},
         parent: {type: String}
@@ -68,11 +70,10 @@ export class ActivityPubItems extends ActivityPubObject {
 
     constructor(showMetadata) {
         super(showMetadata);
-        this.it = [];
+        if (!this.it) this.it = [];
         this.threaded = false;
         this.ordered = false;
-        this.inline = false;
-        this.parent = null;
+        if (!this.parent) this.parent = null;
     }
 
     filterActivitiesByObjectIds() {
@@ -94,6 +95,7 @@ export class ActivityPubItems extends ActivityPubObject {
     }
 
     async renderItems() {
+        // TODO(marius): move this to another place
         for (let i = 0; i < this.it.length; i++) {
             let it = this.it[i];
             if (typeof it !== 'object') {
@@ -117,7 +119,7 @@ export class ActivityPubItems extends ActivityPubObject {
         if (ActivityTypes.indexOf(type) >= 0) {
             renderedItem = renderActivityByType(it, true, itemsInline);
         } else if (ActorTypes.indexOf(type) >= 0) {
-            renderedItem = renderActorByType(it, this.showMetadata, itemsInline);
+            renderedItem = renderActorByType(it, this.showMetadata, true);
         } else {
             renderedItem = renderObjectByType(it, this.showMetadata, itemsInline);
         }
@@ -134,8 +136,6 @@ export class ActivityPubItems extends ActivityPubObject {
         if (!(this.it?.length > 0)) {
             return nothing;
         }
-
-        this.it.map(it => new ActivityPubItem(it));
 
         this.filterActivitiesByObjectIds();
 
