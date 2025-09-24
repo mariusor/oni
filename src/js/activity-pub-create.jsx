@@ -1,5 +1,4 @@
-import {css, html, nothing} from "lit";
-import {ActivityPubObject} from "./activity-pub-object";
+import {html, nothing} from "lit";
 import {until} from "lit-html/directives/until.js";
 import {ObjectTypes, ActorTypes, ActivityPubItem, ActivityTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
@@ -16,11 +15,13 @@ export class ActivityPubCreate extends ActivityPubActivity {
 
     async renderObject(showMetadata) {
         await this.dereferenceProperty('object');
+        if (typeof this.it.object !== 'object') return nothing;
+
         if (!Array.isArray(this.it.object)) {
             this.it.object = [this.it.object];
         }
 
-        const actor = this.it.hasOwnProperty('actor')? this.it.actor : null;
+        const actor = this.it.hasOwnProperty('actor') ? this.it.actor : null;
         return html`${map(this.it.object, function (ob) {
             if (!ob.hasOwnProperty('attributedTo')) {
                 ob.attributedTo = actor;
