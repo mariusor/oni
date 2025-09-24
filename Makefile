@@ -50,9 +50,7 @@ all: $(PROJECT_NAME) ctl
 download: go.sum
 
 go.sum: go.mod
-	$(GO) mod download all
 	$(GO) mod tidy
-	$(GO) get oni
 
 $(PROJECT_NAME): go.sum bin/$(PROJECT_NAME)
 bin/$(PROJECT_NAME): cmd/oni/main.go $(GO_SOURCES) go.sum static/main.css static/main.js static/icons.svg

@@ -21,12 +21,19 @@ The application supports text posts, image, audio and video uploads.
 ## Compiling
 
 ```sh
-# We need to download the JavaScript dependencies, using yarn or npm
+# We need to download the JavaScript dependencies, using yarn or npm:
 # yarn install
 # npm install
+# Also, while we are in heavy development, we do have the 'go.sum' module checksum file in the repository,
+# so we need to created it:
 $ go mod tidy
+# As a last step we need to bundle the static assets, for which we use go:generate with the 'esbuilder' API:
 $ go generate assets.go
+# We now can build the ONI and control helper binaries:
 $ go build -trimpath -a -ldflags '-s -w -extldflags "-static"' -o $(go env GOPATH)/bin/oni ./cmd/oni/main.go
+$ go build -trimpath -a -ldflags '-s -w -extldflags "-static"' -o $(go env GOPATH)/bin/onictl ./cmd/ctl/main.go
+# All of these steps have been grouped together with Make:
+$ make all
 ```
 
 ## Run server
