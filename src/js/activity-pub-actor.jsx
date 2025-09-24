@@ -97,8 +97,10 @@ export class ActivityPubActor extends ActivityPubObject {
             font-size: .8em;
         }
         a.inline img {
-            max-height: 1.8rem;
-            vertical-align: bottom;
+            max-height: 1.2rem;
+            vertical-align: middle;
+            margin: .1rem -.2rem .1rem 0;
+            border: .01rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
         }
         a.inline span {
             opacity: 0.7;
