@@ -234,22 +234,26 @@ export async function loadPalette(it) {
     let imageColors = [];
     let avgColor = defaultBgColor;
 
+    if (iconURL) {
+        palette.iconURL = iconURL;
+        iconColors = (await colorsFromImage(iconURL));
+        avgColor = await average(iconURL, {format: 'hex'});
+    }
+
     if (imageURL) {
         palette.bgImageURL = imageURL;
-        imageColors = (await colorsFromImage(imageURL));//?.filter(validColors);
+        imageColors = (await colorsFromImage(imageURL));
         avgColor = await average(imageURL, {format: 'hex'});
     }
 
-    if (iconURL) {
-        palette.iconURL = iconURL;
-        iconColors = (await colorsFromImage(iconURL));//?.filter(validColors);
-        if (avgColor) {
-            avgColor = await average(iconURL, {format: 'hex'});
-        }
-    }
+    const maxBgSaturation = 0.45;
 
     if (avgColor) {
-        palette.bgColor = avgColor;
+        let tgBg = tc(avgColor);
+        if (tgBg.toHsl().s > maxBgSaturation) {
+            tgBg = tgBg.desaturate(100*Math.abs(tgBg.toHsl().s - maxBgSaturation));
+        }
+        palette.bgColor = `#${tgBg.toHex()}`;
         palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
 
         root.style.setProperty('--bg-color', palette.bgColor);
@@ -384,12 +388,6 @@ export function renderDuration(seconds) {
     }
     const [val, unit] = relativeDuration(seconds)
     return html`<span>${pluralize(Math.round(val), unit)}</span>`;
-}
-
-function validColors(value, index, array) {
-    const notDark = not('#000000', 2)(value);
-    const notLight = not('#ffffff', 2)(value);
-    return notDark && notLight;
 }
 
 // formulas from : https://www.easyrgb.com/en/math.php
