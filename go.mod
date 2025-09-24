@@ -7,19 +7,19 @@ require (
 	git.sr.ht/~mariusor/lw v0.0.0-20250325163623-1639f3fb0e0d
 	git.sr.ht/~mariusor/mask v0.0.0-20250114195353-98705a6977b7
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20250805090125-7286b55ea3f3
-	git.sr.ht/~mariusor/ssm v0.0.0-20250617180832-c3c0db41a98e
+	git.sr.ht/~mariusor/ssm v0.0.0-20250920150353-cc21fa885fda
 	git.sr.ht/~mariusor/wrapper v0.0.0-20250504120759-5fa47ac25e08
 	github.com/alecthomas/kong v1.12.1
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.9
-	github.com/go-ap/activitypub v0.0.0-20250905102448-e9df599e4528
-	github.com/go-ap/auth v0.0.0-20250909130627-7ba95f863264
-	github.com/go-ap/client v0.0.0-20250905102653-674f86aded3d
+	github.com/go-ap/activitypub v0.0.0-20250924114144-2429ef373dc3
+	github.com/go-ap/auth v0.0.0-20250924114843-d2635ccd9c72
+	github.com/go-ap/client v0.0.0-20250924114747-60d900e2a785
 	github.com/go-ap/errors v0.0.0-20250905102357-4480b47a00c4
-	github.com/go-ap/filters v0.0.0-20250909130221-883df1a722e4
+	github.com/go-ap/filters v0.0.0-20250924114310-9ddada298f9d
 	github.com/go-ap/jsonld v0.0.0-20250905102310-8480b0fe24d9
-	github.com/go-ap/processing v0.0.0-20250909130701-94814c8f7f96
-	github.com/go-ap/storage-fs v0.0.0-20250909130728-97c1ca4b19c3
+	github.com/go-ap/processing v0.0.0-20250924114915-4042b07addb1
+	github.com/go-ap/storage-fs v0.0.0-20250924114937-681c0e92ba5b
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
 	github.com/goburrow/cache v0.1.4
@@ -40,7 +40,7 @@ require (
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.24.0 // indirect
-	github.com/go-ap/cache v0.0.0-20250905102525-152e952d5d86 // indirect
+	github.com/go-ap/cache v0.0.0-20250924114254-a6be9a7d6a3b // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
@@ -55,7 +55,7 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
 	golang.org/x/image v0.31.0 // indirect
-	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/net v0.44.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
