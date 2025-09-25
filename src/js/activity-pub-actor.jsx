@@ -1,12 +1,13 @@
-import {css, html, nothing} from "lit";
+import {css, html, nothing, unsafeCSS} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
-import {hostFromIRI, loadPalette, urlText} from "./utils";
+import {hostFromIRI, urlText} from "./utils";
 import {ActivityPubItem, ActorTypes} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
 import {TinyColor} from "@ctrl/tinycolor";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {classMap} from "lit-html/directives/class-map.js";
 import {isLocalIRI} from "./client";
+import {Palette} from "./oni-theme";
 
 const tc = (c) => new TinyColor(c)
 
@@ -120,42 +121,6 @@ export class ActivityPubActor extends ActivityPubObject {
         super();
     }
 
-    renderBgImage(palette) {
-        if (!palette) return nothing;
-        if (!palette?.bgColor) return nothing;
-
-        const col = tc(palette.bgColor);
-        const haveBgImg = palette.hasOwnProperty('bgImageURL') && palette.bgImageURL.length > 0;
-        if (!haveBgImg || !col) {
-            return nothing;
-        }
-
-        const img = palette.bgImageURL;
-        return `:host header {
-            background-size: cover;
-            background-clip: padding-box;
-            background-image: linear-gradient(${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${img});
-        }`;
-    }
-
-    async renderPalette() {
-        const palette = await loadPalette(this.it);
-        if (!palette) return nothing;
-
-        this.scheduleUpdate();
-        return html`
-            ${this.renderBgImage(palette)}
-            :host header {
-                --bg-color: ${palette.bgColor};
-                --fg-color: ${palette.fgColor};
-                --link-color: ${palette.linkColor};
-                --link-visited-color: ${palette.linkVisitedColor};
-                --link-active-color: ${palette.linkActiveColor};
-                --accent-color: ${palette.accentColor};
-            }
-        `;
-    }
-
     renderIcon() {
         const icon = this.it.getIcon();
         if (!icon) {
@@ -247,6 +212,17 @@ export class ActivityPubActor extends ActivityPubObject {
         return html`<a class=${classMap({'inline': this.inline})} title=${title} href=${iri}>${ needsAvatar ? this.renderIcon() : nothing} ${this.renderRemotePreferredUsername()}</a>`;
     }
 
+    async renderStyles() {
+        let palette = Palette.fromStorage();
+        if (!palette.matchItem(this.it)) {
+            palette = await Palette.fromActivityPubItem(this.it);
+            if (palette) Palette.toStorage(palette);
+        }
+        if (!palette) return nothing;
+
+        return palette.renderStyles();
+    }
+
     render() {
         if (typeof this.it === 'string') {
             return html`<a class='inline' href=${this.it}>${urlText(this.it)}</a>`;
@@ -255,8 +231,8 @@ export class ActivityPubActor extends ActivityPubObject {
         if (this.inline) return this.renderInline();
 
         const iri = this.it.iri();
-        const style = html`<style>${until(this.renderPalette())}</style>`;
 
+        const style = html`<style>${until(this.renderStyles())}</style>`;
         return html`${style}<header>
             <a href=${iri}>${this.renderIcon()}</a>
             <section>

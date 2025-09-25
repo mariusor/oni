@@ -1,14 +1,11 @@
-import {html} from "lit";
+import {css, html} from "lit";
 import {until} from "lit-html/directives/until.js";
 import {ActivityPubObject} from "./activity-pub-object";
-import {isMainPage, renderColors} from "./utils";
+import {isMainPage} from "./utils";
 import {when} from "lit-html/directives/when.js";
 
 export class OniMain extends ActivityPubObject {
-    static styles = [];
-    static properties = [{
-        colors: {type: Array},
-    }, ActivityPubObject.properties];
+    static styles = [css``];
 
     constructor() {
         super();
@@ -22,11 +19,9 @@ export class OniMain extends ActivityPubObject {
     }
 
     render() {
-        const colors = html`${until(renderColors(this.it))}`
-
         return html`${until(this.renderHeader())}
             <slot></slot>
-            ${colors}
-            `;
+            <oni-palette></oni-palette>
+        `;
     }
 }

@@ -1,9 +1,8 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubNote} from "./activity-pub-note";
-import {until} from "lit-html/directives/until.js";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
-import {renderHtml, renderHtmlText} from "./utils";
+import {renderHtmlText} from "./utils";
 
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`

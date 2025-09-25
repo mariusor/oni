@@ -23,10 +23,12 @@ import {ActivityPubCreate} from "./activity-pub-create";
 import {ActivityPubAnnounce} from "./activity-pub-announce";
 import {ActivityPubAppreciation} from "./activity-pub-appreciation";
 import {ActivityPubFollow} from "./activity-pub-follow";
+import {PaletteElement} from "./oni-theme";
 
 customElements.define('oni-main', OniMain);
 customElements.define('oni-errors', OniErrors);
 customElements.define('oni-header', OniHeader);
+customElements.define('oni-palette', PaletteElement);
 
 customElements.define('oni-object', ActivityPubObject);
 customElements.define('oni-note', ActivityPubNote);
@@ -58,17 +60,6 @@ customElements.define('oni-login-link', OniLoginLink);
 customElements.define('bandcamp-embed', BandCampEmbed);
 
 OnReady(function () {
-    const root = document.documentElement;
-    const palette = JSON.parse(localStorage.getItem('palette'));
-    if (palette) {
-        root.style.setProperty('--fg-color', palette.fgColor);
-        root.style.setProperty('--bg-color', palette.bgColor);
-        root.style.setProperty('--link-color', palette.linkColor);
-        root.style.setProperty('--link-visited-color', palette.linkVisitedColor);
-        root.style.setProperty('--link-active-color', palette.linkActiveColor);
-        root.style.setProperty('--accent-color', palette.accentColor);
-    }
-
     document.addEventListener('logged.in', () => window.location.reload());
     document.addEventListener('logged.out', () => window.location.reload());
 });

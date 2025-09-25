@@ -356,17 +356,22 @@ export function getHref (it) {
         }
         return val;
     }
+    if (Array.isArray(it)) {
+        return first(it);
+    }
     let iri;
-    if (it.hasOwnProperty('url')) {
-        iri = first(it.url);
-        if (iri.length > 0) return iri;
-    }
-    if (it.hasOwnProperty('href')) {
-        iri = first(it.href);
-        if (iri.length > 0) return iri;
-    }
-    if (it.hasOwnProperty('id')) {
-        iri = it.id;
+    if (typeof it === 'object') {
+        if (it.hasOwnProperty('url')) {
+            iri = first(it.url);
+            if (iri.length > 0) return iri;
+        }
+        if (it.hasOwnProperty('href')) {
+            iri = first(it.href);
+            if (iri.length > 0) return iri;
+        }
+        if (it.hasOwnProperty('id')) {
+            iri = it.id;
+        }
     }
     return iri;
 }
