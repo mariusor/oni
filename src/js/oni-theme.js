@@ -165,10 +165,12 @@ export class PaletteElement extends LitElement {
     static styles = [css`
         div.colors {
             display: flex;
-            gap: 4px;
+            gap: 2px;
+            flex-wrap: wrap;
+            flex-basis: content;
         }
         div.colors div {
-            max-width: 20%;
+            width: 220px;
         }
     `];
 
@@ -191,34 +193,20 @@ export class PaletteElement extends LitElement {
         if (this.palette?.iconColors?.length+this.palette?.imageColors?.length === 0) return nothing;
 
         const renderColor = (color, contrastColor, label) => html`
-            <div style="padding: .2rem 1rem; background-color: ${color}; color: ${contrastColor}; font-size:.8em;">
-                <small>
-                    ${label}${color}
-                    :
-                    <data value="${colorDiff(color, this.palette.bgColor)}" title="diff">
-                        ${colorDiff(color, this.palette.bgColor).toFixed(2)}
-                    </data>
-                    :
-                    <data value="${contrast(color, this.palette.bgColor)}" title="contrast bg">
-                        ${contrast(color, this.palette.bgColor).toFixed(2)}
-                    </data>
-                    :
-                    <data value="${contrast(color, this.palette.fgColor)}" title="contrast fg">
-                        ${contrast(color, this.palette.fgColor).toFixed(2)}
-                    </data>
-                    :
-                    <data value="${tc(color).toHsl().h}" title="hue">
-                        ${tc(color).toHsl().h.toFixed(2)}
-                    </data>
-                    :
-                    <data value="${tc(color).toHsl().s}" title="saturation">
-                        ${tc(color).toHsl().s.toFixed(2)}
-                    </data>
-                    :
-                    <data value="${tc(color).toHsl().l}" title="luminance">
-                        ${tc(color).toHsl().l.toFixed(2)}
-                    </data>
-                </small>
+            <div style="padding: .2rem 1rem; background-color: ${color}; color: ${contrastColor}; border: 1px solid ${contrastColor}; font-size:.7rem;">
+                ${label}${color}: <data value="${colorDiff(color, this.palette.bgColor)}" title="diff">
+                    ${colorDiff(color, this.palette.bgColor).toFixed(2)}
+                </data>:<data value="${contrast(color, this.palette.bgColor)}" title="contrast bg">
+                    ${contrast(color, this.palette.bgColor).toFixed(2)}
+                </data>:<data value="${contrast(color, this.palette.fgColor)}" title="contrast fg">
+                    ${contrast(color, this.palette.fgColor).toFixed(2)}
+                </data>:<data value="${tc(color).toHsl().h}" title="hue">
+                    ${tc(color).toHsl().h.toFixed(2)}
+                </data>:<data value="${tc(color).toHsl().s}" title="saturation">
+                    ${tc(color).toHsl().s.toFixed(2)}
+                </data>:<data value="${tc(color).toHsl().l}" title="luminance">
+                    ${tc(color).toHsl().l.toFixed(2)}
+                </data>
             </div>
         `;
         const colorMap = (colors) => {
