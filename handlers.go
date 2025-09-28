@@ -59,10 +59,9 @@ func (o *oni) Error(err error) http.HandlerFunc {
 			status = http.StatusInternalServerError
 		}
 		oniFn := template.FuncMap{
-			"ONI":        func() vocab.Actor { return o.oniActor(r) },
-			"URLS":       actorURLs(o.oniActor(r)),
-			"Title":      func() string { return http.StatusText(errors.HttpStatus(err)) },
-			"CurrentURL": func() template.HTMLAttr { return "" },
+			"ONI":   func() vocab.Actor { return o.oniActor(r) },
+			"URLS":  actorURLs(o.oniActor(r)),
+			"Title": func() string { return http.StatusText(errors.HttpStatus(err)) },
 		}
 		templatePath := "components/errors"
 		wrt := bytes.Buffer{}

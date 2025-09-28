@@ -71,7 +71,9 @@ var (
 			"JSONAttr": func(it any) template.HTMLAttr {
 				return template.HTMLAttr(renderJson(it))
 			},
-			"HTTPErrors": errors.HttpErrors,
+			"HTTPErrors":          errors.HttpErrors,
+			"CurrentURL":          func() template.HTMLAttr { return "" },
+			"oniCollectionParent": func() vocab.IRI { return "" },
 		}},
 	}
 
