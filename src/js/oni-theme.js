@@ -106,15 +106,19 @@ export class Palette {
         let avgColor = palette.bgColor;
 
         if (iconURL) {
+            let colorCount = 5;
             palette.iconURL = iconURL;
-            palette.iconColors = (await colorsFromImage(iconURL));
+            if (!imageURL) {
+                colorCount = 10;
+            }
+            palette.iconColors = (await colorsFromImage(iconURL, colorCount));
             avgColor = await average(iconURL, {format: 'hex'});
             // console.debug(`loaded icon colors (avg ${avgColor}) ${palette.iconURL}:`, palette.iconColors);
         }
 
         if (imageURL) {
             palette.imageURL = imageURL;
-            palette.imageColors = (await colorsFromImage(imageURL));
+            palette.imageColors = (await colorsFromImage(imageURL, 20));
             avgColor = await average(imageURL, {format: 'hex'});
             // console.debug(`loaded image colors (avg ${avgColor}) ${palette.imageURL}:`, palette.imageColors);
         }
@@ -250,7 +254,7 @@ export const mediumScreen = () => !!(mediumScreenMediaMatch?.matches);
 const largeScreenMediaMatch = window.matchMedia('(width > 1920px)')
 export const largeScreen = () => !!(largeScreenMediaMatch?.matches);
 
-const colorsFromImage = (url) => prominent(url, {amount: 20, group: 32, format: 'hex'});
+const colorsFromImage = (url, amount) => prominent(url, {amount: amount || 10, group: 32, format: 'hex'});
 
 const /* filter */ onLightness = (min, max) => (col) => {
     const hsl = tc(col)?.toHsl();
