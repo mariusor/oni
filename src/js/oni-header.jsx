@@ -12,9 +12,9 @@ export class OniHeader extends ActivityPubActor {
     static styles = [
         css`
             :host header {
-                padding-top: .4em;
+                padding-top: .4rem;
                 display: grid;
-                height: 2.2em;
+                height: 2.4rem;
                 align-items: end;
             }
             header a img, header a svg { 
@@ -25,18 +25,22 @@ export class OniHeader extends ActivityPubActor {
                 background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
                 max-height: 2rem;
                 max-width: 2rem;
+                padding: .2rem;
+                margin-top: .4rem;
                 margin-bottom: -.4rem;
             }
-            header a, header a:visited, header a:hover {
-                color: var(--accent-color);
+            header a, header a:visited, header a:hover, header a:visited:hover  {
+                color: var(--fg-color);
                 text-shadow: 0 0 2rem var(--accent-color), 0 0 .3rem var(--accent-color);
             }
             header a {
                 min-width: 0;
                 margin-left: .4em;
+                font-size: 1.6rem;
                 text-decoration: none;
                 display: inline-block;
                 align-self: start;
+                font-weight: bold;
             }
         `,
         ActivityPubObject.styles

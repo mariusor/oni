@@ -1,15 +1,12 @@
-import {css, html, nothing, unsafeCSS} from "lit";
+import {css, html, nothing} from "lit";
 import {ActivityPubObject} from "./activity-pub-object";
 import {hostFromIRI, urlText} from "./utils";
 import {ActivityPubItem, ActorTypes} from "./activity-pub-item";
 import {until} from "lit-html/directives/until.js";
-import {TinyColor} from "@ctrl/tinycolor";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {classMap} from "lit-html/directives/class-map.js";
 import {isLocalIRI} from "./client";
 import {Palette} from "./oni-theme";
-
-const tc = (c) => new TinyColor(c)
 
 export class ActivityPubActor extends ActivityPubObject {
     static styles = [css`
@@ -35,8 +32,7 @@ export class ActivityPubActor extends ActivityPubObject {
         section h2 {
             font-weight: 300;
         }
-        section h1 a oni-natural-language-values {
-            color: var(--accent-color);
+        section h1 a [name] {
             text-shadow: 0 0 2rem var(--accent-color), 0 0 .3rem var(--accent-color);
         }
         header > a svg {
@@ -51,6 +47,8 @@ export class ActivityPubActor extends ActivityPubObject {
             max-height: 10em;
             max-width: 10em;
             margin-bottom: -.4rem;
+            margin-top: .4rem;
+            padding: .32rem;
         }
         section ul {
             display: inline-block;

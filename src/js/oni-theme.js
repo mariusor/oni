@@ -4,13 +4,13 @@ import {ActivityPubItem, getHref} from "./activity-pub-item";
 import {css, html, LitElement, nothing, unsafeCSS} from "lit";
 import {map} from "lit-html/directives/map.js";
 import {isMainPage} from "./utils";
+import {when} from "lit-html/directives/when.js";
 
 export class Palette {
     bgColor;
     fgColor;
     accentColor;
     linkColor;
-    linkActiveColor;
     linkVisitedColor;
     imageURL;
     iconURL;
@@ -19,15 +19,12 @@ export class Palette {
     iconColors = [];
 
     constructor() {
-        const root = document.documentElement;
-        const style = getComputedStyle(root);
+        const style = getComputedStyle(document.documentElement);
 
         this.bgColor = style.getPropertyValue('--bg-color').trim();
         this.fgColor = style.getPropertyValue('--fg-color').trim();
         this.accentColor = style.getPropertyValue('--accent-color').trim();
         this.linkColor = style.getPropertyValue('--link-color').trim();
-        this.linkActiveColor = style.getPropertyValue('--link-active-color').trim();
-        this.linkVisitedColor = style.getPropertyValue('--link-visited-color').trim();
         this.colorScheme = prefersDarkTheme() ? 'dark' : 'light';
     }
 
@@ -49,13 +46,12 @@ export class Palette {
     }
 
     setRootStyles() {
-        const root = document.body;
+        const root = document.documentElement;
         root.style.setProperty('--fg-color', this.fgColor);
         root.style.setProperty('--bg-color', this.bgColor);
         root.style.setProperty('--accent-color', this.accentColor);
         root.style.setProperty('--link-color', this.linkColor);
         root.style.setProperty('--link-visited-color', this.linkVisitedColor);
-        root.style.setProperty('--link-active-color', this.linkActiveColor);
         root.style.accentColor = this.accentColor;
         root.style.backgroundColor = this.bgColor;
         root.style.color = this.fgColor;
@@ -73,7 +69,6 @@ export class Palette {
                 palette.bgColor = _palette.bgColor;
                 palette.accentColor = _palette.accentColor;
                 palette.linkColor = _palette.linkColor;
-                palette.linkActiveColor = _palette.linkActiveColor;
                 palette.linkVisitedColor = _palette.linkVisitedColor;
                 palette.colorScheme = _palette.colorScheme;
                 palette.iconColors = _palette.iconColors;
@@ -87,22 +82,14 @@ export class Palette {
         this.setRootStyles();
         const col = tc(this.bgColor);
         return unsafeCSS(`
-            :host {
-                --bg-color: ${this.bgColor};
-                --fg-color: ${this.fgColor};
-                --accent-color: ${this.accentColor};
-                --link-color: ${this.linkColor};
-                --link-visited-color: ${this.linkVisitedColor};
-                --link-active-color: ${this.linkActiveColor};
-            }
             :host header {
                 background-size: cover;
                 background-clip: padding-box;
+                background-position: center;
                 background-image: linear-gradient(${col.setAlpha(0.1).toRgbString()}, ${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${this.imageURL});
             }
         `);
     }
-
 
     static toStorage(palette) {
         localStorage.setItem('palette', JSON.stringify(palette));
@@ -122,50 +109,134 @@ export class Palette {
             palette.iconURL = iconURL;
             palette.iconColors = (await colorsFromImage(iconURL));
             avgColor = await average(iconURL, {format: 'hex'});
-            console.debug(`loaded icon colors ${palette.iconURL}:`, palette.iconColors);
+            // console.debug(`loaded icon colors (avg ${avgColor}) ${palette.iconURL}:`, palette.iconColors);
         }
 
         if (imageURL) {
             palette.imageURL = imageURL;
             palette.imageColors = (await colorsFromImage(imageURL));
-            //avgColor = await average(imageURL, {format: 'hex'});
-            console.debug(`loaded image colors ${palette.imageURL}:`, palette.imageColors);
+            avgColor = await average(imageURL, {format: 'hex'});
+            // console.debug(`loaded image colors (avg ${avgColor}) ${palette.imageURL}:`, palette.imageColors);
         }
 
-        const maxBgSaturation = 0.45;
-
         if (avgColor) {
+            const maxBgSaturation = 0.45;
+
             let tgBg = tc(avgColor);
             if (tgBg.toHsl().s > maxBgSaturation) {
                 tgBg = tgBg.desaturate(100*Math.abs(tgBg.toHsl().s - maxBgSaturation));
+                if (prefersDarkTheme()) {
+                    tgBg.lighten(10);
+                } else {
+                    tgBg.darken(10);
+                }
             }
             palette.bgColor = tgBg.toHexString();
             palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
         }
 
-        let paletteColors = palette.imageColors;
-        if (palette.imageColors.length === 0) {
-            paletteColors = palette.iconColors;
-        }
+        let paletteColors = [... new Set([...palette.imageColors, ...palette.iconColors])];
         if (paletteColors.length > 0) {
-            palette.accentColor = getAccentColor(palette, paletteColors) || palette.accentColor;
-            paletteColors = paletteColors.filter(not(palette.accentColor, 1));
+            console.debug(`colors for fg`, paletteColors);
+            palette.fgColor = getFgColor(paletteColors, palette.bgColor)
+                || palette.fgColor;
+            paletteColors = paletteColors.filter(color => color !== palette.fgColor);
 
-            palette.linkColor = getAccentColor(palette, paletteColors) || palette.linkColor;
-            paletteColors = paletteColors.filter(not(palette.linkColor, 1));
+            console.debug(`colors for accent`, paletteColors);
+            palette.accentColor = getAccentColor(paletteColors, palette.bgColor)
+                || palette.accentColor;
+            paletteColors = paletteColors.filter(color => color !== palette.accentColor);
 
-            palette.linkVisitedColor = getClosestColor(palette, paletteColors, palette.linkColor) || palette.linkVisitedColor;
-            paletteColors = paletteColors.filter(not(palette.linkVisitedColor, 1));
+            console.debug(`colors for link`, paletteColors);
+            palette.linkColor = getAccentColor(paletteColors, palette.bgColor)
+                || tc(palette.fgColor).mix(palette.accentColor, 80).toHexString();
+            paletteColors = paletteColors.filter(color => color !== palette.linkColor);
 
-            palette.linkActiveColor = getClosestColor(palette, paletteColors, palette.linkColor) || palette.linkActiveColor;
-        }
-
-        if (palette.imageColors.length + palette.iconColors.length > 0) {
-            const allColors = [... new Set(palette.imageColors.concat(palette.iconColors))];
-            palette.fgColor = getFgColor(palette, allColors)  || palette.fgColor;
+            console.debug(`colors for visited link`, paletteColors);
+            palette.linkVisitedColor = getAccentColor(paletteColors, palette.bgColor)
+                || tc(palette.linkColor).darken(10).toHexString();
+            // if (prefersDarkTheme()) {
+            //     palette.linkVisitedColor = tc(palette.linkColor).lighten(10).toHexString();
+            // }
         }
 
         return palette;
+    }
+}
+
+export class PaletteElement extends LitElement {
+    static styles = [css``];
+
+    static properties = {
+        palette: {type: Palette},
+    }
+
+    constructor() {
+        super();
+        this.palette = null;
+    }
+
+
+    render() {
+        this.palette = this.palette || Palette.fromStorage();
+
+        if (!this.palette) return nothing;
+        if (!isMainPage()) return nothing;
+        if (!window.location.hostname.endsWith('local')) return nothing;
+        if (this.palette?.iconColors?.length+this.palette?.imageColors?.length === 0) return nothing;
+
+        const renderColor = (color, contrastColor, label) => html`
+            <div style="padding: .2rem 1rem; background-color: ${color}; color: ${contrastColor}; font-size:.8em;">
+                <small>
+                    ${label}${color}
+                    :
+                    <data value="${colorDiff(color, this.palette.bgColor)}" title="diff">
+                        ${colorDiff(color, this.palette.bgColor).toFixed(2)}
+                    </data>
+                    :
+                    <data value="${contrast(color, this.palette.bgColor)}" title="contrast bg">
+                        ${contrast(color, this.palette.bgColor).toFixed(2)}
+                    </data>
+                    :
+                    <data value="${contrast(color, this.palette.fgColor)}" title="contrast fg">
+                        ${contrast(color, this.palette.fgColor).toFixed(2)}
+                    </data>
+                    :
+                    <data value="${tc(color).toHsl().h}" title="hue">
+                        ${tc(color).toHsl().h.toFixed(2)}
+                    </data>
+                    :
+                    <data value="${tc(color).toHsl().s}" title="saturation">
+                        ${tc(color).toHsl().s.toFixed(2)}
+                    </data>
+                    :
+                    <data value="${tc(color).toHsl().l}" title="luminance">
+                        ${tc(color).toHsl().l.toFixed(2)}
+                    </data>
+                </small>
+            </div>
+        `;
+        const colorMap = (colors) => {
+            return html`
+                ${map(colors, color => {
+                    const contrastColor = mostReadable([this.palette.fgColor, this.palette.bgColor], color);
+                    return renderColor(color, contrastColor);
+                })}
+            `;
+        }
+        return html`
+            ${renderColor(this.palette.bgColor, this.palette.fgColor, html`<b>Background:</b> `)}
+            ${renderColor(this.palette.fgColor, this.palette.bgColor, html`<b>Foreground:</b> `)}
+            ${renderColor(this.palette.accentColor, this.palette.bgColor, html`<b>Accent:</b> `)}
+            ${renderColor(this.palette.linkColor, this.palette.bgColor, html`<b>Link:</b> `)}
+            ${renderColor(this.palette.linkVisitedColor, this.palette.bgColor, html`<b>Visited Link:</b> `)}
+            ${when(this.palette.iconColors,
+                    () => html`<hr/>${colorMap(this.palette.iconColors)}`
+            )}
+            ${when(this.palette.imageColors,
+                    () => html`<hr/>${colorMap(this.palette.imageColors)}`
+            )}
+        `;
     }
 }
 
@@ -184,7 +255,7 @@ export const mediumScreen = () => !!(mediumScreenMediaMatch?.matches);
 const largeScreenMediaMatch = window.matchMedia('(width > 1920px)')
 export const largeScreen = () => !!(largeScreenMediaMatch?.matches);
 
-const colorsFromImage = (url) => prominent(url, {amount: 50, group: 40, format: 'hex', sample: 128});
+const colorsFromImage = (url) => prominent(url, {amount: 20, group: 32, format: 'hex'});
 
 const /* filter */ onLightness = (min, max) => (col) => {
     const hsl = tc(col)?.toHsl();
@@ -199,128 +270,60 @@ const /* filter */ onContrastTo = (base, min, max) => (col) => {
     const con = contrast(col, base);
     return con >= (min || 0) && con <= (max || 21)
 };
-const /* filter */ not = (c, diff) => (n) => Math.abs(colorDiff(c, n)) >= (diff || 2);
+const /* filter */ not = (c, diff) => (n) => Math.abs(colorDiff(c, n)) >= (diff || 0.5);
 const /* sort */ byContrastTo = (base) => (a, b) => contrast(b, base) - contrast(a, base);
 const /* sort */ bySaturation = (a, b) => tc(b).toHsv().s - tc(a).toHsv().s;
 const /* sort */ byDiff = (base) => (a, b) => Math.abs(colorDiff(a, base)) - Math.abs(colorDiff(b, base));
 
-function getFgColor(palette, colors) {
-    colors = Array.isArray(colors) ? colors : [colors];
+function getFgColor(colors, toColor) {
+    colors = Array.isArray(colors) ? colors : [... new Set(colors)];
 
-    console.debug(`fg colors`, colors);
-    return mostReadable(colors, palette.bgColor)?.toHexString();
+    const fgColors = colors
+        .filter(onSaturation(0, 0.3))
+        .filter(onContrastTo(toColor, 5, 19))
+        .sort(byContrastTo(toColor));
+
+    console.debug(`filtered colors`, fgColors);
+    const most = fgColors.at(0);
+    console.debug(`most readable to ${toColor} is ${most}: ${contrast(most, toColor)}`);
+    return most;
 }
 
 function mostReadable(colors, toColor) {
     colors = Array.isArray(colors) ? colors : [colors];
-    colors = [...(new Set(colors))];
 
-    console.debug(`unique colors`, colors);
-    if (colors.length === 1) {
-        colors = tc(colors.at(0)).polyad(4).map(col => col.toHexString());
-        console.debug(`tetrad colors`, colors);
-    }
-    colors = colors
-        .filter(onContrastTo(toColor, 4, 21))
+    colors = colors.filter(onContrastTo(toColor, 4, 21))
         .sort(byContrastTo(toColor));
 
-    console.debug(`sorted colors`, colors);
-    const most = colors?.at(0);
-    const least = colors?.at(-1);
-    console.debug(`most readable to ${toColor} is ${most}, not ${least}: ${contrast(most, toColor)}/${contrast(least, toColor)}`);
     return tc(colors.at(0));
 }
 
-function getClosestColor(palette, colors, color) {
+function getClosestColor(colors, color, onColor) {
     colors = Array.isArray(colors) ? colors : [colors];
 
     colors = colors
-        .filter(onContrastTo(palette.bgColor, 3, 7))
+        .filter(onContrastTo(onColor, 3, 7))
         .sort(byDiff(color))
         .reverse();
-    return colors.at(0);
+
+    const most = colors.at(0);
+    console.debug(`most readable to ${onColor} and closest to ${color} is ${most}: ${contrast(most, onColor)}`);
+    return most;
 }
 
-function getAccentColor(palette, colors) {
+function getAccentColor(colors, toColor) {
     colors = Array.isArray(colors) ? colors : [colors];
 
-    const filterColors = (colors) => colors
-        .filter(onSaturation(0.4))
-        .filter(onLightness(0.4, 0.6));
+    let accentColors = colors
+        .filter(onContrastTo(toColor, 2.8, 19))
+        .filter(onSaturation(0.4, 1))
+        .sort(bySaturation)
+        .sort(byContrastTo(toColor)).reverse();
 
-    let accentColors = colors;
-    for (let i = 0; i < 10; i++) {
-        accentColors = filterColors(accentColors);
-        if (accentColors.length > 0) break;
-
-        colors.forEach((value, index) => {
-            accentColors[index] = tc(value).saturate(10).toHexString()
-        });
-    }
-    if (!(accentColors.length > 0)) {
-        return "";
-    }
-    console.debug(`accent colors`, accentColors);
-    return mostReadable(accentColors, palette.bgColor)?.toHexString();
-}
-
-export class PaletteElement extends LitElement {
-    static styles = [css``];
-
-    constructor() {
-        super();
-    }
-
-    render() {
-        const palette = Palette.fromStorage();
-
-        if (!palette) return nothing;
-        if (!isMainPage()) return nothing;
-        if (!window.location.hostname.endsWith('local')) return nothing;
-
-        const colorMap = (ordered) => {
-            console.debug(`map colors`, ordered);
-            return html`
-                ${map(ordered, value => {
-                    console.debug(`rendering color ${value}`)
-                    const color = (value === palette.bgColor) ? palette.fgColor : palette.bgColor;
-                    return html`
-                        <div style="padding: .2rem 1rem; background-color: ${value}; color: ${color}; font-size:.8em;">
-                            <small>
-                                ${value}
-                                :
-                                <data value="${colorDiff(value, palette.bgColor)}" title="diff">
-                                    ${colorDiff(value, palette.bgColor).toFixed(2)}
-                                </data>
-                                :
-                                <data value="${contrast(value, palette.bgColor)}" title="contrast bg">
-                                    ${contrast(value, palette.bgColor).toFixed(2)}
-                                </data>
-                                :
-                                <data value="${contrast(value, palette.fgColor)}" title="contrast fg">
-                                    ${contrast(value, palette.fgColor).toFixed(2)}
-                                </data>
-                                :
-                                <data value="${tc(value).toHsl().h}" title="hue">${tc(value).toHsl().h.toFixed(2)}
-                                </data>
-                                :
-                                <data value="${tc(value).toHsl().s}" title="saturation">
-                                    ${tc(value).toHsl().s.toFixed(2)}
-                                </data>
-                                :
-                                <data value="${tc(value).toHsl().l}" title="luminance">${tc(value).toHsl().l.toFixed(2)}
-                                </data>
-                            </small>
-                        </div>
-                    `
-                })}
-            `;
-        }
-        return html`
-            ${colorMap(palette.iconColors)}<br/>
-            ${colorMap(palette.imageColors)}
-        `;
-    }
+    console.debug(`filtered colors`, accentColors);
+    const most = accentColors.at(0);
+    console.debug(`most readable to ${toColor} is ${most}: ${contrast(most, toColor)}`);
+    return most;
 }
 
 // formulas from : https://www.easyrgb.com/en/math.php
@@ -373,4 +376,3 @@ function apURL(ob) {
     }
     return ob
 }
-

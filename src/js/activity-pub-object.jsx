@@ -14,18 +14,15 @@ export class ActivityPubObject extends LitElement {
         a {
             color: var(--link-color);
         }
-        a:hover {
-            --link-hover-color: oklch(from var(--link-color) calc(l + .2) c h);
+        a:hover, a:hover:visited {
             color: var(--link-hover-color);
             text-shadow: 0 0 1rem var(--link-hover-color), 0 0 .3rem var(--bg-color);
         }
         a:visited {
-            --link-visited-color: oklch(from var(--link-color) calc(l + .2) c h);
             color: var(--link-visited-color);
             text-shadow: 0 0 1rem var(--link-visited-color), 0 0 .3rem var(--bg-color);
         }
         a:active {
-            --link-active-color: oklch(from var(--link-color) calc(l + .2) c h);
             color: var(--link-active-color);
             text-shadow: 0 0 1rem var(--link-active-color), 0 0 .3rem var(--bg-color);
         }
@@ -106,6 +103,16 @@ export class ActivityPubObject extends LitElement {
         }
         .replies *, .attachments * {
             font-size: .9rem;
+        }
+        :root {
+            --link-hover-color: oklch(from var(--link-color) calc(l + .2) c h);
+            --link-active-color: oklch(from var(--link-color) calc(l + .2) c h);
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --link-hover-color: oklch(from var(--link-color) calc(l - .2) c h);
+                --link-active-color: oklch(from var(--link-color) calc(l - .2) c h);
+            }
         }
         @media(max-width: 480px) {
             :host footer {
