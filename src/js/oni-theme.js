@@ -167,14 +167,18 @@ export class Palette {
 
 export class PaletteElement extends LitElement {
     static styles = [css`
+        div {
+            padding: .2rem .5rem; 
+            font-size: .6rem;
+        }
         div.colors {
+            padding: 0;
             display: flex;
             gap: 2px;
             flex-wrap: wrap;
-            flex-basis: content;
         }
         div.colors div {
-            width: 220px;
+            flex: 1 1 220px;
         }
     `];
 
@@ -197,7 +201,7 @@ export class PaletteElement extends LitElement {
         if (this.palette?.iconColors?.length+this.palette?.imageColors?.length === 0) return nothing;
 
         const renderColor = (color, contrastColor, label) => html`
-            <div style="padding: .2rem 1rem; background-color: ${color}; color: ${contrastColor}; border: 1px solid ${contrastColor}; font-size:.7rem;">
+            <div style="background-color: ${color}; color: ${contrastColor}; border: 1px solid ${contrastColor};">
                 ${label}${color}: <data value="${colorDiff(color, this.palette.bgColor)}" title="diff">
                     ${colorDiff(color, this.palette.bgColor).toFixed(2)}
                 </data>:<data value="${contrast(color, this.palette.bgColor)}" title="contrast bg">
@@ -221,6 +225,8 @@ export class PaletteElement extends LitElement {
                 })}
             `;
         }
+        const colors = [... new Set([...this.palette.iconColors, ...this.palette.imageColors])]
+            .toSorted(byDiff(this.palette.bgColor));
         return html`
             ${renderColor(this.palette.bgColor, this.palette.fgColor, html`<b>Background:</b> `)}
             ${renderColor(this.palette.fgColor, this.palette.bgColor, html`<b>Foreground:</b> `)}
@@ -228,11 +234,9 @@ export class PaletteElement extends LitElement {
             ${renderColor(this.palette.linkColor, this.palette.bgColor, html`<b>Link:</b> `)}
             ${renderColor(this.palette.linkVisitedColor, this.palette.bgColor, html`<b>Visited Link:</b> `)}
             <div class="colors">
-            ${when(this.palette.iconColors,
-                    () => html`${colorMap(this.palette.iconColors)}`
-            )}
-            ${when(this.palette.imageColors,
-                    () => html`${colorMap(this.palette.imageColors)}`
+            ${when(colors.length > 0,
+                    () => html`${colorMap(colors)}`,
+                    () => nothing,
             )}
             </div>
         `;
