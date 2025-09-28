@@ -155,9 +155,6 @@ export class Palette {
             console.debug(`colors for visited link`, paletteColors);
             palette.linkVisitedColor = getAccentColor(paletteColors, palette.bgColor)
                 || tc(palette.linkColor).darken(10).toHexString();
-            // if (prefersDarkTheme()) {
-            //     palette.linkVisitedColor = tc(palette.linkColor).lighten(10).toHexString();
-            // }
         }
 
         return palette;
@@ -165,7 +162,15 @@ export class Palette {
 }
 
 export class PaletteElement extends LitElement {
-    static styles = [css``];
+    static styles = [css`
+        div.colors {
+            display: flex;
+            gap: 4px;
+        }
+        div.colors div {
+            max-width: 20%;
+        }
+    `];
 
     static properties = {
         palette: {type: Palette},
@@ -230,12 +235,14 @@ export class PaletteElement extends LitElement {
             ${renderColor(this.palette.accentColor, this.palette.bgColor, html`<b>Accent:</b> `)}
             ${renderColor(this.palette.linkColor, this.palette.bgColor, html`<b>Link:</b> `)}
             ${renderColor(this.palette.linkVisitedColor, this.palette.bgColor, html`<b>Visited Link:</b> `)}
+            <div class="colors">
             ${when(this.palette.iconColors,
-                    () => html`<hr/>${colorMap(this.palette.iconColors)}`
+                    () => html`${colorMap(this.palette.iconColors)}`
             )}
             ${when(this.palette.imageColors,
-                    () => html`<hr/>${colorMap(this.palette.imageColors)}`
+                    () => html`${colorMap(this.palette.imageColors)}`
             )}
+            </div>
         `;
     }
 }
