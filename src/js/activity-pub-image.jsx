@@ -3,6 +3,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubNote} from "./activity-pub-note";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {renderHtmlText} from "./utils";
+import {when} from "lit-html/directives/when.js";
 
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`
@@ -52,15 +53,10 @@ export class ActivityPubImage extends ActivityPubObject {
         }
         dialog {
             border: none;
-            background: none;
+            background-color: transparent;
             overflow: clip;
-            margin: 0;
-            padding: .4rem;
             margin: auto;
-            outline: none;
-            outline-offset: 0;
-            max-width: 90%;
-            max-height: 100%;
+            max-width: 98%;
         }
         dialog a {
             position: absolute;
@@ -72,14 +68,18 @@ export class ActivityPubImage extends ActivityPubObject {
             padding: .2rem .4rem;
             border-radius: .4rem;
         }
-        dialog img {
-            width: auto;
-            height: 100%;
-            object-fit: cover;
-        }
         dialog::backdrop {
             background-color: var(--bg-color);
             opacity: .9;
+        }
+        dialog img {
+            max-width: 98vw;
+            max-height: 95vh;
+        }
+        @media (max-width: 960px) {
+            dialog img {
+                max-width: 100%;
+            }
         }
         `, ActivityPubNote.styles];
 
@@ -154,16 +154,20 @@ export class ActivityPubImage extends ActivityPubObject {
 
         const name = renderHtmlText(this.it.getName());
         const alt = renderHtmlText(this.it.getSummary());
+        const needsFullSize = url.length > 0 || largest?.width > 1920;
 
         const altElement = this.renderAlt(name, alt);
         return html`
-            <dialog closedby="any">
-                <a @click=${this.hideModal} href="#"><oni-icon name="close" alt="Close dialog"></oni-icon></a>
-                <img loading="lazy" 
-                     src=${largest?.href ?? nothing} 
-                     title="${name ?? alt}" 
-                     alt="${alt ?? nothing}"/>
-            </dialog>
+            ${when(
+                needsFullSize,
+                    () => html`<dialog closedby="any">
+                            <a @click=${this.hideModal} href="#"><oni-icon name="close" alt="Close dialog"></oni-icon></a>
+                            <img loading="lazy"
+                                 src=${largest?.href ?? nothing}
+                                 title="${name ?? alt}"
+                                 alt="${alt ?? nothing}"/>
+                        </dialog>`,
+            )}
             <figure>
                 ${altElement}
                 <img @click=${this.showModal} loading="lazy" src=${src ?? nothing}
