@@ -289,7 +289,7 @@ const (
 	// It makes use of the custom URI scheme 'org.oni.app://'
 	DefaultOniAppRedirectURL = "org.oni.app://oauth2redirect"
 	// DefaultBOXAppRedirectURL is the default redirect URL used by the OAuth2 mechanisms based on the
-	// GoActivityPub client library. We're using the 127.0.0.1 explicitly to allow for wildcard ports
+	// GoActivityPub client library. We're using the http://127.0.0.1 explicitly to allow for wildcard ports
 	// from the client side. See: https://www.rfc-editor.org/rfc/rfc8252#section-7.3
 	DefaultBOXAppRedirectURL = "http://127.0.0.1"
 )
