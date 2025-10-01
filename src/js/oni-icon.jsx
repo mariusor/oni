@@ -9,7 +9,7 @@ export class OniIcon extends LitElement {
         fill: currentColor;
         color: currentColor;
         vertical-align: middle;
-        margin: 0 .2rem;
+        padding: 0 .2rem;
     }
     svg[data-name=outbox] {
         vertical-align: text-bottom;

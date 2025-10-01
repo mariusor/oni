@@ -27,15 +27,20 @@ export class ActivityPubImage extends ActivityPubObject {
         figcaption {
             position: absolute;
             padding: 1rem;
-            display: flex;
-            align-items: start;
+            display: inline-block;
+        }
+        figure details[open] {
+            max-width: 30%;
+        }
+        figure details[open] summary {
+            padding-bottom: .4rem;
         }
         figure details {
             cursor: pointer;
-            font-size: .7rem;
-            line-height: 1rem;
-            background-color: color-mix(in srgb, black, transparent 60%);
-            padding: .1rem .4rem;
+            font-size: .9rem;
+            line-height: 1.4rem;
+            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(40%);
+            padding: .2rem .4rem;
             border-radius: .4rem;
         }
         figure summary {
@@ -43,7 +48,38 @@ export class ActivityPubImage extends ActivityPubObject {
             list-style-type: none;
             font-variant: small-caps;
             font-weight: bold;
-            padding: .2rem 0;
+            padding: 0 .2rem;
+        }
+        dialog {
+            border: none;
+            background: none;
+            overflow: clip;
+            margin: 0;
+            padding: .4rem;
+            margin: auto;
+            outline: none;
+            outline-offset: 0;
+            max-width: 90%;
+            max-height: 100%;
+        }
+        dialog a {
+            position: absolute;
+            right: 0;
+            display: inline-block;
+            font-size: .9rem;
+            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(40%);
+            margin: 1rem 2rem 0 0;
+            padding: .2rem .4rem;
+            border-radius: .4rem;
+        }
+        dialog img {
+            width: auto;
+            height: 100%;
+            object-fit: cover;
+        }
+        dialog::backdrop {
+            background-color: var(--bg-color);
+            opacity: .9;
         }
         `, ActivityPubNote.styles];
 
@@ -67,7 +103,21 @@ export class ActivityPubImage extends ActivityPubObject {
                 (prev, cur) => (cur?.width <= prev?.width) ? cur : prev
             ) :
             src;
-        return html`<img loading="lazy" src=${smallest?.href ?? nothing} title="${name ?? alt}" alt="${alt ?? nothing}" class="small""/>`;
+
+        let largest = typeof(src) === 'string' ? {href: src} : src;
+        return html`<a href=${largest?.href ?? '#'} @click=${() => console.debug('show modal!')}><img loading="lazy" src=${smallest?.href ?? nothing} title="${name ?? alt}" alt="${alt ?? nothing}" class="small""/></a>`;
+    }
+
+    showModal(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.shadowRoot?.querySelector("dialog")?.showModal();
+    }
+
+    hideModal(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.shadowRoot?.querySelector("dialog")?.close();
     }
 
     render() {
@@ -107,9 +157,16 @@ export class ActivityPubImage extends ActivityPubObject {
 
         const altElement = this.renderAlt(name, alt);
         return html`
+            <dialog closedby="any">
+                <a @click=${this.hideModal} href="#"><oni-icon name="close" alt="Close dialog"></oni-icon></a>
+                <img loading="lazy" 
+                     src=${largest?.href ?? nothing} 
+                     title="${name ?? alt}" 
+                     alt="${alt ?? nothing}"/>
+            </dialog>
             <figure>
                 ${altElement}
-                <img loading="lazy" src=${src ?? nothing}
+                <img @click=${this.showModal} loading="lazy" src=${src ?? nothing}
                      title="${name ?? alt}" alt="${alt ?? nothing}"
                      srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
             </figure>
