@@ -11,7 +11,7 @@ import {Palette} from "./oni-theme";
 export class ActivityPubActor extends ActivityPubObject {
     static styles = [css`
         :host header {
-            padding: 1rem;
+            padding: 1rem 1rem .2rem 1rem;
             display: flex;
             justify-content: start;
             align-items: flex-end;
@@ -39,14 +39,14 @@ export class ActivityPubActor extends ActivityPubObject {
             color: var(--accent-color);
         }
         header > a img, header > a svg {
+            aspect-ratio: 1;
+            object-fit: cover;
             border: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
             border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
             box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
             max-height: 10em;
-            max-width: 10em;
-            margin-bottom: -.4rem;
             margin-top: .4rem;
             padding: .32rem;
         }
