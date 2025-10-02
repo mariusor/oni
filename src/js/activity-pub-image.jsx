@@ -21,6 +21,7 @@ export class ActivityPubImage extends ActivityPubObject {
             max-width: 1rem;
             max-height: 1rem;
             vertical-align: text-top;
+            border: unset;
         }
         figure {
             margin: auto;
@@ -100,10 +101,9 @@ export class ActivityPubImage extends ActivityPubObject {
             src.reduce(
                 (prev, cur) => (cur?.width <= prev?.width) ? cur : prev
             ) :
-            src;
+            {href : src};
 
-        let largest = typeof(src) === 'string' ? {href: src} : src;
-        return html`<a href=${largest?.href ?? '#'} @click=${() => console.debug('show modal!')}><img loading="lazy" src=${smallest?.href ?? nothing} title="${name ?? alt}" alt="${alt ?? nothing}" class="small""/></a>`;
+        return html`<img loading="lazy" src=${smallest?.href ?? nothing} title="${name ?? alt}" alt="${alt ?? nothing}" class="small""/>`;
     }
 
     showModal(e) {

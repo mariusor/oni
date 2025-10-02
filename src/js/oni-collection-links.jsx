@@ -44,13 +44,6 @@ export class OniCollectionLinks extends LitElement {
         :host li.active {
             background-color: var(--accent-color);
         }
-        :host li oni-image {
-            max-width: 1.2rem;
-            max-height: 1.2rem;
-            display: inline-block;
-            vertical-align: middle;
-            margin-bottom: .4rem;
-        }
         @media (max-width: 576px) {
             :host li {
                 line-height: 1.2rem;
@@ -148,6 +141,11 @@ const LinkStyle = css`
             color: var(--bg-color);
             text-shadow: 0 0 1em var(--accent-color), 0 0 .4rem var(--bg-color);
         }
+        :host oni-image {
+            max-width: 1.1rem;
+            max-height: 1.1rem;
+            display: inline-block;
+        }
         @media (max-width: 860px) {
             :host a {
                 font-size: .7rem;
@@ -202,7 +200,7 @@ export class OniCollectionLink extends ActivityPubObject {
         }
         const icon = this.it.getIcon();
         if (icon) {
-            return html`<oni-image it=${JSON.stringify(icon)}></oni-image>`;
+            return html`<oni-image it=${JSON.stringify(icon)} .inline=${true}></oni-image>`;
         }
         return html`<oni-icon name=${this.collectionType()}></oni-icon>`;
     }
