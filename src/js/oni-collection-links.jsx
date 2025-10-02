@@ -32,11 +32,10 @@ export class OniCollectionLinks extends LitElement {
             text-align: center;
             list-style: none;
             display: inline-block;
-            line-height: 2.2rem;
             padding: 0 1rem 0 .6rem;
-            margin: 0 .2rem;
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
             text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
+            border-radius: 0 .3rem 0 0;
         }
         :host li.active {
             background-color: var(--accent-color);
