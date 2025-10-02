@@ -11,8 +11,8 @@ export class OniIcon extends LitElement {
         vertical-align: middle;
         padding: 0 .2rem;
     }
-    svg[data-name=outbox] {
-        vertical-align: text-bottom;
+    svg[data-name=inbox], svg[data-name=outbox]  {
+        margin-bottom: .1rem;
     }
     svg[data-name=clock], svg[data-name=announce], svg[data-name=like], svg[data-name=dislike] {
         margin: -.1rem -.2rem 0 0;
