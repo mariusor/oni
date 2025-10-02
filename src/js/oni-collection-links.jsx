@@ -107,7 +107,7 @@ export class OniCollectionLinks extends LitElement {
                     fetchActivityPubIRI(iri)
                         .then(it => html`<oni-collection-link it=${JSON.stringify(it)}></oni-collection-link>`)
                         .catch(console.warn),
-                    html`<oni-collection-link it=${JSON.stringify(iri)} loading=${true}></oni-collection-link>`,
+                    html`<oni-collection-link it=${JSON.stringify(iri)} .loading=${true}></oni-collection-link>`,
                 )}
             </li>`
         )
@@ -202,7 +202,7 @@ export class OniCollectionLink extends ActivityPubObject {
 
     render() {
         let iri = this.it;
-        if (!this.loading) {
+        if (typeof this.it === 'object') {
             iri = this.it.iri();
         }
         const label = this.label();

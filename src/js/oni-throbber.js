@@ -13,6 +13,7 @@ export class OniThrobber extends OniIcon {
           vertical-align: text-bottom;
           height: 1rem;
           width: 1rem;
+          margin-bottom: -.1rem;
         }
         svg circle {
             stroke: currentColor;
