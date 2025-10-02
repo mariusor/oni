@@ -44,6 +44,13 @@ export class OniCollectionLinks extends LitElement {
         :host li.active {
             background-color: var(--accent-color);
         }
+        :host li oni-image {
+            max-width: 1.2rem;
+            max-height: 1.2rem;
+            display: inline-block;
+            vertical-align: middle;
+            margin-bottom: .4rem;
+        }
         @media (max-width: 576px) {
             :host li {
                 line-height: 1.2rem;
