@@ -29,8 +29,6 @@ export class ActivityPubImage extends ActivityPubObject {
             position: absolute;
             padding: 1rem;
             display: inline-block;
-        }
-        figure details[open] {
             max-width: 30%;
         }
         figure details[open] summary {
