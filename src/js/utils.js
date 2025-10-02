@@ -218,3 +218,7 @@ export function urlRoot(iri) {
     iri.pathname = '';
     return iri.toString()
 }
+
+export const toTitleCase = (s) => typeof s  === 'string'
+    ? `${s?.at(0)?.toLocaleUpperCase()}${s?.substring(1)}`
+    : nothing;

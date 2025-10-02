@@ -24,6 +24,7 @@ import {ActivityPubAnnounce} from "./activity-pub-announce";
 import {ActivityPubAppreciation} from "./activity-pub-appreciation";
 import {ActivityPubFollow} from "./activity-pub-follow";
 import {PaletteElement} from "./oni-theme";
+import {OniThrobber} from "./oni-throbber";
 
 customElements.define('oni-main', OniMain);
 customElements.define('oni-errors', OniErrors);
@@ -54,6 +55,7 @@ customElements.define('oni-collection-links', OniCollectionLinks);
 customElements.define('oni-collection-link', OniCollectionLink);
 
 customElements.define('oni-icon', OniIcon);
+customElements.define('oni-throbber', OniThrobber);
 
 customElements.define('oni-login-link', OniLoginLink);
 

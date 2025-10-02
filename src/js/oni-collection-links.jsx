@@ -2,10 +2,12 @@ import {css, html, LitElement, nothing} from "lit";
 import {classMap} from "lit-html/directives/class-map.js";
 import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubItem, ActorTypes} from "./activity-pub-item";
-import {until} from "lit-html/directives/until.js";
 import {fetchActivityPubIRI} from "./client";
 import {map} from "lit-html/directives/map.js";
 import {when} from "lit-html/directives/when.js";
+import {OniThrobber} from "./oni-throbber";
+import {toTitleCase} from "./utils";
+import {until} from "lit-html/directives/until.js";
 
 export class OniCollectionLinks extends LitElement {
     static styles = css`
@@ -99,13 +101,15 @@ export class OniCollectionLinks extends LitElement {
     renderCollectionItems() {
         this.buildCollections();
         if (!(this.collections?.length > 0)) return nothing;
-        return map(this.collections,(iri) => until(
-            fetchActivityPubIRI(iri)
-                .then(
-                    it => html`<li class=${classMap({'active': isCurrentPage(it.iri())})}>
-                                            <oni-collection-link it=${JSON.stringify(it)}></oni-collection-link>
-                                        </li>`
-                ).catch(console.warn))
+        return map(this.collections,(iri) => html`
+            <li class=${classMap({'active': isCurrentPage(iri)})}>
+                ${until(
+                    fetchActivityPubIRI(iri)
+                        .then(it => html`<oni-collection-link it=${JSON.stringify(it)}></oni-collection-link>`)
+                        .catch(console.warn),
+                    html`<oni-collection-link it=${JSON.stringify(iri)} loading=${true}></oni-collection-link>`,
+                )}
+            </li>`
         )
     }
 
@@ -159,25 +163,36 @@ const LinkStyle = css`
 export class OniCollectionLink extends ActivityPubObject {
     static styles = LinkStyle;
 
-    static properties = ActivityPubObject.properties;
+    static properties = {
+        loading: {type: Boolean,},
+    };
 
     constructor() {
         super();
+        this.loading = false;
     }
 
     collectionType() {
-        return this.it.iri().split('/').at(-1);
+        if (typeof this.it === 'object') {
+            return this.it?.iri()?.split('/')?.at(-1);
+        }
+        return toTitleCase(this.it?.split('/')?.at(-1));
     }
 
     label() {
-        const name = this.it.getName();
-        if (name.length > 0) {
-            return name;
+        if (!this.loading) {
+            const name = this.it?.getName();
+            if (name.length > 0) {
+                return name;
+            }
         }
         return this.collectionType();
     }
 
     renderIcon() {
+        if (this.loading) {
+            return OniThrobber.throbber(this.collectionType());
+        }
         const icon = this.it.getIcon();
         if (icon) {
             return html`<oni-image it=${JSON.stringify(icon)}></oni-image>`;
@@ -186,7 +201,10 @@ export class OniCollectionLink extends ActivityPubObject {
     }
 
     render() {
-        const iri = this.it.iri();
+        let iri = this.it;
+        if (!this.loading) {
+            iri = this.it.iri();
+        }
         const label = this.label();
         return html`<a href=${iri} class=${classMap({'active': isCurrentPage(iri)})}>${this.renderIcon()} ${label}</a>`;
     }
