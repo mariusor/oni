@@ -36,6 +36,10 @@ export class OniCollectionLinks extends LitElement {
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
             text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
             border-radius: 0 .3rem 0 0;
+            margin: 0 .2rem;
+        }
+        :host li:first-child {
+            margin-right: -.2rem;
         }
         :host li.active {
             background-color: var(--accent-color);
@@ -100,15 +104,12 @@ export class OniCollectionLinks extends LitElement {
     renderCollectionItems() {
         this.buildCollections();
         if (!(this.collections?.length > 0)) return nothing;
-        return map(this.collections,(iri) => html`
-            <li class=${classMap({'active': isCurrentPage(iri)})}>
-                ${until(
-                    fetchActivityPubIRI(iri)
-                        .then(it => html`<oni-collection-link it=${JSON.stringify(it)}></oni-collection-link>`)
-                        .catch(console.warn),
-                    html`<oni-collection-link it=${JSON.stringify(iri)} .loading=${true}></oni-collection-link>`,
-                )}
-            </li>`
+        return map(this.collections,(iri) => until(
+                fetchActivityPubIRI(iri)
+                    .then(it => html`<li class=${classMap({'active': isCurrentPage(iri)})}><oni-collection-link it=${JSON.stringify(it)}></oni-collection-link></li>`)
+                    .catch(console.warn),
+                html`<li class=${classMap({'active': isCurrentPage(iri)})}><oni-collection-link it=${JSON.stringify(iri)} .loading=${true}></oni-collection-link></li>`,
+            )
         )
     }
 
