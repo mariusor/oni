@@ -48,6 +48,8 @@ var (
 						return "activity"
 					case vocab.CollectionTypes.Contains(t):
 						return "collection"
+					case vocab.ActivityVocabularyTypes{vocab.ArticleType, vocab.NoteType}.Contains(t):
+						return template.HTML(vocab.NoteType)
 					case t == "":
 						return "tag"
 					default:

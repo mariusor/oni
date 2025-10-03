@@ -14,7 +14,6 @@ export class OniHeader extends ActivityPubActor {
             :host header {
                 padding-top: .4rem;
                 display: grid;
-                height: 2.4rem;
                 align-items: end;
             }
             header a img, header a svg { 

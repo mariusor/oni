@@ -311,8 +311,9 @@ export class ActivityPubObject extends LitElement {
     renderContent() {
         const content = this.it.getContent();
         if (!(content?.length > 0)) return nothing;
+        const type = this.it.getType().toLowerCase();
         return html`
-            <oni-natural-language-values name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
+            <oni-natural-language-values data-container-type=${type} name="content" it=${JSON.stringify(content)}></oni-natural-language-values>`;
     }
 
     renderSummary() {

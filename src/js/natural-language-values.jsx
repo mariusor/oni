@@ -6,14 +6,26 @@ import {sanitize} from "./utils";
 export class NaturalLanguageValues extends LitElement {
     static styles = [css`
         :host {
-            display: inline
+            display: inline;
         }
-        :host p {
+        p {
+            margin-block-start: 0;
+            margin-block-end: 0;
+        }
+        :host([data-container-type="note"]) p {
+            margin-block-end: 0;
+            margin-block-start: .4rem;
+        }
+        :host([data-container-type="article"]) p {
+            text-indent: 1.4rem;
             text-align: justify; 
-            margin-block-start: .2rem;
-            margin-block-end: .2rem;
         }
-        :host div { display: inline-block; }
+        :host([data-container-type="article"]) p + p {
+            margin-block-start: .8rem;
+        }
+        :host div {
+            display: inline-block; 
+        }
         :host([name=summary]) p, :host([name=name]) p, :host([name=preferredUsername]) p {
             display: inline-block;
             margin: 0;
