@@ -105,12 +105,19 @@ export class OniCollectionLinks extends LitElement {
     renderCollectionItems() {
         this.buildCollections();
         if (!(this.collections?.length > 0)) return nothing;
-        return map(this.collections,(iri) => until(
-                fetchActivityPubIRI(iri)
-                    .then(it => html`<li class=${classMap({'active': isCurrentPage(iri)})}><oni-collection-link it=${JSON.stringify(it)}></oni-collection-link></li>`)
-                    .catch(console.warn),
-                html`<li class=${classMap({'active': isCurrentPage(iri)})}><oni-collection-link it=${JSON.stringify(iri)} .loading=${true}></oni-collection-link></li>`,
-            )
+
+        const json = document.querySelector('oni-collection script')?.text;
+        return map(this.collections,(iri) => {
+            if (isCurrentPage(iri) && json) {
+                return html`<li class="active"><oni-collection-link it=${json}></oni-collection-link></li>`;
+            }
+            return until(
+                    fetchActivityPubIRI(iri)
+                        .then(it => html`<li class=${classMap({'active': isCurrentPage(iri)})}><oni-collection-link it=${JSON.stringify(it)}></oni-collection-link></li>`)
+                        .catch(console.warn),
+                    html`<li class=${classMap({'active': isCurrentPage(iri)})}><oni-collection-link it=${JSON.stringify(iri)} .loading=${true}></oni-collection-link></li>`,
+                )
+            }
         )
     }
 
