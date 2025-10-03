@@ -337,7 +337,9 @@ export class ActivityPubItem {
                 }
             }
         }
-        if (typeof it === "object") {
+        if (Array.isArray(it)) {
+            return it.map(data => ActivityPubItem.load(data));
+        } else if (typeof it === "object") {
             return new ActivityPubItem(it);
         }
         return it;

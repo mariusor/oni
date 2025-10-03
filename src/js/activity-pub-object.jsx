@@ -170,12 +170,7 @@ export class ActivityPubObject extends LitElement {
             this.inline = false;
             this.showMetadata = true;
             // NOTE(marius): we're expecting an array here
-            const it = JSON.parse(json);
-            if (Array.isArray(it)) {
-                this.it = it.map(data => ActivityPubItem.load(data));
-            } else {
-                this.it = ActivityPubItem.load(it);
-            }
+            this.it = ActivityPubItem.load(json);
         }
     }
 
