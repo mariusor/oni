@@ -23,7 +23,7 @@ import {ActivityPubCreate} from "./activity-pub-create";
 import {ActivityPubAnnounce} from "./activity-pub-announce";
 import {ActivityPubAppreciation} from "./activity-pub-appreciation";
 import {ActivityPubFollow} from "./activity-pub-follow";
-import {PaletteElement} from "./oni-theme";
+import {Palette, PaletteElement} from "./oni-theme";
 import {OniThrobber} from "./oni-throbber";
 
 customElements.define('oni-main', OniMain);
@@ -62,6 +62,10 @@ customElements.define('oni-login-link', OniLoginLink);
 customElements.define('bandcamp-embed', BandCampEmbed);
 
 OnReady(function () {
+    // NOTE(marius): we set the palette colours for the root style sheet in order to avoid flickering
+    // between default CSS variables and the ones loaded from local storage later in the oni-main element.
+    Palette.fromStorage()?.setRootStyles();
+
     document.addEventListener('logged.in', () => window.location.reload());
     document.addEventListener('logged.out', () => window.location.reload());
 });
