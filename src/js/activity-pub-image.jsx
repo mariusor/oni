@@ -68,7 +68,7 @@ export class ActivityPubImage extends ActivityPubObject {
             border-radius: .4rem;
         }
         dialog::backdrop {
-            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(40%);
+            backdrop-filter: blur(40px) contrast(85%) brightness(60%);
         }
         dialog img {
             max-width: 98vw;

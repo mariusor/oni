@@ -46,6 +46,7 @@ export class ActivityPubActor extends ActivityPubObject {
             shape-outside: margin-box;
             box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
+            backdrop-filter: blur(10px);
             max-height: 10em;
             margin-top: .4rem;
             padding: .32rem;

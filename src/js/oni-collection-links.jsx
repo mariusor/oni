@@ -26,7 +26,7 @@ export class OniCollectionLinks extends LitElement {
         }
         :host li {
             border-width: 1px;
-            border-style: solid; 
+            border-style: solid;
             border-color: var(--accent-color);
             border-bottom-width: 0;
             text-align: center;
@@ -34,6 +34,7 @@ export class OniCollectionLinks extends LitElement {
             display: inline-block;
             padding: 0 1rem 0 .6rem;
             background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
+            backdrop-filter: blur(10px);
             text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
             border-radius: 0 .3rem 0 0;
             margin: 0 .2rem;

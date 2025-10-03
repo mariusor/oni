@@ -22,6 +22,7 @@ export class OniHeader extends ActivityPubActor {
                 shape-outside: margin-box;
                 box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
                 background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
+                backdrop-filter: blur(10px);
                 max-height: 2rem;
                 max-width: 2rem;
                 padding: .2rem;
