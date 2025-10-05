@@ -1,8 +1,9 @@
 /**
  * A port of JWZ's email threading algorithm for ActivityPub items.
  * The changes we've done are to accommodate the differences between ActivityPub threading and mail threading.
- *  1. we dispense with the inReplyTo/References complexities
- *  2. we use the object's ID instead of subject
+ *  1. We dispense with the inReplyTo/References complexities
+ *  2. We use the object's ID instead of subject
+ *  3. We need to take into account that a Node's can reference multiple parents. TODO(marius)
  */
 
 export class Node {
@@ -15,7 +16,7 @@ export class Node {
         return this.item?.id || null;
     }
     get isDummy() {
-        return this.item == null;
+        return !this.item;
     }
 }
 
@@ -32,8 +33,8 @@ export function Thread(items) {
 
     function getRefs(item) {
         if (!item) return [];
-        if (!item.inReplyTo) return [];
-        return Array.isArray(item.inReplyTo) && item.inReplyTo.length > 0
+        if (!item?.inReplyTo) return [];
+        return Array.isArray(item?.inReplyTo) && item?.inReplyTo.length > 0
             ? item.inReplyTo : (item.inReplyTo === 'string' && item.inReplyTo.length > 0 ? [item.inReplyTo] : []);
     }
 
@@ -70,8 +71,15 @@ export function Thread(items) {
     // Step 4: collect root nodes (no parent, not dummy, or dummy with children)
     const roots = [];
     for (const node of idTable.values()) {
-        if (!node.parent && (!node.isDummy || node.children.length > 0)) {
-            roots.push(node);
+        const isRoot = !node.parent && (!node.isDummy || node.children.length > 0);
+        if (isRoot) {
+            // NOTE(marius): I'm not sure if the fact that the items that have children get pushed to a dummy node
+            // is a bug or some piece of logic that I'm not following, but I think this is a solution until I find out.
+            if (node.isDummy) {
+                node.children.forEach(child => roots.push(child))
+            } else {
+                roots.push(node);
+            }
         }
     }
 
