@@ -4,7 +4,7 @@ import {until} from "lit-html/directives/until.js";
 import {ObjectTypes, ActivityPubItem, ActivityTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {map} from "lit-html/directives/map.js";
-import {renderObjectByType} from "./utils";
+import {pastensify, renderActorByType, renderObjectByType, renderTimestamp} from "./utils";
 
 export class ActivityPubActivity extends ActivityPubObject {
     static styles = [
@@ -18,6 +18,15 @@ export class ActivityPubActivity extends ActivityPubObject {
 
     constructor() {
         super(true);
+    }
+
+    renderInline() {
+        if (!this.it.hasOwnProperty('actor')) return nothing;
+        const action = pastensify(this.it.type, true);
+        return html`
+            ${renderObjectByType(this.it.getObject(), false, true)}
+            ${action} by ${renderActorByType(this.it.getActor(), false, true)}
+            ${renderTimestamp(this.it.getPublished(), true)}`;
     }
 
     async renderActor(showMetadata) {

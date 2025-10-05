@@ -1,14 +1,17 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubCreate} from "./activity-pub-create";
-import {pastensify, renderActorByType, renderObjectByType, renderTimestamp} from "./utils";
+import {pastensify, renderTimestamp} from "./utils";
 import {ActivityPubActivity} from "./activity-pub-activity";
 import {until} from "lit-html/directives/until.js";
 
 export class ActivityPubAnnounce extends ActivityPubCreate {
     static styles = [
-        css``,
-        ActivityPubActivity.styles,
-    ];
+        css`
+            footer {
+                padding-bottom: .2rem;
+            }
+        `,
+        ActivityPubActivity.styles];
 
     constructor() {
         super(true);
@@ -34,15 +37,6 @@ export class ActivityPubAnnounce extends ActivityPubCreate {
                 ${action} ${renderTimestamp(published)} ${until(auth)}
                 ${this.renderBookmark()}
             </aside>`;
-    }
-
-    renderInline() {
-        if (!this.it.hasOwnProperty('actor')) return nothing;
-        const action = pastensify(this.it.type, true);
-        return html`
-            ${renderObjectByType(this.it.getObject(), false, true)}
-            ${action} by ${renderActorByType(this.it.getActor(), false, true)}
-            ${renderTimestamp(this.it.getPublished(), true)}`;
     }
 
     render() {

@@ -1,6 +1,6 @@
 import {html, nothing} from "lit";
 import {until} from "lit-html/directives/until.js";
-import {ObjectTypes, ActorTypes, ActivityPubItem, ActivityTypes} from "./activity-pub-item";
+import {ObjectTypes, ActorTypes} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {map} from "lit-html/directives/map.js";
 import {renderObjectByType} from "./utils";

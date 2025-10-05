@@ -12,15 +12,6 @@ export class ActivityPubFollow extends ActivityPubActivity {
         super(true);
     }
 
-    renderInline() {
-        if (!this.it.hasOwnProperty('actor')) return nothing;
-        const action = pastensify(this.it.type, true);
-        return html`
-            ${renderObjectByType(this.it.getObject(), false, true)}
-            ${action} by ${renderActorByType(this.it.getActor(), false, true)}
-            ${renderTimestamp(this.it.getPublished(), true)}`;
-    }
-
     render() {
         return html`${this.renderInline()}`;
     }
