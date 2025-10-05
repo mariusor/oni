@@ -320,12 +320,6 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderReactions() {
-        if (!this.inFocus()) {
-            // NOTE(marius): I don't like the logic of this. Ideally we'd like the rendering of the reactions
-            // to be done for all items, not only on their own page.
-            return html`<ul></ul>`;
-        }
-
         return html`<ul class="reactions">
             ${until(this.renderReactionsLikes())} 
             ${until(this.renderReactionsAnnounces())}
