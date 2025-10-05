@@ -346,6 +346,7 @@ export class ActivityPubObject extends LitElement {
         if (!this.it.hasOwnProperty('replies')) {
             return nothing;
         }
+        if (window.location?.href?.includes('replies')) return nothing;
         let replies = this.it.replies;
         replies = await fetchActivityPubIRI(replies);
         if (replies.totalItems === 0) {
@@ -370,10 +371,6 @@ export class ActivityPubObject extends LitElement {
         return html`${map(groupActivities(likes),
                 g => html`<li>${renderActivityGroup(g)}</li>`
         )}`;
-    }
-
-    inFocus() {
-        return this.it.iri() === decodeURI(window.location.href);
     }
 
     render() {

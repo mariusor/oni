@@ -71,7 +71,7 @@ export class ActivityPubCollection extends ActivityPubObject {
             renderedParent = html`${until(ActivityPubObject.renderByType(this.parent, true, false))}`;
         }
 
-        let itemsInline = this.inline || this.it.iri()?.includes('shares') || this.it.iri()?.includes('following');
+        let itemsInline = this.inline || this.it.iri()?.includes('shares') || this.it.iri()?.includes('following') || this.it.iri()?.includes('followers');
         let threaded = this.threaded || this.it.iri()?.includes('replies');
         let parent = this.parent;
         if (typeof parent === 'object') parent = parent.iri();
