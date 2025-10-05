@@ -41,22 +41,23 @@ export class ActivityPubActor extends ActivityPubObject {
         header > a img, header > a svg {
             aspect-ratio: 1;
             object-fit: cover;
-            border: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
-            border-radius: 0 1.6em 1.6em 1.6em;
             shape-outside: margin-box;
-            box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
-            background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
-            backdrop-filter: blur(10px);
             max-height: 10em;
             margin-top: .4rem;
             padding: .32rem;
+            backdrop-filter: blur(10px);
+            border-radius: 0 1.6em 1.6em 1.6em;
+            border: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
+            box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
+            background-color: color-mix(in srgb, var(--accent-color), transparent 85%);
         }
         section ul {
             display: inline-block;
             margin: 0.3rem 0 0 -1.2rem;
             padding: 0.3rem 1.4rem;
             border-radius: 1.6em;
-            background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
+            backdrop-filter: blur(2px);
+            background-color: color-mix(in srgb, var(--accent-color), transparent 85%);
         }
         @media(max-width: 480px) {
             :host header {

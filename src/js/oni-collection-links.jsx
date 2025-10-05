@@ -33,11 +33,11 @@ export class OniCollectionLinks extends LitElement {
             list-style: none;
             display: inline-block;
             padding: 0 1rem 0 .6rem;
-            background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
-            backdrop-filter: blur(10px);
-            text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
-            border-radius: 0 .3rem 0 0;
             margin: 0 .2rem;
+            backdrop-filter: blur(2px);
+            border-radius: 0 .3rem 0 0;
+            text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
+            background-color: color-mix(in srgb, var(--accent-color), transparent 85%);
         }
         :host li:first-child {
             margin-right: -.2rem;

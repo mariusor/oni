@@ -17,17 +17,17 @@ export class OniHeader extends ActivityPubActor {
                 align-items: end;
             }
             header a img, header a svg { 
-                border: .01rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
                 border-radius: 0 20% 20% 20%;
                 shape-outside: margin-box;
-                box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
-                background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
-                backdrop-filter: blur(10px);
                 max-height: 2rem;
                 max-width: 2rem;
                 padding: .2rem;
                 margin-top: .4rem;
                 margin-bottom: -.4rem;
+                backdrop-filter: blur(10px);
+                border: .01rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
+                box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
+                background-color: color-mix(in srgb, var(--accent-color), transparent 80%);
             }
             header a, header a:visited, header a:hover, header a:visited:hover  {
                 color: var(--fg-color);
