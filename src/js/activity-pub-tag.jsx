@@ -43,11 +43,11 @@ export class ActivityPubTag extends ActivityPubNote {
             `;
         }
         let name = renderHtmlText(this.it.getName());
-        if (name?.length === 0) {
+        if (!(name?.length > 0)) {
             name = urlText(iri);
         }
 
-        return html`<a rel="${rel}" href="${iri}">${name}</a>`;
+        return html`<a rel=${rel} href=${iri}>${name}</a>`;
     }
 
     static isValid(it) {
