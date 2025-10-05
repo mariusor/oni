@@ -1,6 +1,6 @@
 import {ActivityPubObject} from "./activity-pub-object";
 import {css, html, nothing} from "lit";
-import {ActivityPubItem, ActivityTypes, ActorTypes} from "./activity-pub-item";
+import {ActivityTypes, ActorTypes} from "./activity-pub-item";
 import {pluralize, renderActivityByType, renderActorByType, renderObjectByType} from "./utils";
 import {until} from "lit-html/directives/until.js";
 import {fetchActivityPubIRI} from "./client";
@@ -8,6 +8,7 @@ import {ActivityPubActivity} from "./activity-pub-activity";
 import {Thread} from "./items-threading";
 import {sortByPublished} from "./activity-pub-collection";
 import {when} from "lit-html/directives/when.js";
+import {map} from "lit-html/directives/map.js";
 
 export class ActivityPubItems extends ActivityPubObject {
     static styles = [css`
@@ -50,11 +51,8 @@ export class ActivityPubItems extends ActivityPubObject {
             display: inline-block;
             flex: 1 1 32%;
         }
-        :host ul details summary {
-            margin-left: -.8rem;
-        }
-        :host ul details {
-            padding-left: 1.2rem;
+        details ul li {
+            margin-left: 1.2rem;
         }
         li > oni-image, li > oni-audio, li > oni-video {
             margin-top: .6rem;
@@ -78,6 +76,8 @@ export class ActivityPubItems extends ActivityPubObject {
 
     filterActivitiesByObjectIds() {
         if (!(this.it?.length > 0)) return;
+
+        this.it.sort((a, b) => sortByPublished(b, a))
 
         let objectsIds = [];
         // NOTE(marius): if we have multiple activities operating on the same object,
@@ -112,7 +112,12 @@ export class ActivityPubItems extends ActivityPubObject {
             <ul>${items}</ul>`);
     }
 
-    renderItem(it, i, itemsInline, slot) {
+    renderItem(it, i, itemsInline, slot = null) {
+        if (!it) {
+            if (!slot) { return nothing; }
+            return html`<li>${slot}</li>`;
+        }
+
         const type = it.hasOwnProperty('type') ? it.type : 'unknown';
 
         let renderedItem;
@@ -126,7 +131,7 @@ export class ActivityPubItems extends ActivityPubObject {
 
         // NOTE(marius): slot is used for rendering child comments in a threaded items list
         return html`
-            <li>${until(renderedItem)}${slot}</li>`
+            <li>${renderedItem}${slot}</li>`
     }
 
     render() {
@@ -138,6 +143,11 @@ export class ActivityPubItems extends ActivityPubObject {
         }
 
         this.filterActivitiesByObjectIds();
+
+        // NOTE(marius): resort the items in chronological order
+        // because filter Activities by Object ids sorts it reverse chronological,
+        // in order to keep the older activities in.
+        this.it.sort(sortByPublished);
 
         return html`${
             until(
@@ -151,23 +161,30 @@ export class ActivityPubItems extends ActivityPubObject {
 
     renderThreaded(thread) {
         return html`
-            ${thread.map((node, i) => {
+            ${map(thread, (node, i) => {
                 const slot = html`${when(
                     node.children.length > 0,
-                    () => html`<details open><summary>${pluralize(node.children.length, 'reply')}</summary><ul>${until(this.renderThreaded(node.children))}</ul></details>`,
+                    () => html`<details><summary>${pluralize(count(node.children), 'reply')}</summary><ul>${until(this.renderThreaded(node?.children))}</ul></details>`,
                 )}`;
 
-                if (node.item === null) return html`${slot}`;
-                return until(this.renderItem(node.item, i, this.inline, slot));
+                return html`${until(this.renderItem(node.item, i, this.inline, slot))}`;
             })}
         `;
     }
 
     async renderThreadedItems() {
-        this.it.sort(sortByPublished);
-
+        const thread = Thread(this.it);
         return html`
-            <ul>${this.renderThreaded(Thread(this.it))}</ul> `;
+            <details open>
+                <summary>${pluralize(count(thread), 'reply')}</summary>
+                <ul>${until(this.renderThreaded(thread))}</ul>
+            </details>`;
     }
 }
 
+const count = (children) => {
+    let total = children?.length;
+    children.forEach(child => { total += count(child?.children) })
+
+    return total;
+}

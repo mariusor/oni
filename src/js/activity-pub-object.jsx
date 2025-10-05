@@ -46,7 +46,6 @@ export class ActivityPubObject extends LitElement {
         :host footer {
             border-bottom: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
             font-size: .84rem;
-            line-height: 1rem;
             margin-top: .3rem;
             width: 100%;
             display: flex;
@@ -54,6 +53,7 @@ export class ActivityPubObject extends LitElement {
             align-self: end;
             justify-content: space-between;
             gap: 1rem;
+            height: 1.2rem;
         }
         figure {
             margin-bottom: 0;
