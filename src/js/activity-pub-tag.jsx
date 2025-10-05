@@ -1,6 +1,6 @@
 import {css, html, nothing} from "lit";
 import {ActivityPubNote} from "./activity-pub-note";
-import {renderHtmlText} from "./utils";
+import {renderHtmlText, urlText} from "./utils";
 import {getHref} from "./activity-pub-item";
 
 export class ActivityPubTag extends ActivityPubNote {
@@ -42,7 +42,11 @@ export class ActivityPubTag extends ActivityPubNote {
                 <footer>${this.renderMetadata()}</footer>
             `;
         }
-        const name = renderHtmlText(this.it.getName());
+        let name = renderHtmlText(this.it.getName());
+        if (name?.length === 0) {
+            name = urlText(iri);
+        }
+
         return html`<a rel="${rel}" href="${iri}">${name}</a>`;
     }
 
