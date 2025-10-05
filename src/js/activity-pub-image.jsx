@@ -172,10 +172,9 @@ export class ActivityPubImage extends ActivityPubObject {
                             <a @click=${this.hideModal} href="#"><oni-icon name="close" alt="Close dialog"></oni-icon></a>
                             ${image(largest?.href)}
                         </dialog>
-                        ${image(src, sources, sizes)}
                     `,
-                    
             )}
+            ${image(src, sources, sizes)}
             ${this.renderTag()}
             ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
         `;
