@@ -36,6 +36,7 @@ export class ActivityPubImage extends ActivityPubObject {
             padding-bottom: .4rem;
         }
         figure details {
+            color: var(--fg-color);
             cursor: pointer;
             font-size: .9rem;
             line-height: 1.4rem;
@@ -66,6 +67,7 @@ export class ActivityPubImage extends ActivityPubObject {
             margin: 1rem 2rem 0 0;
             padding: .2rem .4rem;
             border-radius: .4rem;
+            z-index: 1;
         }
         dialog::backdrop {
             backdrop-filter: blur(40px) contrast(85%) brightness(60%);
@@ -154,23 +156,26 @@ export class ActivityPubImage extends ActivityPubObject {
         const needsFullSize = url.length > 0 || largest?.width > 1920;
 
         const altElement = this.renderAlt(name, alt);
+
+        const image = (src, sources, sizes) => html`
+            <figure>
+                <figcaption>${altElement}</figcaption>
+                <img @click=${this.showModal} loading="lazy" src=${src ?? nothing}
+                     title="${name ?? alt}" alt="${alt ?? nothing}"
+                     srcSet=${sources ?? nothing} sizes=${sizes ?? nothing} />
+            </figure>`;
         return html`
             ${when(
                 needsFullSize,
-                    () => html`<dialog closedby="any">
+                    () => html`
+                        <dialog closedby="any">
                             <a @click=${this.hideModal} href="#"><oni-icon name="close" alt="Close dialog"></oni-icon></a>
-                            <img loading="lazy"
-                                 src=${largest?.href ?? nothing}
-                                 title="${name ?? alt}"
-                                 alt="${alt ?? nothing}"/>
-                        </dialog>`,
+                            ${image(largest?.href)}
+                        </dialog>
+                        ${image(src, sources, sizes)}
+                    `,
+                    
             )}
-            <figure>
-                ${altElement}
-                <img @click=${this.showModal} loading="lazy" src=${src ?? nothing}
-                     title="${name ?? alt}" alt="${alt ?? nothing}"
-                     srcSet="${sources ?? nothing}" sizes="${sizes ?? nothing}"/>
-            </figure>
             ${this.renderTag()}
             ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
         `;
@@ -189,12 +194,10 @@ export class ActivityPubImage extends ActivityPubObject {
         }
 
         return html`
-            <figcaption>
-                <details @toggle=${() => this._showAlt = !this._showAlt}>
-                    <summary>${expando}</summary>
-                    ${unsafeHTML(alt)}
-                </details>
-            </figcaption>`;
+            <details @toggle=${() => this._showAlt = !this._showAlt}>
+                <summary>${expando}</summary>
+                ${unsafeHTML(alt)}
+            </details>`;
 
     }
 
