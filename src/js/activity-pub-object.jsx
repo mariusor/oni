@@ -328,7 +328,7 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderReactionsAnnounces() {
-        if (!this.it.hasOwnProperty('shares')) {
+        if (!this.it.hasOwnProperty('shares') || window.location?.href?.includes('shares')) {
             return nothing;
         }
         let shares = this.it.shares;
@@ -343,10 +343,9 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderReactionsReplies() {
-        if (!this.it.hasOwnProperty('replies')) {
+        if (!this.it.hasOwnProperty('replies') || window.location?.href?.includes('replies')) {
             return nothing;
         }
-        if (window.location?.href?.includes('replies')) return nothing;
         let replies = this.it.replies;
         replies = await fetchActivityPubIRI(replies);
         if (replies.totalItems === 0) {
@@ -359,7 +358,7 @@ export class ActivityPubObject extends LitElement {
     }
 
     async renderReactionsLikes() {
-        if (!this.it.hasOwnProperty('likes')) {
+        if (!this.it.hasOwnProperty('likes') || window.location?.href?.includes('likes')) {
             return nothing;
         }
         let likes = this.it.likes;
