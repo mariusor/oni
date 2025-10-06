@@ -4,6 +4,8 @@ Is a single user ActivityPub server compatible with Mastodon and the rest of the
 
 It is part of the tools built for and with the help with of the [GoActivityPub](https://github.com/go-ap) library.
 
+![ONI main page after fresh install](https://git.sr.ht/~mariusor/go-activitypub-doc/blob/master/oni/img/oni-index.png)
+
 ## Getting the source
 
 ```sh
@@ -88,8 +90,10 @@ $ box authorize --as https://johndoe.example.com --secret SuperSecretOAuth2Clien
 # if the content contains two empty lines, the --name is the text that precedes them, 
 # and the --content the text after
 $ box post --as https://johndoe.example.com --id https://johndoe.example.com/posts/first \
---name "First Post" --content "This is a short post!"
+--name "First Post" --content "Hello Fediverse⁂!"
 ```
+
+![First post](https://git.sr.ht/~mariusor/go-activitypub-doc/blob/master/oni/img/oni-first-post.png)
 
 ### Upload an image
 
