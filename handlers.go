@@ -178,7 +178,7 @@ func (o *oni) ServeBinData(it vocab.Item) http.HandlerFunc {
 
 	raw := buf.Bytes()
 	eTag := fmt.Sprintf(`"%2x"`, md5.Sum(raw))
-	return writeResponse(raw, it.GetType(), updatedAt, contentType, eTag)
+	return writeResponse(raw, it.GetType(), updatedAt, contentType.String(), eTag)
 }
 
 func sameishIRI(check, colIRI vocab.IRI) bool {
@@ -395,10 +395,10 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 		}
 		return nil
 	})
-	return writeResponse(dat, it.GetType(), updatedAt, acceptableJsonLD, eTag)
+	return writeResponse(dat, it.GetType(), updatedAt, client.ContentTypeJsonLD, eTag)
 }
 
-func writeResponse(raw []byte, typ vocab.ActivityVocabularyType, updatedAt time.Time, contentType ct.MediaType, eTag string) http.HandlerFunc {
+func writeResponse(raw []byte, typ vocab.ActivityVocabularyType, updatedAt time.Time, contentType string, eTag string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if vocab.ActivityTypes.Contains(typ) {
 			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(activityCacheDuration.Seconds())))
@@ -409,7 +409,7 @@ func writeResponse(raw []byte, typ vocab.ActivityVocabularyType, updatedAt time.
 		if !updatedAt.IsZero() {
 			w.Header().Set("Last-Modified", updatedAt.Format(time.RFC1123))
 		}
-		w.Header().Set("Content-Type", contentType.String())
+		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("ETag", eTag)
 		status := http.StatusOK
 		uaHasItem := requestMatchesETag(r.Header, eTag) || requestMatchesLastModified(r.Header, updatedAt)
