@@ -41,7 +41,7 @@ func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
 	o.Error(errors.NotFoundf("%s not found", r.URL.Path)).ServeHTTP(w, r)
 }
 
-var acceptableErrorMediaTypes = []ct.MediaType{acceptableTextHTML, acceptableApplicationJson}
+var acceptableErrorMediaTypes = []ct.MediaType{html, applicationJson}
 
 func (o *oni) Error(err error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -488,11 +488,12 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 }
 
 var (
-	acceptableJsonActivity    = ct.NewMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTypeActivityJson))
-	acceptableJsonLD          = ct.NewMediaType(fmt.Sprintf("%s;q=0.8", client.ContentTypeJsonLD))
-	acceptableApplicationJson = ct.NewMediaType("application/json;q=0.8")
-	acceptableTextHTML        = ct.NewMediaType("text/html;q=0.9")
+	applicationJsonActivity = ct.NewMediaType(client.ContentTypeActivityJson)
+	applicationJsonLD       = ct.NewMediaType(client.ContentTypeJsonLD)
+	applicationJson         = ct.NewMediaType("application/json")
+	fallbackHTML            = ct.NewMediaType("text/html;q=0.1")
 
+	html        = ct.NewMediaType("text/html")
 	imageAny    = ct.NewMediaType("image/*")
 	audioAny    = ct.NewMediaType("audio/*")
 	videoAny    = ct.NewMediaType("video/*")
@@ -516,7 +517,7 @@ var iriNotFound = func(iri vocab.IRI) error {
 }
 
 func getRequestAcceptedContentType(r *http.Request) func(...ct.MediaType) bool {
-	acceptableMediaTypes := []ct.MediaType{acceptableTextHTML, acceptableJsonLD, acceptableJsonActivity, acceptableApplicationJson}
+	acceptableMediaTypes := []ct.MediaType{applicationJsonLD, applicationJsonActivity, applicationJson, fallbackHTML}
 	accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
 	return checkAcceptMediaType(accepted)
 }
@@ -532,14 +533,11 @@ func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct
 		}
 		return nil
 	})
-	if len(acceptableMediaTypes) == 0 {
-		acceptableMediaTypes = append(acceptableMediaTypes, acceptableTextHTML)
-	}
-	acceptableMediaTypes = append(acceptableMediaTypes, acceptableJsonLD, acceptableJsonActivity, acceptableApplicationJson)
+	acceptableMediaTypes = append(acceptableMediaTypes, applicationJsonLD, applicationJsonActivity, applicationJson, fallbackHTML)
 
 	accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
 	if accepted.Type == "" {
-		accepted = acceptableTextHTML
+		accepted = fallbackHTML
 	}
 	return checkAcceptMediaType(accepted)
 }
@@ -805,7 +803,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		colFilters = filters.FromValues(r.URL.Query())
 		if vocab.ValidActivityCollection(whichCollection) {
 			accepts := getRequestAcceptedContentType(r)
-			if accepts(acceptableTextHTML) && (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
+			if accepts(fallbackHTML) && (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
 				obFilters := make(filters.Checks, 0)
 				obFilters = append(obFilters, filters.Not(filters.NilID))
 				if vocab.Outbox == whichCollection {
@@ -852,10 +850,12 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	it = vocab.CleanRecipients(it)
 	accepts := getItemAcceptedContentType(it, r)
 	switch {
-	case accepts(imageAny, audioAny, videoAny, pdfDocument):
+	case !accepts(html) && accepts(imageAny, audioAny, videoAny, pdfDocument):
 		o.ServeBinData(it).ServeHTTP(w, r)
-	case accepts(acceptableJsonLD, acceptableJsonActivity, acceptableApplicationJson):
+	case !accepts(html) && accepts(applicationJsonLD, applicationJsonActivity, applicationJson):
 		o.ServeActivityPubItem(it).ServeHTTP(w, r)
+	case accepts(html):
+		fallthrough
 	default:
 		o.ServeHTML(it).ServeHTTP(w, r)
 	}
