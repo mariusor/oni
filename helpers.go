@@ -202,7 +202,9 @@ func logRequest(o *oni, h http.Header, body []byte) {
 	fn := fmt.Sprintf("%s/%s.req", o.StoragePath, time.Now().UTC().Format(time.RFC3339))
 	all := bytes.Buffer{}
 	_ = h.Write(&all)
-	all.Write([]byte{'\n', '\n'})
-	all.Write(body)
+	if body != nil {
+		all.Write([]byte{'\n', '\n'})
+		all.Write(body)
+	}
 	_ = os.WriteFile(fn, all.Bytes(), 0660)
 }
