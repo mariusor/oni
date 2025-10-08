@@ -350,7 +350,7 @@ func (o *oni) Run(c context.Context) error {
 		syscall.SIGUSR2: func(_ chan<- error) {
 			InDebugMode = !InDebugMode
 			if o.Logger != nil {
-				o.Logger.WithContext(lw.Ctx{"maintenance": InDebugMode}).Debugf("SIGUSR2 received")
+				o.Logger.WithContext(lw.Ctx{"debug": InDebugMode}).Debugf("SIGUSR2 received")
 			}
 		},
 		syscall.SIGINT: func(exit chan<- error) {
