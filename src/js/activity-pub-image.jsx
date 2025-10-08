@@ -13,7 +13,8 @@ export class ActivityPubImage extends ActivityPubObject {
         }
         img {
             border-radius: .4rem;
-            border: 1px solid var(--accent-color);
+            outline: .08rem solid color-mix(in srgb, var(--accent-color), transparent 55%);
+            outline-offset: -.08rem;
             max-width: 100%;
             height: auto;
         }
@@ -21,7 +22,7 @@ export class ActivityPubImage extends ActivityPubObject {
             max-width: 1rem;
             max-height: 1rem;
             vertical-align: text-top;
-            border: unset;
+            outline: unset;
         }
         figure {
             margin: auto;
