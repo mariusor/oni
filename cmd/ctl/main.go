@@ -34,6 +34,7 @@ var CLI struct {
 	Actor       Actor       `cmd:"" description:"Actor helper"`
 	Block       Block       `cmd:"" description:"Block instances or actors"`
 	Maintenance Maintenance `cmd:"" help:"Toggle maintenance mode for the running ${name} server."`
+	Debug       Debug       `cmd:"" help:"Toggle debug mode for the running ${name} server."`
 	Reload      Reload      `cmd:"" help:"Reload the running ${name} server configuration"`
 	Stop        Stop        `cmd:"" help:"Stops the running ${name} server configuration"`
 }

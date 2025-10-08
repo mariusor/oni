@@ -14,6 +14,12 @@ func (m Maintenance) Run(ctl *Control) error {
 	return ctl.SendSignal(syscall.SIGUSR1)
 }
 
+type Debug struct{}
+
+func (d Debug) Run(ctl *Control) error {
+	return ctl.SendSignal(syscall.SIGUSR2)
+}
+
 type Reload struct{}
 
 func (m Reload) Run(ctl *Control) error {
