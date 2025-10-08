@@ -56,7 +56,7 @@ go.sum: go.mod
 	$(GO) mod tidy
 
 $(PROJECT_NAME): bin/$(PROJECT_NAME)
-bin/$(PROJECT_NAME): go.sum $(ONI_BIN_SOURCES) $(GO_SOURCES) static/main.css static/main.js static/icons.svg
+bin/$(PROJECT_NAME): go.sum $(ONI_BIN_SOURCES) $(GO_SOURCES) assets
 	$(BUILD) -o $@ ./cmd/oni
 ifneq ($(ENV),dev)
 	$(UPX) -q --mono --no-progress --best $@ || true
@@ -72,7 +72,8 @@ endif
 yarn.lock:
 	$(YARN) install
 
-assets: static/main.css static/main.js static/icons.svg static/robots.txt
+assets: yarn.lock
+	go generate -v assets.go
 
 static/main.js: $(TS_SOURCES) yarn.lock
 	go generate -v assets.go
