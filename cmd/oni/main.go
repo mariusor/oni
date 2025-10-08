@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"oni"
+	"oni/internal/xdg"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -14,18 +15,6 @@ import (
 	"github.com/alecthomas/kong"
 	vocab "github.com/go-ap/activitypub"
 )
-
-var dataPath = func() string {
-	dh := os.Getenv("XDG_DATA_HOME")
-	if dh == "" {
-		if userPath := os.Getenv("HOME"); userPath == "" {
-			dh = "/usr/share"
-		} else {
-			dh = filepath.Join(userPath, ".local/share")
-		}
-	}
-	return filepath.Join(dh, "oni")
-}()
 
 func loadAccountsFromStorage(base string) (vocab.ItemCollection, error) {
 	urls := make(vocab.ItemCollection, 0)
@@ -61,25 +50,37 @@ func maybeLoadServiceActor(base, path string) (*vocab.Actor, bool) {
 	return nil, false
 }
 
-var (
-	version = "HEAD"
-)
-
 var CLI struct {
 	Listen  string `default:"127.0.0.1:60123" short:"l" help:"Listen socket"`
 	Path    string `default:"${default_path}" help:"Path for ActivityPub storage"`
 	URL     string `default:"${default_url}" help:"Default URL for the instance actor"`
-	Pw      string `default:"${default_pw}" help:"Default password to use for the main Oni actor"`
+	Pw      string `default:"${default_pw}" help:"Default password to use for the instance actor"`
 	Verbose bool   `default:"false" help:"Show verbose log output"`
 }
 
 func main() {
+	if build, ok := debug.ReadBuildInfo(); ok && oni.Version == "HEAD" {
+		if build.Main.Version != "(devel)" {
+			oni.Version = build.Main.Version
+		}
+		for _, bs := range build.Settings {
+			if bs.Key == "vcs.revision" {
+				oni.Version = bs.Value[:8]
+			}
+			if bs.Key == "vcs.modified" {
+				oni.Version += "-git"
+			}
+		}
+	}
+
 	_ = kong.Parse(&CLI,
-		kong.Name("oni"),
-		kong.Description("Run the ONI server"),
+		kong.Name(oni.AppName),
+		kong.Description("Run the ${name} server, version ${version}."),
 		kong.UsageOnError(),
 		kong.Vars{
-			"default_path": dataPath,
+			"name":         oni.AppName,
+			"version":      oni.Version,
+			"default_path": xdg.DataPath(oni.AppName),
 			"default_url":  oni.DefaultURL,
 			"default_pw":   oni.DefaultOAuth2ClientPw,
 		},
@@ -89,21 +90,6 @@ func main() {
 		}),
 	)
 
-	if build, ok := debug.ReadBuildInfo(); ok && version == "HEAD" {
-		if build.Main.Version != "(devel)" {
-			version = build.Main.Version
-		}
-		for _, bs := range build.Settings {
-			if bs.Key == "vcs.revision" {
-				version = bs.Value[:8]
-			}
-			if bs.Key == "vcs.modified" {
-				version += "-git"
-			}
-		}
-	}
-
-	oni.Version = version
 	lvl := lw.DebugLevel
 	if CLI.Verbose {
 		lvl = lw.TraceLevel

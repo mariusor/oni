@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"oni/internal/xdg"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,9 +24,11 @@ import (
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
 	storage "github.com/go-ap/storage-fs"
+	"github.com/goburrow/cache"
 )
 
 var (
+	AppName    = "oni"
 	Version    = "(devel)"
 	ProjectURL = "https://git.sr.ht/~mariusor/oni"
 	DefaultURL = "https://oni.local"
@@ -280,6 +283,10 @@ func (o *oni) Run(c context.Context) error {
 	// Create a deadline to wait for.
 	ctx, cancelFn := context.WithCancel(c)
 
+	if err := xdg.WritePid(AppName); err != nil {
+		o.Logger.Warnf("Unable to write pid file: %s", err)
+		o.Logger.Warnf("Some CLI commands relying on it will not work")
+	}
 	sockType := ""
 	setters := []w.SetFn{w.Handler(o.m)}
 

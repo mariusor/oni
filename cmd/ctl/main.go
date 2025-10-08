@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"oni"
+	"oni/internal/xdg"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -27,11 +28,14 @@ type Control struct {
 }
 
 var CLI struct {
-	Path    string `default:"${default_path}" help:"Path for the ActivityPub storage"`
-	Verbose bool   `default:"false" help:"Show verbose log output"`
-	OAuth2  OAuth2 `cmd:"" name:"oauth" description:"OAuth2 client and access token helper"`
-	Actor   Actor  `cmd:"" description:"Actor helper"`
-	Block   Block  `cmd:"" description:"Block instances or actors"`
+	Path        string      `default:"${default_path}" help:"Path for the ActivityPub storage"`
+	Verbose     bool        `default:"false" help:"Show verbose log output"`
+	OAuth2      OAuth2      `cmd:"" name:"oauth" description:"OAuth2 client and access token helper"`
+	Actor       Actor       `cmd:"" description:"Actor helper"`
+	Block       Block       `cmd:"" description:"Block instances or actors"`
+	Maintenance Maintenance `cmd:"" help:"Toggle maintenance mode for the running ${name} server."`
+	Reload      Reload      `cmd:"" help:"Reload the running ${name} server configuration"`
+	Stop        Stop        `cmd:"" help:"Stops the running ${name} server configuration"`
 }
 
 type FixCollections struct {
@@ -325,18 +329,6 @@ func (r RotateKey) Run(ctl *Control) error {
 	return nil
 }
 
-func dataPath() string {
-	dh := os.Getenv("XDG_DATA_HOME")
-	if dh == "" {
-		if userPath := os.Getenv("HOME"); userPath == "" {
-			dh = "/usr/share"
-		} else {
-			dh = filepath.Join(userPath, ".local/share")
-		}
-	}
-	return filepath.Join(dh, "oni")
-}
-
 func newOrderedCollection(id vocab.IRI, base vocab.IRI) *vocab.OrderedCollection {
 	return &vocab.OrderedCollection{
 		ID:        id,
@@ -406,7 +398,11 @@ func setupCtl(storagePath string, verbose bool) (*Control, error) {
 	fields := lw.Ctx{"path": storagePath}
 
 	ctl := new(Control)
-	ll := lw.Dev().WithContext(fields)
+	ll := lw.Dev()
+	if verbose {
+		ll = lw.Dev(lw.SetLevel(lw.DebugLevel))
+	}
+	ll = ll.WithContext(fields)
 	ctl.Logger = ll
 
 	if err := mkDirIfNotExists(storagePath); err != nil {
@@ -428,15 +424,29 @@ func setupCtl(storagePath string, verbose bool) (*Control, error) {
 	return ctl, nil
 }
 
-var version = "HEAD"
-
 func main() {
+	if build, ok := debug.ReadBuildInfo(); ok && oni.Version == "HEAD" {
+		if build.Main.Version != "(devel)" {
+			oni.Version = build.Main.Version
+		}
+		for _, bs := range build.Settings {
+			if bs.Key == "vcs.revision" {
+				oni.Version = bs.Value[:8]
+			}
+			if bs.Key == "vcs.modified" {
+				oni.Version += "-git"
+			}
+		}
+	}
+
 	ctx := kong.Parse(&CLI,
 		kong.Name("onictl"),
-		kong.Description("CLI helper to manage an ONI instances"),
+		kong.Description("CLI helper to manage an ${name} instances, version ${version}."),
 		kong.UsageOnError(),
 		kong.Vars{
-			"default_path": dataPath(),
+			"name":         oni.AppName,
+			"version":      oni.Version,
+			"default_path": xdg.DataPath(oni.AppName),
 			"default_pw":   oni.DefaultOAuth2ClientPw,
 		},
 		kong.ConfigureHelp(kong.HelpOptions{Compact: true, Summary: true}),
@@ -444,26 +454,12 @@ func main() {
 
 	ctl, err := setupCtl(CLI.Path, CLI.Verbose)
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Error: %+s", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
 		os.Exit(1)
 	}
 
-	if build, ok := debug.ReadBuildInfo(); ok && version == "HEAD" {
-		if build.Main.Version != "(devel)" {
-			version = build.Main.Version
-		}
-		for _, bs := range build.Settings {
-			if bs.Key == "vcs.revision" {
-				version = bs.Value[:8]
-			}
-			if bs.Key == "vcs.modified" {
-				version += "-git"
-			}
-		}
-	}
-
 	if err = ctx.Run(ctl); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "Error: %+s", err)
+		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
 		os.Exit(1)
 	}
 }
