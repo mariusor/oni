@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"oni"
-	"oni/internal/xdg"
 	"os"
 	"path/filepath"
 	"runtime/debug"
 	"strings"
 
 	"git.sr.ht/~mariusor/lw"
+	"git.sr.ht/~mariusor/oni"
+	"git.sr.ht/~mariusor/oni/internal/xdg"
 	"github.com/alecthomas/kong"
 	vocab "github.com/go-ap/activitypub"
 )

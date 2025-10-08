@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"oni/internal/xdg"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,13 +17,13 @@ import (
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
+	"git.sr.ht/~mariusor/oni/internal/xdg"
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
 	storage "github.com/go-ap/storage-fs"
-	"github.com/goburrow/cache"
 )
 
 var (

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"oni"
-	"oni/internal/xdg"
 	"syscall"
 
+	"git.sr.ht/~mariusor/oni"
+	"git.sr.ht/~mariusor/oni/internal/xdg"
 	"github.com/go-ap/errors"
 )
 

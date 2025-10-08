@@ -1,4 +1,4 @@
-module oni
+module git.sr.ht/~mariusor/oni
 
 go 1.25
 

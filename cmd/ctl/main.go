@@ -5,8 +5,6 @@ import (
 	"encoding/pem"
 	"fmt"
 	"net/url"
-	"oni"
-	"oni/internal/xdg"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -14,6 +12,8 @@ import (
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
+	"git.sr.ht/~mariusor/oni"
+	"git.sr.ht/~mariusor/oni/internal/xdg"
 	"github.com/alecthomas/kong"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"

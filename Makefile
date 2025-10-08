@@ -8,7 +8,7 @@ MAKEFLAGS += --no-builtin-rules
 PROJECT_NAME ?= oni
 ENV ?= dev
 
-LDFLAGS ?= -X main.version=$(VERSION)
+LDFLAGS ?= -X git.sr.ht/~mariusor/oni.Version=$(VERSION)
 BUILDFLAGS ?= -a -ldflags '$(LDFLAGS)' -tags "$(TAGS)"
 TEST_FLAGS ?= -count=1
 
@@ -21,6 +21,9 @@ TS_SOURCES := $(wildcard src/js/*)
 CSS_SOURCES := $(wildcard src/css/*)
 SVG_SOURCES := $(wildcard src/*.svg)
 ROBOTS_TXT := $(wildcard src/robots.txt)
+
+ONI_BIN_SOURCES := $(wildcard ./cmd/oni/*.go)
+CTL_BIN_SOURCES := $(wildcard ./cmd/ctl/*.go)
 
 TAGS := $(ENV)
 
@@ -45,23 +48,23 @@ TEST := $(GO) test $(BUILDFLAGS)
 
 .PHONY: all assets test coverage download clean
 
-all: $(PROJECT_NAME) ctl
+all: $(PROJECT_NAME) $(PROJECT_NAME)ctl
 
 download: go.sum
 
 go.sum: go.mod
 	$(GO) mod tidy
 
-$(PROJECT_NAME): go.sum bin/$(PROJECT_NAME)
-bin/$(PROJECT_NAME): cmd/oni/main.go $(GO_SOURCES) go.sum static/main.css static/main.js static/icons.svg
-	$(BUILD) -o $@ cmd/oni/main.go
+$(PROJECT_NAME): bin/$(PROJECT_NAME)
+bin/$(PROJECT_NAME): go.sum $(ONI_BIN_SOURCES) $(GO_SOURCES) static/main.css static/main.js static/icons.svg
+	$(BUILD) -o $@ ./cmd/oni
 ifneq ($(ENV),dev)
 	$(UPX) -q --mono --no-progress --best $@ || true
 endif
 
-ctl: bin/ctl
-bin/ctl: go.sum cmd/ctl/main.go $(GO_SOURCES)
-	$(BUILD) -o $@ cmd/ctl/main.go
+$(PROJECT_NAME)ctl: bin/$(PROJECT_NAME)ctl
+bin/$(PROJECT_NAME)ctl: go.sum $(CTL_BIN_SOURCES) $(GO_SOURCES)
+	$(BUILD) -o $@ ./cmd/ctl
 ifneq ($(ENV),dev)
 	$(UPX) -q --mono --no-progress --best $@ || true
 endif
