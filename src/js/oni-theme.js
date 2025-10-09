@@ -81,6 +81,7 @@ export class Palette {
     renderStyles() {
         this.setRootStyles();
         const col = tc(this.bgColor);
+        if (!this.imageURL) return nothing;
         return unsafeCSS(`
             :host header {
                 background-size: cover;
