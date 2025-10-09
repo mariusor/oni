@@ -1063,7 +1063,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.Logger.WithContext(lctx).Errorf("Failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
-
 		defer logRequest(o, r.Header, body)
 
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
@@ -1087,7 +1086,8 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			return it, errors.HttpStatus(err), err
 		}
 
-		if it.GetType() == vocab.FollowType {
+		// NOTE(marius): if we received a Follow from a remote actor we automatically Accept
+		if processing.IsInbox(receivedIn) && it.GetType() == vocab.FollowType {
 			defer func() {
 				go ssm.Run(context.Background(), runWithRetry(func(ctx context.Context) ssm.Fn {
 					l := lw.Ctx{}
@@ -1104,7 +1104,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 				}))
 			}()
 		}
-		if it.GetType() == vocab.UpdateType {
+		if processing.IsOutbox(receivedIn) && it.GetType() == vocab.UpdateType {
 			// NOTE(marius): if we updated one of the main actors, we replace it in the array
 			_ = vocab.OnActivity(it, func(upd *vocab.Activity) error {
 				return o.actorsCacheClean(upd.Object)
