@@ -13,6 +13,10 @@ $ git clone https://git.sr.ht/~mariusor/oni
 $ cd oni
 ```
 
+### Container images
+
+Another option for running ONI is to use the pre-built images. More details about that can be found [here](./images/README.md).
+
 ## Features
 
 Posting to an ONI instance is done using Client to Server ActivityPub. 
