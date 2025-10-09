@@ -5,17 +5,12 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"html/template"
-	"net/url"
 	"os"
-	"path/filepath"
-	"time"
 
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/auth"
 	"github.com/go-ap/errors"
-	"github.com/go-ap/filters"
-	"github.com/go-ap/processing"
-	"github.com/openshift/osin"
 )
 
 var (
@@ -70,169 +65,16 @@ func PublicKey(iri vocab.IRI, prvKey *rsa.PrivateKey) vocab.PublicKey {
 	}
 }
 
-type Control struct {
-	Storage FullStorage
-	Logger  lw.Logger
-}
-
-func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
-	it, err := c.Storage.Load(iri)
+func CreateBlankActor(o *oni, id vocab.IRI) vocab.Actor {
+	ctl := Control{Storage: o.Storage, Logger: o.Logger}
+	blank, err := ctl.CreateActor(id, o.pw)
 	if err != nil {
-		if !errors.IsNotFound(err) {
-			return nil, err
+		if errors.Is(err, os.ErrExist) && blank != nil {
+			return *blank
 		}
+		o.Logger.WithContext(lw.Ctx{"err": err.Error(), "iri": id}).Warnf("unable to create root actor")
+		return auth.AnonymousActor
 	}
-	if it != nil && !vocab.IsNil(it) && it.GetLink().Equals(iri, true) {
-		act, err := vocab.ToActor(it)
-		if err != nil {
-			return nil, err
-		}
-		c.Logger.WithContext(lw.Ctx{"iri": iri}).Warnf("Actor already exists")
-		return act, errors.Annotatef(os.ErrExist, "actor exists")
-	}
-
-	o := DefaultActor(iri)
-	o.Followers = vocab.Followers.Of(iri)
-	o.Following = vocab.Following.Of(iri)
-	o.Endpoints = &vocab.Endpoints{
-		OauthAuthorizationEndpoint: o.GetLink().AddPath("oauth", "authorize"),
-		OauthTokenEndpoint:         o.GetLink().AddPath("oauth", "token"),
-	}
-
-	if it, err = c.Storage.Save(o); err != nil {
-		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to save main actor")
-		return nil, err
-	}
-
-	actor, err := vocab.ToActor(it)
-	if err != nil {
-		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Invalid actor type %T", it)
-		return nil, err
-	}
-
-	if err = c.Storage.PasswordSet(actor, []byte(pw)); err != nil {
-		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to set password for actor")
-		return nil, err
-	} else {
-		c.Logger.WithContext(lw.Ctx{"secret": pw}).Infof("Successfully set password")
-	}
-	u, _ := actor.ID.URL()
-	if err = c.CreateOAuth2ClientIfMissing(actor.ID, pw); err != nil {
-		c.Logger.WithContext(lw.Ctx{"host": u.Hostname(), "err": err.Error()}).Errorf("Unable to save OAuth2 Client")
-		return nil, err
-	} else {
-		c.Logger.WithContext(lw.Ctx{"ClientID": actor.ID}).Debugf("Created OAuth2 Client")
-	}
-
-	if actor, err = c.UpdateActorKey(actor); err != nil {
-		c.Logger.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("Unable to generate Private/Public key pair")
-	} else {
-		c.Logger.WithContext(lw.Ctx{"id": actor.ID}).Debugf("Created Private/Public key pair")
-	}
-
-	if addr, err := checkIRIResolvesLocally(actor.ID); err != nil {
-		c.Logger.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Unable to resolve actor's hostname to a valid address")
-		c.Logger.WithContext(lw.Ctx{"host": u.Host}).Warnf("Please make sure your DNS is configured correctly to point the hostname to the socket oni listens to")
-	} else {
-		c.Logger.WithContext(lw.Ctx{"host": u.Host, "addr": addr.String()}).Debugf("Successfully resolved hostname to a valid address")
-	}
-
-	return actor, nil
-}
-
-func (c *Control) GenAccessToken(clientID, actorIdentifier string, dat interface{}) (string, error) {
-	if u, err := url.Parse(clientID); err == nil {
-		clientID = filepath.Base(u.Path)
-		if clientID == "." {
-			clientID = u.Host
-		}
-	}
-	cl, err := c.Storage.GetClient(clientID)
-	if err != nil {
-		return "", err
-	}
-
-	now := time.Now().UTC()
-	var f processing.Filterable
-	if u, err := url.Parse(actorIdentifier); err == nil {
-		u.Scheme = "https"
-		f = vocab.IRI(u.String())
-	} else {
-		f = filters.FiltersNew(filters.Name(actorIdentifier), filters.Type(vocab.ActorTypes...))
-	}
-	list, err := c.Storage.Load(f.GetLink())
-	if err != nil {
-		return "", err
-	}
-	if vocab.IsNil(list) {
-		return "", errors.NotFoundf("not found")
-	}
-	var actor vocab.Item
-	if list.IsCollection() {
-		err = vocab.OnCollectionIntf(list, func(c vocab.CollectionInterface) error {
-			f := c.Collection().First()
-			if f == nil {
-				return errors.NotFoundf("no actor found %s", c.GetLink())
-			}
-			actor, err = vocab.ToActor(f)
-			return err
-		})
-	} else {
-		actor, err = vocab.ToActor(list)
-	}
-	if err != nil {
-		return "", err
-	}
-
-	aud := &osin.AuthorizeData{
-		Client:      cl,
-		CreatedAt:   now,
-		ExpiresIn:   86400,
-		RedirectUri: cl.GetRedirectUri(),
-		State:       "state",
-	}
-
-	// generate token code
-	aud.Code, err = (&osin.AuthorizeTokenGenDefault{}).GenerateAuthorizeToken(aud)
-	if err != nil {
-		return "", err
-	}
-
-	// generate token directly
-	ar := &osin.AccessRequest{
-		Type:          osin.AUTHORIZATION_CODE,
-		AuthorizeData: aud,
-		Client:        cl,
-		RedirectUri:   cl.GetRedirectUri(),
-		Scope:         "scope",
-		Authorized:    true,
-		Expiration:    -1,
-	}
-
-	ad := &osin.AccessData{
-		Client:        ar.Client,
-		AuthorizeData: ar.AuthorizeData,
-		AccessData:    ar.AccessData,
-		ExpiresIn:     ar.Expiration,
-		Scope:         ar.Scope,
-		RedirectUri:   cl.GetRedirectUri(),
-		CreatedAt:     now,
-		UserData:      actor.GetLink(),
-	}
-
-	// generate access token
-	ad.AccessToken, ad.RefreshToken, err = (&osin.AccessTokenGenDefault{}).GenerateAccessToken(ad, ar.GenerateRefresh)
-	if err != nil {
-		return "", err
-	}
-	// save authorize data
-	if err = c.Storage.SaveAuthorize(aud); err != nil {
-		return "", err
-	}
-	// save access token
-	if err = c.Storage.SaveAccess(ad); err != nil {
-		return "", err
-	}
-
-	return ad.AccessToken, nil
+	o.Logger.WithContext(lw.Ctx{"iri": id}).Infof("Created new root actor")
+	return *blank
 }

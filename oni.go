@@ -2,16 +2,9 @@ package oni
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
-	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -20,9 +13,6 @@ import (
 	"git.sr.ht/~mariusor/oni/internal/xdg"
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
-	"github.com/go-ap/auth"
-	"github.com/go-ap/errors"
-	"github.com/go-ap/processing"
 	storage "github.com/go-ap/storage-fs"
 )
 
@@ -41,127 +31,13 @@ type oni struct {
 	TimeOut     time.Duration
 	PwHash      []byte
 
-	mu sync.Mutex
+	mu *sync.Mutex
 	a  []vocab.Actor
 	pw string
 	m  http.Handler
 }
 
 type optionFn func(o *oni)
-
-func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
-	st := c.Storage
-	l := c.Logger
-
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		return actor, errors.Annotatef(err, "unable to save Private Key")
-	}
-
-	typ := actor.GetType()
-	if !vocab.ActorTypes.Contains(typ) {
-		return actor, errors.Newf("trying to generate keys for invalid ActivityPub object type: %s", typ)
-	}
-
-	iri := actor.ID
-
-	m := new(auth.Metadata)
-	if err = st.LoadMetadata(iri, m); err != nil && !errors.IsNotFound(err) {
-		return actor, err
-	}
-	if m.PrivateKey != nil {
-		l.WithContext(lw.Ctx{"iri": iri}).Debugf("Actor already has a private key")
-	}
-
-	prvEnc, err := x509.MarshalPKCS8PrivateKey(key)
-	if err != nil {
-		l.WithContext(lw.Ctx{"key": key, "iri": iri}).Errorf("Unable to x509.MarshalPKCS8PrivateKey()")
-		return actor, err
-	}
-
-	pub := key.Public()
-	pubEnc, err := x509.MarshalPKIXPublicKey(pub)
-	if err != nil {
-		l.WithContext(lw.Ctx{"pubKey": pub, "iri": iri}).Errorf("Unable to x509.MarshalPKIXPublicKey()")
-		return actor, err
-	}
-	pubEncoded := pem.EncodeToMemory(&pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: pubEnc,
-	})
-
-	actor.PublicKey = vocab.PublicKey{
-		ID:           vocab.IRI(fmt.Sprintf("%s#main", iri)),
-		Owner:        iri,
-		PublicKeyPem: string(pubEncoded),
-	}
-
-	cl := Client(*actor, st, l.WithContext(lw.Ctx{"log": "client"}))
-	p := processing.New(
-		processing.Async, processing.WithIDGenerator(GenerateID),
-		processing.WithLogger(l.WithContext(lw.Ctx{"log": "processing"})),
-		processing.WithIRI(actor.ID), processing.WithClient(cl), processing.WithStorage(st),
-		processing.WithLocalIRIChecker(IRIsContain(vocab.IRIs{actor.ID})),
-	)
-
-	followers := vocab.Followers.IRI(actor)
-	outbox := vocab.Outbox.IRI(actor)
-	upd := new(vocab.Activity)
-	upd.Type = vocab.UpdateType
-	upd.Actor = actor.GetLink()
-	upd.Object = actor
-	upd.Published = time.Now().UTC()
-	upd.To = vocab.ItemCollection{vocab.PublicNS}
-	upd.CC = vocab.ItemCollection{followers}
-
-	_, err = p.ProcessClientActivity(upd, *actor, outbox)
-	if err != nil {
-		return actor, err
-	}
-
-	m.PrivateKey = pem.EncodeToMemory(&pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: prvEnc,
-	})
-
-	if err = st.SaveMetadata(iri, m); err != nil {
-		l.WithContext(lw.Ctx{"key": key, "iri": iri}).Errorf("Unable to save the private key")
-		return actor, err
-	}
-
-	return actor, nil
-}
-
-func CreateBlankActor(o *oni, id vocab.IRI) vocab.Actor {
-	ctl := Control{Storage: o.Storage, Logger: o.Logger}
-	blank, err := ctl.CreateActor(id, o.pw)
-	if err != nil {
-		if errors.Is(err, os.ErrExist) && blank != nil {
-			return *blank
-		}
-		o.Logger.WithContext(lw.Ctx{"err": err.Error(), "iri": id}).Warnf("unable to create root actor")
-		return auth.AnonymousActor
-	}
-	o.Logger.WithContext(lw.Ctx{"iri": id}).Infof("Created new root actor")
-	return *blank
-}
-
-func checkIRIResolvesLocally(iri vocab.IRI) (*net.TCPAddr, error) {
-	uu, err := iri.URL()
-	if err != nil {
-		return nil, err
-	}
-
-	host := uu.Host
-	if strings.LastIndexByte(host, ':') < 0 {
-		if uu.Scheme == "https" {
-			host += ":443"
-		} else {
-			host += ":80"
-		}
-	}
-	return net.ResolveTCPAddr("tcp", host)
-}
 
 func Oni(initFns ...optionFn) *oni {
 	o := new(oni)
@@ -170,6 +46,7 @@ func Oni(initFns ...optionFn) *oni {
 		fn(o)
 	}
 
+	o.mu = &sync.Mutex{}
 	if opener, ok := o.Storage.(interface{ Open() error }); ok {
 		if err := opener.Open(); err != nil {
 			o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to open storage")
@@ -180,6 +57,7 @@ func Oni(initFns ...optionFn) *oni {
 	if len(o.a) == 0 {
 		o.Logger.Warnf("Storage does not contain any actors.")
 	}
+
 	localURLs := make(vocab.IRIs, 0, len(o.a))
 	for i, act := range o.a {
 		it, err := o.Storage.Load(act.GetLink())

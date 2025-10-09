@@ -10,7 +10,6 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/mask"
@@ -295,29 +294,6 @@ const (
 	// from the client side. See: https://www.rfc-editor.org/rfc/rfc8252#section-7.3
 	DefaultBOXAppRedirectURL = "http://127.0.0.1"
 )
-
-func (c *Control) CreateOAuth2ClientIfMissing(i vocab.IRI, pw string) error {
-	u, _ := i.URL()
-	if pw == "" {
-		pw = DefaultOAuth2ClientPw
-	}
-
-	cl, err := c.Storage.GetClient(u.Host)
-	if err == nil {
-		return nil
-	}
-	uris := append(
-		[]string{u.String(), DefaultOniAppRedirectURL, DefaultBOXAppRedirectURL, processing.OAuthOOBRedirectURN},
-		strings.Split(ExtraRedirectURL, "\n")...,
-	)
-	cl = &osin.DefaultClient{
-		Id:          u.Host,
-		Secret:      pw,
-		RedirectUri: strings.Join(uris, "\n"),
-		UserData:    i,
-	}
-	return c.Storage.CreateClient(cl)
-}
 
 var authKey = func() []byte {
 	v1 := rand.Int()
