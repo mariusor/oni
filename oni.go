@@ -201,7 +201,7 @@ func Oni(initFns ...optionFn) *oni {
 		if actor.PublicKey.ID == "" {
 			iri := actor.ID
 			if actor, err = o.UpdateActorKey(actor); err != nil {
-				o.Logger.WithContext(lw.Ctx{"err": err, "id": iri}).Errorf("Unable to generate Private Key")
+				o.Logger.WithContext(lw.Ctx{"err": err, "id": iri}).Errorf("Unable to generate Private/Public key pair")
 			}
 		}
 

@@ -124,6 +124,12 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 		c.Logger.WithContext(lw.Ctx{"ClientID": actor.ID}).Debugf("Created OAuth2 Client")
 	}
 
+	if actor, err = c.UpdateActorKey(actor); err != nil {
+		c.Logger.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("Unable to generate Private/Public key pair")
+	} else {
+		c.Logger.WithContext(lw.Ctx{"id": actor.ID}).Debugf("Created Private/Public key pair")
+	}
+
 	if addr, err := checkIRIResolvesLocally(actor.ID); err != nil {
 		c.Logger.WithContext(lw.Ctx{"err": err.Error()}).Warnf("Unable to resolve actor's hostname to a valid address")
 		c.Logger.WithContext(lw.Ctx{"host": u.Host}).Warnf("Please make sure your DNS is configured correctly to point the hostname to the socket oni listens to")
