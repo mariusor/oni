@@ -66,7 +66,7 @@ export class OniHeader extends ActivityPubActor {
         if (!ActivityPubItem.isValid(this.it)) return nothing;
 
         const style = html`<style>${until(this.renderStyles())}</style>`;
-        const iconName = html`<span>${this.renderIconName()}</span>`;
+        const iconName = html`${this.renderIconName()}`;
         return html`${style}<header>${until(this.renderCollections(iconName), `<hr/>`)}</header>`;
     }
 }
