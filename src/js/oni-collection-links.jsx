@@ -44,6 +44,7 @@ export class OniCollectionLinks extends LitElement {
         }
         :host li.active {
             background-color: var(--accent-color);
+            backdrop-filter: none;
         }
         @media (max-width: 576px) {
             :host li {

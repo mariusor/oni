@@ -60,15 +60,16 @@ export class ActivityPubImage extends ActivityPubObject {
             max-width: 98%;
         }
         dialog a {
-            position: absolute;
-            right: 0;
-            display: inline-block;
             font-size: .9rem;
-            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(40%);
+            right: 0;
+            position: absolute;
+            display: inline-block;
             margin: 1rem 2rem 0 0;
             padding: .2rem .4rem;
             border-radius: .4rem;
             z-index: 1;
+            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(40%);
+            outline: none;
         }
         dialog::backdrop {
             backdrop-filter: blur(40px) contrast(85%) brightness(60%);
