@@ -25,6 +25,7 @@ export class Palette {
         this.fgColor = style.getPropertyValue('--fg-color').trim();
         this.accentColor = style.getPropertyValue('--accent-color').trim();
         this.linkColor = style.getPropertyValue('--link-color').trim();
+        this.linkVisitedColor = style.getPropertyValue('--link-visited-color').trim();
         this.colorScheme = prefersDarkTheme() ? 'dark' : 'light';
     }
 
@@ -114,14 +115,14 @@ export class Palette {
             }
             palette.iconColors = (await colorsFromImage(iconURL, colorCount));
             avgColor = await average(iconURL, {format: 'hex'});
-            // console.debug(`loaded icon colors (avg ${avgColor}) ${palette.iconURL}:`, palette.iconColors);
+            //console.debug(`loaded icon colors (avg ${avgColor}) ${palette.iconURL}:`, palette.iconColors);
         }
 
         if (imageURL) {
             palette.imageURL = imageURL;
             palette.imageColors = (await colorsFromImage(imageURL, 20));
             avgColor = await average(imageURL, {format: 'hex'});
-            // console.debug(`loaded image colors (avg ${avgColor}) ${palette.imageURL}:`, palette.imageColors);
+            //console.debug(`loaded image colors (avg ${avgColor}) ${palette.imageURL}:`, palette.imageColors);
         }
 
         if (avgColor) {
@@ -142,22 +143,22 @@ export class Palette {
 
         let paletteColors = [... new Set([...palette.imageColors, ...palette.iconColors])];
         if (paletteColors.length > 0) {
-            console.debug(`colors for fg`, paletteColors);
+            //console.debug(`colors for fg`, paletteColors);
             palette.fgColor = getFgColor(paletteColors, palette.bgColor)
                 || palette.fgColor;
             paletteColors = paletteColors.filter(color => color !== palette.fgColor);
 
-            console.debug(`colors for accent`, paletteColors);
+            //console.debug(`colors for accent`, paletteColors);
             palette.accentColor = getAccentColor(paletteColors, palette.bgColor)
                 || palette.accentColor;
             paletteColors = paletteColors.filter(color => color !== palette.accentColor);
 
-            console.debug(`colors for link`, paletteColors);
+            //console.debug(`colors for link`, paletteColors);
             palette.linkColor = getAccentColor(paletteColors, palette.bgColor)
                 || tc(palette.fgColor).mix(palette.accentColor, 80).toHexString();
             paletteColors = paletteColors.filter(color => color !== palette.linkColor);
 
-            console.debug(`colors for visited link`, paletteColors);
+            //console.debug(`colors for visited link`, paletteColors);
             palette.linkVisitedColor = getAccentColor(paletteColors, palette.bgColor)
                 || tc(palette.linkColor).darken(10).toHexString();
         }
