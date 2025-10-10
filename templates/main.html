@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ Title }}</title>
-    <link rel="stylesheet" href="/main.css">
     {{- range $key, $value := URLS }}
     <link href="{{ $value }}" rel="me alternate">
     {{- end }}
@@ -13,7 +12,8 @@
     <link rel="alternate" type="application/activity+json" href="{{ $curURL }}">
     {{- end }}
     <script defer src="/main.js"></script>
-    <style>script { display: none; } </style>
+    <link rel="stylesheet" href="/main.css">
+    <style>script { display: none; }</style>
 </head>
 <body>
 <oni-main it="{{ ONI.ID }}">
@@ -25,10 +25,11 @@
         on top of ActivityPub, and as such, it does not work without it.
     </noscript>
     <ul>
-        <li><small>Content: <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license">licensed under CC-BY-SA 4.0</a></small></li>
-        <li><small>Source code:
-            <a href="https://git.sr.ht/~mariusor/oni/tree/master/item/LICENSE" rel="license">licensed under MIT</a> &ndash;
-            <a href="https://git.sr.ht/~mariusor/oni/tree"><oni-icon alt="Link to the repository" name="bookmark"></oni-icon></a></small>
+        <li>
+            <small>Source code hosted on
+                <a href="https://git.sr.ht/~mariusor/oni/tree"><oni-icon alt="Link to the repository" name="bookmark"></oni-icon> SourceHut</a>
+                &ndash; <a href="https://git.sr.ht/~mariusor/oni/tree/master/item/LICENSE" rel="license">licensed under MIT</a>
+            </small>
         </li>
     </ul>
 </footer>
