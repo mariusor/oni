@@ -47,9 +47,6 @@ export class OniCollectionLinks extends LitElement {
             backdrop-filter: none;
         }
         @media (max-width: 576px) {
-            ::slotted(a) {
-                padding: .2rem .4rem 0;
-            }
             :host li {
                 line-height: 1.2rem;
                 padding: .2rem .4rem 0;
@@ -57,8 +54,11 @@ export class OniCollectionLinks extends LitElement {
                 overflow-x: clip;
             }
             :host nav {
-                display: grid;
-                justify-items: end;
+                display: block;
+            }
+            :host ul {
+                width: 100vch;
+                text-align: right;
             }
         }
     `
