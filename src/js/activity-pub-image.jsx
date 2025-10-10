@@ -4,6 +4,7 @@ import {ActivityPubNote} from "./activity-pub-note";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {renderHtmlText} from "./utils";
 import {when} from "lit-html/directives/when.js";
+import {classMap} from "lit-html/directives/class-map.js";
 
 export class ActivityPubImage extends ActivityPubObject {
     static styles = [css`
@@ -17,6 +18,9 @@ export class ActivityPubImage extends ActivityPubObject {
             outline-offset: -.08rem;
             max-width: 100%;
             height: auto;
+        }
+        img.can-expand {
+            cursor: pointer;
         }
         img.small {
             max-width: 1rem;
@@ -162,7 +166,7 @@ export class ActivityPubImage extends ActivityPubObject {
         const image = (src, sources, sizes) => html`
             <figure>
                 <figcaption>${altElement}</figcaption>
-                <img @click=${this.showModal} loading="lazy" src=${src ?? nothing}
+                <img class=${classMap({'can-expand': needsFullSize && sources?.length > 0})} @click=${this.showModal} loading="lazy" src=${src ?? nothing}
                      title="${name ?? alt}" alt="${alt ?? nothing}"
                      srcSet=${sources ?? nothing} sizes=${sizes ?? nothing} />
             </figure>`;
