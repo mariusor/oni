@@ -12,7 +12,7 @@ export class Node {
         this.children = [];
         this.parent = null;
     }
-    get id () {
+    get id() {
         return this.item?.id || null;
     }
     get isDummy() {
@@ -22,20 +22,25 @@ export class Node {
 
 export function Thread(items) {
     const idTable = new Map();
+    const refsTable = new Map();
 
-    // Step 1: create nodes for all messages
+    // Step 1: create nodes for all messages, and build the parent reference map
     for (const item of items) {
         if (!item?.id) continue; // skip messages without id
         if (!idTable.has(item.id)) {
             idTable.set(item.id, new Node(item));
+            refsTable.set(item.id, new Set(getRefs(item)));
         }
     }
 
     function getRefs(item) {
         if (!item) return [];
-        if (!item?.inReplyTo) return [];
-        return Array.isArray(item?.inReplyTo) && item?.inReplyTo.length > 0
-            ? item.inReplyTo : (item.inReplyTo === 'string' && item.inReplyTo.length > 0 ? [item.inReplyTo] : []);
+        if (Array.isArray(item?.inReplyTo)) return item.inReplyTo;
+        if (typeof item?.inReplyTo === 'string') {
+            if (item?.inReplyTo.length === 0) return [];
+            return [item?.inReplyTo];
+        }
+        return [];
     }
 
     // Step 2: create dummy nodes for missing parents
@@ -46,25 +51,26 @@ export function Thread(items) {
         return idTable.get(id);
     }
 
-    // Step 3: link nodes based on inReplyTo
+    // Step 3: link nodes based on inReplyTo ids
     for (const item of items) {
         const node = idTable.get(item.id);
 
         // Build the inReplyTo chain
-        const refs = getRefs(item);
-        let parent = null;
-        for (const ref of refs) {
-            const refNode = getOrCreateNode(ref);
-            if (parent && !refNode.parent) {
-                refNode.parent = parent;
-                parent.children.push(refNode);
-            }
-            parent = refNode;
-        }
-        // Now link this message as child of the last reference
-        if (parent && !node.parent) {
+        const itemRefs = refsTable.get(item.id)
+        let allParentRefs = new Set();
+        itemRefs.forEach(parentRef => {
+            refsTable.get(parentRef)?.forEach(it => allParentRefs.add(it));
+        });
+
+        // Try to establish which is the immediate parent
+        const parentId = itemRefs?.difference(allParentRefs)?.values()?.next()?.value;
+        if (!parentId) continue;
+
+        const parent = getOrCreateNode(parentId);
+        // Now link this node as child of the found parent
+        if (!node.parent) {
             node.parent = parent;
-            parent.children.push(node);
+            parent.children?.push(node);
         }
     }
 
