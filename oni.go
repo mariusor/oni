@@ -26,10 +26,8 @@ var (
 type oni struct {
 	Control
 
-	Listen      string
-	StoragePath string
-	TimeOut     time.Duration
-	PwHash      []byte
+	Listen  string
+	TimeOut time.Duration
 
 	mu *sync.Mutex
 	a  []vocab.Actor
@@ -93,7 +91,7 @@ func Oni(initFns ...optionFn) *oni {
 }
 
 func WithLogger(l lw.Logger) optionFn {
-	return func(o *oni) { o.Logger = l }
+	return func(o *oni) { o.Control.Logger = l }
 }
 
 func WithPassword(pw string) optionFn {

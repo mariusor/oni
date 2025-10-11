@@ -25,6 +25,8 @@ import (
 type Control struct {
 	Storage FullStorage
 	Logger  lw.Logger
+
+	StoragePath string
 }
 
 func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {

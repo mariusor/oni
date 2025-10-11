@@ -23,8 +23,8 @@ import (
 
 type Control struct {
 	oni.Control
-	Service     vocab.Actor
-	StoragePath string
+
+	Service vocab.Actor
 }
 
 var CLI struct {
@@ -404,7 +404,7 @@ func setupCtl(storagePath string, verbose bool) (*Control, error) {
 		ll = lw.Dev(lw.SetLevel(lw.DebugLevel))
 	}
 	ll = ll.WithContext(fields)
-	ctl.Logger = ll
+	ctl.Control.Logger = ll
 
 	if err := mkDirIfNotExists(storagePath); err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to create path")

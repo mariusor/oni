@@ -1063,7 +1063,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.Logger.WithContext(lctx).Errorf("Failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
-		defer logRequest(o, r.Header, body)
+		defer logRequest(o.StoragePath, r.Header, body)
 
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
 			lctx["err"] = err.Error()

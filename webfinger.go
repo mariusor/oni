@@ -661,7 +661,7 @@ func HandleOauthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 			o.Error(errors.NewNotValid(err, "unable to read request body")).ServeHTTP(w, r)
 			return
 		}
-		defer logRequest(o, r.Header, body)
+		defer logRequest(o.StoragePath, r.Header, body)
 
 		regReq := ClientRegistrationRequest{}
 		if err := json.Unmarshal(body, &regReq); err != nil {

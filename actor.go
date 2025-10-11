@@ -66,8 +66,7 @@ func PublicKey(iri vocab.IRI, prvKey *rsa.PrivateKey) vocab.PublicKey {
 }
 
 func CreateBlankActor(o *oni, id vocab.IRI) vocab.Actor {
-	ctl := Control{Storage: o.Storage, Logger: o.Logger}
-	blank, err := ctl.CreateActor(id, o.pw)
+	blank, err := o.Control.CreateActor(id, o.pw)
 	if err != nil {
 		if errors.Is(err, os.ErrExist) && blank != nil {
 			return *blank

@@ -125,7 +125,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(m)
 		return
 	}
-	defer logRequest(o, r.Header, nil)
+	defer logRequest(o.StoragePath, r.Header, nil)
 
 	s, err := authServer(o, a)
 	if err != nil {
@@ -189,7 +189,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
-	defer logRequest(o, r.Header, nil)
+	defer logRequest(o.StoragePath, r.Header, nil)
 
 	s, err := authServer(o, a)
 	if err != nil {

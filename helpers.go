@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	vocab "github.com/go-ap/activitypub"
@@ -195,11 +196,11 @@ func irif(r *http.Request) vocab.IRI {
 	return vocab.IRI(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
 }
 
-func logRequest(o *oni, h http.Header, body []byte) {
+func logRequest(outPath string, h http.Header, body []byte) {
 	if !InDebugMode {
 		return
 	}
-	fn := fmt.Sprintf("%s/%s.req", o.StoragePath, time.Now().UTC().Format(time.RFC3339))
+	fn := filepath.Join(outPath, time.Now().UTC().Format(time.RFC3339)) + ".req"
 	all := bytes.Buffer{}
 	_ = h.Write(&all)
 	if body != nil {
