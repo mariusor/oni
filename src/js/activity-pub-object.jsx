@@ -394,6 +394,12 @@ ActivityPubObject.renderByMediaType = function (it, showMetadata, inline) {
     if (it.mediaType.indexOf('image/') === 0) {
         return html`<oni-image it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-image>`;
     }
+    if (it.mediaType.indexOf('audio/') === 0) {
+        return html`<oni-audio it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-audio>`;
+    }
+    if (it.mediaType.indexOf('video/') === 0) {
+        return html`<oni-video it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-video>`;
+    }
     if (it.mediaType.indexOf('text/html') === 0) {
         it.content = sanitize(it.content);
         return unsafeHTML(it.content);
