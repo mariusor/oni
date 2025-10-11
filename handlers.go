@@ -10,20 +10,17 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"time"
 
-	"git.sr.ht/~mariusor/cache"
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/ssm"
 	ct "github.com/elnormous/contenttype"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/client"
-	"github.com/go-ap/client/s2s"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
 	"github.com/go-ap/jsonld"
@@ -471,7 +468,7 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		author = loaded
 	} else {
-		solver := auth.ClientResolver(Client(auth.AnonymousActor, o.Storage, o.Logger.WithContext(lw.Ctx{"log": "keyfetch"})),
+		solver := auth.ClientResolver(o.Client(auth.AnonymousActor, lw.Ctx{"log": "keyfetch"}),
 			auth.SolverWithStorage(o.Storage), auth.SolverWithLogger(logFn),
 			auth.SolverWithLocalIRIFn(isLocalIRI),
 		)
@@ -701,7 +698,7 @@ func (o *oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnor
 		}
 	}
 
-	c := Client(auth.AnonymousActor, o.Storage, o.Logger)
+	c := o.Client(auth.AnonymousActor, lw.Ctx{})
 	s, err := auth.New(
 		auth.WithIRI(oniActor.GetLink()),
 		auth.WithStorage(o.Storage),
@@ -969,34 +966,6 @@ func IRIsContain(iris vocab.IRIs) func(i vocab.IRI) bool {
 	}
 }
 
-func Client(actor vocab.Actor, st processing.KeyLoader, l lw.Logger) *client.C {
-	var tr http.RoundTripper = &http.Transport{}
-	cachePath, err := os.UserCacheDir()
-	if err != nil {
-		cachePath = os.TempDir()
-	}
-
-	lctx := lw.Ctx{"log": "client"}
-	if !vocab.PublicNS.Equals(actor.ID, true) {
-		if prv, _ := st.LoadKey(actor.ID); prv != nil {
-			tr = s2s.New(s2s.WithTransport(tr), s2s.WithActor(&actor, prv), s2s.WithLogger(l.WithContext(lw.Ctx{"log": "HTTP-Sig"})))
-			lctx["transport"] = "HTTP-Sig"
-			lctx["actor"] = actor.GetLink()
-		}
-	}
-
-	ua := fmt.Sprintf("%s/%s (+%s)", ProjectURL, Version, actor.GetLink())
-	baseClient := &http.Client{
-		Transport: client.UserAgentTransport(ua, cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni")))),
-	}
-
-	return client.New(
-		client.WithLogger(l.WithContext(lctx)),
-		client.WithHTTPClient(baseClient),
-		client.SkipTLSValidation(IsDev),
-	)
-}
-
 const (
 	jitterDelay = 50 * time.Millisecond
 
@@ -1049,7 +1018,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			}
 		}
 
-		c := Client(actor, o.Storage, o.Logger.WithContext(lctx, lw.Ctx{"log": "client"}))
+		c := o.Client(actor, lctx)
 		processor := processing.New(
 			processing.Async,
 			processing.WithLogger(o.Logger.WithContext(lctx, lw.Ctx{"log": "processing"})),

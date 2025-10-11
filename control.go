@@ -7,15 +7,19 @@ import (
 	"encoding/pem"
 	"fmt"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"git.sr.ht/~mariusor/cache"
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
+	"github.com/go-ap/client"
+	"github.com/go-ap/client/s2s"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
 	"github.com/go-ap/processing"
@@ -27,6 +31,37 @@ type Control struct {
 	Logger  lw.Logger
 
 	StoragePath string
+}
+
+func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
+	lctx["log"] = "client"
+	var tr http.RoundTripper = &http.Transport{}
+
+	st := c.Storage
+	l := c.Logger.WithContext(lctx)
+
+	cachePath, err := os.UserCacheDir()
+	if err != nil {
+		cachePath = os.TempDir()
+	}
+
+	if !vocab.PublicNS.Equals(actor.ID, true) {
+		if prv, _ := st.LoadKey(actor.ID); prv != nil {
+			tr = s2s.New(s2s.WithTransport(tr), s2s.WithActor(&actor, prv), s2s.WithLogger(l.WithContext(lw.Ctx{"log": "HTTP-Sig"})))
+			lctx["transport"] = "HTTP-Sig"
+			lctx["actor"] = actor.GetLink()
+		}
+	}
+
+	ua := fmt.Sprintf("%s/%s (+%s)", ProjectURL, Version, actor.GetLink())
+	transport := client.UserAgentTransport(ua, cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni"))))
+	baseClient := &http.Client{Transport: transport}
+
+	return client.New(
+		client.WithLogger(l.WithContext(lctx)),
+		client.WithHTTPClient(baseClient),
+		client.SkipTLSValidation(IsDev),
+	)
 }
 
 func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
@@ -259,7 +294,7 @@ func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
 	st := c.Storage
 	l := c.Logger
 
-	cl := Client(*actor, st, l.WithContext(lw.Ctx{"log": "client"}))
+	cl := c.Client(*actor, lw.Ctx{"log": "client"})
 	p := processing.New(
 		processing.Async, processing.WithIDGenerator(GenerateID),
 		processing.WithLogger(l.WithContext(lw.Ctx{"log": "processing"})),
