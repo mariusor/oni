@@ -361,19 +361,19 @@ export function getHref (it) {
     if (Array.isArray(it)) {
         return first(it);
     }
-    let iri;
+    let url;
     if (typeof it === 'object') {
         if (it.hasOwnProperty('url')) {
-            iri = first(it.url);
-            if (iri.length > 0) return iri;
+            url = first(it.url);
+            if (url.length > 0) return url;
         }
         if (it.hasOwnProperty('href')) {
-            iri = first(it.href);
-            if (iri.length > 0) return iri;
+            url = first(it.href);
+            if (url.length > 0) return url;
         }
         if (it.hasOwnProperty('id')) {
-            iri = it.id;
+            url = it.id;
         }
     }
-    return iri;
+    return url;
 }
