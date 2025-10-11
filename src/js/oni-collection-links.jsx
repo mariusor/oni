@@ -194,10 +194,13 @@ export class OniCollectionLink extends ActivityPubObject {
     }
 
     collectionType() {
+        let iri;
         if (typeof this.it === 'object') {
-            return this.it?.iri()?.split('/')?.at(-1);
+            iri = this.it?.iri();
+        } else {
+            iri = this.it;
         }
-        return toTitleCase(this.it?.split('/')?.at(-1));
+        return URL.parse(iri)?.pathname?.split('/')?.at(-1) || "unknown";
     }
 
     label() {
@@ -207,7 +210,7 @@ export class OniCollectionLink extends ActivityPubObject {
                 return name;
             }
         }
-        return this.collectionType();
+        return toTitleCase(this.collectionType());
     }
 
     renderIcon() {
