@@ -167,7 +167,7 @@ export class ActivityPubImage extends ActivityPubObject {
             <figure>
                 <figcaption>${altElement}</figcaption>
                 <img class=${classMap({'can-expand': needsFullSize && sources?.length > 0})} @click=${this.showModal} loading="lazy" src=${src ?? nothing}
-                     title="${name ?? alt}" alt="${alt ?? nothing}"
+                     title=${name ?? alt} alt=${alt ?? nothing}
                      srcSet=${sources ?? nothing} sizes=${sizes ?? nothing} />
             </figure>`;
         return html`
@@ -203,7 +203,6 @@ export class ActivityPubImage extends ActivityPubObject {
                 <summary>${expando}</summary>
                 ${unsafeHTML(alt)}
             </details>`;
-
     }
 
     static isValid(it) {

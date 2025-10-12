@@ -1,16 +1,20 @@
 import {css, html, nothing} from "lit";
-import {ActivityPubObject} from "./activity-pub-object";
-import {when} from "lit-html/directives/when.js";
 import {ActivityPubItem, getHref} from "./activity-pub-item";
+import {renderHtml, renderHtmlText} from "./utils";
+import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {ActivityPubNote} from "./activity-pub-note";
+import {ActivityPubObject} from "./activity-pub-object";
 
 export class ActivityPubAudio extends ActivityPubObject {
     static styles = [css`
         audio {
-            max-width: 100%; 
-            max-height: 12vw;
             align-self: start;
-        }`, ActivityPubNote.styles];
+            margin: auto;
+        }
+        figure {
+            margin: auto;
+        }
+        `, ActivityPubNote.styles];
 
     constructor() {
         super();
@@ -18,18 +22,24 @@ export class ActivityPubAudio extends ActivityPubObject {
 
     render() {
         if (!ActivityPubItem.isValid(this.it)) return nothing;
-        const alt = this.it.getSummary();
+        const name = renderHtmlText(this.it.getName());
+        const alt = renderHtmlText(this.it.getSummary());
+        const altHTML = renderHtml(this.it.getSummary());
+
         const metadata = this.renderMetadata();
         const src = getHref(this.it);
+
+        let altElement = nothing;
+        if (altHTML) {
+            altElement = html`<figcaption>${unsafeHTML(altHTML)}</figcaption>`;
+        }
         return html`
             <figure>
-                <audio controls preload="metadata" src=${src ?? nothing}></audio>
-                ${when(alt.length > 0,
-                        () => html`<figcaption>
-                                <oni-natural-language-values name="summary" it=${JSON.stringify(alt)}></oni-natural-language-values>
-                            </figcaption>`,
-                        () => nothing
-                )}
+                <audio controls preload="metadata"
+                       title=${name ?? alt}
+                       src=${src ?? nothing}
+                ></audio>
+                ${altElement}
             </figure>
             ${this.renderTag()}
             ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
