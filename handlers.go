@@ -116,16 +116,17 @@ func (c corsLogger) Printf(f string, v ...interface{}) {
 	c(f, v...)
 }
 
+var c = cors.New(cors.Options{
+	AllowedOrigins:   []string{"https://*"},
+	AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+	AllowedHeaders:   []string{"*"},
+	AllowCredentials: true,
+	AllowOriginFunc:  checkOriginForBlockedActors,
+	MaxAge:           300, // Maximum value not ignored by any of major browsers
+	Debug:            IsDev,
+})
+
 func (o *oni) setupActivityPubRoutes(m chi.Router) {
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"https://*"},
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
-		AllowCredentials: true,
-		AllowOriginFunc:  checkOriginForBlockedActors,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-		Debug:            IsDev,
-	})
 	c.Log = corsLogger(o.Logger.WithContext(lw.Ctx{"log": "cors"}).Tracef)
 	m.Group(func(m chi.Router) {
 		m.Use(c.Handler, o.MaybeCreateRootActor, o.StopBlocked)
