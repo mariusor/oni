@@ -19,7 +19,6 @@ import (
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/client"
-	"github.com/go-ap/client/debug"
 	"github.com/go-ap/client/s2s"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
@@ -34,12 +33,8 @@ type Control struct {
 	StoragePath string
 }
 
-func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
+func (c *Control) Client(actor vocab.Actor, tr http.RoundTripper, lctx lw.Ctx) *client.C {
 	lctx["log"] = "client"
-	var tr http.RoundTripper = &http.Transport{}
-	if InDebugMode.Load() {
-		tr = debug.Transport(tr, c.StoragePath)
-	}
 	st := c.Storage
 	l := c.Logger.WithContext(lctx)
 
@@ -309,7 +304,7 @@ func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
 	st := c.Storage
 	l := c.Logger
 
-	cl := c.Client(*actor, lw.Ctx{"log": "client"})
+	cl := c.Client(*actor, http.DefaultTransport, lw.Ctx{"log": "client"})
 	p := processing.New(
 		processing.Async, processing.WithIDGenerator(GenerateID),
 		processing.WithLogger(l.WithContext(lw.Ctx{"log": "processing"})),

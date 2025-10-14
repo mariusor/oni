@@ -184,6 +184,7 @@ func (o *oni) Run(c context.Context) error {
 	}
 	logCtx := lw.Ctx{
 		"version": Version,
+		"debug":   InDebugMode.Load(),
 		"socket":  o.Listen,
 		"hosts":   iris(o.a...),
 	}

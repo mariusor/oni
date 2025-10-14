@@ -22,6 +22,7 @@ import (
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/client"
+	"github.com/go-ap/client/debug"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
 	"github.com/go-ap/jsonld"
@@ -136,10 +137,8 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 			m.Get("/*", o.ActivityPubItem)
 			m.Head("/*", o.ActivityPubItem)
 		})
-		if InDebugMode.Load() {
-			m = m.With(processing.RequestToDiskMw(o.StoragePath))
-		}
-		m.Method(http.MethodPost, "/*", o.ProcessActivity())
+		debugRequestMw := processing.RequestToDiskMw(o.StoragePath, InDebugMode.Load)
+		m.With(debugRequestMw).Method(http.MethodPost, "/*", o.ProcessActivity())
 	})
 }
 
@@ -478,7 +477,7 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		author = loaded
 	} else {
-		solver := auth.ClientResolver(o.Client(auth.AnonymousActor, lw.Ctx{"log": "keyfetch"}),
+		solver := auth.ClientResolver(o.Client(auth.AnonymousActor, http.DefaultTransport, lw.Ctx{"log": "keyfetch"}),
 			auth.SolverWithStorage(o.Storage), auth.SolverWithLogger(logFn),
 			auth.SolverWithLocalIRIFn(isLocalIRI),
 		)
@@ -708,7 +707,7 @@ func (o *oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnor
 		}
 	}
 
-	c := o.Client(auth.AnonymousActor, lw.Ctx{})
+	c := o.Client(auth.AnonymousActor, http.DefaultTransport, lw.Ctx{})
 	s, err := auth.New(
 		auth.WithIRI(oniActor.GetLink()),
 		auth.WithStorage(o.Storage),
@@ -1024,11 +1023,15 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			}
 		}
 
-		c := o.Client(actor, lctx)
+		var tr http.RoundTripper = &http.Transport{}
+		if InDebugMode.Load() {
+			tr = debug.New(debug.WithTransport(tr), debug.WithPath(o.StoragePath))
+		}
+		cl := o.Client(actor, tr, lctx)
 		processor := processing.New(
 			processing.Async,
 			processing.WithLogger(o.Logger.WithContext(lctx, lw.Ctx{"log": "processing"})),
-			processing.WithIRI(baseIRIs...), processing.WithClient(c), processing.WithStorage(o.Storage),
+			processing.WithIRI(baseIRIs...), processing.WithClient(cl), processing.WithStorage(o.Storage),
 			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
 		)
 
