@@ -11,7 +11,7 @@ export class ActivityPubActivity extends ActivityPubObject {
         ActivityPubObject.styles,
         css`
             :host > oni-image {
-                margin-top: 1rem;
+                margin-top: .6rem;
             }
         `,
     ];

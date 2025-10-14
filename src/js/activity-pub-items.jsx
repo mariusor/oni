@@ -54,9 +54,6 @@ export class ActivityPubItems extends ActivityPubObject {
         details ul li {
             margin-left: 1.2rem;
         }
-        li > oni-image, li > oni-audio, li > oni-video {
-            margin-top: .6rem;
-        }
     `, ActivityPubObject.styles];
 
     static properties = {
