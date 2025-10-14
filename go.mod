@@ -13,12 +13,12 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.9
 	github.com/go-ap/activitypub v0.0.0-20251007131428-e3b22fbf6257
-	github.com/go-ap/auth v0.0.0-20251007131808-401a63ca375b
-	github.com/go-ap/client v0.0.0-20251007131736-f7a8f55835c9
+	github.com/go-ap/auth v0.0.0-20251014103014-58c78b370f8e
+	github.com/go-ap/client v0.0.0-20251014102817-2a0fd86cc52e
 	github.com/go-ap/errors v0.0.0-20250905102357-4480b47a00c4
 	github.com/go-ap/filters v0.0.0-20251007131616-3481286d74d2
 	github.com/go-ap/jsonld v0.0.0-20250905102310-8480b0fe24d9
-	github.com/go-ap/processing v0.0.0-20251009100731-856f4db8c278
+	github.com/go-ap/processing v0.0.0-20251014103126-59678f5057a0
 	github.com/go-ap/storage-fs v0.0.0-20251008174442-fd182fff43bc
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
@@ -39,7 +39,7 @@ require (
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/bits-and-blooms/bitset v1.24.0 // indirect
+	github.com/bits-and-blooms/bitset v1.24.1 // indirect
 	github.com/go-ap/cache v0.0.0-20251007131541-7f856f34616b // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect

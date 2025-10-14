@@ -86,6 +86,9 @@ func Oni(initFns ...optionFn) *oni {
 		}
 	}
 
+	// NOTE(marius): we set the debug mode value based on static IsDev
+	InDebugMode.Store(IsDev)
+
 	o.setupRoutes()
 	return o
 }
@@ -218,15 +221,15 @@ func (o *oni) Run(c context.Context) error {
 			}
 		},
 		syscall.SIGUSR1: func(_ chan<- error) {
-			InMaintenanceMode = !InMaintenanceMode
+			InMaintenanceMode.Store(!InMaintenanceMode.Load())
 			if o.Logger != nil {
-				o.Logger.WithContext(lw.Ctx{"maintenance": InMaintenanceMode}).Debugf("SIGUSR1 received")
+				o.Logger.WithContext(lw.Ctx{"maintenance": InMaintenanceMode.Load()}).Debugf("SIGUSR1 received")
 			}
 		},
 		syscall.SIGUSR2: func(_ chan<- error) {
-			InDebugMode = !InDebugMode
+			InDebugMode.Store(!InDebugMode.Load())
 			if o.Logger != nil {
-				o.Logger.WithContext(lw.Ctx{"debug": InDebugMode}).Debugf("SIGUSR2 received")
+				o.Logger.WithContext(lw.Ctx{"debug": InDebugMode.Load()}).Debugf("SIGUSR2 received")
 			}
 		},
 		syscall.SIGINT: func(exit chan<- error) {

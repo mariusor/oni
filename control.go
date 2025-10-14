@@ -19,6 +19,7 @@ import (
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/client"
+	"github.com/go-ap/client/debug"
 	"github.com/go-ap/client/s2s"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
@@ -36,7 +37,9 @@ type Control struct {
 func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 	lctx["log"] = "client"
 	var tr http.RoundTripper = &http.Transport{}
-
+	if InDebugMode.Load() {
+		tr = debug.Transport(tr, c.StoragePath)
+	}
 	st := c.Storage
 	l := c.Logger.WithContext(lctx)
 
@@ -54,8 +57,9 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 	}
 
 	ua := fmt.Sprintf("%s/%s (+%s)", ProjectURL, Version, actor.GetLink())
-	transport := client.UserAgentTransport(ua, cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni"))))
-	baseClient := &http.Client{Transport: transport}
+	tr = client.UserAgentTransport(ua, cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni"))))
+
+	baseClient := &http.Client{Transport: tr}
 
 	return client.New(
 		client.WithLogger(l.WithContext(lctx)),

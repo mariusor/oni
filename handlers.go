@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
@@ -129,8 +130,16 @@ var c = cors.New(cors.Options{
 func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	c.Log = corsLogger(o.Logger.WithContext(lw.Ctx{"log": "cors"}).Tracef)
 	m.Group(func(m chi.Router) {
-		m.Use(c.Handler, o.MaybeCreateRootActor, o.StopBlocked)
-		m.HandleFunc("/*", o.ActivityPubItem)
+		m.Use(o.StopBlocked)
+		m.Group(func(m chi.Router) {
+			m.Use(c.Handler, o.MaybeCreateRootActor, o.StopBlocked)
+			m.Get("/*", o.ActivityPubItem)
+			m.Head("/*", o.ActivityPubItem)
+		})
+		if InDebugMode.Load() {
+			m = m.With(processing.RequestToDiskMw(o.StoragePath))
+		}
+		m.Method(http.MethodPost, "/*", o.ProcessActivity())
 	})
 }
 
@@ -792,10 +801,6 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	colFilters := make(filters.Checks, 0)
 
 	if vocab.ValidCollectionIRI(iri) {
-		if r.Method == http.MethodPost {
-			o.ProcessActivity().ServeHTTP(w, r)
-			return
-		}
 		_, whichCollection := vocab.Split(iri)
 
 		colFilters = filters.FromValues(r.URL.Query())
@@ -1033,7 +1038,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			o.Logger.WithContext(lctx).Errorf("Failed loading body")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
-		defer logRequest(o.StoragePath, r.Header, body)
 
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
 			lctx["err"] = err.Error()
@@ -1090,12 +1094,12 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 	}
 }
 
-var InMaintenanceMode bool = false
-var InDebugMode bool = false
+var InMaintenanceMode = atomic.Bool{}
+var InDebugMode = atomic.Bool{}
 
 func (o *oni) OutOfOrderMw(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if InMaintenanceMode {
+		if InMaintenanceMode.Load() {
 			o.Error(errors.ServiceUnavailablef("temporarily out of order")).ServeHTTP(w, r)
 			return
 		}
