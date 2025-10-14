@@ -114,9 +114,20 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 	}
 
 	if actor, err = c.GenKeyPair(actor); err != nil {
-		c.Logger.WithContext(lw.Ctx{"err": err, "id": actor.ID}).Errorf("Unable to generate Private/Public key pair")
+		c.Logger.WithContext(lw.Ctx{"err": err, "id": o.ID}).Errorf("Unable to generate Private/Public key pair")
 	} else {
-		c.Logger.WithContext(lw.Ctx{"id": actor.ID}).Debugf("Created Private/Public key pair")
+		c.Logger.WithContext(lw.Ctx{"id": o.ID}).Debugf("Created Private/Public key pair")
+	}
+
+	// NOTE(marius): a second save to update the public key
+	if it, err = c.Storage.Save(actor); err != nil {
+		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to save main actor")
+		return nil, err
+	}
+
+	if actor, err = vocab.ToActor(it); err != nil {
+		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Invalid actor type %T", it)
+		return nil, err
 	}
 
 	if addr, err := checkIRIResolvesLocally(actor.ID); err != nil {
