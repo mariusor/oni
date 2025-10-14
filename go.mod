@@ -13,7 +13,7 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.9
 	github.com/go-ap/activitypub v0.0.0-20251007131428-e3b22fbf6257
-	github.com/go-ap/auth v0.0.0-20251014115613-73764d206510
+	github.com/go-ap/auth v0.0.0-20251014152716-c2110295e89c
 	github.com/go-ap/client v0.0.0-20251014115429-d8c9aab73d73
 	github.com/go-ap/errors v0.0.0-20250905102357-4480b47a00c4
 	github.com/go-ap/filters v0.0.0-20251007131616-3481286d74d2

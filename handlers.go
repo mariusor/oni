@@ -477,12 +477,15 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		author = loaded
 	} else {
-		solver := auth.ClientResolver(o.Client(auth.AnonymousActor, http.DefaultTransport, lw.Ctx{"log": "keyfetch"}),
+		solver := auth.Resolver(o.Client(auth.AnonymousActor, http.DefaultTransport, lw.Ctx{"log": "keyfetch"}),
 			auth.SolverWithStorage(o.Storage), auth.SolverWithLogger(logFn),
 			auth.SolverWithLocalIRIFn(isLocalIRI),
 		)
 
-		author, _ = solver.LoadActorFromRequest(r)
+		if err := solver.Verify(r); err != nil {
+			o.Logger.WithContext(lw.Ctx{"log": "auth", "err": err.Error()}).Warnf("Failed to load actor")
+		}
+		author = solver.Actor()
 		*r = *r.WithContext(context.WithValue(r.Context(), authorizedActorCtxKey, author))
 	}
 
