@@ -1,4 +1,4 @@
-//go:build !dev
+//go:build prod
 
 package oni
 
@@ -8,4 +8,4 @@ func init() {
 	errors.IncludeBacktrace = false
 }
 
-var IsDev = false
+const IsDev = false

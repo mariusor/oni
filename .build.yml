@@ -50,7 +50,7 @@ tasks:
       _push() {
         make -C images ENV=dev VERSION="${_version}" push
         if [ "${_branch}" = "master" ]; then
-            make -C images ENV=qa VERSION="${_version}" push
+            make -C images ENV=prod VERSION="${_version}" push
         fi
 
         _tag=$(git describe --long --tags || true)

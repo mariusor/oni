@@ -1,5 +1,5 @@
-//go:build dev
+//go:build !prod
 
 package oni
 
-var IsDev = true
+const IsDev = true
