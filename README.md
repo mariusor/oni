@@ -47,10 +47,18 @@ $ make all
 ```sh
 # --listen can be a tcp socket, a domain socket, or the magic string "systemd"
 # The later should be used if running as a systemd service with socket activation
-$ oni --listen 127.0.4.2:4567 --path ~/.cache/oni 
+$ oni --listen 127.0.4.2:4567 --path ~/.cache/oni
 ```
 
-## Add root actor 
+### Running a server in a production environment
+
+The development builds of ONI are not compatible with Mastodon, as the HTTP-Signatures generated are meant to be
+replayble from other contexts, which in production environments should be avoided.
+
+Therefore, if you want to run an ONI instance as part of the wider fediverse you must make sure that it was built by
+passing either `-tags prod` or `-tags qa` to the build command.
+
+## Add root actor
 
 ```sh
 # Creates an actor for URL https://johndoe.example.com and adds an OAuth2 client application with name 'johndoe.example.com'
