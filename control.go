@@ -51,7 +51,7 @@ func (c *Control) Client(actor vocab.Actor, tr http.RoundTripper, lctx lw.Ctx) *
 		}
 	}
 
-	ua := fmt.Sprintf("%s/%s (+%s)", ProjectURL, Version, actor.GetLink())
+	ua := fmt.Sprintf("%s@%s (+%s)", ProjectURL, Version, actor.GetLink())
 	tr = client.UserAgentTransport(ua, cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni"))))
 
 	baseClient := &http.Client{Transport: tr}
