@@ -87,6 +87,11 @@ export class ActivityPubImage extends ActivityPubObject {
                 max-width: 100%;
             }
         }
+        @media (max-width: 536px) {
+            img.small {
+                vertical-align: top;
+            }
+        }
         `, ActivityPubNote.styles];
 
     static properties = {
