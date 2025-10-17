@@ -298,80 +298,20 @@ class ImagePopUp extends LitElement {
     static properties = {
         src: {type: String},
         img: {type: Element},
-        zoomed: {type: Boolean}
     };
 
     constructor() {
         super();
         this.src = '';
         this.img = null;
-        this.zoomed = false;
-    }
-
-    zoomDragStart(e) {
-        if (!this.zoomed) return;
-        this.dragStartPos = { x: e.clientX, y: e.clientY};
-        this.img.style.cursor = 'move';
-    }
-
-    zoomDrag(e) {
-        if (!this.zoomed) return;
-        if (e.clientX + e.clientY === 0) {
-            this.img.style.cursor = 'default';
-            e.preventDefault();
-            e.stopPropagation();
-
-            return;
-        }
-
-        const multiplier = Math.max(
-            this.img.naturalWidth/this.img.width*0.1,
-            this.img.naturalHeight/this.img.height*0.1
-        );
-        const deltaX = (e.clientX - this.dragStartPos.x)*multiplier;
-        const deltaY = (e.clientY - this.dragStartPos.y)*multiplier;
-
-        const matches = this.img.style?.objectPosition?.matchAll(/(\d+)% (\d+)%/g);
-        let origX = 50;
-        let origY = 50;
-
-        if (matches && matches.length > 2) {
-            origX = parseInt(matches[1]);
-            origY = parseInt(matches[2]);
-        }
-
-        this.img.style.objectPosition = `${clamp(origX+deltaX, 0, 100)}% ${clamp(origY+deltaY, 0, 100)}%`;
-    }
-
-    toggleZoom(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.zoomed = !this.zoomed;
-        if (!this.img) {
-            this.img = this.shadowRoot?.querySelector('figure img');
-        }
-        if (!this.zoomed) {
-            this.img.draggable = false;
-            this.img.removeAttribute('style');
-        } else {
-            this.img.draggable = true;
-            this.img.style.objectFit = 'none';
-        }
     }
 
     render() {
-        const zoomDirection = this.zoomed ? 'out' : 'in';
         return html`
-            <a @click=${this.toggleZoom} href="#">
-                <oni-icon name="zoom-${zoomDirection}" alt="Zoom image ${zoomDirection}"></oni-icon>
-            </a>
             <figure>
                 <figcaption><slot name="alt"></slot></figcaption>
-                <img @dragstart=${this.zoomDragStart}
-                     @drag=${this.zoomDrag}
-                     loading="lazy" src=${this.src}
-                     title=${this.name ?? this.alt} alt=${this.alt ?? nothing}/>
+                <img loading="lazy" src=${this.src}
+                     title=${this.name ?? this.alt} alt=${this.alt ?? nothing} draggable="true" />
             </figure>`;
     }
 }
