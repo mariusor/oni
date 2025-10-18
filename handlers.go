@@ -623,6 +623,30 @@ func requestMatchesETag(h http.Header, eTag string) bool {
 	return false
 }
 
+var pushableStaticAssets = [...]string{
+	"/main.js", "/main.css", "icons.svg",
+}
+
+func tryPushStaticAssets(w http.ResponseWriter, r *http.Request) error {
+	pusher, ok := w.(http.Pusher)
+	if !ok {
+		return nil
+	}
+	// Push is supported.
+	options := &http.PushOptions{
+		Header: http.Header{
+			"Accept-Encoding": r.Header["Accept-Encoding"],
+		},
+	}
+	errs := make([]error, 0, len(pushableStaticAssets))
+	for _, assetPath := range pushableStaticAssets {
+		if err := pusher.Push(assetPath, options); err != nil {
+			errs = append(errs, errors.Annotatef(err, "failed to push: %s", assetPath))
+		}
+	}
+	return errors.Join(errs...)
+}
+
 func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 	templatePath := "components/item"
 
@@ -637,6 +661,7 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 		return nil
 	})
 	return func(w http.ResponseWriter, r *http.Request) {
+		_ = tryPushStaticAssets(w, r)
 		oniActor := o.oniActor(r)
 		oniFn := template.FuncMap{
 			"ONI":   func() vocab.Actor { return oniActor },
