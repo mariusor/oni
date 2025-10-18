@@ -728,7 +728,7 @@ func HandleOauthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 		}
 
 		// TODO(marius): use some valid pw generation here
-		pw := []byte("asd")
+		pw := []byte(DefaultOAuth2ClientPw)
 
 		app, err := o.AddActor(p, pw, self)
 		if err != nil {
