@@ -10,7 +10,7 @@
     --link-active-color: oklch(from var(--link-color) calc(l - .2) c h);
     --link-visited-hover-color: oklch(from var(--link-visited-color) calc(l + .2) c h);
     --accent-color: var(--fg-color);
-    /* font-size: clamp(1rem, .97vw, 4.5rem); */
+    overscroll-behavior-y: none;
 }
 
 @media (prefers-color-scheme: light) {
