@@ -298,16 +298,111 @@ class ImagePopUp extends LitElement {
     static properties = {
         src: {type: String},
         img: {type: Element},
+        zoomed: {type: Boolean},
     };
 
     constructor() {
         super();
         this.src = '';
         this.img = null;
+        this.zoomed = false;
+        this.dragStarted = false;
+        this.pointerMap = new Map();
+    }
+
+    toggleZoom(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        this.zoomed = !this.zoomed;
+        if (!this.img) {
+            this.img = this.shadowRoot?.querySelector('figure img');
+        }
+        if (!this.zoomed) {
+            this.img.removeAttribute('style');
+        } else {
+            this.img.style.objectFit = 'none';
+            this.img.style.setProperty("--dx", `0%`);
+            this.img.style.setProperty("--dy", `0%`);
+            this.img.style.objectPosition = `var(--dx) var(--dy)`;
+        }
+    }
+
+    handleDown(event) {
+        if (!this.zoomed) return;
+        this.dragStarted = true;
+        this.img.style.cursor = 'move';
+
+        event.preventDefault();
+        event.target.setPointerCapture(event.pointerId);
+
+        this.pointerMap.set(event.pointerId, {
+            id: event.pointerId,
+            startPos: { x: event.clientX, y: event.clientY },
+            currentPos: { x: event.clientX, y: event.clientY },
+        });
+    }
+
+    handleMove(event, onMove) {
+        if (!this.zoomed || !this.dragStarted) return;
+
+        event.preventDefault();
+        const saved = this.pointerMap.get(event.pointerId) || emptyOb;
+        const current = Object.assign({x: -1, y: -1}, saved?.currentPos || {});
+        saved.currentPos = { x: event.clientX, y: event.clientY };
+        const w = this.img.width;
+        const h = this.img.height;
+        const delta = {
+            x: (saved.currentPos.x - current.x)/w*160,
+            y: (saved.currentPos.y - current.y)/h*160,
+        };
+        onMove(delta);
+    }
+
+    handleUp(event) {
+        this.dragStarted = false;
+        event.target.releasePointerCapture(event.pointerId);
+        this.img.style.cursor = 'default';
+    }
+
+    moveElement(delta) {
+        if (!this.zoomed || !this.dragStarted) return;
+        const getNumber = (key, fallback) => {
+            const saved = this.img.style.getPropertyValue(key);
+            if (saved.length > 0) {
+                return parseFloat(saved.replace("%", ""));
+            }
+            return fallback;
+        };
+
+        const dx = clamp(getNumber("--dx", 0) + delta.x, 0, 100);
+        const dy = clamp(getNumber("--dy", 0) + delta.y, 0, 100);
+        this.img.style.setProperty("--dx", `${dx}%`);
+        this.img.style.setProperty("--dy", `${dy}%`);
+    }
+
+    firstUpdated({}) {
+        this.img = this.shadowRoot?.querySelector('figure img');
+        this.img.addEventListener("pointerdown", (e) => {
+            this.handleDown(e);
+        });
+        this.img.addEventListener("pointermove", (e) => {
+            this.handleMove(e,  (delta) => {
+                this.moveElement(delta);
+            });
+        });
+        this.img.addEventListener("pointerup", (e) => {
+            this.handleUp(e);
+        });
+        this.requestUpdate();
     }
 
     render() {
+        const zoomDirection = this.zoomed ? 'out' : 'in';
         return html`
+            <a @click=${this.toggleZoom} href="#">
+                <oni-icon name="zoom-${zoomDirection}" alt="Zoom image ${zoomDirection}"></oni-icon>
+            </a>
             <figure>
                 <figcaption><slot name="alt"></slot></figcaption>
                 <img loading="lazy" src=${this.src}
@@ -315,6 +410,8 @@ class ImagePopUp extends LitElement {
             </figure>`;
     }
 }
+
+const emptyOb = {currentPos:{x:-1, y:-1}, startPos: {x:-1, y:-1}, id: -1};
 
 customElements.define('image-alt', ImageAlt);
 customElements.define('image-popup', ImagePopUp);
