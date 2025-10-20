@@ -22,7 +22,7 @@ export class ActivityPubImage extends ActivityPubObject {
             height: auto;
         }
         img.can-expand {
-            cursor: pointer;
+            cursor: zoom-in;
         }
         img.small {
             max-width: 1rem;
@@ -140,7 +140,7 @@ export class ActivityPubImage extends ActivityPubObject {
 
         const name = renderHtmlText(this.it.getName());
         const alt = renderHtmlText(this.it.getSummary());
-        const needsFullSize = url.length > 0 || largest?.width > 1920;
+        const needsFullSize = largest?.width > this.clientWidth || largest?.height > this.clientHeight;
 
         const altElement = html`
             <image-alt name=${name} alt=${alt} slot="alt"></image-alt>`;
@@ -157,7 +157,7 @@ export class ActivityPubImage extends ActivityPubObject {
             )}
             <figure>
                 <figcaption>${altElement}</figcaption>
-                <img class=${classMap({'can-expand': needsFullSize && sources?.length > 0})}
+                <img class=${classMap({'can-expand': needsFullSize})}
                      @click=${this.showModal}
                      loading="lazy" src=${src ?? nothing}
                      title=${name ?? alt} alt=${alt ?? nothing}
@@ -321,9 +321,10 @@ class ImagePopUp extends LitElement {
         if (!this.zoomed) {
             this.img.removeAttribute('style');
         } else {
-            this.img.style.objectFit = 'none';
             this.img.style.setProperty("--dx", `0%`);
             this.img.style.setProperty("--dy", `0%`);
+            this.img.style.objectFit = 'none';
+            this.img.style.cursor = 'grab';
             this.img.style.objectPosition = `var(--dx) var(--dy)`;
         }
     }
@@ -331,7 +332,7 @@ class ImagePopUp extends LitElement {
     handleDown(event) {
         if (!this.zoomed) return;
         this.dragStarted = true;
-        this.img.style.cursor = 'move';
+        this.img.style.cursor = 'grabbing';
 
         event.preventDefault();
         event.target.setPointerCapture(event.pointerId);
@@ -362,7 +363,7 @@ class ImagePopUp extends LitElement {
     handleUp(event) {
         this.dragStarted = false;
         event.target.releasePointerCapture(event.pointerId);
-        this.img.style.cursor = 'default';
+        this.img.style.cursor = 'grab';
     }
 
     moveElement(delta) {
