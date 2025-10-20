@@ -126,18 +126,7 @@ export class Palette {
         }
 
         if (avgColor) {
-            const maxBgSaturation = 0.45;
-
-            let tgBg = tc(avgColor);
-            if (tgBg.toHsl().s > maxBgSaturation) {
-                tgBg = tgBg.desaturate(100*Math.abs(tgBg.toHsl().s - maxBgSaturation));
-                if (prefersDarkTheme()) {
-                    tgBg.lighten(10);
-                } else {
-                    tgBg.darken(10);
-                }
-            }
-            palette.bgColor = tgBg.toHexString();
+            palette.bgColor = changeSaturation(avgColor);
             palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
         }
 
@@ -280,16 +269,28 @@ const /* sort */ byContrastTo = (base) => (a, b) => contrast(b, base) - contrast
 const /* sort */ bySaturation = (a, b) => tc(b).toHsv().s - tc(a).toHsv().s;
 const /* sort */ byDiff = (base) => (a, b) => Math.abs(colorDiff(a, base)) - Math.abs(colorDiff(b, base));
 
+const defaultFgColors = ['#EFF0F1', '#232627'];
 function getFgColor(colors, toColor) {
-    colors = Array.isArray(colors) ? colors : [... new Set(colors)];
+    colors = Array.isArray(colors) ? [... new Set(colors)] : [];
 
+    colors = [... new Set([...defaultFgColors, ...colors])];
     const fgColors = colors
         .filter(onSaturation(0, 0.3))
         .filter(onContrastTo(toColor, 5, 19))
         .sort(byContrastTo(toColor));
 
+    let most;
+    if (fgColors.length > 0) {
+        most = fgColors.at(0);
+    } else {
+        if (prefersDarkTheme()) {
+            most =  defaultFgColors[1];
+        } else {
+            most = defaultFgColors[0];
+        }
+    }
+
     console.debug(`filtered colors`, fgColors);
-    const most = fgColors.at(0);
     console.debug(`most readable to ${toColor} is ${most}: ${contrast(most, toColor)}`);
     return most;
 }
@@ -325,10 +326,46 @@ function getAccentColor(colors, toColor) {
         .sort(bySaturation)
         .sort(byContrastTo(toColor)).reverse();
 
+
+    let most;
+    if (accentColors.length > 0) {
+        most = accentColors.at(0);
+    } else {
+        most = modifyPerTheme(toColor);
+    }
     console.debug(`filtered colors`, accentColors);
-    const most = accentColors.at(0);
     console.debug(`most readable to ${toColor} is ${most}: ${contrast(most, toColor)}`);
     return most;
+}
+
+const maxBgSaturation = 0.45;
+const minContrast = 4.8;
+
+function modifyPerTheme(original) {
+    let color = tc(original).clone();
+    const wantsDark = prefersDarkTheme();
+    do {
+        if (wantsDark) {
+            color = color.lighten(10);
+        } else {
+            color = color.darken(10);
+        }
+    } while (contrast(original, color) < minContrast)
+
+    return color.toHexString();
+}
+
+function changeSaturation(origColor) {
+    let finalColor = tc(origColor);
+    if (finalColor.toHsl().s > maxBgSaturation) {
+        finalColor = finalColor.desaturate(100*Math.abs(finalColor.toHsl().s - maxBgSaturation));
+    }
+    if (prefersDarkTheme()) {
+        finalColor.lighten(10);
+    } else {
+        finalColor.darken(10);
+    }
+    return finalColor.toHexString();
 }
 
 // formulas from : https://www.easyrgb.com/en/math.php
