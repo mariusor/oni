@@ -33,8 +33,29 @@ export class ActivityPubObject extends LitElement {
             padding: 0;
             margin: 0;
         }
-        article header h1 {
-            font-size: 1.32rem;
+        h1 {
+            margin-block: .78rem;
+            font: 700 1.6rem / 1.125 sans-serif;
+        }
+        h2 {
+            margin-block: .7rem;
+            font: 700 1.4rem / 1.125 sans-serif;
+        }
+        h3 {
+            margin-block: .62rem;
+            font: 700 1.28rem / 1.125 sans-serif;
+        }
+        h4 {
+            margin-block: .6rem;
+            font: 600 1.125rem / 1.125 sans-serif;
+        }
+        h5 {
+            margin-block: .58rem;
+            font: 600 1.04rem / 1.125 sans-serif;
+        }
+        h6 {
+            margin-block: .56rem;
+            font: 600 .98rem / 1.125 sans-serif;
         }
         article {
             display: flex;

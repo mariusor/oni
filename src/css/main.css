@@ -9,8 +9,12 @@
     --link-hover-color: oklch(from var(--link-color) calc(l - .2) c h);
     --link-active-color: oklch(from var(--link-color) calc(l - .2) c h);
     --link-visited-hover-color: oklch(from var(--link-visited-color) calc(l + .2) c h);
-    --accent-color: var(--fg-color);
+    --accent-color: var(--link-color);
     overscroll-behavior-y: none;
+    color-scheme: light dark;
+    scrollbar-color: var(--accent-color) #0000;
+    height: 100%;
+    font: clamp(.75em, .2em + 1.5vw, 1.25em) / 1.25 sans-serif;
 }
 
 @media (prefers-color-scheme: light) {
@@ -22,95 +26,20 @@
         --link-hover-color: oklch(from var(--link-color) calc(l + .2) c h);
         --link-active-color: oklch(from var(--link-color) calc(l + .2) c h);
         --link-visited-hover-color: oklch(from var(--link-visited-color) calc(l + .2) c h);
-        --accent-color: var(--fg-color);
-    }
-}
-
-@media (min-width: 2201px) {
-    :root {
-        font-size: .82vw;
-    }
-}
-
-@media (max-width: 2200px) {
-    :root {
-        font-size: .86vw;
-    }
-}
-
-@media (max-width: 1800px) {
-    :root {
-        font-size: 1vw;
-    }
-}
-
-@media (max-width: 1500px) {
-    :root {
-        font-size: 1.2vw;
-    }
-}
-
-@media (max-width: 1200px) {
-    :root {
-        font-size: 1.4vw;
-    }
-}
-
-@media (max-width: 1050px) {
-    :root {
-        font-size: 1.6vw;
-    }
-}
-
-@media (max-width: 948px) {
-    :root {
-        font-size: 1.8vw;
-    }
-}
-
-@media (max-width: 860px) {
-    :root {
-        font-size: 2.2vw;
-    }
-}
-
-@media (max-width: 768px) {
-    :root {
-        font-size: 2.6vw;
-    }
-}
-
-@media (max-width: 576px) {
-    :root {
-        font-size: 2.8vw;
-    }
-    oni-collection-link a {
-        font-size: 0;
-    }
-}
-
-@media (max-width: 480px) {
-    :root {
-        font-size: 4vw;
-    }
-}
-
-@media (max-width: 400px) {
-    :root {
-        font-size: 4.8vw;
+        --accent-color: var(--link-color);
     }
 }
 
 body {
+    display: grid;
     margin: 0 0 auto 0;
     color: var(--fg-color);
     accent-color: var(--accent-color);
     background-color: var(--bg-color);
-    min-height: 100vh;
     align-items: start;
-    display: grid;
     font-family: sans-serif;
-    line-height: 1.8rem;
+    line-height: 1.6rem;
+    min-height: 100vh;
 }
 
 a {
@@ -184,12 +113,16 @@ oni-main > oni-actor {
     margin: 0;
     width: 100%;
     max-width: 100%;
+    grid-template-columns: 100%;
+    justify-content: center;
+    padding: 0;
 }
 
 oni-main > * {
-    max-width: 90cqw;
-    width: 90ch;
-    margin: 1rem auto auto;
+    display: grid;
+    grid-template-columns: min(100%, 90ch);
+    justify-content: center;
+    padding: 1rem;
 }
 
 oni-note, oni-event, oni-video, oni-audio, oni-image, oni-tag,

@@ -10,27 +10,6 @@ export class ActivityPubNote extends ActivityPubObject {
         flex-direction: column;
         align-items: center;
     }
-    article > * {
-        margin-top: .2rem;
-    }
-    article header h1 {
-        font-size: 1.32rem;
-    }
-    article header h2 {
-        font-size: 1.16rem;
-    }
-    article header h3 {
-        font-size: 1.1rem;
-    }
-    article header h4 {
-        font-size: 1.08rem;
-    }
-    article header h5 {
-        font-size: 1rem;
-    }
-    article header h6 {
-        font-size: .9rem;
-    }
     footer {
         font-size: .9rem;
         line-height: 1.3rem;
