@@ -360,7 +360,7 @@ func cleanupMediaObjectFromActivity(act *vocab.Activity) error {
 
 func contentHasBinaryData(nlv vocab.NaturalLanguageValues) bool {
 	for _, nv := range nlv {
-		if bytes.HasPrefix(nv.Value, []byte("data:")) {
+		if bytes.HasPrefix(nv, []byte("data:")) {
 			return true
 		}
 	}
@@ -370,7 +370,7 @@ func contentHasBinaryData(nlv vocab.NaturalLanguageValues) bool {
 func cleanupMediaObject(o *vocab.Object) error {
 	if contentHasBinaryData(o.Content) {
 		// NOTE(marius): remove inline content from media ActivityPub objects
-		o.Content = o.Content[:0]
+		o.Content = make(vocab.NaturalLanguageValues)
 		if o.URL == nil {
 			// Add an explicit URL if missing.
 			o.URL = o.ID

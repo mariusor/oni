@@ -20,10 +20,10 @@ var (
 		DisableHTTPErrorRendering: true,
 		Funcs: []template.FuncMap{{
 			"HTMLAttr": func(n vocab.NaturalLanguageValues) template.HTMLAttr {
-				return template.HTMLAttr(n.First().Value)
+				return template.HTMLAttr(n.First())
 			},
 			"HTML": func(n vocab.NaturalLanguageValues) template.HTML {
-				return template.HTML(n.First().Value)
+				return template.HTML(n.First())
 			},
 			"oniType": func(i any) template.HTML {
 				switch it := i.(type) {

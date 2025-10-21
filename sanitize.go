@@ -29,8 +29,7 @@ var (
 
 func sanitizeNaturalLanguageValues(val vocab.NaturalLanguageValues) vocab.NaturalLanguageValues {
 	for k, v := range val {
-		val[k].Ref = vocab.LangRef(defaultSanitizePolicy.Sanitize(string(v.Ref)))
-		val[k].Value = defaultSanitizePolicy.SanitizeBytes(v.Value)
+		val[k] = defaultSanitizePolicy.SanitizeBytes(v)
 	}
 
 	return val

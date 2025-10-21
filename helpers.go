@@ -14,7 +14,7 @@ import (
 )
 
 func DefaultValue(name string) vocab.NaturalLanguageValues {
-	return vocab.NaturalLanguageValues{vocab.LangRefValueNew(vocab.NilLangRef, name)}
+	return vocab.NaturalLanguageValues{vocab.DefaultLang: vocab.Content(name)}
 }
 
 func SetPreferredUsername(i vocab.Item, name vocab.NaturalLanguageValues) error {
@@ -145,7 +145,7 @@ func GenerateID(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) 
 }
 
 func getBinData(nlVal vocab.NaturalLanguageValues, mt vocab.MimeType) (string, []byte, error) {
-	val := nlVal.First().Value
+	val := nlVal.First()
 
 	contentType := "application/octet-stream"
 	if mt != "" {
@@ -187,7 +187,7 @@ func getBinData(nlVal vocab.NaturalLanguageValues, mt vocab.MimeType) (string, [
 }
 
 func isData(nlVal vocab.NaturalLanguageValues) bool {
-	return len(nlVal) > 0 && bytes.Equal(nlVal.First().Value[:4], []byte("data"))
+	return len(nlVal) > 0 && bytes.Equal(nlVal.First()[:4], []byte("data"))
 }
 
 func irif(r *http.Request) vocab.IRI {
