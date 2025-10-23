@@ -720,7 +720,7 @@ func HandleOauthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 			Generator:         self.GetLink(),
 			Published:         now,
 			Updated:           now,
-			PreferredUsername: vocab.DefaultNaturalLanguageValue(name),
+			PreferredUsername: vocab.DefaultNaturalLanguage(name),
 			URL:               urls,
 		}
 		if regReq.LogoURI != "" {
