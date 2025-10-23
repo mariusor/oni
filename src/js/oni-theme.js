@@ -132,24 +132,15 @@ export class Palette {
 
         let paletteColors = [... new Set([...palette.imageColors, ...palette.iconColors])];
         if (paletteColors.length > 0) {
-            //console.debug(`colors for fg`, paletteColors);
-            palette.fgColor = getFgColor(paletteColors, palette.bgColor)
-                || palette.fgColor;
+            palette.fgColor = getFgColor(paletteColors, palette.bgColor) || palette.fgColor;
             paletteColors = paletteColors.filter(color => color !== palette.fgColor);
-
-            //console.debug(`colors for accent`, paletteColors);
-            palette.accentColor = getAccentColor(paletteColors, palette.bgColor)
-                || palette.accentColor;
-            paletteColors = paletteColors.filter(color => color !== palette.accentColor);
-
-            //console.debug(`colors for link`, paletteColors);
-            palette.linkColor = getAccentColor(paletteColors, palette.bgColor)
-                || tc(palette.fgColor).mix(palette.accentColor, 80).toHexString();
-            paletteColors = paletteColors.filter(color => color !== palette.linkColor);
-
-            //console.debug(`colors for visited link`, paletteColors);
-            palette.linkVisitedColor = getAccentColor(paletteColors, palette.bgColor)
-                || tc(palette.linkColor).darken(10).toHexString();
+            palette.accentColor = getAccentColor(paletteColors, palette.bgColor) || palette.accentColor;
+            palette.linkColor = tc(palette.fgColor).mix(palette.accentColor, 80).toHexString();
+            if (palette.colorScheme === 'dark') {
+                palette.linkVisitedColor = tc(palette.linkColor).darken(10).toHexString();
+            } else {
+                palette.linkVisitedColor = tc(palette.linkColor).lighten(10).toHexString();
+            }
         }
 
         return palette;
@@ -182,7 +173,6 @@ export class PaletteElement extends LitElement {
         this.palette = null;
     }
 
-
     render() {
         this.palette = this.palette || Palette.fromStorage();
 
@@ -193,12 +183,8 @@ export class PaletteElement extends LitElement {
 
         const renderColor = (color, contrastColor, label) => html`
             <div style="background-color: ${color}; color: ${contrastColor}; border: 1px solid ${contrastColor};">
-                ${label}${color}: <data value="${colorDiff(color, this.palette.bgColor)}" title="diff">
-                    ${colorDiff(color, this.palette.bgColor).toFixed(2)}
-                </data>:<data value="${contrast(color, this.palette.bgColor)}" title="contrast bg">
+                ${label}${color}: <data value="${contrast(color, this.palette.bgColor)}" title="contrast bg">
                     ${contrast(color, this.palette.bgColor).toFixed(2)}
-                </data>:<data value="${contrast(color, this.palette.fgColor)}" title="contrast fg">
-                    ${contrast(color, this.palette.fgColor).toFixed(2)}
                 </data>:<data value="${tc(color).toHsl().h}" title="hue">
                     ${tc(color).toHsl().h.toFixed(2)}
                 </data>:<data value="${tc(color).toHsl().s}" title="saturation">
@@ -208,6 +194,7 @@ export class PaletteElement extends LitElement {
                 </data>
             </div>
         `;
+
         const colorMap = (colors) => {
             return html`
                 ${map(colors, color => {
@@ -217,7 +204,7 @@ export class PaletteElement extends LitElement {
             `;
         }
         const colors = [... new Set([...this.palette.iconColors, ...this.palette.imageColors])]
-            .toSorted(byDiff(this.palette.bgColor));
+            .toSorted(byContrastTo(this.palette.bgColor));
         return html`
             ${renderColor(this.palette.bgColor, this.palette.fgColor, html`<b>Background:</b> `)}
             ${renderColor(this.palette.fgColor, this.palette.bgColor, html`<b>Foreground:</b> `)}
@@ -289,10 +276,11 @@ function getFgColor(colors, toColor) {
             most = defaultFgColors[0];
         }
     }
+    most = tc(most).mix(toColor, 30);
 
-    console.debug(`filtered colors`, fgColors);
-    console.debug(`most readable to ${toColor} is ${most}: ${contrast(most, toColor)}`);
-    return most;
+    console.debug(`filtered fg colors`, fgColors);
+    console.debug(`most readable to ${toColor} is ${most.toHexString()}: ${contrast(most, toColor)}`);
+    return most.toHexString();
 }
 
 function mostReadable(colors, toColor) {
@@ -322,18 +310,15 @@ function getAccentColor(colors, toColor) {
 
     let accentColors = colors
         .filter(onContrastTo(toColor, 2.8, 19))
-        .filter(onSaturation(0.4, 1))
         .sort(bySaturation)
         .sort(byContrastTo(toColor)).reverse();
 
-
     let most;
     if (accentColors.length > 0) {
-        most = accentColors.at(0);
-    } else {
-        most = modifyPerTheme(toColor);
+        console.debug(`filtered accent colors`, accentColors);
+        most = accentColors.toSorted(bySaturation).at(0);
     }
-    console.debug(`filtered colors`, accentColors);
+    most = modifyPerTheme(toColor);
     console.debug(`most readable to ${toColor} is ${most}: ${contrast(most, toColor)}`);
     return most;
 }
