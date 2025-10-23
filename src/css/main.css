@@ -110,11 +110,8 @@ oni-main > * {
 }
 
 oni-main > oni-actor {
-    margin: 0;
-    width: 100%;
-    max-width: 100%;
     grid-template-columns: 100%;
-    justify-content: center;
+    margin: 0;
     padding: 0;
 }
 
@@ -123,7 +120,6 @@ oni-main > * {
     display: grid;
     grid-template-columns: min(100%, 90ch);
     justify-content: center;
-    margin: auto;
 }
 
 oni-note footer, oni-event footer, oni-video footer, oni-audio footer, oni-image footer, oni-tag footer,

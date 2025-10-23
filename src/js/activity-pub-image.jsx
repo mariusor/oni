@@ -140,7 +140,9 @@ export class ActivityPubImage extends ActivityPubObject {
 
         const name = renderHtmlText(this.it.getName());
         const alt = renderHtmlText(this.it.getSummary());
-        const needsFullSize = largest?.width > this.clientWidth || largest?.height > this.clientHeight;
+
+        const wider = largest?.width > largest?.height;
+        const needsFullSize = wider ? largest?.width > this.clientWidth : largest?.height > this.clientHeight;
 
         const altElement = html`
             <image-alt name=${name} alt=${alt} slot="alt"></image-alt>`;
@@ -164,8 +166,7 @@ export class ActivityPubImage extends ActivityPubObject {
                      srcSet=${sources ?? nothing} sizes=${sizes ?? nothing}/>
             </figure>
             ${this.renderTag()}
-            ${metadata !== nothing ? html`
-                <footer>${metadata}</footer>` : nothing}
+            ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
         `;
     }
 
