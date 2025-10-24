@@ -58,14 +58,14 @@ go.sum: go.mod
 $(PROJECT_NAME): bin/$(PROJECT_NAME)
 bin/$(PROJECT_NAME): go.sum $(ONI_BIN_SOURCES) $(GO_SOURCES) assets
 	$(BUILD) -o $@ ./cmd/oni
-ifneq ($(ENV),dev)
+ifneq (,$(findstring $(ENV), "prod qa"))
 	$(UPX) -q --mono --no-progress --best $@ || true
 endif
 
 $(PROJECT_NAME)ctl: bin/$(PROJECT_NAME)ctl
 bin/$(PROJECT_NAME)ctl: go.sum $(CTL_BIN_SOURCES) $(GO_SOURCES)
 	$(BUILD) -o $@ ./cmd/ctl
-ifneq ($(ENV),dev)
+ifneq (,$(findstring $(ENV), "prod qa"))
 	$(UPX) -q --mono --no-progress --best $@ || true
 endif
 
