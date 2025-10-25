@@ -18,6 +18,12 @@ export class ActivityPubVideo extends ActivityPubObject {
         figure {
             margin: auto;
         }
+        figcaption {
+            position: absolute;
+            padding: 1rem;
+            display: inline-block;
+            max-width: 30%;
+        }
         `, ActivityPubNote.styles];
 
     constructor() {
@@ -33,17 +39,15 @@ export class ActivityPubVideo extends ActivityPubObject {
         const metadata = this.renderMetadata();
         const src = getHref(this.it);
 
-        let altElement = nothing;
-        if (altHTML) {
-            altElement = html`<figcaption>${unsafeHTML(altHTML)}</figcaption>`;
-        }
+        const altElement = html`
+            <image-alt name=${name} alt=${alt} slot="alt"></image-alt>`;
         return html`
             <figure>
+                <figcaption>${altElement}</figcaption>
                 <video playsinline controls preload="metadata" 
                        title="${name ?? alt}" 
                        src=${src ?? nothing}
                 ></video>
-                ${altElement}
             </figure>
             ${this.renderTag()}
             ${metadata !== nothing ? html`<footer>${metadata}</footer>` : nothing}
