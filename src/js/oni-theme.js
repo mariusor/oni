@@ -317,8 +317,9 @@ function getAccentColor(colors, toColor) {
     if (accentColors.length > 0) {
         console.debug(`filtered accent colors`, accentColors);
         most = accentColors.toSorted(bySaturation).at(0);
+    } else {
+        most = modifyPerTheme(toColor).saturate(80).toHexString();
     }
-    most = modifyPerTheme(toColor);
     console.debug(`most readable to ${toColor} is ${most}: ${contrast(most, toColor)}`);
     return most;
 }
@@ -337,7 +338,7 @@ function modifyPerTheme(original) {
         }
     } while (contrast(original, color) < minContrast)
 
-    return color.toHexString();
+    return color;
 }
 
 function changeSaturation(origColor) {
