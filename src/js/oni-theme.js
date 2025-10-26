@@ -53,9 +53,6 @@ export class Palette {
         root.style.setProperty('--accent-color', this.accentColor);
         root.style.setProperty('--link-color', this.linkColor);
         root.style.setProperty('--link-visited-color', this.linkVisitedColor);
-        root.style.accentColor = this.accentColor;
-        root.style.backgroundColor = this.bgColor;
-        root.style.color = this.fgColor;
     }
 
     static fromStorage() {
@@ -130,16 +127,17 @@ export class Palette {
             palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
         }
 
+        const wantsDark = prefersDarkTheme();
         let paletteColors = [... new Set([...palette.imageColors, ...palette.iconColors])];
         if (paletteColors.length > 0) {
             palette.fgColor = getFgColor(paletteColors, palette.bgColor) || palette.fgColor;
             paletteColors = paletteColors.filter(color => color !== palette.fgColor);
-            palette.accentColor = getAccentColor(paletteColors, palette.bgColor) || palette.accentColor;
-            palette.linkColor = tc(palette.fgColor).mix(palette.accentColor, 80).toHexString();
-            if (palette.colorScheme === 'dark') {
-                palette.linkVisitedColor = tc(palette.linkColor).darken(10).toHexString();
+            palette.accentColor = getAccentColor(palette.bgColor) || palette.accentColor;
+            palette.linkColor = getLinkColor(paletteColors, palette.bgColor);
+            if (wantsDark || palette.colorScheme === 'dark') {
+                palette.linkVisitedColor = tc(palette.linkColor).mix(palette.accentColor, 30).lighten(20).toHexString();
             } else {
-                palette.linkVisitedColor = tc(palette.linkColor).lighten(10).toHexString();
+                palette.linkVisitedColor = tc(palette.linkColor).mix(palette.accentColor, 30).darken(20).toHexString();
             }
         }
 
@@ -266,11 +264,12 @@ function getFgColor(colors, toColor) {
         .filter(onContrastTo(toColor, 5, 19))
         .sort(byContrastTo(toColor));
 
+    const wantsDark = prefersDarkTheme();
     let most;
     if (fgColors.length > 0) {
         most = fgColors.at(0);
     } else {
-        if (prefersDarkTheme()) {
+        if (wantsDark) {
             most =  defaultFgColors[1];
         } else {
             most = defaultFgColors[0];
@@ -305,21 +304,25 @@ function getClosestColor(colors, color, onColor) {
     return most;
 }
 
-function getAccentColor(colors, toColor) {
+function getLinkColor(colors, toColor) {
     colors = Array.isArray(colors) ? colors : [colors];
 
-    let accentColors = colors
+    colors = colors
         .filter(onContrastTo(toColor, 2.8, 19))
         .sort(bySaturation)
         .sort(byContrastTo(toColor)).reverse();
 
     let most;
-    if (accentColors.length > 0) {
-        console.debug(`filtered accent colors`, accentColors);
-        most = accentColors.toSorted(bySaturation).at(0);
-    } else {
-        most = modifyPerTheme(toColor).saturate(80).toHexString();
+    if (colors.length > 0) {
+        console.debug(`filtered accent colors`, colors);
+        most = colors.toSorted(byDiff(toColor)).at(0);
     }
+    console.debug(`most readable to ${toColor} is ${most}: ${contrast(most, toColor)}`);
+    return most;
+}
+
+function getAccentColor(toColor) {
+    const most = accentFromBg(toColor).toHexString();
     console.debug(`most readable to ${toColor} is ${most}: ${contrast(most, toColor)}`);
     return most;
 }
@@ -327,10 +330,11 @@ function getAccentColor(colors, toColor) {
 const maxBgSaturation = 0.45;
 const minContrast = 4.8;
 
-function modifyPerTheme(original) {
+function accentFromBg(original) {
     let color = tc(original).clone();
     const wantsDark = prefersDarkTheme();
     do {
+        color = color.saturate(5);
         if (wantsDark) {
             color = color.lighten(10);
         } else {

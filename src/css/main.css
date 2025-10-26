@@ -6,8 +6,8 @@
     --fg-color: #EFF0F1;
     --link-color: #1E90FF; /* dodgerblue */
     --link-visited-color: #9370DB; /* mediumpurple */
-    --link-hover-color: oklch(from var(--link-color) calc(l - .2) c h);
-    --link-active-color: oklch(from var(--link-color) calc(l - .2) c h);
+    --link-hover-color: oklch(from var(--link-color) calc(l + .2) c h);
+    --link-active-color: oklch(from var(--link-color) calc(l + .2) c h);
     --link-visited-hover-color: oklch(from var(--link-visited-color) calc(l + .2) c h);
     --accent-color: var(--link-color);
     overscroll-behavior-y: none;
@@ -23,9 +23,9 @@
         --fg-color: #232627;
         --link-color: #0000CD; /* mediumblue */
         --link-visited-color: #663399; /* rebeccapurple */
-        --link-hover-color: oklch(from var(--link-color) calc(l + .2) c h);
-        --link-active-color: oklch(from var(--link-color) calc(l + .2) c h);
-        --link-visited-hover-color: oklch(from var(--link-visited-color) calc(l + .2) c h);
+        --link-hover-color: oklch(from var(--link-color) calc(l - .2) c h);
+        --link-active-color: oklch(from var(--link-color) calc(l - .2) c h);
+        --link-visited-hover-color: oklch(from var(--link-visited-color) calc(l - .2) c h);
         --accent-color: var(--link-color);
     }
 }

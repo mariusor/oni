@@ -125,16 +125,6 @@ export class ActivityPubObject extends LitElement {
         .replies *, .attachments * {
             font-size: .9rem;
         }
-        :root {
-            --link-hover-color: oklch(from var(--link-color) calc(l + .2) c h);
-            --link-active-color: oklch(from var(--link-color) calc(l + .2) c h);
-        }
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --link-hover-color: oklch(from var(--link-color) calc(l - .2) c h);
-                --link-active-color: oklch(from var(--link-color) calc(l - .2) c h);
-            }
-        }
         @media(max-width: 480px) {
             :host footer {
                 display: inline-block;
