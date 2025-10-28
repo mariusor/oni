@@ -47,8 +47,8 @@ type FullStorage interface {
 }
 
 type PasswordChanger interface {
-	PasswordSet(vocab.Item, []byte) error
-	PasswordCheck(vocab.Item, []byte) error
+	PasswordSet(vocab.IRI, []byte) error
+	PasswordCheck(vocab.IRI, []byte) error
 }
 
 type authModel struct {
@@ -75,7 +75,7 @@ func (o *oni) loadAccountFromPost(actor vocab.Actor, r *http.Request) error {
 
 	o.Logger.WithContext(lw.Ctx{"pass": mask.S(pw)}).Infof("Received")
 
-	return o.Storage.PasswordCheck(actor, []byte(pw))
+	return o.Storage.PasswordCheck(actor.GetLink(), []byte(pw))
 }
 
 func actorIRIFromRequest(r *http.Request) vocab.IRI {

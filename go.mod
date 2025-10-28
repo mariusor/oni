@@ -12,14 +12,14 @@ require (
 	github.com/alecthomas/kong v1.12.1
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.9
-	github.com/go-ap/activitypub v0.0.0-20251023124303-72d37526e637
-	github.com/go-ap/auth v0.0.0-20251023125002-c896906dd35f
-	github.com/go-ap/client v0.0.0-20251023124838-07369e5662e8
+	github.com/go-ap/activitypub v0.0.0-20251028130710-8bc6217f6c8d
+	github.com/go-ap/auth v0.0.0-20251028142656-76709b9096cb
+	github.com/go-ap/client v0.0.0-20251028142600-fee16b588e45
 	github.com/go-ap/errors v0.0.0-20250905102357-4480b47a00c4
-	github.com/go-ap/filters v0.0.0-20251023124807-74f4640efcf0
+	github.com/go-ap/filters v0.0.0-20251028142811-9b3305faa3cd
 	github.com/go-ap/jsonld v0.0.0-20250905102310-8480b0fe24d9
-	github.com/go-ap/processing v0.0.0-20251023125027-dc5f61f115e8
-	github.com/go-ap/storage-fs v0.0.0-20251023125219-942f85dca5b0
+	github.com/go-ap/processing v0.0.0-20251028142716-e33323290dae
+	github.com/go-ap/storage-fs v0.0.0-20251028142849-b10e4032d281
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
 	github.com/goburrow/cache v0.1.4
@@ -28,7 +28,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/openshift/osin v1.0.2-0.20220317075346-0f4d38c6e53f
-	github.com/sergeymakinen/go-ico v1.0.0-beta.0
+	github.com/sergeymakinen/go-ico v1.0.0
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
 	github.com/valyala/fastjson v1.6.4
@@ -39,8 +39,8 @@ require (
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/bits-and-blooms/bitset v1.24.1 // indirect
-	github.com/go-ap/cache v0.0.0-20251023124652-cea883170078 // indirect
+	github.com/bits-and-blooms/bitset v1.24.3 // indirect
+	github.com/go-ap/cache v0.0.0-20251028142135-e067d18ce6a1 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
@@ -59,5 +59,4 @@ require (
 	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

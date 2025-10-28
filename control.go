@@ -98,7 +98,7 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 		return nil, err
 	}
 
-	if err = c.Storage.PasswordSet(actor, []byte(pw)); err != nil {
+	if err = c.Storage.PasswordSet(actor.GetLink(), []byte(pw)); err != nil {
 		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to set password for actor")
 		return nil, err
 	} else {
