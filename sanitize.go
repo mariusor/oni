@@ -11,7 +11,7 @@ var (
 	svgRelatedAttrs = []string{"aria-hidden", "name", "href", "width", "height"}
 
 	extraAllowedTags  = []string{"style", "nav", "aside", "bandcamp-embed", "iframe"}
-	extraAllowedAttrs = []string{"class", "rel", "src", "url"}
+	extraAllowedAttrs = []string{"class", "rel", "src", "url", "style"}
 
 	defaultSanitizePolicy = func() *bluemonday.Policy {
 		p := bluemonday.UGCPolicy().
@@ -19,10 +19,6 @@ var (
 			AllowElements(append(svgRelatedTags, extraAllowedTags...)...).
 			AllowAttrs(append(svgRelatedAttrs, extraAllowedAttrs...)...).Globally()
 
-		//p.AllowStandardAttributes()
-		//p.AllowStandardURLs()
-		//p.AllowImages()
-		//p.AllowLists()
 		return p
 	}()
 )
