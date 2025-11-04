@@ -28,6 +28,7 @@ CTL_BIN_SOURCES := $(wildcard ./cmd/ctl/*.go)
 TAGS := $(ENV)
 
 export CGO_ENABLED=0
+export GOEXPERIMENT=greenteagc
 
 ifneq ($(ENV), dev)
 	LDFLAGS += -s -w -extldflags "-static"
