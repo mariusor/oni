@@ -13,13 +13,13 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.25.9
 	github.com/go-ap/activitypub v0.0.0-20251028130710-8bc6217f6c8d
-	github.com/go-ap/auth v0.0.0-20251028142656-76709b9096cb
+	github.com/go-ap/auth v0.0.0-20251107183414-fbe6d21a4056
 	github.com/go-ap/client v0.0.0-20251029092820-7694763217df
 	github.com/go-ap/errors v0.0.0-20250905102357-4480b47a00c4
-	github.com/go-ap/filters v0.0.0-20251028142811-9b3305faa3cd
+	github.com/go-ap/filters v0.0.0-20251107171832-f29304e3da0b
 	github.com/go-ap/jsonld v0.0.0-20250905102310-8480b0fe24d9
-	github.com/go-ap/processing v0.0.0-20251028142716-e33323290dae
-	github.com/go-ap/storage-fs v0.0.0-20251102162749-1b45fdcb2173
+	github.com/go-ap/processing v0.0.0-20251107183955-5157bcd24a77
+	github.com/go-ap/storage-fs v0.0.0-20251107184052-8f100554bbb5
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
 	github.com/goburrow/cache v0.1.4
@@ -32,7 +32,7 @@ require (
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
 	github.com/valyala/fastjson v1.6.4
-	golang.org/x/oauth2 v0.32.0
+	golang.org/x/oauth2 v0.33.0
 )
 
 require (
@@ -56,7 +56,7 @@ require (
 	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/image v0.32.0 // indirect
 	golang.org/x/net v0.46.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
 )
