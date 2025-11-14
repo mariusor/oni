@@ -33,6 +33,29 @@ type Control struct {
 	StoragePath string
 }
 
+func MkDirIfNotExists(p string) (err error, exists bool) {
+	p, err = filepath.Abs(p)
+	if err != nil {
+		return err, exists
+	}
+	fi, err := os.Stat(p)
+	if err != nil && os.IsNotExist(err) {
+		if err = os.MkdirAll(p, os.ModeDir|os.ModePerm|0700); err != nil {
+			return err, exists
+		}
+		fi, err = os.Stat(p)
+	} else {
+		exists = fi != nil
+	}
+	if err != nil {
+		return err, exists
+	}
+	if !fi.IsDir() {
+		return fmt.Errorf("path exists, and is not a folder %s", p), true
+	}
+	return nil, exists
+}
+
 func (c *Control) Client(actor vocab.Actor, tr http.RoundTripper, lctx lw.Ctx) *client.C {
 	lctx["log"] = "client"
 	st := c.Storage

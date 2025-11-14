@@ -2,18 +2,21 @@ package oni
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/oni/internal/xdg"
+	"git.sr.ht/~mariusor/storage-all"
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
-	storage "github.com/go-ap/storage-fs"
 )
 
 var (
@@ -50,10 +53,6 @@ func Oni(initFns ...optionFn) *oni {
 			o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to open storage")
 			return o
 		}
-	}
-
-	if len(o.a) == 0 {
-		o.Logger.Warnf("Storage does not contain any actors.")
 	}
 
 	localURLs := make(vocab.IRIs, 0, len(o.a))
@@ -130,20 +129,25 @@ func ListenOn(listen string) optionFn {
 
 func emptyLogFn(_ string, _ ...any) {}
 
-func WithStoragePath(st string) optionFn {
-	conf := storage.Config{Path: st, UseIndex: false}
+var ValidStorageTypes = []string{
+	string(storage.FS), string(storage.BoltDB), string(storage.Badger), string(storage.Sqlite),
+}
 
+func ParseStorageDSN(s string) (storage.Type, string) {
+	r := regexp.MustCompile(fmt.Sprintf(`(%s):\/\/(.+)`, strings.Join(ValidStorageTypes, "|")))
+	found := r.FindAllSubmatch([]byte(s), -1)
+	if len(found) == 0 {
+		return storage.Default, s
+	}
+	sto := found[0]
+	if len(sto) == 1 {
+		return storage.Default, string(sto[1])
+	}
+	return storage.Type(sto[1]), string(sto[2])
+}
+
+func WithStorage(st FullStorage) optionFn {
 	return func(o *oni) {
-		o.StoragePath = st
-		if o.Logger != nil {
-			conf.Logger = o.Logger
-		}
-		o.Logger.WithContext(lw.Ctx{"path": st}).Debugf("Using storage")
-		st, err := storage.New(conf)
-		if err != nil {
-			o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to initialize storage")
-			return
-		}
 		o.Storage = st
 	}
 }

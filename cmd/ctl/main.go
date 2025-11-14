@@ -8,17 +8,18 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"slices"
 	"strings"
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/oni"
 	"git.sr.ht/~mariusor/oni/internal/xdg"
+	"git.sr.ht/~mariusor/storage-all"
 	"github.com/alecthomas/kong"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
-	storage "github.com/go-ap/storage-fs"
 )
 
 type Control struct {
@@ -28,7 +29,7 @@ type Control struct {
 }
 
 var CLI struct {
-	Path        string      `default:"${default_path}" help:"Path for the ActivityPub storage"`
+	Path        string      `default:"${default_path}" help:"Storage path (or DSN) for the ActivityPub storage. DSN can have the format type:///path/to/storage."`
 	Verbose     bool        `default:"false" help:"Show verbose log output"`
 	OAuth2      OAuth2      `cmd:"" name:"oauth" description:"OAuth2 client and access token helper"`
 	Actor       Actor       `cmd:"" description:"Actor helper"`
@@ -395,7 +396,7 @@ func tryCreateCollection(ctl *Control, colIRI vocab.IRI) error {
 	return nil
 }
 
-func setupCtl(storagePath string, verbose bool) (*Control, error) {
+func setupCtl(storagePath string, typ storage.Type, verbose bool) (*Control, error) {
 	fields := lw.Ctx{"path": storagePath}
 
 	ctl := new(Control)
@@ -406,13 +407,23 @@ func setupCtl(storagePath string, verbose bool) (*Control, error) {
 	ll = ll.WithContext(fields)
 	ctl.Control.Logger = ll
 
-	if err := mkDirIfNotExists(storagePath); err != nil {
+	initFns := []storage.InitFn{
+		storage.WithPath(storagePath),
+		storage.WithType(typ),
+		storage.WithLogger(ctl.Logger),
+		storage.WithCache(true),
+	}
+	if err, exists := oni.MkDirIfNotExists(storagePath); err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to create path")
 		return nil, err
+	} else if !exists {
+		if err := storage.Bootstrap(initFns...); err != nil {
+			ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to bootstrap storage")
+			os.Exit(1)
+		}
 	}
 
-	conf := storage.Config{CacheEnable: true, Path: storagePath, Logger: ctl.Logger}
-	st, err := storage.New(conf)
+	st, err := storage.New(initFns...)
 	if err != nil {
 		ctl.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to initialize storage")
 		return nil, err
@@ -420,7 +431,9 @@ func setupCtl(storagePath string, verbose bool) (*Control, error) {
 
 	ctl.Storage = st
 	if opener, ok := ctl.Storage.(interface{ Open() error }); ok {
-		err = opener.Open()
+		if err = opener.Open(); err != nil {
+			return nil, err
+		}
 	}
 	return ctl, nil
 }
@@ -453,10 +466,18 @@ func main() {
 		kong.ConfigureHelp(kong.HelpOptions{Compact: true, Summary: true}),
 	)
 
-	ctl, err := setupCtl(CLI.Path, CLI.Verbose)
+	storageType := storage.Default
+	if typ, path := oni.ParseStorageDSN(CLI.Path); slices.Contains(oni.ValidStorageTypes, string(typ)) {
+		storageType = typ
+		CLI.Path = path
+	}
+	ctl, err := setupCtl(CLI.Path, storageType, CLI.Verbose)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
 		os.Exit(1)
+	}
+	if closer, okc := ctl.Storage.(interface{ Close() }); okc {
+		defer closer.Close()
 	}
 
 	if err = ctx.Run(ctl); err != nil {

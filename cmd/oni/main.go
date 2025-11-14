@@ -2,57 +2,20 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"io/fs"
 	"os"
-	"path/filepath"
 	"runtime/debug"
-	"strings"
+	"slices"
 
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/oni"
 	"git.sr.ht/~mariusor/oni/internal/xdg"
+	"git.sr.ht/~mariusor/storage-all"
 	"github.com/alecthomas/kong"
-	vocab "github.com/go-ap/activitypub"
 )
-
-func loadAccountsFromStorage(base string) (vocab.ItemCollection, error) {
-	urls := make(vocab.ItemCollection, 0)
-	err := filepath.WalkDir(base, func(file string, d fs.DirEntry, err error) error {
-		if maybeActor, ok := maybeLoadServiceActor(CLI.Path, file); ok {
-			urls = append(urls, maybeActor)
-		}
-		return nil
-	})
-	return urls, err
-}
-
-func maybeLoadServiceActor(base, path string) (*vocab.Actor, bool) {
-	if base[len(base)-1] != '/' {
-		base = base + "/"
-	}
-	pieces := strings.Split(strings.Replace(path, base, "", 1), string(filepath.Separator))
-	if len(pieces) == 2 && pieces[1] == "__raw" {
-		raw, err := os.ReadFile(path)
-		if err != nil {
-			return nil, false
-		}
-		it, err := vocab.UnmarshalJSON(raw)
-		if err != nil || vocab.IsNil(it) {
-			return nil, false
-		}
-		act, err := vocab.ToActor(it)
-		if err != nil {
-			return nil, false
-		}
-		return act, true
-	}
-	return nil, false
-}
 
 var CLI struct {
 	Listen  string `default:"127.0.0.1:60123" short:"l" help:"Listen socket"`
-	Path    string `default:"${default_path}" help:"Path for ActivityPub storage"`
+	Path    string `default:"${default_path}" help:"Storage path (or DSN) for the ActivityPub storage. DSN can have the format type:///path/to/storage."`
 	URL     string `default:"${default_url}" help:"Default URL for the instance actor"`
 	Pw      string `default:"${default_pw}" help:"Default password to use for the instance actor"`
 	Verbose bool   `default:"false" help:"Show verbose log output"`
@@ -97,48 +60,42 @@ func main() {
 
 	ll := lw.Dev(lw.SetLevel(lvl))
 
-	err := mkDirIfNotExists(CLI.Path)
+	storageType := storage.FS
+	if typ, path := oni.ParseStorageDSN(CLI.Path); slices.Contains(oni.ValidStorageTypes, string(typ)) {
+		storageType = typ
+		CLI.Path = path
+	}
+	ll.WithContext(lw.Ctx{"path": CLI.Path, "typ": storageType}).Debugf("Using storage")
+
+	initFns := []storage.InitFn{storage.WithPath(CLI.Path), storage.WithType(storageType), storage.UseIndex(false), storage.WithLogger(ll)}
+	err, exists := oni.MkDirIfNotExists(CLI.Path)
 	if err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to create path")
 		os.Exit(1)
+	} else if !exists {
+		if err := storage.Bootstrap(initFns...); err != nil {
+			ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to bootstrap storage")
+			os.Exit(1)
+		}
 	}
 
-	urls, err := loadAccountsFromStorage(CLI.Path)
+	st, err := storage.New(initFns...)
 	if err != nil {
-		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to load accounts from storage")
+		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to initialize storage")
 		os.Exit(1)
+	}
+	if closer, ok := st.(interface{ Close() }); ok {
+		defer closer.Close()
 	}
 
 	err = oni.Oni(
 		oni.WithPassword(CLI.Pw),
 		oni.WithLogger(ll),
-		oni.WithStoragePath(CLI.Path),
-		oni.LoadActor(urls...),
+		oni.WithStorage(st),
 		oni.ListenOn(CLI.Listen),
 	).Run(context.Background())
 	if err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to start server")
 		os.Exit(1)
 	}
-}
-
-func mkDirIfNotExists(p string) (err error) {
-	p, err = filepath.Abs(p)
-	if err != nil {
-		return err
-	}
-	fi, err := os.Stat(p)
-	if err != nil && os.IsNotExist(err) {
-		if err = os.MkdirAll(p, os.ModeDir|os.ModePerm|0700); err != nil {
-			return err
-		}
-		fi, err = os.Stat(p)
-	}
-	if err != nil {
-		return err
-	}
-	if !fi.IsDir() {
-		return fmt.Errorf("path exists, and is not a folder %s", p)
-	}
-	return nil
 }
