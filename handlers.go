@@ -772,14 +772,18 @@ func (o *oni) loadBlockedActors(of vocab.Item) vocab.IRIs {
 	return blocked
 }
 
-func rootIRI(r *http.Request) vocab.IRI {
+func requestRootIRI(r *http.Request) vocab.IRI {
 	return vocab.IRI("https://" + r.Host)
+}
+
+func uriRootIRI(u *url.URL) vocab.IRI {
+	return vocab.IRI(u.Scheme + "://" + u.Host)
 }
 
 func (o *oni) MaybeCreateRootActor(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if actor := o.oniActor(r); actor.Equals(auth.AnonymousActor) {
-			if actor = CreateBlankActor(o, rootIRI(r)); !actor.Equals(auth.AnonymousActor) {
+			if actor = CreateBlankActor(o, requestRootIRI(r)); !actor.Equals(auth.AnonymousActor) {
 				o.mu.Lock()
 				o.a = append(o.a, actor)
 				o.mu.Unlock()

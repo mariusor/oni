@@ -376,16 +376,17 @@ func (c *Control) CreateOAuth2ClientIfMissing(i vocab.IRI, pw string) error {
 		pw = DefaultOAuth2ClientPw
 	}
 
-	cl, err := c.Storage.GetClient(u.Host)
+	id := string(uriRootIRI(u))
+	cl, err := c.Storage.GetClient(id)
 	if err == nil {
 		return nil
 	}
 	uris := append(
-		[]string{u.String(), DefaultOniAppRedirectURL, DefaultBOXAppRedirectURL, processing.OAuthOOBRedirectURN},
+		[]string{id, DefaultOniAppRedirectURL, DefaultBOXAppRedirectURL, processing.OAuthOOBRedirectURN},
 		strings.Split(ExtraRedirectURL, "\n")...,
 	)
 	cl = &osin.DefaultClient{
-		Id:          u.Host,
+		Id:          id,
 		Secret:      pw,
 		RedirectUri: strings.Join(uris, "\n"),
 		UserData:    i,
