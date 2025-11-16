@@ -217,7 +217,7 @@ func isObjectProp(prop string) bool {
 	return slices.Contains(objectProps, prop)
 }
 
-func loadItemFromStorage(s processing.ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.Item, error) {
+func loadItemFromStorage(s ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.Item, error) {
 	var isObjProperty bool
 	var prop string
 
@@ -773,7 +773,7 @@ func (o *oni) loadBlockedActors(of vocab.Item) vocab.IRIs {
 }
 
 func requestRootIRI(r *http.Request) vocab.IRI {
-	return vocab.IRI("https://" + r.Host)
+	return vocab.IRI("https://" + r.Host + "/")
 }
 
 func uriRootIRI(u *url.URL) vocab.IRI {
