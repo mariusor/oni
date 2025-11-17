@@ -213,10 +213,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 	o.redirectOrOutput(resp, w, r)
 }
 
-var (
-	errUnauthorized = errors.Unauthorizedf("Invalid username or password")
-	errNotFound     = filters.ErrNotFound("actor not found")
-)
+var errUnauthorized = errors.Unauthorizedf("Invalid username or password")
 
 func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 	a, err := loadBaseActor(o, r)

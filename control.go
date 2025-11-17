@@ -21,7 +21,6 @@ import (
 	"github.com/go-ap/client"
 	"github.com/go-ap/client/s2s"
 	"github.com/go-ap/errors"
-	"github.com/go-ap/filters"
 	"github.com/go-ap/processing"
 	"github.com/openshift/osin"
 )
@@ -175,14 +174,13 @@ func (c *Control) GenAccessToken(clientID, actorIdentifier string, dat interface
 	}
 
 	now := time.Now().UTC()
-	var f processing.Filterable
-	if u, err := url.Parse(actorIdentifier); err == nil {
-		u.Scheme = "https"
-		f = vocab.IRI(u.String())
-	} else {
-		f = filters.FiltersNew(filters.Name(actorIdentifier), filters.Type(vocab.ActorTypes...))
+
+	u, err := url.Parse(actorIdentifier)
+	if err != nil {
+		return "", err
 	}
-	list, err := c.Storage.Load(f.GetLink())
+	u.Scheme = "https"
+	list, err := c.Storage.Load(vocab.IRI(u.String()))
 	if err != nil {
 		return "", err
 	}
