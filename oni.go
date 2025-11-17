@@ -190,7 +190,6 @@ func (o *oni) Run(c context.Context) error {
 		"version": Version,
 		"debug":   InDebugMode.Load(),
 		"socket":  o.Listen,
-		"hosts":   iris(o.a...),
 	}
 	if sockType != "" {
 		logCtx["socket"] = o.Listen + "[" + sockType + "]"
