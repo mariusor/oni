@@ -902,7 +902,15 @@ func (o *oni) oniActor(r *http.Request) vocab.Actor {
 			return a
 		}
 	}
-	return auth.AnonymousActor
+	result := auth.AnonymousActor
+	maybeActor, err := o.Storage.Load(reqIRI)
+	if err == nil {
+		if actor, err := vocab.ToActor(maybeActor); err == nil && !auth.AnonymousActor.Equals(actor) {
+			result = *actor
+			o.a = append(o.a, result)
+		}
+	}
+	return result
 }
 
 var createTypes = vocab.ActivityVocabularyTypes{vocab.CreateType, vocab.UpdateType}
