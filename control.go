@@ -330,7 +330,7 @@ func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
 		processing.WithIDGenerator(GenerateID),
 		processing.WithLogger(l.WithContext(lw.Ctx{"log": "processing"})),
 		processing.WithIRI(actor.ID), processing.WithClient(cl), processing.WithStorage(st),
-		processing.WithLocalIRIChecker(IRIsContain(vocab.IRIs{actor.ID})),
+		processing.WithLocalIRIChecker(c.IRIHasLocalParent()),
 	)
 
 	followers := vocab.Followers.IRI(actor)

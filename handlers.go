@@ -1005,9 +1005,20 @@ func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
 	return nil
 }
 
-func IRIsContain(iris vocab.IRIs) func(i vocab.IRI) bool {
+func (c *Control) IRIHasLocalParent() func(i vocab.IRI) bool {
 	return func(i vocab.IRI) bool {
-		return iris.Contains(i)
+		u, err := i.URL()
+		if err != nil {
+			return false
+		}
+		u.Path = "/"
+		u.RawQuery = ""
+		u.RawFragment = ""
+		i = vocab.IRI(u.String())
+		if _, err := c.Storage.Load(i); err == nil {
+			return true
+		}
+		return false
 	}
 }
 
@@ -1071,8 +1082,8 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		processor := processing.New(
 			processing.Async,
 			processing.WithLogger(o.Logger.WithContext(lctx, lw.Ctx{"log": "processing"})),
-			processing.WithIRI(baseIRIs...), processing.WithClient(cl), processing.WithStorage(o.Storage),
-			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(IRIsContain(baseIRIs)),
+			processing.WithClient(cl), processing.WithStorage(o.Storage),
+			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(o.IRIHasLocalParent()),
 		)
 
 		body, err := io.ReadAll(r.Body)
