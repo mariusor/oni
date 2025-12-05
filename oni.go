@@ -214,6 +214,7 @@ func (o *oni) Run(c context.Context) error {
 				ll.Infof("Stopped")
 			}
 		}
+		_ = xdg.CleanPid(AppName)
 		cancelFn()
 	}
 	defer stopFn(ctx)

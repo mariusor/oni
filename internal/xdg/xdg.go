@@ -39,6 +39,14 @@ func PidPath(appName string) string {
 	return filepath.Join(RuntimePath(), strings.ToLower(appName)+".pid")
 }
 
+func CleanPid(appName string) error {
+	appPid := PidPath(appName)
+	if _, err := os.Stat(appPid); err != nil {
+		return nil
+	}
+	return os.RemoveAll(appPid)
+}
+
 func WritePid(appName string) error {
 	pid := os.Getpid()
 	raw := make([]byte, 0)
