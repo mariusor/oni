@@ -19,6 +19,9 @@ var (
 		IsDevelopment:             false,
 		DisableHTTPErrorRendering: true,
 		Funcs: []template.FuncMap{{
+			"CurrentVersion": func() template.HTMLAttr {
+				return template.HTMLAttr(strings.TrimSuffix(Version, "-git"))
+			},
 			"HTMLAttr": func(n vocab.NaturalLanguageValues) template.HTMLAttr {
 				return template.HTMLAttr(n.First())
 			},

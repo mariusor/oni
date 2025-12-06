@@ -21,7 +21,7 @@ import (
 
 var (
 	AppName    = "oni"
-	Version    = "(devel)"
+	Version    = "HEAD"
 	ProjectURL = "https://git.sr.ht/~mariusor/oni"
 	DefaultURL = "https://oni.local"
 )
