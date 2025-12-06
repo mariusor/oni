@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"path/filepath"
 	"runtime/debug"
 	"slices"
 	"strings"
@@ -484,25 +483,4 @@ func main() {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
 		os.Exit(1)
 	}
-}
-
-func mkDirIfNotExists(p string) (err error) {
-	p, err = filepath.Abs(p)
-	if err != nil {
-		return err
-	}
-	fi, err := os.Stat(p)
-	if err != nil && os.IsNotExist(err) {
-		if err = os.MkdirAll(p, os.ModeDir|os.ModePerm|0700); err != nil {
-			return err
-		}
-		fi, err = os.Stat(p)
-	}
-	if err != nil {
-		return err
-	}
-	if !fi.IsDir() {
-		return fmt.Errorf("path exists, and is not a folder %s", p)
-	}
-	return nil
 }

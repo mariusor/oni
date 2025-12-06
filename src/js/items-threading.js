@@ -3,7 +3,7 @@
  * The changes we've done are to accommodate the differences between ActivityPub threading and mail threading.
  *  1. We dispense with the inReplyTo/References complexities
  *  2. We use the object's ID instead of subject
- *  3. We need to take into account that a Node's can reference multiple parents. TODO(marius)
+ *  3. We take into account that a Node can reference multiple parents.
  */
 
 export class Node {
