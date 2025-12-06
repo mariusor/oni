@@ -177,8 +177,11 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 			m := login{title: "Login"}
 			m.backURL = backURL(r)
 
-			clientIRI := vocab.IRI(fmt.Sprintf("https://%s", ar.Client.GetId()))
-			it, err := o.Storage.Load(clientIRI)
+			clientIRI := ar.Client.GetId()
+			if _, err := url.Parse(clientIRI); err != nil {
+				clientIRI = fmt.Sprintf("https://%s", clientIRI)
+			}
+			it, err := o.Storage.Load(vocab.IRI(clientIRI))
 			if err != nil {
 				o.Logger.WithContext(lw.Ctx{"err": err, "iri": clientIRI}).Errorf("Invalid client")
 				errors.HandleError(errors.Unauthorizedf("Invalid client")).ServeHTTP(w, r)
