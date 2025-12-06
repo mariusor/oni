@@ -93,8 +93,10 @@ type authModel struct {
 }
 
 func AuthorizeURL(actor vocab.Actor, state string) string {
-	u, _ := actor.ID.URL()
-	config := oauth2.Config{ClientID: u.Host, RedirectURL: actor.ID.String()}
+	clientIRI := actor.ID
+	u, _ := clientIRI.URL()
+	u.Path = ""
+	config := oauth2.Config{ClientID: u.String(), RedirectURL: actor.ID.String()}
 	if !vocab.IsNil(actor) && actor.Endpoints != nil {
 		if actor.Endpoints.OauthTokenEndpoint != nil {
 			config.Endpoint.TokenURL = actor.Endpoints.OauthTokenEndpoint.GetLink().String()

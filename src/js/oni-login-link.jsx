@@ -113,7 +113,7 @@ export class OniLoginLink extends LitElement {
     async accessToken(code, state, pw) {
         const tokenURL = this.tokenURL;
 
-        const client = window.location.hostname;
+        const client = `${window.location.protocol}//${window.location.host}`;
         const l = new URLSearchParams({
             grant_type: 'client_credentials',
             code: code,
@@ -121,14 +121,14 @@ export class OniLoginLink extends LitElement {
             client_id: client,
         });
 
-        const basicAuth = btoa(`${client}:${pw}`);
+        const basicAuth = `${encodeURIComponent(client)}:${pw}`;
         const req = {
             method: 'POST',
             body: l.toString(),
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/x-www-form-urlencoded",
-                Authorization: `Basic ${basicAuth}`
+                Authorization: `Basic ${btoa(basicAuth)}`
             }
         };
 
