@@ -648,7 +648,7 @@ func (o *oni) AddActor(p *vocab.Person, pw []byte, author vocab.Actor) (*vocab.P
 	return p, o.Storage.PasswordSet(p.GetLink(), pw)
 }
 
-func HandleOauthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.Request) {
+func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			o.Error(errors.MethodNotAllowedf("HTTP method not allowed")).ServeHTTP(w, r)

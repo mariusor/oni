@@ -152,12 +152,16 @@ func WithStorage(st FullStorage) optionFn {
 	}
 }
 
-func iris(list ...vocab.Actor) vocab.IRIs {
-	urls := make(vocab.ItemCollection, 0, len(list))
-	for _, a := range list {
-		urls = append(urls, a)
+func (o *oni) Pause() error {
+	if InMaintenanceMode.Load() {
+		// restart everything
+		o.Storage.Close()
+	} else {
+		if storageWithOpen, ok := o.Storage.(interface{ Open() error }); ok {
+			return storageWithOpen.Open()
+		}
 	}
-	return urls.IRIs()
+	return nil
 }
 
 // Run is the wrapper for starting the web-server and handling signals
@@ -227,8 +231,12 @@ func (o *oni) Run(c context.Context) error {
 		},
 		syscall.SIGUSR1: func(_ chan<- error) {
 			InMaintenanceMode.Store(!InMaintenanceMode.Load())
+			logFn := o.Logger.WithContext(lw.Ctx{"maintenance": InMaintenanceMode.Load()}).Debugf
+			if err := o.Pause(); err != nil {
+				logFn = o.Logger.WithContext(lw.Ctx{"maintenance": InMaintenanceMode.Load(), "err": err.Error()}).Warnf
+			}
 			if o.Logger != nil {
-				o.Logger.WithContext(lw.Ctx{"maintenance": InMaintenanceMode.Load()}).Debugf("SIGUSR1 received")
+				logFn("SIGUSR1 received")
 			}
 		},
 		syscall.SIGUSR2: func(_ chan<- error) {

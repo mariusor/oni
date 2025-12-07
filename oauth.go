@@ -82,6 +82,7 @@ type CollectionStore interface {
 	// RemoveFrom removes "it" item from "col" collection
 	RemoveFrom(vocab.IRI, ...vocab.Item) error
 }
+
 type PasswordChanger interface {
 	PasswordSet(vocab.IRI, []byte) error
 	PasswordCheck(vocab.IRI, []byte) error

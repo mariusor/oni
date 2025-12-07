@@ -10,6 +10,7 @@ import (
 	"runtime/debug"
 	"slices"
 	"strings"
+	"syscall"
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
@@ -20,6 +21,7 @@ import (
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
+	"github.com/openshift/osin"
 	"golang.org/x/term"
 )
 
@@ -29,14 +31,29 @@ type Control struct {
 	Service vocab.Actor
 }
 
+func (c *Control) Close() {
+	if _, ok := c.Storage.(interface{ Open() error }); ok {
+		_ = c.SendSignal(syscall.SIGUSR1)
+	}
+	c.Storage.Close()
+}
+
+func (c *Control) Open() error {
+	if opener, ok := c.Storage.(interface{ Open() error }); ok {
+		_ = c.SendSignal(syscall.SIGUSR1)
+		return opener.Open()
+	}
+	return nil
+}
+
 var CLI struct {
 	Path        string      `default:"${default_path}" help:"Storage path (or DSN) for the ActivityPub storage. DSN can have the format type:///path/to/storage."`
 	Verbose     bool        `default:"false" help:"Show verbose log output"`
 	OAuth2      OAuth2      `cmd:"" name:"oauth" description:"OAuth2 client and access token helper"`
 	Actor       Actor       `cmd:"" description:"Actor helper"`
 	Block       Block       `cmd:"" description:"Block instances or actors"`
-	Maintenance Maintenance `cmd:"" help:"Toggle maintenance mode for the running ${name} server."`
 	Debug       Debug       `cmd:"" help:"Toggle debug mode for the running ${name} server."`
+	Maintenance Maintenance `cmd:"" help:"Toggle maintenance mode for the running ${name} server."`
 	Reload      Reload      `cmd:"" help:"Reload the running ${name} server configuration"`
 	Stop        Stop        `cmd:"" help:"Stops the running ${name} server configuration"`
 }
@@ -317,7 +334,7 @@ func (c ChangePassword) Run(ctl *Control) error {
 	if err != nil {
 		return err
 	}
-	pw, err := loadPwFromStdin(true, fmt.Sprintf("%s's", vocab.NameOf(actor)))
+	pw, err := loadPwFromStdin(true, fmt.Sprintf("%s's", vocab.PreferredNameOf(actor)))
 	if err != nil {
 		return err
 	}
@@ -325,11 +342,19 @@ func (c ChangePassword) Run(ctl *Control) error {
 		return errors.Errorf("empty password")
 	}
 
-	pwManager, ok := ctl.Storage.(interface{ PasswordSet(vocab.IRI, []byte) error })
-	if !ok {
-		return errors.Errorf("unable to save password for current storage %T", ctl.Storage)
+	if client, err := ctl.Storage.GetClient(string(c.IRI)); err == nil {
+		toUpdate := osin.DefaultClient{
+			Id:          client.GetId(),
+			Secret:      string(pw),
+			RedirectUri: client.GetRedirectUri(),
+			UserData:    client.GetUserData(),
+		}
+		if err := ctl.Storage.UpdateClient(&toUpdate); err != nil {
+			return err
+		}
 	}
-	return pwManager.PasswordSet(c.IRI, pw)
+
+	return ctl.Storage.PasswordSet(c.IRI, pw)
 }
 
 type RotateKey struct {
@@ -475,11 +500,6 @@ func setupCtl(storagePath string, typ storage.Type, verbose bool) (*Control, err
 	}
 
 	ctl.Storage = st
-	if opener, ok := ctl.Storage.(interface{ Open() error }); ok {
-		if err = opener.Open(); err != nil {
-			return nil, err
-		}
-	}
 	return ctl, nil
 }
 
@@ -512,18 +532,22 @@ func main() {
 	)
 
 	storageType := storage.Default
-	if typ, path := oni.ParseStorageDSN(CLI.Path); slices.Contains(oni.ValidStorageTypes, string(typ)) {
+	typ, path := oni.ParseStorageDSN(CLI.Path)
+	if slices.Contains(oni.ValidStorageTypes, string(typ)) {
 		storageType = typ
 		CLI.Path = path
 	}
+
 	ctl, err := setupCtl(CLI.Path, storageType, CLI.Verbose)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
 		os.Exit(1)
 	}
-	if closer, okc := ctl.Storage.(interface{ Close() }); okc {
-		defer closer.Close()
+	if err = ctl.Open(); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
+		os.Exit(1)
 	}
+	defer ctl.Close()
 
 	if err = ctx.Run(ctl); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
