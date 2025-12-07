@@ -10,9 +10,9 @@ require (
 	git.sr.ht/~mariusor/ssm v0.0.0-20250920150353-cc21fa885fda
 	git.sr.ht/~mariusor/storage-all v0.0.0-20251206143125-f0d54042bca3
 	git.sr.ht/~mariusor/wrapper v0.0.0-20250504120759-5fa47ac25e08
-	github.com/alecthomas/kong v1.12.1
+	github.com/alecthomas/kong v1.13.0
 	github.com/elnormous/contenttype v1.0.4
-	github.com/evanw/esbuild v0.25.9
+	github.com/evanw/esbuild v0.27.1
 	github.com/go-ap/activitypub v0.0.0-20251124111637-be8249f2f382
 	github.com/go-ap/auth v0.0.0-20251124134534-2bd4baf49172
 	github.com/go-ap/client v0.0.0-20251124134453-e43d584b3ea0
@@ -33,6 +33,7 @@ require (
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
 	github.com/valyala/fastjson v1.6.4
 	golang.org/x/oauth2 v0.33.0
+	golang.org/x/term v0.37.0
 )
 
 require (

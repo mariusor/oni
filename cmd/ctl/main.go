@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -19,6 +20,7 @@ import (
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
+	"golang.org/x/term"
 )
 
 type Control struct {
@@ -156,6 +158,7 @@ type Actor struct {
 	Move           Move           `cmd:"" description:"Move an existing actor to a new URL"`
 	FixCollections FixCollections `cmd:"" description:"Fix a root actor's collections"`
 	RotateKey      RotateKey      `cmd:"" description:"Rotate the public/private key pair for an actor"`
+	ChangePassword ChangePassword `cmd:"" description:"Change the password for the actor"`
 }
 
 type AddActor struct {
@@ -284,6 +287,49 @@ func (m Move) Run(ctl *Control) error {
 		return errors.Annotatef(err, "unable to move actor from %s to %s", from, to)
 	}
 	return nil
+}
+
+type ChangePassword struct {
+	IRI vocab.IRI `arg:"" optional:"" name:"for" help:"The actor IRI to change the password for."`
+}
+
+func loadPwFromStdin(confirm bool, prompt string) ([]byte, error) {
+	fmt.Printf("%s pw: ", prompt)
+	pw1, _ := term.ReadPassword(0)
+	fmt.Println()
+	if confirm {
+		fmt.Printf("pw again: ")
+		pw2, _ := term.ReadPassword(0)
+		fmt.Println()
+		if !bytes.Equal(pw1, pw2) {
+			return nil, errors.Errorf("Passwords do not match")
+		}
+	}
+	return pw1, nil
+}
+
+func (c ChangePassword) Run(ctl *Control) error {
+	actors, err := ctl.Storage.Load(c.IRI)
+	if err != nil {
+		return err
+	}
+	actor, err := vocab.ToActor(actors)
+	if err != nil {
+		return err
+	}
+	pw, err := loadPwFromStdin(true, fmt.Sprintf("%s's", vocab.NameOf(actor)))
+	if err != nil {
+		return err
+	}
+	if pw == nil {
+		return errors.Errorf("empty password")
+	}
+
+	pwManager, ok := ctl.Storage.(interface{ PasswordSet(vocab.IRI, []byte) error })
+	if !ok {
+		return errors.Errorf("unable to save password for current storage %T", ctl.Storage)
+	}
+	return pwManager.PasswordSet(c.IRI, pw)
 }
 
 type RotateKey struct {
