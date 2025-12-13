@@ -16,6 +16,7 @@ tasks:
   - setup: |
       cd oni && make download && go mod vendor
   - build: |
+      test ${BUILD_SUBMITTER} != "git.sr.ht" && complete-build
       cd oni
       make clean oni
   - tests: |
@@ -25,9 +26,21 @@ tasks:
       set -a +x
       cd oni
       make coverage
+  - push_to_github: |
+      test "${BUILD_SUBMITTER}" != "git.sr.ht" && complete-build
+      set -a +x
+      ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
+      cd oni
+      git remote add hub git@github.com:mariusor/oni
+      git push hub --force --all
   - images: |
+      test ${BUILD_SUBMITTER} != "git.sr.ht" && complete-build
       set -a +x
       source ~/.buildah.env
+
+      cd oni || exit
+      make download
 
       _user=$(id -un)
 
@@ -39,31 +52,21 @@ tasks:
       podman login -u="${BUILDAH_USER}" -p="${BUILDAH_SECRET}" quay.io
 
       set --
-      cd oni || exit
 
       _sha=$(git rev-parse --short HEAD)
       _branch=$(git branch --points-at=${_sha} | tail -n1 | tr -d '* ')
       _version=$(printf "%s-%s" "${_branch}" "${_sha}")
 
-      make VERSION=${_version} -C images cert builder
-
       _push() {
         make -C images ENV=dev VERSION="${_version}" push
+
         if [ "${_branch}" = "master" ]; then
             make -C images ENV=qa VERSION="${_version}" push
         fi
 
         _tag=$(git describe --long --tags || true)
         if [ -n "${_tag}" ]; then
-            make -C images ENV=prod VERSION="${_tag}" push
+          make -C images ENV=prod VERSION="${_tag}" push
         fi
       }
       _push
-  - push_to_github: |
-      test "${BUILD_SUBMITTER}" != "git.sr.ht" && complete-build
-      set -a +x
-      ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-
-      cd oni
-      git remote add hub git@github.com:mariusor/oni
-      git push hub --force --all
