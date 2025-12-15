@@ -3,12 +3,13 @@ package oni
 import (
 	"bytes"
 	"crypto"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
-	"math/rand"
+	mrand "math/rand/v2"
 	"net/http"
 	"net/url"
 
@@ -317,7 +318,7 @@ func (o *oni) redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http
 }
 
 // DefaultOAuth2ClientPw is the default password used by the main actor
-var DefaultOAuth2ClientPw = base64.RawStdEncoding.EncodeToString([]byte(fmt.Sprintf("%2x", rand.Int63())))
+var DefaultOAuth2ClientPw = rand.Text()
 
 var ExtraRedirectURL = ""
 
@@ -333,8 +334,8 @@ const (
 )
 
 var authKey = func() []byte {
-	v1 := rand.Int()
-	v2 := rand.Int()
+	v1 := mrand.Int()
+	v2 := mrand.Int()
 	b := [16]byte{
 		byte(0xff & v1),
 		byte(0xff & v2),

@@ -8,6 +8,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	vocab "github.com/go-ap/activitypub"
@@ -191,5 +192,9 @@ func isData(nlVal vocab.NaturalLanguageValues) bool {
 }
 
 func irif(r *http.Request) vocab.IRI {
-	return vocab.IRI(fmt.Sprintf("https://%s%s", r.Host, r.RequestURI))
+	return vocab.IRI("https://" + filepath.Join(r.Host, r.RequestURI))
+}
+
+func baseIRI(r *http.Request) vocab.IRI {
+	return vocab.IRI("https://" + r.Host)
 }

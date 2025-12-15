@@ -896,7 +896,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *oni) oniActor(r *http.Request) vocab.Actor {
-	reqIRI := irif(r)
+	reqIRI := baseIRI(r)
 	for _, a := range o.a {
 		if reqIRI.Contains(a.ID, false) {
 			return a

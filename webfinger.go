@@ -640,7 +640,14 @@ func (o *oni) AddActor(p *vocab.Person, pw []byte, author vocab.Actor) (*vocab.P
 		return nil, errors.Newf("unable to find Actor's outbox: %s", author)
 	}
 
-	ap := processing.New(processing.WithStorage(o.Storage), processing.WithIDGenerator(GenerateID))
+	alwaysLocal := func(_ vocab.IRI) bool {
+		return true
+	}
+	ap := processing.New(
+		processing.WithStorage(o.Storage),
+		processing.WithIDGenerator(GenerateID),
+		processing.WithLocalIRIChecker(alwaysLocal),
+	)
 	if _, err := ap.ProcessClientActivity(create, author, outbox.GetLink()); err != nil {
 		return nil, err
 	}
@@ -652,6 +659,12 @@ func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			o.Error(errors.MethodNotAllowedf("HTTP method not allowed")).ServeHTTP(w, r)
+			return
+		}
+
+		self := o.oniActor(r)
+		if self.Equals(auth.AnonymousActor) {
+			o.Error(errors.NotFoundf("not found")).ServeHTTP(w, r)
 			return
 		}
 
@@ -668,13 +681,9 @@ func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 			return
 		}
 
-		self := o.oniActor(r)
-		if self.Equals(auth.AnonymousActor) {
-			o.Error(errors.NotFoundf("not found")).ServeHTTP(w, r)
-			return
-		}
-
 		var id string
+		var d osin.Client
+		var status int
 
 		now := time.Now().UTC()
 		name := regReq.ClientName
@@ -706,73 +715,87 @@ func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 		if regReq.SoftwareID != nil {
 			clientID = clientID.AddPath(regReq.SoftwareID.String())
 		} else {
-			if uid, err := uuid.NewRandom(); err != nil {
-				o.Error(errors.Annotatef(err, "Error generating UUID for application %s", name)).ServeHTTP(w, r)
-				return
-			} else {
-				clientID = clientID.AddPath(uid.String())
-			}
+			clientID = clientID.AddPath(uuid.New().String())
 		}
-		p := &vocab.Application{
+
+		clientActor := &vocab.Application{
 			ID:                clientID,
 			Type:              vocab.ApplicationType,
 			AttributedTo:      self.GetLink(),
+			Audience:          vocab.ItemCollection{vocab.PublicNS},
 			Generator:         self.GetLink(),
 			Published:         now,
 			Updated:           now,
 			PreferredUsername: vocab.DefaultNaturalLanguage(name),
+			Summary:           vocab.DefaultNaturalLanguage("Generated actor"),
 			URL:               urls,
 		}
 		if regReq.LogoURI != "" {
-			p.Icon = vocab.IRI(regReq.LogoURI)
+			clientActor.Icon = vocab.IRI(regReq.LogoURI)
 		}
 
-		// TODO(marius): use some valid pw generation here
-		pw := []byte(DefaultOAuth2ClientPw)
+		maybeExists, err := o.Storage.Load(clientActor.ID)
+		if err == nil {
+			clientActor, err = vocab.ToActor(maybeExists)
+			if err != nil {
+				o.Error(errors.Conflictf("existing item at IRI %s but is not an actor %s", clientActor.ID, maybeExists.GetType())).ServeHTTP(w, r)
+				return
+			}
 
-		app, err := o.AddActor(p, pw, self)
-		if err != nil {
-			o.Error(err).ServeHTTP(w, r)
-			return
-		}
-		if metaSaver, ok := o.Storage.(MetadataStorage); ok {
-			if err := AddKeyToItem(metaSaver, p, "RSA"); err != nil {
-				o.Error(errors.Annotatef(err, "Error saving metadata for application %s", name)).ServeHTTP(w, r)
+			d, err = o.Storage.GetClient(clientActor.ID.String())
+			if err != nil {
+				o.Error(errors.Newf("unable to load existing OAuth2 client application")).ServeHTTP(w, r)
+				return
+			}
+			status = http.StatusOK
+		} else {
+			// TODO(marius): use some valid pw generation here
+			pw := []byte(DefaultOAuth2ClientPw)
+
+			app, err := o.AddActor(clientActor, pw, self)
+			if err != nil {
+				o.Error(err).ServeHTTP(w, r)
+				return
+			}
+			if metaSaver, ok := o.Storage.(MetadataStorage); ok {
+				if err := AddKeyToItem(metaSaver, clientActor, "RSA"); err != nil {
+					o.Error(errors.Annotatef(err, "Error saving metadata for application %s", name)).ServeHTTP(w, r)
+					return
+				}
+			}
+
+			// TODO(marius): allow for updates of the application actor with incoming parameters for Icon, Summary, samd.
+
+			id = app.GetID().String()
+			if id == "" {
+				o.Error(errors.Newf("invalid actor saved, id is null")).ServeHTTP(w, r)
+				return
+			}
+
+			// TODO(marius): add a local Client struct that implements Client and ClientSecretMatcher interfaces with bcrypt support
+			//   It could even be a struct composite from an activitypub.Application + secret and callback properties
+			userData, _ := json.Marshal(regReq)
+			d = &osin.DefaultClient{
+				Id:          id,
+				Secret:      string(pw),
+				RedirectUri: strings.Join(redirect, "\n"),
+				UserData:    userData,
+			}
+
+			if err = o.Storage.CreateClient(d); err != nil {
+				o.Error(errors.Newf("unable to save OAuth2 client application")).ServeHTTP(w, r)
 				return
 			}
 		}
 
-		// TODO(marius): allow for updates of the application actor with incoming parameters for Icon, Summary, samd.
-
-		id = app.GetID().String()
-		if id == "" {
-			o.Error(errors.Newf("invalid actor saved, id is null")).ServeHTTP(w, r)
-			return
-		}
-
-		// TODO(marius): add a local Client struct that implements Client and ClientSecretMatcher interfaces with bcrypt support
-		//   It could even be a struct composite from an activitypub.Application + secret and callback properties
-		userData, _ := json.Marshal(regReq)
-		d := osin.DefaultClient{
-			Id:          id,
-			Secret:      string(pw),
-			RedirectUri: strings.Join(redirect, "\n"),
-			UserData:    userData,
-		}
-
-		if err = o.Storage.CreateClient(&d); err != nil {
-			o.Error(errors.Newf("unable to save OAuth2 client application")).ServeHTTP(w, r)
-			return
-		}
-
 		resp := ClientRegistrationResponse{
-			ClientID:     d.Id,
-			ClientSecret: d.Secret,
-			IssuedAt:     now.Unix(),
+			ClientID:     d.GetId(),
+			ClientSecret: d.GetSecret(),
+			IssuedAt:     clientActor.Published.Unix(),
 			Expires:      0,
 		}
 		w.Header().Add("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(status)
 		_ = json.NewEncoder(w).Encode(resp)
 		o.Logger.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
 	}
@@ -879,15 +902,26 @@ func AddKeyToItem(metaSaver MetadataStorage, it vocab.Item, typ string) error {
 //
 // https://datatracker.ietf.org/doc/html/rfc8414#section-3.2
 type OauthAuthorizationMetadata struct {
-	Issuer                                     string   `json:"issuer"`
-	AuthorizationEndpoint                      string   `json:"authorization_endpoint"`
-	TokenEndpoint                              string   `json:"token_endpoint"`
-	TokenEndpointAuthMethodsSupported          []string `json:"token_endpoint_auth_methods_supported,omitempty"`
-	TokenEndpointAuthSigningAlgValuesSupported []string `json:"token_endpoint_auth_signing_alg_values_supported,omitempty"`
-	RegistrationEndpoint                       string   `json:"registration_endpoint"`
-	GrantTypesSupported                        []string `json:"grant_types_supported,omitempty"`
-	ScopesSupported                            []string `json:"scopes_supported,omitempty"`
-	ResponseTypesSupported                     []string `json:"response_types_supported,omitempty"`
+	Issuer                                     string                   `json:"issuer"`
+	AuthorizationEndpoint                      string                   `json:"authorization_endpoint"`
+	TokenEndpoint                              string                   `json:"token_endpoint"`
+	TokenEndpointAuthMethodsSupported          []string                 `json:"token_endpoint_auth_methods_supported,omitempty"`
+	TokenEndpointAuthSigningAlgValuesSupported []string                 `json:"token_endpoint_auth_signing_alg_values_supported,omitempty"`
+	RegistrationEndpoint                       string                   `json:"registration_endpoint"`
+	GrantTypesSupported                        []osin.AccessRequestType `json:"grant_types_supported,omitempty"`
+	ScopesSupported                            []string                 `json:"scopes_supported,omitempty"`
+	ResponseTypesSupported                     []string                 `json:"response_types_supported,omitempty"`
+}
+
+func defaultGrantTypes() []osin.AccessRequestType {
+	grants := make([]osin.AccessRequestType, 0, len(auth.DefaultAccessTypes))
+	for _, typ := range auth.DefaultAccessTypes {
+		if typ == osin.IMPLICIT {
+			typ = "implicit"
+		}
+		grants = append(grants, typ)
+	}
+	return grants
 }
 
 func HandleOauthAuthorizationServer(o *oni) func(w http.ResponseWriter, r *http.Request) {
@@ -901,7 +935,7 @@ func HandleOauthAuthorizationServer(o *oni) func(w http.ResponseWriter, r *http.
 			Issuer:                            actor.ID.String(),
 			AuthorizationEndpoint:             actor.Endpoints.OauthAuthorizationEndpoint.GetID().String(),
 			TokenEndpoint:                     actor.Endpoints.OauthTokenEndpoint.GetID().String(),
-			GrantTypesSupported:               []string{"authorization_code", "implicit"},
+			GrantTypesSupported:               defaultGrantTypes(),
 			TokenEndpointAuthMethodsSupported: []string{"client_secret_basic"},
 			RegistrationEndpoint:              actor.ID.AddPath("oauth/client").String(),
 			TokenEndpointAuthSigningAlgValuesSupported: []string{},
