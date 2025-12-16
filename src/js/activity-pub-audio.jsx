@@ -10,6 +10,10 @@ export class ActivityPubAudio extends ActivityPubObject {
         audio {
             align-self: start;
             margin: auto;
+            width: 100%;
+            outline: .08rem solid color-mix(in srgb, var(--accent-color), transparent 55%);
+            outline-offset: -0.08rem;
+            border-radius: 0.4rem;
         }
         figure {
             margin: auto;

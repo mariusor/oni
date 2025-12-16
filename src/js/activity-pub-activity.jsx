@@ -10,7 +10,7 @@ export class ActivityPubActivity extends ActivityPubObject {
     static styles = [
         ActivityPubObject.styles,
         css`
-            :host > oni-image {
+            :host > oni-image, :host > oni-video, :host > oni-audio {
                 margin-top: .6rem;
             }
         `,
