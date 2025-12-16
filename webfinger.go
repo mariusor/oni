@@ -786,6 +786,7 @@ func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 				o.Error(errors.Newf("unable to save OAuth2 client application")).ServeHTTP(w, r)
 				return
 			}
+			status = http.StatusCreated
 		}
 
 		resp := ClientRegistrationResponse{
