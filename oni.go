@@ -249,20 +249,20 @@ func (o *oni) Run(c context.Context) error {
 			if o.Logger != nil {
 				o.Logger.Debugf("SIGINT received, stopping")
 			}
-			exit <- nil
+			exit <- w.Interrupt
 		},
 		syscall.SIGTERM: func(exit chan<- error) {
 			if o.Logger != nil {
 				o.Logger.Debugf("SIGTERM received, force stopping")
 			}
-			exit <- nil
+			exit <- w.Interrupt
 		},
 		syscall.SIGQUIT: func(exit chan<- error) {
 			if o.Logger != nil {
 				o.Logger.Debugf("SIGQUIT received, force stopping with core-dump")
 			}
 			cancelFn()
-			exit <- nil
+			exit <- w.Interrupt
 		},
 	}).Exec(ctx, srvRun)
 	if o.Logger != nil {

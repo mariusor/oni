@@ -482,11 +482,12 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 			auth.SolverWithLocalIRIFn(isLocalIRI),
 		)
 
-		author, err := solver.Verify(r)
+		fetched, err := solver.Verify(r)
 		if err != nil {
 			o.Logger.WithContext(lw.Ctx{"log": "auth", "err": err.Error()}).Warnf("Failed to load actor")
 		}
-		*r = *r.WithContext(context.WithValue(r.Context(), authorizedActorCtxKey, author))
+		*r = *r.WithContext(context.WithValue(r.Context(), authorizedActorCtxKey, fetched))
+		author = fetched
 	}
 
 	if author.Equals(auth.AnonymousActor) {
