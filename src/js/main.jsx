@@ -20,6 +20,7 @@ import {OniErrors} from "./oni-errors";
 import {OniHeader} from "./oni-header";
 import {OniLoginLink} from "./oni-login-link";
 import {ActivityPubCreate} from "./activity-pub-create";
+import {ActivityPubPage} from "./activity-pub-page";
 import {ActivityPubAnnounce} from "./activity-pub-announce";
 import {ActivityPubAppreciation} from "./activity-pub-appreciation";
 import {ActivityPubFollow} from "./activity-pub-follow";
@@ -33,6 +34,7 @@ customElements.define('oni-palette', PaletteElement);
 
 customElements.define('oni-object', ActivityPubObject);
 customElements.define('oni-note', ActivityPubNote);
+customElements.define('oni-page', ActivityPubPage);
 customElements.define('oni-image', ActivityPubImage);
 customElements.define('oni-audio', ActivityPubAudio);
 customElements.define('oni-video', ActivityPubVideo);

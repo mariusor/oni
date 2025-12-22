@@ -476,8 +476,9 @@ ActivityPubObject.renderByType = /*async*/ function (it, showMetadata, inline) {
             return html`<oni-image it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-image>`;
         case 'Note':
         case 'Article':
-        case 'Page':
             return html`<oni-note it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-note>`;
+        case 'Page':
+            return html`<oni-page it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-page>`;
         case 'Tombstone':
             return html`<oni-tombstone it=${JSON.stringify(it)} ?showMetadata=${showMetadata} ?inline=${inline}></oni-tombstone>`;
         case 'Mention':
