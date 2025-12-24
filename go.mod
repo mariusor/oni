@@ -9,7 +9,7 @@ require (
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20250805090125-7286b55ea3f3
 	git.sr.ht/~mariusor/ssm v0.0.0-20250920150353-cc21fa885fda
 	git.sr.ht/~mariusor/storage-all v0.0.0-20251223173927-1a9494b2daa7
-	git.sr.ht/~mariusor/wrapper v0.0.0-20251222125502-e381d9b657be
+	git.sr.ht/~mariusor/wrapper v0.0.0-20251224151401-852801607a0c
 	github.com/alecthomas/kong v1.13.0
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.27.1

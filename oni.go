@@ -164,17 +164,20 @@ func (o *oni) Pause() error {
 	return nil
 }
 
+const defaultGraceWait = 1500 * time.Millisecond
+
 // Run is the wrapper for starting the web-server and handling signals
 func (o *oni) Run(c context.Context) error {
 	// Create a deadline to wait for.
 	ctx, cancelFn := context.WithCancel(c)
+	defer cancelFn()
 
 	if err := xdg.WritePid(AppName); err != nil {
 		o.Logger.Warnf("Unable to write pid file: %s", err)
 		o.Logger.Warnf("Some CLI commands relying on it will not work")
 	}
 	sockType := ""
-	setters := []w.SetFn{w.Handler(o.m)}
+	setters := []w.SetFn{w.Handler(o.m), w.GracefulWait(defaultGraceWait)}
 
 	if os.Getenv("LISTEN_FDS") != "" {
 		sockType = "Systemd"
@@ -192,7 +195,6 @@ func (o *oni) Run(c context.Context) error {
 	}
 	logCtx := lw.Ctx{
 		"version": Version,
-		"debug":   InDebugMode.Load(),
 		"socket":  o.Listen,
 	}
 	if sockType != "" {
@@ -205,68 +207,61 @@ func (o *oni) Run(c context.Context) error {
 		o.Logger.WithContext(logCtx).Infof("Started")
 	}
 
-	stopFn := func(ctx context.Context) {
+	stopFn := func(ctx context.Context) error {
 		if closer, ok := o.Storage.(interface{ Close() }); ok {
 			closer.Close()
 		}
-		err := srvStop(ctx)
-		if o.Logger != nil {
-			ll := o.Logger.WithContext(logCtx)
-			if err != nil {
-				ll.Errorf("%+v", err)
-			} else {
-				ll.Infof("Stopped")
+		defer func() {
+			if err := xdg.CleanPid(AppName); err != nil {
+				o.Logger.Errorf("%+v", err)
 			}
-		}
-		_ = xdg.CleanPid(AppName)
-		cancelFn()
+		}()
+		return srvStop(ctx)
 	}
-	defer stopFn(ctx)
+
+	exitWithErrOrInterrupt := func(err error, exit chan<- error) {
+		if err == nil {
+			err = w.Interrupt
+		}
+		exit <- err
+	}
 
 	err := w.RegisterSignalHandlers(w.SignalHandlers{
-		syscall.SIGHUP: func(_ chan<- error) {
-			if o.Logger != nil {
-				o.Logger.Debugf("SIGHUP received, reloading configuration")
-			}
-		},
 		syscall.SIGUSR1: func(_ chan<- error) {
-			InMaintenanceMode.Store(!InMaintenanceMode.Load())
-			logFn := o.Logger.WithContext(lw.Ctx{"maintenance": InMaintenanceMode.Load()}).Debugf
+			maintenance := InMaintenanceMode.Load()
+			InMaintenanceMode.Store(!maintenance)
+			logFn := o.Logger.WithContext(lw.Ctx{"maintenance": !maintenance}).Debugf
 			if err := o.Pause(); err != nil {
-				logFn = o.Logger.WithContext(lw.Ctx{"maintenance": InMaintenanceMode.Load(), "err": err.Error()}).Warnf
+				logFn = o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Warnf
 			}
 			if o.Logger != nil {
 				logFn("SIGUSR1 received")
 			}
 		},
 		syscall.SIGUSR2: func(_ chan<- error) {
-			InDebugMode.Store(!InDebugMode.Load())
+			debug := InDebugMode.Load()
+			InDebugMode.Store(!debug)
 			if o.Logger != nil {
-				o.Logger.WithContext(lw.Ctx{"debug": InDebugMode.Load()}).Debugf("SIGUSR2 received")
+				o.Logger.WithContext(lw.Ctx{"debug": !debug}).Debugf("SIGUSR2 received")
 			}
 		},
 		syscall.SIGINT: func(exit chan<- error) {
-			if o.Logger != nil {
-				o.Logger.Debugf("SIGINT received, stopping")
-			}
-			exit <- w.Interrupt
+			o.Logger.WithContext(lw.Ctx{"wait": defaultGraceWait}).Debugf("SIGINT received, interrupted")
+			exitWithErrOrInterrupt(stopFn(ctx), exit)
 		},
 		syscall.SIGTERM: func(exit chan<- error) {
-			if o.Logger != nil {
-				o.Logger.Debugf("SIGTERM received, force stopping")
-			}
-			exit <- w.Interrupt
+			o.Logger.WithContext(lw.Ctx{"wait": defaultGraceWait}).Debugf("SIGTERM received, stopping with cleanup")
+			exitWithErrOrInterrupt(stopFn(ctx), exit)
 		},
 		syscall.SIGQUIT: func(exit chan<- error) {
-			if o.Logger != nil {
-				o.Logger.Debugf("SIGQUIT received, force stopping with core-dump")
-			}
+			o.Logger.Debugf("SIGQUIT received, ungraceful force stopping")
+			// NOTE(marius): to skip any graceful wait on the listening server, cancel the context first
 			cancelFn()
-			exit <- w.Interrupt
+			exitWithErrOrInterrupt(stopFn(ctx), exit)
 		},
 	}).Exec(ctx, srvRun)
 	if o.Logger != nil {
-		o.Logger.Infof("Shutting down")
+		o.Logger.Infof("Stopped")
 	}
 	return err
 }
