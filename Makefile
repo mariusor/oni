@@ -25,7 +25,6 @@ SVG_SOURCES := $(wildcard src/*.svg)
 ROBOTS_TXT := $(wildcard src/robots.txt)
 
 ONI_BIN_SOURCES := $(wildcard ./cmd/oni/*.go)
-CTL_BIN_SOURCES := $(wildcard ./cmd/ctl/*.go)
 
 TAGS := $(ENV)
 
@@ -56,7 +55,7 @@ TEST := $(GO) test $(BUILDFLAGS)
 help: ## Help target that shows this message.
 	@sed -rn 's/^([^:]+):.*[ ]##[ ](.+)/\1:\2/p' $(MAKEFILE_LIST) | column -ts: -l2
 
-all: $(PROJECT_NAME) $(PROJECT_NAME)ctl
+all: $(PROJECT_NAME)
 
 download: go.sum ## Downloads dependencies and tidies the go.mod file.
 
@@ -66,13 +65,6 @@ go.sum: go.mod
 $(PROJECT_NAME): bin/$(PROJECT_NAME) ## Builds the ONI service binary.
 bin/$(PROJECT_NAME): go.sum $(ONI_BIN_SOURCES) $(GO_SOURCES) assets
 	$(BUILD) -o $@ ./cmd/oni
-ifneq (,$(findstring $(ENV), "prod qa"))
-	$(UPX) -q --mono --no-progress --best $@ || true
-endif
-
-$(PROJECT_NAME)ctl: bin/$(PROJECT_NAME)ctl ## Builds the ONI control binary.
-bin/$(PROJECT_NAME)ctl: go.sum $(CTL_BIN_SOURCES) $(GO_SOURCES)
-	$(BUILD) -o $@ ./cmd/ctl
 ifneq (,$(findstring $(ENV), "prod qa"))
 	$(UPX) -q --mono --no-progress --best $@ || true
 endif

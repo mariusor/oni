@@ -23,10 +23,10 @@ To run a container based on these images, you can use podman:
 $ podman run --network=host --name=ONI -v /var/cache/oni:/storage quay.io/go-ap/oni:latest
 ```
 
-### Running `onictl` commands in the containers
+### Running `oni` commands in the containers
 
 ```sh
 # running with the same configuration environment as above
-$ podman exec ONI onictl reload
+$ podman exec ONI oni reload
 ```
 

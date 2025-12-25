@@ -35,9 +35,8 @@ The application supports text posts, image, audio and video uploads.
 $ go mod tidy
 # As a last step we need to bundle the static assets, for which we use go:generate with the 'esbuilder' API:
 $ go generate assets.go
-# We now can build the ONI and control helper binaries:
+# We now can build the ONI binary:
 $ go build -trimpath -a -ldflags '-s -w -extldflags "-static"' -o $(go env GOPATH)/bin/oni ./cmd/oni/main.go
-$ go build -trimpath -a -ldflags '-s -w -extldflags "-static"' -o $(go env GOPATH)/bin/onictl ./cmd/ctl/main.go
 # All of these steps have been grouped together with Make:
 $ make all
 ```
@@ -65,7 +64,7 @@ passing either `-tags prod` or `-tags qa` to the build command.
 # with OAuth2 client password 'SuperSecretOAuth2ClientPassword'. 
 # The --with-token boolean flag can make the application generate an Authorization header containing a Bearer token 
 # usable directly in an ActivityPub client.
-$ onictl actor add --pw SuperSecretOAuth2ClientPassword https://johndoe.example.com
+$ oni actor add --pw SuperSecretOAuth2ClientPassword https://johndoe.example.com
 # with box
 ```
 
@@ -74,7 +73,7 @@ $ onictl actor add --pw SuperSecretOAuth2ClientPassword https://johndoe.example.
 ```sh
 # Blocks all access to all johndoe.example.com pages for any access that has requests with Authorization 
 # headers generated for actors hosted on naughty.social
-$ onictl block --client https://johndoe.example.com https://naughty.social
+$ oni block --client https://johndoe.example.com https://naughty.social
 ```
 
 ## Interacting with ONI instances using BOX cli helper
