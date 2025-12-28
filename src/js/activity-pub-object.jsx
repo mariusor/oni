@@ -64,6 +64,12 @@ export class ActivityPubObject extends LitElement {
         article header {
             align-self: start;
         }
+        article aside:has(img) {
+            display: grid;
+            justify-content: center;
+            grid-auto-flow: column;
+            gap: 1rem;
+        }
         :host footer {
             border-bottom: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
             font-size: .84rem;
