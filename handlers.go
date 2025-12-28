@@ -149,7 +149,7 @@ func binDataFromItem(it vocab.Item, w io.Writer) (contentType ct.MediaType, upda
 			return errors.NotSupportedf("invalid object")
 		}
 		if len(ob.Content) == 0 {
-			return errors.NotSupportedf("invalid object")
+			return errors.NotSupportedf("invalid object content")
 		}
 		typ, raw, err := getBinData(ob.Content, ob.MediaType)
 		if err != nil {
@@ -329,6 +329,7 @@ func cleanupMediaObjectFromItem(it vocab.Item) error {
 	if it == nil {
 		return nil
 	}
+	it = vocab.Clone(it)
 	if it.IsCollection() {
 		return vocab.OnCollectionIntf(it, cleanupMediaObjectsFromCollection)
 	}
@@ -651,8 +652,6 @@ func tryPushStaticAssets(w http.ResponseWriter, r *http.Request) error {
 func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 	templatePath := "components/item"
 
-	_ = cleanupMediaObjectFromItem(it)
-	_ = sanitizeItem(it)
 	updatedAt := time.Now()
 	_ = vocab.OnObject(it, func(o *vocab.Object) error {
 		updatedAt = o.Published

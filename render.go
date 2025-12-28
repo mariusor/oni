@@ -87,14 +87,13 @@ var (
 )
 
 func renderJson(it any) []byte {
-	var res []byte
-	switch o := it.(type) {
-	case vocab.Item:
-		res, _ = vocab.MarshalJSON(o)
-	case vocab.NaturalLanguageValues:
-		res, _ = o.MarshalJSON()
-	default:
-		res, _ = json.Marshal(o)
+	ob, ok := it.(vocab.Item)
+	if !ok {
+		res, _ := json.Marshal(it)
+		return res
 	}
+	_ = cleanupMediaObjectFromItem(ob)
+	_ = sanitizeItem(ob)
+	res, _ := json.Marshal(ob)
 	return res
 }
