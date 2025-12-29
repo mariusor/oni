@@ -102,7 +102,7 @@ func (o *oni) setupStaticRoutes(m chi.Router) {
 	m.Handle("/main.css", fsServe)
 	m.HandleFunc("/icons.svg", fsServe)
 	m.HandleFunc("/robots.txt", fsServe)
-	m.HandleFunc("/favicon.ico", o.ServeFavIcon)
+	m.With(o.MaybeCreateRootActor).HandleFunc("/favicon.ico", o.ServeFavIcon)
 }
 
 func (o *oni) setupWebfingerRoutes(m chi.Router) {

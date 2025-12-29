@@ -7,8 +7,8 @@ import (
 
 var (
 	// NOTE(marius): for inline svg images like, the default icon
-	svgRelatedTags  = []string{"svg", "use"}
-	svgRelatedAttrs = []string{"aria-hidden", "name", "href", "width", "height"}
+	svgRelatedTags  = []string{"svg", "use", "path"}
+	svgRelatedAttrs = []string{"aria-hidden", "viewBox", "name", "id", "href", "width", "height", "fill", "stroke", "stroke-width", "d"}
 
 	extraAllowedTags  = []string{"style", "nav", "aside", "bandcamp-embed", "iframe"}
 	extraAllowedAttrs = []string{"class", "rel", "src", "url", "style"}

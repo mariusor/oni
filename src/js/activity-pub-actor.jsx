@@ -37,6 +37,11 @@ export class ActivityPubActor extends ActivityPubObject {
         }
         header > a svg {
             color: var(--accent-color);
+            fill: none;
+            stroke-width: 1.5;
+            stroke: currentColor;
+            width: 90%;
+            max-width: 10rem;
         }
         header > a img, header > a svg {
             aspect-ratio: 1;

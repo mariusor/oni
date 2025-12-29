@@ -16,11 +16,16 @@ export class OniHeader extends ActivityPubActor {
                 display: grid;
                 align-items: end;
             }
+            header a svg {
+               fill: none;
+               stroke-width: 1.5;
+               stroke:currentColor;
+            }
             header a img, header a svg { 
                 border-radius: 0 20% 20% 20%;
                 shape-outside: margin-box;
-                max-height: 2rem;
-                max-width: 2rem;
+                height: 2rem;
+                width: 2rem;
                 padding: .2rem;
                 margin-top: .4rem;
                 margin-bottom: -.4rem;
