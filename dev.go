@@ -2,4 +2,10 @@
 
 package oni
 
+import "github.com/go-ap/errors"
+
+func init() {
+	errors.SetIncludeBacktrace(false)
+}
+
 const IsDev = true
