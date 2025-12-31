@@ -317,21 +317,24 @@ func (c *Control) GenKeyPair(actor *vocab.Actor) (*vocab.Actor, error) {
 }
 
 func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
-	var err error
-	if actor, err = c.GenKeyPair(actor); err != nil {
-		return actor, err
-	}
+	// NOTE(marius): we initialize the client that we're going to use for Update
+	// dissemination with an HTTP-Signature based on the current private key.
+	cl := c.Client(*actor, http.DefaultTransport, lw.Ctx{"log": "client"})
 
 	st := c.Storage
 	l := c.Logger
 
-	cl := c.Client(*actor, http.DefaultTransport, lw.Ctx{"log": "client"})
 	p := processing.New(
 		processing.WithIDGenerator(GenerateID),
 		processing.WithLogger(l.WithContext(lw.Ctx{"log": "processing"})),
 		processing.WithIRI(actor.ID), processing.WithClient(cl), processing.WithStorage(st),
 		processing.WithLocalIRIChecker(c.IRIHasLocalParent()),
 	)
+
+	var err error
+	if actor, err = c.GenKeyPair(actor); err != nil {
+		return actor, err
+	}
 
 	followers := vocab.Followers.IRI(actor)
 	outbox := vocab.Outbox.IRI(actor)
@@ -343,8 +346,7 @@ func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
 	upd.To = vocab.ItemCollection{vocab.PublicNS}
 	upd.CC = vocab.ItemCollection{followers}
 
-	_, err = p.ProcessClientActivity(upd, *actor, outbox)
-	if err != nil {
+	if _, err = p.ProcessClientActivity(upd, *actor, outbox); err != nil {
 		return actor, err
 	}
 
