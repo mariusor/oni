@@ -291,7 +291,7 @@ func loadItemFromStorage(s ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.
 			return nil
 		})
 	}
-	if vocab.IsNil(it) {
+	if vocab.IsNil(it) || vocab.IsIRI(it) {
 		return nil, errors.NotFoundf("not found")
 	}
 	if vocab.IsIRI(it) && !it.GetLink().Equals(iri, true) {
