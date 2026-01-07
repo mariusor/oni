@@ -14,6 +14,7 @@ import (
 
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/oni/internal/xdg"
+	m "git.sr.ht/~mariusor/servermux"
 	"git.sr.ht/~mariusor/storage-all"
 	w "git.sr.ht/~mariusor/wrapper"
 	vocab "github.com/go-ap/activitypub"
@@ -177,21 +178,21 @@ func (o *oni) Run(c context.Context) error {
 		o.Logger.Warnf("Some CLI commands relying on it will not work")
 	}
 	sockType := ""
-	setters := []w.SetFn{w.Handler(o.m), w.GracefulWait(defaultGraceWait)}
+	setters := []m.SetFn{m.Handler(o.m)}
 
 	if os.Getenv("LISTEN_FDS") != "" {
 		sockType = "Systemd"
-		setters = append(setters, w.OnSystemd())
+		setters = append(setters, m.OnSystemd())
 	} else if filepath.IsAbs(o.Listen) {
 		dir := filepath.Dir(o.Listen)
 		if _, err := os.Stat(dir); err == nil {
 			sockType = "socket"
-			setters = append(setters, w.OnSocket(o.Listen))
+			setters = append(setters, m.OnSocket(o.Listen))
 			defer func() { _ = os.RemoveAll(o.Listen) }()
 		}
 	} else {
 		sockType = "TCP"
-		setters = append(setters, w.OnTCP(o.Listen))
+		setters = append(setters, m.OnTCP(o.Listen))
 	}
 	logCtx := lw.Ctx{
 		"version": Version,
@@ -202,7 +203,14 @@ func (o *oni) Run(c context.Context) error {
 	}
 
 	// Get start/stop functions for the http server
-	srvRun, srvStop := w.HttpServer(setters...)
+	httpSrv, err := m.HttpServer(setters...)
+	if err != nil {
+		return err
+	}
+	s, err := m.Mux(m.WithServer(httpSrv), m.GracefulWait(defaultGraceWait))
+	if err != nil {
+		return err
+	}
 	if o.Logger != nil {
 		o.Logger.WithContext(logCtx).Infof("Started")
 	}
@@ -216,7 +224,7 @@ func (o *oni) Run(c context.Context) error {
 				o.Logger.Errorf("%+v", err)
 			}
 		}()
-		return srvStop(ctx)
+		return s.Stop(ctx)
 	}
 
 	exitWithErrOrInterrupt := func(err error, exit chan<- error) {
@@ -226,7 +234,7 @@ func (o *oni) Run(c context.Context) error {
 		exit <- err
 	}
 
-	err := w.RegisterSignalHandlers(w.SignalHandlers{
+	err = w.RegisterSignalHandlers(w.SignalHandlers{
 		syscall.SIGUSR1: func(_ chan<- error) {
 			maintenance := InMaintenanceMode.Load()
 			InMaintenanceMode.Store(!maintenance)
@@ -259,7 +267,7 @@ func (o *oni) Run(c context.Context) error {
 			cancelFn()
 			exitWithErrOrInterrupt(stopFn(ctx), exit)
 		},
-	}).Exec(ctx, srvRun)
+	}).Exec(ctx, s.Start)
 	if o.Logger != nil {
 		o.Logger.Infof("Stopped")
 	}
