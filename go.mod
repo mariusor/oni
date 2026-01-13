@@ -6,21 +6,21 @@ require (
 	git.sr.ht/~mariusor/cache v0.0.0-20250616110250-18a60a6f9473
 	git.sr.ht/~mariusor/lw v0.0.0-20250325163623-1639f3fb0e0d
 	git.sr.ht/~mariusor/mask v0.0.0-20250114195353-98705a6977b7
-	git.sr.ht/~mariusor/servermux v0.0.0-20260104112549-0a3ff90bf795
+	git.sr.ht/~mariusor/servermux v0.0.0-20260113120515-73350ce7afad
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20250805090125-7286b55ea3f3
 	git.sr.ht/~mariusor/ssm v0.0.0-20250920150353-cc21fa885fda
-	git.sr.ht/~mariusor/storage-all v0.0.0-20260108121959-8c5f0d6f9ef9
+	git.sr.ht/~mariusor/storage-all v0.0.0-20260113135215-9102d52e2b95
 	git.sr.ht/~mariusor/wrapper v0.0.0-20260103185140-9873830de009
 	github.com/alecthomas/kong v1.13.0
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.27.1
 	github.com/go-ap/activitypub v0.0.0-20260102112410-54375d828154
-	github.com/go-ap/auth v0.0.0-20260102113527-7eacd35a8b49
+	github.com/go-ap/auth v0.0.0-20260109092107-38c0f9cf6659
 	github.com/go-ap/client v0.0.0-20260102113429-e43de2d4ea43
 	github.com/go-ap/errors v0.0.0-20251229095444-2702aa2d8569
 	github.com/go-ap/filters v0.0.0-20260102113139-8ad00475b09e
 	github.com/go-ap/jsonld v0.0.0-20251216162253-e38fa664ea77
-	github.com/go-ap/processing v0.0.0-20260107160342-39d0c0ea7a97
+	github.com/go-ap/processing v0.0.0-20260112174746-534525380942
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
 	github.com/goburrow/cache v0.1.4
@@ -34,7 +34,7 @@ require (
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
 	github.com/valyala/fastjson v1.6.7
 	golang.org/x/oauth2 v0.34.0
-	golang.org/x/term v0.38.0
+	golang.org/x/term v0.39.0
 )
 
 require (
@@ -57,7 +57,7 @@ require (
 	github.com/charmbracelet/x/conpty v0.2.0 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
-	github.com/clipperhouse/displaywidth v0.6.2 // indirect
+	github.com/clipperhouse/displaywidth v0.7.0 // indirect
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/creack/pty v1.1.24 // indirect
@@ -68,9 +68,9 @@ require (
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/go-ap/cache v0.0.0-20260102112930-bfa197b487fb // indirect
 	github.com/go-ap/storage-badger v0.0.0-20260102114145-aa5bc644359e // indirect
-	github.com/go-ap/storage-boltdb v0.0.0-20260102114123-757dc56b2df9 // indirect
-	github.com/go-ap/storage-fs v0.0.0-20260107121028-2811b990146e // indirect
-	github.com/go-ap/storage-sqlite v0.0.0-20260108113015-44b4272b36f5 // indirect
+	github.com/go-ap/storage-boltdb v0.0.0-20260113094534-8d74e7b54a7e // indirect
+	github.com/go-ap/storage-fs v0.0.0-20260113134619-7c780f3e91d2 // indirect
+	github.com/go-ap/storage-sqlite v0.0.0-20260113134950-4a50708fbb88 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -105,18 +105,16 @@ require (
 	go.opentelemetry.io/otel v1.39.0 // indirect
 	go.opentelemetry.io/otel/metric v1.39.0 // indirect
 	go.opentelemetry.io/otel/trace v1.39.0 // indirect
-	golang.org/x/crypto v0.46.0 // indirect
-	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
-	golang.org/x/image v0.34.0 // indirect
-	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/crypto v0.47.0 // indirect
+	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
+	golang.org/x/image v0.35.0 // indirect
+	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/text v0.33.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
 	modernc.org/libc v1.67.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.42.2 // indirect
+	modernc.org/sqlite v1.44.0 // indirect
 )
-
-replace github.com/mattn/go-sqlite3 => github.com/mattn/go-sqlite3 v1.14.32
