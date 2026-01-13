@@ -8,23 +8,19 @@ export class NaturalLanguageValues extends LitElement {
         :host {
             display: inline;
         }
+        :host div {
+            display: inline-block;
+        }
         p {
             margin-block-start: 0;
             margin-block-end: 0;
         }
-        :host([data-container-type="note"]) p {
-            margin-block-end: 0;
-            margin-block-start: .4rem;
-        }
         :host([data-container-type="article"]) p {
             text-indent: 1.4rem;
-            text-align: justify; 
+            text-align: justify;
         }
-        :host([data-container-type="article"]) p + p {
+        :host([data-container-type="article"]) p + p, :host([data-container-type="article"]) p:first-of-type {
             margin-block-start: .8rem;
-        }
-        :host div {
-            display: inline-block; 
         }
         :host([name=summary]) p, :host([name=name]) p, :host([name=preferredUsername]) p {
             display: inline-block;
@@ -63,6 +59,13 @@ export class NaturalLanguageValues extends LitElement {
         }
         hr {
             border-color: var(--accent-color);
+        }
+        p img {
+            border-radius: .4rem;
+            outline: .08rem solid color-mix(in srgb, var(--accent-color), transparent 55%);
+            outline-offset: -.08rem;
+            max-width: 100%;
+            height: auto;
         }
     `, ActivityPubObject.styles];
 
