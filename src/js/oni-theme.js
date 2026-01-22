@@ -14,7 +14,6 @@ export class Palette {
     linkVisitedColor;
     imageURL;
     iconURL;
-    colorScheme;
     imageColors = [];
     iconColors = [];
 
@@ -26,7 +25,10 @@ export class Palette {
         this.accentColor = style.getPropertyValue('--accent-color').trim();
         this.linkColor = style.getPropertyValue('--link-color').trim();
         this.linkVisitedColor = style.getPropertyValue('--link-visited-color').trim();
-        this.colorScheme = prefersDarkTheme() ? 'dark' : 'light';
+
+        darkMediaMatch.addEventListener("change", (e) => {
+            console.debug(`it is ${e.matches ? "dark" : "light"} prefersDark?: ${prefersDarkTheme()}`);
+        });
     }
 
     matchItem(it) {
@@ -68,7 +70,6 @@ export class Palette {
                 palette.accentColor = _palette.accentColor;
                 palette.linkColor = _palette.linkColor;
                 palette.linkVisitedColor = _palette.linkVisitedColor;
-                palette.colorScheme = _palette.colorScheme;
                 palette.iconColors = _palette.iconColors;
                 palette.imageColors = _palette.imageColors;
             }
@@ -105,11 +106,8 @@ export class Palette {
         let avgColor = palette.bgColor;
 
         if (iconURL) {
-            let colorCount = 5;
+            let colorCount = 25;
             palette.iconURL = iconURL;
-            if (!imageURL) {
-                colorCount = 10;
-            }
             palette.iconColors = (await colorsFromImage(iconURL, colorCount));
             avgColor = await average(iconURL, {format: 'hex'});
             //console.debug(`loaded icon colors (avg ${avgColor}) ${palette.iconURL}:`, palette.iconColors);
@@ -117,24 +115,23 @@ export class Palette {
 
         if (imageURL) {
             palette.imageURL = imageURL;
-            palette.imageColors = (await colorsFromImage(imageURL, 20));
+            palette.imageColors = (await colorsFromImage(imageURL, 25));
             avgColor = await average(imageURL, {format: 'hex'});
             //console.debug(`loaded image colors (avg ${avgColor}) ${palette.imageURL}:`, palette.imageColors);
         }
 
         if (avgColor) {
             palette.bgColor = changeSaturation(avgColor);
-            palette.colorScheme = tc(avgColor).isDark() ? 'dark' : 'light';
         }
 
         const wantsDark = prefersDarkTheme();
         let paletteColors = [... new Set([...palette.imageColors, ...palette.iconColors])];
         if (paletteColors.length > 0) {
             palette.fgColor = getFgColor(paletteColors, palette.bgColor) || palette.fgColor;
-            paletteColors = paletteColors.filter(color => color !== palette.fgColor);
+            paletteColors = paletteColors.filter(color => tc(color) !== tc(palette.fgColor));
             palette.accentColor = getAccentColor(palette.bgColor) || palette.accentColor;
             palette.linkColor = getLinkColor(paletteColors, palette.bgColor);
-            if (wantsDark || palette.colorScheme === 'dark') {
+            if (wantsDark) {
                 palette.linkVisitedColor = tc(palette.linkColor).mix(palette.accentColor, 30).lighten(20).toHexString();
             } else {
                 palette.linkVisitedColor = tc(palette.linkColor).mix(palette.accentColor, 30).darken(20).toHexString();
@@ -278,7 +275,7 @@ function getFgColor(colors, toColor) {
     most = tc(most).mix(toColor, 30);
 
     console.debug(`filtered fg colors`, fgColors);
-    console.debug(`most readable to ${toColor} is ${most.toHexString()}: ${contrast(most, toColor)}`);
+    console.debug(`dark theme: ${wantsDark}, most readable to ${toColor} is ${most.toHexString()}: ${contrast(most, toColor)}`);
     return most.toHexString();
 }
 
