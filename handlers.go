@@ -43,6 +43,12 @@ func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
 var acceptableErrorMediaTypes = []ct.MediaType{html, applicationJson}
 
 func (o *oni) Error(err error) http.HandlerFunc {
+	if err == nil {
+		o.Logger.Errorf("NIL error received")
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer o.Logger.WithContext(lw.Ctx{"err": err, "url": irif(r)}).Errorf("Error")
 
@@ -816,6 +822,10 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 			}
 
 			r = r.WithContext(ctx)
+		}
+		if next == nil {
+			o.Logger.Warnf("StopBlocked received %T %v next handler", next, next)
+			return
 		}
 		next.ServeHTTP(w, r)
 	})
