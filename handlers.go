@@ -44,7 +44,7 @@ var acceptableErrorMediaTypes = []ct.MediaType{html, applicationJson}
 
 func (o *oni) Error(err error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		defer o.Logger.WithContext(lw.Ctx{"err": err.Error(), "url": irif(r)}).Errorf("Error")
+		defer o.Logger.WithContext(lw.Ctx{"err": err, "url": irif(r)}).Errorf("Error")
 
 		accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableErrorMediaTypes)
 		if accepted.Type == "" || errors.IsRedirect(err) {
