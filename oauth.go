@@ -297,8 +297,7 @@ func (o *oni) redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http
 		// Output redirect with parameters
 		u, err := rs.GetRedirectUrl()
 		if err != nil {
-			err := annotatedRsError(http.StatusInternalServerError, err, "Error getting OAuth2 redirect URL")
-			o.Error(err).ServeHTTP(w, r)
+			o.Error(annotatedRsError(http.StatusInternalServerError, err, "Error getting OAuth2 redirect URL")).ServeHTTP(w, r)
 			return
 		}
 

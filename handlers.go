@@ -136,7 +136,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	m.Group(func(m chi.Router) {
 		m.Use(o.StopBlocked)
 		m.Group(func(m chi.Router) {
-			m.Use(c.Handler, o.MaybeCreateRootActor, o.StopBlocked)
+			m.Use(c.Handler, o.MaybeCreateRootActor)
 			m.Get("/*", o.ActivityPubItem)
 			m.Head("/*", o.ActivityPubItem)
 		})
@@ -1157,8 +1157,7 @@ var InDebugMode = atomic.Bool{}
 func (o *oni) OutOfOrderMw(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if InMaintenanceMode.Load() {
-			o.Error(errors.ServiceUnavailablef("temporarily out of order")).ServeHTTP(w, r)
-			return
+			next = o.Error(errors.ServiceUnavailablef("temporarily out of order"))
 		}
 		next.ServeHTTP(w, r)
 	})
