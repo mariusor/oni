@@ -9,7 +9,7 @@ require (
 	git.sr.ht/~mariusor/servermux v0.0.0-20260113120515-73350ce7afad
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20250805090125-7286b55ea3f3
 	git.sr.ht/~mariusor/ssm v0.0.0-20250920150353-cc21fa885fda
-	git.sr.ht/~mariusor/storage-all v0.0.0-20260115144059-1818eecf5e6d
+	git.sr.ht/~mariusor/storage-all v0.0.0-20260122095233-c52ccec615c7
 	git.sr.ht/~mariusor/wrapper v0.0.0-20260103185140-9873830de009
 	github.com/alecthomas/kong v1.13.0
 	github.com/elnormous/contenttype v1.0.4
@@ -63,13 +63,13 @@ require (
 	github.com/creack/pty v1.1.24 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgraph-io/badger/v4 v4.9.0 // indirect
-	github.com/dgraph-io/ristretto/v2 v2.3.0 // indirect
+	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/go-ap/cache v0.0.0-20260115142614-f5f3c7970085 // indirect
 	github.com/go-ap/storage-badger v0.0.0-20260115143902-93ad4ee448ec // indirect
 	github.com/go-ap/storage-boltdb v0.0.0-20260115143826-b24156d16556 // indirect
-	github.com/go-ap/storage-fs v0.0.0-20260115143003-506800fdd7bc // indirect
+	github.com/go-ap/storage-fs v0.0.0-20260122094829-2133982397f1 // indirect
 	github.com/go-ap/storage-sqlite v0.0.0-20260115143634-11dae4530127 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
