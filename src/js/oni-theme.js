@@ -333,6 +333,8 @@ const minContrast = 4.8;
 function accentFromBg(original) {
     let color = tc(original).clone();
     const wantsDark = prefersDarkTheme();
+    const maxIter = 20;
+    let cnt = 0;
     do {
         color = color.saturate(5);
         if (wantsDark) {
@@ -340,7 +342,8 @@ function accentFromBg(original) {
         } else {
             color = color.darken(10);
         }
-    } while (contrast(original, color) < minContrast)
+        cnt++;
+    } while (contrast(original, color) < minContrast && cnt < maxIter)
 
     return color;
 }
