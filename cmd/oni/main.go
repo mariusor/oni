@@ -55,7 +55,12 @@ func main() {
 		CLI.Path = path
 	}
 
-	ctl, err := setupCtl(CLI.Path, storageType, CLI.Verbose)
+	ll := lw.Dev()
+	if CLI.Verbose {
+		ll = lw.Dev(lw.SetLevel(lw.DebugLevel))
+	}
+	ll = ll.WithContext(lw.Ctx{"path": CLI.Path})
+	ctl, err := setupCtl(CLI.Path, ll, storageType)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
 		os.Exit(1)
@@ -174,21 +179,14 @@ func (b Block) Run(ctl *Control) error {
 	return nil
 }
 
-func setupCtl(storagePath string, typ storage.Type, verbose bool) (*Control, error) {
-	fields := lw.Ctx{"path": storagePath}
-
+func setupCtl(storagePath string, ll lw.Logger, typ storage.Type) (*Control, error) {
 	ctl := new(Control)
-	ll := lw.Dev()
-	if verbose {
-		ll = lw.Dev(lw.SetLevel(lw.DebugLevel))
-	}
-	ll = ll.WithContext(fields)
-	ctl.Control.Logger = ll
+	ctl.Logger = ll
 
 	initFns := []storage.InitFn{
 		storage.WithPath(storagePath),
 		storage.WithType(typ),
-		storage.WithLogger(ctl.Logger),
+		storage.WithLogger(ll),
 		storage.WithCache(true),
 	}
 	if err, exists := oni.MkDirIfNotExists(storagePath); err != nil {
