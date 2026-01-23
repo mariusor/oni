@@ -386,7 +386,7 @@ func (o *oni) renderTemplate(r *http.Request, w http.ResponseWriter, name string
 		_, _ = io.Copy(w, &wrt)
 		return
 	}
-	o.Error(errors.Annotatef(err, "failed to render template"))(w, r)
+	o.Error(errors.Annotatef(err, "failed to render template")).ServeHTTP(w, r)
 }
 
 type login struct {

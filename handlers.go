@@ -35,21 +35,15 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// NotFound is a generic method to return an 404 error HTTP handler that
-func (o *oni) NotFound(w http.ResponseWriter, r *http.Request) {
-	o.Error(errors.NotFoundf("%s not found", r.URL.Path)).ServeHTTP(w, r)
-}
-
 var acceptableErrorMediaTypes = []ct.MediaType{html, applicationJson}
 
 func (o *oni) Error(err error) http.HandlerFunc {
-	if err == nil {
-		o.Logger.Errorf("NIL error received")
-		return func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
+		if err == nil {
+			o.Logger.WithContext(lw.Ctx{"url": irif(r)}).Errorf("Nil error received when calling Error handler")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		defer o.Logger.WithContext(lw.Ctx{"err": err, "url": irif(r)}).Errorf("Error")
 
 		accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableErrorMediaTypes)
@@ -816,16 +810,13 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
 						o.Logger.WithContext(lw.Ctx{"actor": act.ID, "by": oniActor.ID}).Warnf("Blocked")
-						next = o.Error(errors.Gonef("nothing to see here, please move along"))
+						o.Error(errors.Gonef("nothing to see here, please move along")).ServeHTTP(w, r)
+						return
 					}
 				}
 			}
 
 			r = r.WithContext(ctx)
-		}
-		if next == nil {
-			o.Logger.Warnf("StopBlocked received %T %v next handler", next, next)
-			return
 		}
 		next.ServeHTTP(w, r)
 	})
@@ -1098,7 +1089,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			processing.WithClient(cl), processing.WithStorage(o.Storage),
 			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(o.IRIHasLocalParent()),
 		)
-		defer r.Body.Close()
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -1172,7 +1162,8 @@ var InDebugMode = atomic.Bool{}
 func (o *oni) OutOfOrderMw(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if InMaintenanceMode.Load() {
-			next = o.Error(errors.ServiceUnavailablef("temporarily out of order"))
+			o.Error(errors.ServiceUnavailablef("temporarily out of order")).ServeHTTP(w, r)
+			return
 		}
 		next.ServeHTTP(w, r)
 	})
