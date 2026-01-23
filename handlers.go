@@ -811,7 +811,7 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 			act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor, blocked...)
 			ctx := r.Context()
 			ctx = context.WithValue(ctx, blockedActorsCtxKey, blocked)
-			if !act.Equals(auth.AnonymousActor) {
+			if !act.GetLink().Equal(auth.AnonymousActor.GetLink()) {
 				ctx = context.WithValue(ctx, authorizedActorCtxKey, act)
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
@@ -1077,14 +1077,14 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		lctx["oni"] = actor.GetLink()
 
 		author := auth.AnonymousActor
-		if ok, err := o.ValidateRequest(r); !ok {
+		_, err := o.ValidateRequest(r)
+		if err != nil {
 			lctx["err"] = err.Error()
 			o.Logger.WithContext(lctx).Errorf("Failed request validation")
 			return it, errors.HttpStatus(err), err
-		} else {
-			if stored, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
-				author = stored
-			}
+		}
+		if stored, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
+			author = stored
 		}
 
 		var tr http.RoundTripper = &http.Transport{}
@@ -1098,11 +1098,16 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			processing.WithClient(cl), processing.WithStorage(o.Storage),
 			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(o.IRIHasLocalParent()),
 		)
+		defer r.Body.Close()
 
 		body, err := io.ReadAll(r.Body)
-		if err != nil || len(body) == 0 {
+		if err != nil {
 			lctx["err"] = err.Error()
 			o.Logger.WithContext(lctx).Errorf("Failed loading body")
+			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
+		}
+		if len(body) == 0 {
+			o.Logger.WithContext(lctx).Errorf("Empty body received")
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
 		}
 
