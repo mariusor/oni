@@ -833,8 +833,9 @@ func hasPath(iri vocab.IRI) bool {
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
 
-	colFilters := make(filters.Checks, 0)
+	authActor, _ := o.loadAuthorizedActor(r, auth.AnonymousActor)
 
+	colFilters := make(filters.Checks, 0)
 	if vocab.ValidCollectionIRI(iri) {
 		_, whichCollection := vocab.Split(iri)
 
@@ -867,9 +868,13 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 				colFilters = append(colFilters, filters.WithMaxCount(MaxItems))
 			}
 		}
-	}
-	if authActor, _ := o.loadAuthorizedActor(r, auth.AnonymousActor); authActor.ID != "" {
-		colFilters = append(colFilters, filters.Authorized(authActor.ID))
+		if col := whichCollection.Of(authActor); vocab.IsNil(col) || col.GetLink().Equal(iri) {
+			colFilters = append(colFilters, filters.Authorized(authActor.ID))
+		}
+	} else {
+		if authActor.ID != "" {
+			colFilters = append(colFilters, filters.Authorized(authActor.ID))
+		}
 	}
 
 	it, err := loadItemFromStorage(o.Storage, iri, colFilters...)
