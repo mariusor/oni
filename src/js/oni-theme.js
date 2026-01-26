@@ -124,13 +124,11 @@ export class Palette {
         const fgMatchPref = userWantsDark === tc(palette.fgColor).isLight();
         console.debug(`userPrefDark: ${userWantsDark}: bgMatch: ${bgMatchPref}, fgMatch: ${fgMatchPref}`);
 
-        if (!bgMatchPref && !fgMatchPref) {
-            // NOTE(marius): we switch between fg and bg to match bg to what the user wants
-            [palette.fgColor, palette.bgColor] = [palette.bgColor, palette.fgColor];
-        } else if (!bgMatchPref && fgMatchPref) {
+        if (!bgMatchPref) {
             palette.bgColor = changeDarkness(palette.bgColor, palette.fgColor, !userWantsDark);
             console.debug(`fg match, fixed bg: ${palette.bgColor}`)
-        } else if (bgMatchPref && !fgMatchPref) {
+        }
+        if (!fgMatchPref) {
             palette.fgColor = changeDarkness(palette.fgColor, palette.bgColor, userWantsDark);
             console.debug(`bg match, fixed fg: ${palette.fgColor}`)
         }
