@@ -118,6 +118,7 @@ export class Palette {
             palette.bgColor = await average(imageURL, {format: 'hex'});
             console.debug(`loaded image ${palette.imageURL}: (bg ${palette.bgColor})`, palette.imageColors);
         }
+
         const userWantsDark = prefersDarkTheme();
         const bgMatchPref = userWantsDark === tc(palette.bgColor).isDark();
         const fgMatchPref = userWantsDark === tc(palette.fgColor).isLight();
@@ -125,36 +126,28 @@ export class Palette {
 
         if (!bgMatchPref && !fgMatchPref) {
             // NOTE(marius): we switch between fg and bg to match bg to what the user wants
-            const t = palette.fgColor;
-            palette.fgColor = palette.bgColor;
-            palette.bgColor = t;
-            console.debug(`neither match, switched them`)
+            [palette.fgColor, palette.bgColor] = [palette.bgColor, palette.fgColor];
         } else if (!bgMatchPref && fgMatchPref) {
             palette.bgColor = changeDarkness(palette.bgColor, palette.fgColor, !userWantsDark);
-            console.debug(`fg match, fix bg`)
+            console.debug(`fg match, fixed bg: ${palette.bgColor}`)
         } else if (bgMatchPref && !fgMatchPref) {
-            console.debug(`bg match, fix ${userWantsDark} fg: ${palette.fgColor}`)
             palette.fgColor = changeDarkness(palette.fgColor, palette.bgColor, userWantsDark);
-            console.debug(`fixed fg: ${palette.fgColor}`)
+            console.debug(`bg match, fixed fg: ${palette.fgColor}`)
         }
 
         // NOTE(marius): at this point bg should match user pref
         const wantsDark = tc(palette.bgColor).isDark();
 
-        //wantsDark = tc(palette.bgColor).isDark();
-        // if (palette.imageColors.length > 0) {
-        //     palette.fgColor = getFgColor(palette.imageColors, palette.bgColor, wantsDark) || palette.fgColor;
-        // } else {
-        //     palette.fgColor = getFgColor(palette.iconColors, palette.bgColor, wantsDark) || palette.fgColor;
-        // }
         if (palette.iconColors.length > 0) {
-            palette.accentColor = getAccentColor(palette.iconColors, palette.bgColor, wantsDark) || palette.accentColor;
-            palette.linkColor = getLinkColor(palette.iconColors, palette.bgColor);
+            palette.accentColor = getAccentColor(palette.iconColors, palette.bgColor, wantsDark);
+            palette.linkColor = getClosestColor(palette.iconColors, palette.accentColor, palette.bgColor);
+            palette.linkColor = tc(palette.linkColor).mix(palette.accentColor, 60).toHexString();
         }
+
         if (wantsDark) {
-            palette.linkVisitedColor = tc(palette.linkColor).mix(palette.accentColor, 60).lighten(40).toHexString();
+            palette.linkVisitedColor = tc(palette.linkColor).mix(palette.bgColor, 10).lighten(40).toHexString();
         } else {
-            palette.linkVisitedColor = tc(palette.linkColor).mix(palette.accentColor, 60).darken(40).toHexString();
+            palette.linkVisitedColor = tc(palette.linkColor).mix(palette.bgColor, 10).darken(40).toHexString();
         }
 
         return palette;
@@ -223,7 +216,7 @@ export class PaletteElement extends LitElement {
             ${renderColor(this.palette.accentColor, this.palette.bgColor, html`<b>Accent:</b> `)}
             ${renderColor(this.palette.linkColor, this.palette.bgColor, html`<b>Link:</b> `)}
             ${renderColor(this.palette.linkVisitedColor, this.palette.bgColor, html`<b>Visited Link:</b> `)}
-            <div class="colors-colors">
+            <div class="colors">
                 ${when(this.palette.iconColors.length > 0,
                         () => html`${colorMap(this.palette.iconColors.toSorted(byContrastTo(this.palette.bgColor)))}`,
                         () => nothing,
@@ -355,7 +348,7 @@ function saturatedFromColor(original, contrastTo, wantsDark) {
     let color = tc(original).clone();
 
     wantsDark = typeof wantsDark == 'undefined' ? prefersDarkTheme() : wantsDark;
-    const maxIter = 30;
+    const maxIter = 50;
     let cnt = 0;
 
     do {
