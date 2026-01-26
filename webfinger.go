@@ -612,49 +612,6 @@ type ClientRegistrationResponse struct {
 	Expires int64 `json:"client_secret_expires_at"`
 }
 
-func (o *oni) AddActor(p *vocab.Person, pw []byte, author vocab.Actor) (*vocab.Person, error) {
-	if o.Storage == nil {
-		return nil, errors.Errorf("invalid storage backend")
-	}
-	if author.GetLink().Equals(auth.AnonymousActor.GetLink(), false) {
-		return nil, errors.Errorf("invalid parent actor")
-	}
-
-	createdAt := time.Now().UTC()
-	create := vocab.Activity{
-		Type:    vocab.CreateType,
-		To:      vocab.ItemCollection{vocab.PublicNS},
-		Actor:   author,
-		Updated: createdAt,
-		Object:  p,
-	}
-	if create.AttributedTo == nil {
-		create.AttributedTo = author.GetLink()
-	}
-	if !create.CC.Contains(author.GetLink()) {
-		_ = create.CC.Append(author.GetLink())
-	}
-
-	outbox := vocab.Outbox.Of(author)
-	if vocab.IsNil(outbox) {
-		return nil, errors.Newf("unable to find Actor's outbox: %s", author)
-	}
-
-	alwaysLocal := func(_ vocab.IRI) bool {
-		return true
-	}
-	ap := processing.New(
-		processing.WithStorage(o.Storage),
-		processing.WithIDGenerator(GenerateID),
-		processing.WithLocalIRIChecker(alwaysLocal),
-	)
-	if _, err := ap.ProcessClientActivity(create, author, outbox.GetLink()); err != nil {
-		return nil, err
-	}
-
-	return p, o.Storage.PasswordSet(p.GetLink(), pw)
-}
-
 func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -752,7 +709,7 @@ func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 			// TODO(marius): use some valid pw generation here
 			pw := []byte(DefaultOAuth2ClientPw)
 
-			app, err := o.AddActor(clientActor, pw, self)
+			app, err := o.AddActorWithPassword(clientActor, pw, self)
 			if err != nil {
 				o.Error(err).ServeHTTP(w, r)
 				return

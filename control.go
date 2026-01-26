@@ -109,36 +109,24 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 		OauthTokenEndpoint:         o.GetLink().AddPath("oauth", "token"),
 	}
 
-	if it, err = c.Storage.Save(o); err != nil {
-		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to save main actor")
-		return nil, err
-	}
-
-	actor, err := vocab.ToActor(it)
+	actor := &o
+	actor, err = c.AddActorWithPassword(actor, []byte(pw), o)
 	if err != nil {
-		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Invalid actor type %T", it)
+		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to save instance actor", it)
 		return nil, err
 	}
 
-	if err = c.Storage.PasswordSet(actor.GetLink(), []byte(pw)); err != nil {
-		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to set password for actor")
-		return nil, err
-	} else {
-		c.Logger.WithContext(lw.Ctx{"secret": pw}).Infof("Successfully set password")
-	}
 	u, _ := actor.ID.URL()
 	if err = c.CreateOAuth2ClientIfMissing(actor.ID, pw); err != nil {
 		c.Logger.WithContext(lw.Ctx{"host": u.Hostname(), "err": err.Error()}).Errorf("Unable to save OAuth2 Client")
 		return nil, err
-	} else {
-		c.Logger.WithContext(lw.Ctx{"ClientID": actor.ID}).Debugf("Created OAuth2 Client")
 	}
+	c.Logger.WithContext(lw.Ctx{"ClientID": actor.ID}).Debugf("Created OAuth2 Client")
 
 	if actor, err = c.GenKeyPair(actor); err != nil {
 		c.Logger.WithContext(lw.Ctx{"err": err, "id": o.ID}).Errorf("Unable to generate Private/Public key pair")
-	} else {
-		c.Logger.WithContext(lw.Ctx{"id": o.ID}).Debugf("Created Private/Public key pair")
 	}
+	c.Logger.WithContext(lw.Ctx{"id": o.ID}).Debugf("Created Private/Public key pair")
 
 	// NOTE(marius): a second save to update the public key
 	if it, err = c.Storage.Save(actor); err != nil {
@@ -392,4 +380,47 @@ func (c *Control) CreateOAuth2ClientIfMissing(i vocab.IRI, pw string) error {
 		UserData:    i,
 	}
 	return c.Storage.CreateClient(cl)
+}
+
+func (c *Control) AddActorWithPassword(p *vocab.Person, pw []byte, author vocab.Actor) (*vocab.Person, error) {
+	if c.Storage == nil {
+		return nil, errors.Errorf("invalid storage backend")
+	}
+	if author.GetLink().Equals(auth.AnonymousActor.GetLink(), false) {
+		return nil, errors.Errorf("invalid parent actor")
+	}
+
+	createdAt := time.Now().UTC()
+	create := vocab.Activity{
+		Type:    vocab.CreateType,
+		To:      vocab.ItemCollection{vocab.PublicNS},
+		Actor:   author,
+		Updated: createdAt,
+		Object:  p,
+	}
+	if create.AttributedTo == nil {
+		create.AttributedTo = author.GetLink()
+	}
+	if !create.CC.Contains(author.GetLink()) {
+		_ = create.CC.Append(author.GetLink())
+	}
+
+	outbox := vocab.Outbox.Of(author)
+	if vocab.IsNil(outbox) {
+		return nil, errors.Newf("unable to find Actor's outbox: %s", author)
+	}
+
+	lwCtx := lw.Ctx{"op": "bootstrap"}
+	ap := processing.New(
+		processing.WithLogger(c.Logger.WithContext(lwCtx)),
+		processing.WithClient(c.Client(author, nil, lwCtx)),
+		processing.WithStorage(c.Storage),
+		processing.WithIDGenerator(GenerateID),
+		processing.WithIRI(author.ID),
+	)
+	if _, err := ap.ProcessClientActivity(create, author, outbox.GetLink()); err != nil {
+		return nil, err
+	}
+
+	return p, c.Storage.PasswordSet(p.GetLink(), pw)
 }
