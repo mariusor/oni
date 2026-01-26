@@ -33,7 +33,8 @@ export class ActivityPubActor extends ActivityPubObject {
             font-weight: 300;
         }
         section h1 a [name] {
-            text-shadow: 0 0 2rem var(--accent-color), 0 0 .3rem var(--accent-color);
+            color: var(--accent-color);
+            text-shadow: 0 0 2rem var(--link-color), 0 0 .3rem var(--link-color);
         }
         header > a svg {
             color: var(--accent-color);
@@ -52,9 +53,9 @@ export class ActivityPubActor extends ActivityPubObject {
             padding: .32rem;
             backdrop-filter: blur(10px);
             border-radius: 0 1.6em 1.6em 1.6em;
-            border: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
-            box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
-            background-color: color-mix(in srgb, var(--accent-color), transparent 85%);
+            border: .1rem solid color-mix(in srgb, var(--link-color), transparent 30%);
+            box-shadow: 0 0 1rem var(--link-color), 0 0 .3rem var(--link-color);
+            background-color: color-mix(in srgb, var(--link-color), transparent 85%);
         }
         section ul {
             display: inline-block;
