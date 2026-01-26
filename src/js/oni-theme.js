@@ -138,14 +138,14 @@ export class Palette {
 
         if (palette.iconColors.length > 0) {
             palette.accentColor = getAccentColor(palette.iconColors, palette.bgColor, wantsDark);
-            palette.linkColor = getClosestColor(palette.iconColors, palette.accentColor, palette.bgColor);
-            palette.linkColor = tc(palette.linkColor).mix(palette.accentColor, 60).toHexString();
+            palette.linkVisitedColor = getClosestColor(palette.iconColors, palette.accentColor, palette.bgColor);
+            palette.linkVisitedColor = tc(palette.linkColor).mix(palette.accentColor, 60).toHexString();
         }
 
         if (wantsDark) {
-            palette.linkVisitedColor = tc(palette.linkColor).mix(palette.bgColor, 10).lighten(40).toHexString();
+            palette.linkColor = tc(palette.linkColor).mix(palette.bgColor, 10).lighten(40).toHexString();
         } else {
-            palette.linkVisitedColor = tc(palette.linkColor).mix(palette.bgColor, 10).darken(40).toHexString();
+            palette.linkColor = tc(palette.linkColor).mix(palette.bgColor, 10).darken(40).toHexString();
         }
 
         return palette;
