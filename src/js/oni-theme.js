@@ -6,6 +6,33 @@ import {map} from "lit-html/directives/map.js";
 import {isMainPage} from "./utils";
 import {when} from "lit-html/directives/when.js";
 
+class LightDark {
+    light;
+    dark;
+
+    toString() {
+        return `light-dark(${tc(this.light).toHexString()}, ${tc(this.dark).toHexString()})`;
+    }
+}
+
+function lightDarkFromColor(col) {
+    const c = tc(col);
+    console.debug(`received ${c.toHexString()}, brightness: ${c.getBrightness()} isLight: ${c.isLight()}, isDark: ${c.isDark()}`)
+    const result = new(LightDark);
+    const oppositeLightnessAmount = 1.6*Math.abs(c.getBrightness()-128);
+    if (c.isLight()) {
+        result.light = c.toHexString();
+        result.dark = c.darken(oppositeLightnessAmount).toHexString();
+        console.debug(`computed ${oppositeLightnessAmount} dark-color: ${tc(result.dark).toHexString()}, brightness: ${tc(result.dark).getBrightness()}`)
+    }  else {
+        result.dark = c.toHexString();
+        result.light = c.lighten(oppositeLightnessAmount).toHexString();
+        console.debug(`computed ${oppositeLightnessAmount} light-color: ${tc(result.light).toHexString()}, brightness: ${tc(result.light).getBrightness()}`)
+    }
+    console.debug(`light dark: ${result}`, result);
+    return result;
+}
+
 export class Palette {
     bgColor;
     fgColor;
@@ -90,7 +117,18 @@ export class Palette {
     }
 
     static toStorage(palette) {
-        localStorage.setItem('palette', JSON.stringify(palette));
+        const _palette = {
+            bgColor: palette.bgColor.toString(),
+            fgColor: palette.fgColor.toString(),
+            accentColor: palette.accentColor.toString(),
+            linkColor: palette.linkColor.toString(),
+            linkVisitedColor: palette.linkVisitedColor.toString(),
+            imageURL:palette.imageURL,
+            iconURL: palette.iconURL,
+            imageColors: palette.imageColors,
+            iconColors: palette.iconColors,
+        }
+        localStorage.setItem('palette', JSON.stringify(_palette));
     }
 
     static async fromActivityPubItem(it) {
@@ -105,7 +143,8 @@ export class Palette {
         if (iconURL) {
             palette.iconURL = iconURL;
             palette.iconColors = (await colorsFromImage(iconURL, colorCount));
-            palette.fgColor = await average(iconURL, {format: 'hex'});
+            const avgCol = await average(iconURL, {format: 'hex'});
+            palette.fgColor = lightDarkFromColor(avgCol);
             console.debug(`loaded icon ${palette.iconURL}: (avg ${palette.fgColor}) `, palette.iconColors);
         }
 
@@ -113,38 +152,25 @@ export class Palette {
             colorCount = 10;
             palette.imageURL = imageURL;
             palette.imageColors = (await colorsFromImage(imageURL, colorCount));
-            palette.bgColor = await average(imageURL, {format: 'hex'});
+            const avgCol = await average(imageURL, {format: 'hex'});
+            palette.bgColor = lightDarkFromColor(avgCol);
             console.debug(`loaded image ${palette.imageURL}: (bg ${palette.bgColor})`, palette.imageColors);
         }
 
-        const userWantsDark = prefersDarkTheme();
-        const bgMatchPref = userWantsDark === tc(palette.bgColor).isDark();
-        const fgMatchPref = userWantsDark === tc(palette.fgColor).isLight();
-        console.debug(`userPrefDark: ${userWantsDark}: bgMatch: ${bgMatchPref}, fgMatch: ${fgMatchPref}`);
-
-        if (!bgMatchPref) {
-            palette.bgColor = changeDarkness(palette.bgColor, palette.fgColor, !userWantsDark);
-            console.debug(`fg match, fixed bg: ${palette.bgColor}`)
-        }
-        if (!fgMatchPref) {
-            palette.fgColor = changeDarkness(palette.fgColor, palette.bgColor, userWantsDark);
-            console.debug(`bg match, fixed fg: ${palette.fgColor}`)
-        }
-
         // NOTE(marius): at this point bg should match user pref
-        const wantsDark = tc(palette.bgColor).isDark();
+        const wantsDark = prefersDarkTheme();
 
-        if (palette.iconColors.length > 0) {
-            palette.accentColor = getAccentColor(palette.iconColors, palette.bgColor, wantsDark);
-            palette.linkVisitedColor = getClosestColor(palette.iconColors, palette.accentColor, palette.bgColor);
-            palette.linkVisitedColor = tc(palette.linkColor).mix(palette.accentColor, 60).toHexString();
-        }
-
-        if (wantsDark) {
-            palette.linkColor = tc(palette.linkColor).mix(palette.bgColor, 10).lighten(40).toHexString();
-        } else {
-            palette.linkColor = tc(palette.linkColor).mix(palette.bgColor, 10).darken(40).toHexString();
-        }
+        // if (palette.iconColors.length > 0) {
+        //     palette.accentColor = getAccentColor(palette.iconColors, palette.bgColor, wantsDark);
+        //     palette.linkVisitedColor = getClosestColor(palette.iconColors, palette.accentColor, palette.bgColor);
+        //     palette.linkVisitedColor = tc(palette.linkColor).mix(palette.accentColor, 60).toHexString();
+        // }
+        //
+        // if (wantsDark) {
+        //     palette.linkColor = tc(palette.linkColor).mix(palette.bgColor, 10).lighten(40).toHexString();
+        // } else {
+        //     palette.linkColor = tc(palette.linkColor).mix(palette.bgColor, 10).darken(40).toHexString();
+        // }
 
         return palette;
     }
