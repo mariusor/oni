@@ -109,14 +109,25 @@ export class Palette {
         return palette;
     }
 
-    renderStyles() {
+    renderThinHeaderBackground() {
+        this.setRootStyles();
+        if (!this.imageURL) return nothing;
+        // NOTE(marius): in the header we want a different gradient, with fewer steps
+        return unsafeCSS(`
+            :host header {
+                --c: var(--bg-color);
+                background-image: linear-gradient(lch(from var(--c) l c h / 0.2), lch(from var(--c) l c h / 0.7), lch(from var(--c) l c h)), url(${this.imageURL});
+            }
+        `);
+    }
+
+    renderHeaderBackground() {
         this.setRootStyles();
         if (!this.imageURL) return nothing;
         return unsafeCSS(`
             :host header {
                 --c: var(--bg-color);
-                background-image: linear-gradient(lch(from var(--c) l c h / 0.1), lch(from var(--c) l c h / 0.2), 
-                    lch(from var(--c) l c h / 0.3), lch(from var(--c) l c h)), url(${this.imageURL});
+                background-image: linear-gradient(lch(from var(--c) l c h / 0.1), lch(from var(--c) l c h / 0.2), lch(from var(--c) l c h / 0.2), lch(from var(--c) l c h / 0.3), lch(from var(--c) l c h)), url(${this.imageURL});
             }
         `);
     }

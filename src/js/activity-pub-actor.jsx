@@ -221,7 +221,7 @@ export class ActivityPubActor extends ActivityPubObject {
         return html`<a class=${classMap({'inline': this.inline})} title=${title} href=${iri}>${ needsAvatar ? this.renderIcon() : nothing} ${this.renderRemotePreferredUsername()}</a>`;
     }
 
-    async renderStyles() {
+    async renderBackground() {
         let palette = Palette.fromStorage();
         if (!palette.matchItem(this.it)) {
             palette = await Palette.fromActivityPubItem(this.it);
@@ -229,7 +229,7 @@ export class ActivityPubActor extends ActivityPubObject {
         }
         if (!palette) return nothing;
 
-        return palette.renderStyles();
+        return palette.renderHeaderBackground();
     }
 
     render() {
@@ -241,7 +241,7 @@ export class ActivityPubActor extends ActivityPubObject {
 
         const iri = this.it.iri();
 
-        const style = html`<style>${until(this.renderStyles())}</style>`;
+        const style = html`<style>${until(this.renderBackground())}</style>`;
         return html`${style}<header>
             <a href=${iri}>${this.renderIcon()}</a>
             <section>

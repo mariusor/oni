@@ -6,6 +6,7 @@ import {ActivityPubObject} from "./activity-pub-object";
 import {ActivityPubItem} from "./activity-pub-item";
 import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 import {sanitize} from "./utils";
+import {Palette} from "./oni-theme";
 
 export class OniHeader extends ActivityPubActor {
 
@@ -67,10 +68,21 @@ export class OniHeader extends ActivityPubActor {
         return html`<a href=${iri}> ${this.renderIcon()} ${username}</a>`;
     }
 
+    async renderBackground() {
+        let palette = Palette.fromStorage();
+        if (!palette.matchItem(this.it)) {
+            palette = await Palette.fromActivityPubItem(this.it);
+            if (palette) Palette.toStorage(palette);
+        }
+        if (!palette) return nothing;
+
+        return palette.renderThinHeaderBackground();
+    }
+
     render() {
         if (!ActivityPubItem.isValid(this.it)) return nothing;
 
-        const style = html`<style>${until(this.renderStyles())}</style>`;
+        const style = html`<style>${until(this.renderBackground())}</style>`;
         const iconName = html`${this.renderIconName()}`;
         return html`${style}<header>${until(this.renderCollections(iconName), `<hr/>`)}</header>`;
     }
