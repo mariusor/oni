@@ -13,6 +13,10 @@ class LightDark {
     toString() {
         return `light-dark(${tc(this.light).toHexString()}, ${tc(this.dark).toHexString()})`;
     }
+
+    toJSON() {
+        return this.toString();
+    }
 }
 
 function lightDarkFromColor(col) {
@@ -117,18 +121,7 @@ export class Palette {
     }
 
     static toStorage(palette) {
-        const _palette = {
-            bgColor: palette.bgColor.toString(),
-            fgColor: palette.fgColor.toString(),
-            accentColor: palette.accentColor.toString(),
-            linkColor: palette.linkColor.toString(),
-            linkVisitedColor: palette.linkVisitedColor.toString(),
-            imageURL:palette.imageURL,
-            iconURL: palette.iconURL,
-            imageColors: palette.imageColors,
-            iconColors: palette.iconColors,
-        }
-        localStorage.setItem('palette', JSON.stringify(_palette));
+        localStorage.setItem('palette', JSON.stringify(palette));
     }
 
     static async fromActivityPubItem(it) {
