@@ -117,7 +117,7 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 	}
 
 	u, _ := actor.ID.URL()
-	if err = c.CreateOAuth2ClientIfMissing(actor.ID, pw); err != nil {
+	if err = c.CreateOAuth2ClientAlways(actor.ID, pw); err != nil {
 		c.Logger.WithContext(lw.Ctx{"host": u.Hostname(), "err": err.Error()}).Errorf("Unable to save OAuth2 Client")
 		return nil, err
 	}
@@ -358,22 +358,18 @@ func checkIRIResolvesLocally(iri vocab.IRI) (*net.TCPAddr, error) {
 	return net.ResolveTCPAddr("tcp", host)
 }
 
-func (c *Control) CreateOAuth2ClientIfMissing(i vocab.IRI, pw string) error {
+func (c *Control) CreateOAuth2ClientAlways(i vocab.IRI, pw string) error {
 	u, _ := i.URL()
 	if pw == "" {
 		pw = DefaultOAuth2ClientPw
 	}
 
 	id := string(uriRootIRI(u))
-	cl, err := c.Storage.GetClient(id)
-	if err == nil {
-		return nil
-	}
 	uris := append(
 		[]string{id, DefaultOniAppRedirectURL, DefaultBOXAppRedirectURL, processing.OAuthOOBRedirectURN},
 		strings.Split(ExtraRedirectURL, "\n")...,
 	)
-	cl = &osin.DefaultClient{
+	cl := &osin.DefaultClient{
 		Id:          id,
 		Secret:      pw,
 		RedirectUri: strings.Join(uris, "\n"),

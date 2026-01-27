@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"git.sr.ht/~mariusor/lw"
+	"git.sr.ht/~mariusor/mask"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/errors"
@@ -76,6 +77,6 @@ func CreateBlankActor(o *oni, id vocab.IRI) vocab.Actor {
 		o.Logger.WithContext(lw.Ctx{"err": err.Error(), "iri": id}).Warnf("unable to create root actor")
 		return auth.AnonymousActor
 	}
-	o.Logger.WithContext(lw.Ctx{"iri": id}).Infof("Created new root actor")
+	o.Logger.WithContext(lw.Ctx{"iri": id, "pw": mask.S(o.pw)}).Infof("Created new root actor")
 	return *blank
 }
