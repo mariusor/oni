@@ -17,6 +17,9 @@ export class ActivityPubActor extends ActivityPubObject {
             align-items: flex-end;
             justify-items: start;
             column-gap: 1.4rem;
+            background-size: cover;
+            background-clip: padding-box;
+            background-position: center;
         }
         header section {
             display: flex;

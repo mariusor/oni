@@ -79,14 +79,12 @@ export class Palette {
 
     renderStyles() {
         this.setRootStyles();
-        const col = tc(this.bgColor);
         if (!this.imageURL) return nothing;
         return unsafeCSS(`
             :host header {
-                background-size: cover;
-                background-clip: padding-box;
-                background-position: center;
-                background-image: linear-gradient(${col.setAlpha(0.1).toRgbString()}, ${col.setAlpha(0.5).toRgbString()}, ${col.setAlpha(1).toRgbString()}), url(${this.imageURL});
+                --c: var(--bg-color);
+                background-image: linear-gradient(lch(from var(--c) l c h / 0.1), lch(from var(--c) l c h / 0.2), 
+                    lch(from var(--c) l c h / 0.3), lch(from var(--c) l c h)), url(${this.imageURL});
             }
         `);
     }
