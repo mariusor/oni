@@ -11,20 +11,19 @@ export class ActivityPubObject extends LitElement {
         :host {
             color: var(--fg-color);
         }
-        a {
+        a:link {
             color: var(--link-color);
-        }
-        a:hover, a:hover:visited {
-            color: var(--link-hover-color);
-            text-shadow: 0 0 1rem var(--link-hover-color), 0 0 .3rem var(--bg-color);
         }
         a:visited {
             color: var(--link-visited-color);
-            text-shadow: 0 0 1rem var(--link-visited-color), 0 0 .3rem var(--bg-color);
+        }
+        a:hover {
+            --c: oklch(from var(--link-color) calc(l - .2) c h);
+            color: var(--c);
+            text-shadow: 0 0 1rem var(--c), 0 0 .3rem var(--bg-color);
         }
         a:active {
-            color: var(--link-active-color);
-            text-shadow: 0 0 1rem var(--link-active-color), 0 0 .3rem var(--bg-color);
+            color: oklch(from var(--link-color) l c calc(h + .2));
         }
         a:has(oni-natural-language-values) {
             text-decoration: none;
