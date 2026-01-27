@@ -16,6 +16,9 @@ export class OniHeader extends ActivityPubActor {
                 padding-top: .4rem;
                 display: grid;
                 align-items: end;
+                background-size: cover;
+                background-clip: padding-box;
+                background-position: center;
             }
             header a svg {
                fill: none;
