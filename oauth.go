@@ -293,16 +293,7 @@ func (o *oni) redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http
 		}
 	}
 
-	if rs.Type == osin.REDIRECT {
-		// Output redirect with parameters
-		u, err := rs.GetRedirectUrl()
-		if err != nil {
-			o.Error(annotatedRsError(http.StatusInternalServerError, err, "Error getting OAuth2 redirect URL")).ServeHTTP(w, r)
-			return
-		}
-
-		http.Redirect(w, r, u, http.StatusFound)
-	} else {
+	if rs.Type == osin.DATA {
 		// set content type if the response doesn't already have one associated with it
 		if w.Header().Get("Content-Type") == "" {
 			w.Header().Set("Content-Type", "application/json")
@@ -311,9 +302,17 @@ func (o *oni) redirectOrOutput(rs *osin.Response, w http.ResponseWriter, r *http
 
 		if err := json.NewEncoder(w).Encode(rs.Output); err != nil {
 			o.Error(err).ServeHTTP(w, r)
-			return
 		}
+		return
 	}
+	// Output redirect with parameters
+	u, err := rs.GetRedirectUrl()
+	if err != nil {
+		o.Error(annotatedRsError(http.StatusInternalServerError, err, "Error getting OAuth2 redirect URL")).ServeHTTP(w, r)
+		return
+	}
+
+	http.Redirect(w, r, u, http.StatusFound)
 }
 
 // DefaultOAuth2ClientPw is the default password used by the main actor
