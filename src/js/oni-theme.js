@@ -22,8 +22,9 @@ class LightDark {
 function lightDarkFromColor(col) {
     const c = tc(col);
     console.debug(`received ${c.toHexString()}, brightness: ${c.getBrightness()} isLight: ${c.isLight()}, isDark: ${c.isDark()}`)
-    const result = new(LightDark);
-    const oppositeLightnessAmount = 1.6*Math.abs(c.getBrightness()-128);
+    const result = new LightDark();
+    // NOTE(marius): we divide by 2.55 to get directly the percentage value passable to lighten()/darken()
+    const oppositeLightnessAmount = Math.abs(c.getBrightness()-128) / 2.55;
     if (c.isLight()) {
         result.light = c.toHexString();
         result.dark = c.darken(oppositeLightnessAmount).toHexString();
@@ -33,7 +34,7 @@ function lightDarkFromColor(col) {
         result.light = c.lighten(oppositeLightnessAmount).toHexString();
         console.debug(`computed ${oppositeLightnessAmount} light-color: ${tc(result.light).toHexString()}, brightness: ${tc(result.light).getBrightness()}`)
     }
-    console.debug(`light dark: ${result}`, result);
+    console.debug(`light dark: ${result}`);
     return result;
 }
 
