@@ -4,7 +4,7 @@
 :root {
     --bg-color: light-dark(#EFF0F1, #232627);
     --fg-color: light-dark(#232627, #EFF0F1);
-    --link-color: light-dark(#0000CD, #1E90FF); /* mediumblue, dodgerblue */
+    --link-color: light-dark(#00008B, #6495ED); /* darkblue, cornflowerblue */
     --link-visited-color: light-dark(#663399, #9370DB); /* rebeccapurple, mediumpurple */
     --accent-color: lch(from var(--link-color) l c calc(h + 80));
 
