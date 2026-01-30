@@ -536,18 +536,24 @@ func getRequestAcceptedContentType(r *http.Request) func(...ct.MediaType) bool {
 	return checkAcceptMediaType(accepted)
 }
 
+func supportedMimeTypeForHTML(mt ct.MediaType) bool {
+	return !mt.Matches(pdfDocument)
+}
+
 func getItemAcceptedContentType(it vocab.Item, r *http.Request) func(check ...ct.MediaType) bool {
 	acceptableMediaTypes := make([]ct.MediaType, 0)
 
 	_ = vocab.OnObject(it, func(ob *vocab.Object) error {
-		if ob.MediaType != "" {
-			if mt, err := ct.ParseMediaType(string(ob.MediaType)); err == nil {
-				acceptableMediaTypes = append(acceptableMediaTypes, mt)
-			}
+		mt, err := ct.ParseMediaType(string(ob.MediaType))
+		if err == nil {
+			acceptableMediaTypes = append(acceptableMediaTypes, mt)
+		}
+		if supportedMimeTypeForHTML(mt) {
+			acceptableMediaTypes = append(acceptableMediaTypes, fallbackHTML)
 		}
 		return nil
 	})
-	acceptableMediaTypes = append(acceptableMediaTypes, applicationJsonLD, applicationJsonActivity, applicationJson, fallbackHTML)
+	acceptableMediaTypes = append(acceptableMediaTypes, applicationJsonLD, applicationJsonActivity, applicationJson)
 
 	accepted, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
 	if accepted.Type == "" {
