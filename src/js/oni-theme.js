@@ -18,6 +18,7 @@ class LightDark {
 }
 
 function fgColor(col) {
+    col = tc(col)?.desaturate(10)?.toHexString() || col;
     const bgColor = lightDarkFromColor(col);
     const fgColor = new LightDark();
     [fgColor.light, fgColor.dark] = [bgColor.dark, bgColor.light];
@@ -25,6 +26,7 @@ function fgColor(col) {
 }
 
 function bgColor(col) {
+    col = tc(col)?.desaturate(10)?.toHexString() || col;
     return lightDarkFromColor(col);
 }
 
@@ -152,15 +154,6 @@ export class Palette {
 
         const palette = new Palette();
 
-        if (iconURL) {
-            const colorCount = 15;
-            palette.iconURL = iconURL;
-            palette.iconColors = (await colorsFromImage(iconURL, colorCount));
-            const avgCol = await average(iconURL, {format: 'hex'});
-            palette.fgColor = fgColor(avgCol);
-            console.debug(`loaded icon ${palette.iconURL}: (avg ${palette.fgColor}) brightness(l:${tc(palette.fgColor.light).getBrightness()}, d:${tc(palette.fgColor.dark).getBrightness()})`, palette.iconColors);
-        }
-
         if (imageURL) {
             const colorCount = 20;
             palette.imageURL = imageURL;
@@ -168,6 +161,15 @@ export class Palette {
             const avgCol = await average(imageURL, {format: 'hex'});
             palette.bgColor = bgColor(avgCol);
             console.debug(`loaded image ${palette.imageURL}: (bg ${palette.bgColor})`, palette.imageColors);
+        }
+
+        if (iconURL) {
+            const colorCount = 20;
+            palette.iconURL = iconURL;
+            palette.iconColors = (await colorsFromImage(iconURL, colorCount));
+            const avgCol = await average(iconURL, {format: 'hex'});
+            palette.fgColor = fgColor(avgCol);
+            console.debug(`loaded icon ${palette.iconURL}: (avg ${palette.fgColor}) brightness(l:${tc(palette.fgColor.light).getBrightness()}, d:${tc(palette.fgColor.dark).getBrightness()})`, palette.iconColors);
         }
 
         let colors = palette.imageColors;
@@ -275,7 +277,7 @@ export const mediumScreen = () => !!(mediumScreenMediaMatch?.matches);
 const largeScreenMediaMatch = window.matchMedia('(width > 1920px)')
 export const largeScreen = () => !!(largeScreenMediaMatch?.matches);
 
-const colorsFromImage = (url, amount) => prominent(url, {amount: amount || 10, group: 32, format: 'hex'});
+const colorsFromImage = (url, amount) => prominent(url, {amount: amount || 10, group: 12, format: 'hex'});
 
 const /* filter */ onLightness = (min, max) => (col) => {
     const hsl = tc(col)?.toHsl();
@@ -297,11 +299,13 @@ const /* filter */ onContrastTo = (base, min, max) => (col) => {
     return con >= (min || 0) && con <= (max || 21)
 };
 const /* filter */ not = (c, diff) => (n) => Math.abs(colorDiff(c, n)) >= (diff || 0.5);
+
 const /* sort */ byContrastTo = (base) => (a, b) => contrast(b, base) - contrast(a, base);
 const /* sort */ bySaturation = (a, b) => tc(b).toHsv().s - tc(a).toHsv().s;
 const /* sort */ byDiff = (base) => (a, b) => Math.abs(colorDiff(a, base)) - Math.abs(colorDiff(b, base));
 
 const defaultFgColors = ['#EFF0F1', '#232627'];
+
 function getFgColor(colors, toColor, wantsDark) {
     colors = Array.isArray(colors) ? [... new Set(colors)] : [];
 
