@@ -57,6 +57,10 @@ export function isMainPage() {
     return window.location.pathname === '/';
 }
 
+export function isDevel() {
+    return window.location.hostname.endsWith('local');
+}
+
 export function relativeDuration(seconds) {
     const minutes = Math.abs(seconds / 60);
     const hours = Math.abs(minutes / 60);
