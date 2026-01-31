@@ -155,33 +155,32 @@ export class Palette {
         const palette = new Palette();
 
         if (imageURL) {
-            const colorCount = 20;
+            const colorCount = 10;
             palette.imageURL = imageURL;
             palette.imageColors = (await colorsFromImage(imageURL, colorCount));
             const avgCol = await average(imageURL, {format: 'hex'});
             palette.bgColor = bgColor(avgCol);
             console.debug(`loaded image ${palette.imageURL}: (bg ${palette.bgColor})`, palette.imageColors);
+            palette.linkColor = getLinkColor(palette.imageColors, palette.bgColor);
+            palette.accentColor = getAccentColor(palette.imageColors.filter(not(palette.linkColor)), palette.bgColor);
         }
 
         if (iconURL) {
-            const colorCount = 20;
+            const colorCount = 15;
             palette.iconURL = iconURL;
             palette.iconColors = (await colorsFromImage(iconURL, colorCount));
             const avgCol = await average(iconURL, {format: 'hex'});
             palette.fgColor = fgColor(avgCol);
             console.debug(`loaded icon ${palette.iconURL}: (avg ${palette.fgColor}) brightness(l:${tc(palette.fgColor.light).getBrightness()}, d:${tc(palette.fgColor.dark).getBrightness()})`, palette.iconColors);
+            palette.accentColor = getAccentColor(palette.iconColors, palette.bgColor);
+            if (!imageURL) {
+                palette.linkColor = getLinkColor(palette.iconColors.filter(not(palette.accentColor)), palette.bgColor);
+            }
         }
-
-        let colors = palette.imageColors;
-        if (palette.iconColors.length > 0) {
-            colors = palette.iconColors;
-        }
-        palette.accentColor = getAccentColor(colors, palette.bgColor);
-        palette.linkColor = getLinkColor(colors, palette.bgColor);
 
         palette.linkVisitedColor = new LightDark();
-        palette.linkVisitedColor.light = tc(palette.linkColor.light).darken(40).toHexString();
-        palette.linkVisitedColor.dark = tc(palette.linkColor.dark).lighten(40).toHexString();
+        palette.linkVisitedColor.light = tc(palette.linkColor.light).darken(20).toHexString();
+        palette.linkVisitedColor.dark = tc(palette.linkColor.dark).lighten(20).toHexString();
 
         return palette;
     }
@@ -283,12 +282,10 @@ const /* filter */ onLightness = (min, max) => (col) => {
     const hsl = tc(col)?.toHsl();
     return hsl?.l >= (min || 0) && hsl?.l <= (max || 1);
 }
-const /* filter */ isLight = () => (col) => {
-    return tc(col)?.getBrightness() >= 132;
-}
-const /* filter */ isDark = () => (col) => {
-    return tc(col)?.getBrightness() < 126;
-}
+const /* filter */ isLight = (col) => tc(col)?.isLight()
+
+const /* filter */ isDark = (col) => tc(col)?.isDark()
+
 const /* filter */ onSaturation = (min, max) => (col) => {
     const hsl = tc(col)?.toHsl();
     return hsl?.s >= (min || 0) && hsl?.s <= (max || 1);
