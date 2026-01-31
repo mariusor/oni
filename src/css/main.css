@@ -7,12 +7,19 @@
     --link-color: light-dark(#00008B, #6495ED); /* darkblue, cornflowerblue */
     --link-visited-color: light-dark(#663399, #9370DB); /* rebeccapurple, mediumpurple */
     --accent-color: lch(from var(--link-color) l c calc(h + 80));
+    --bri: 40%;
 
     overscroll-behavior-y: none;
     color-scheme: light dark;
     scrollbar-color: var(--accent-color) #0000;
     height: 100%;
     font: clamp(.75em, .2em + 1.5vw, 1.25em) / 1.25 sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --bri: 80%;
+    }
 }
 
 body {

@@ -59,7 +59,7 @@ export class ActivityPubImage extends ActivityPubObject {
             padding: .2rem .4rem;
             border-radius: .4rem;
             z-index: 1;
-            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(40%);
+            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(var(--bri));
             outline: none;
         }
         @media (max-width: 536px) {
@@ -189,7 +189,7 @@ class ImageAlt extends LitElement {
             cursor: pointer;
             font-size: .9rem;
             line-height: 1.4rem;
-            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(40%);
+            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(var(--bri));
             padding: .2rem .4rem;
             border-radius: .4rem;
         }
@@ -274,7 +274,7 @@ class ImagePopUp extends LitElement {
             padding: .2rem .4rem;
             border-radius: .4rem;
             z-index: 1;
-            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(40%);
+            backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(var(--bri));
             outline: none;
             right: 3rem;
         }
