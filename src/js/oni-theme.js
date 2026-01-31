@@ -3,8 +3,6 @@ import {average, prominent} from "color.js";
 import {ActivityPubItem, getHref} from "./activity-pub-item";
 import {css, html, LitElement, nothing, unsafeCSS} from "lit";
 import {map} from "lit-html/directives/map.js";
-import {isMainPage} from "./utils";
-import {when} from "lit-html/directives/when.js";
 
 class LightDark {
     light;
@@ -217,8 +215,6 @@ export class PaletteElement extends LitElement {
         this.palette = this.palette || Palette.fromStorage();
 
         if (!this.palette) return nothing;
-        if (!isMainPage()) return nothing;
-        if (!window.location.hostname.endsWith('local')) return nothing;
         if (this.palette?.iconColors?.length+this.palette?.imageColors?.length === 0) return nothing;
 
         const renderColor = (color, contrastColor, label) => html`

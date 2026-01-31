@@ -1,7 +1,7 @@
-import {css, html} from "lit";
+import {css, html, nothing} from "lit";
 import {until} from "lit-html/directives/until.js";
 import {ActivityPubObject} from "./activity-pub-object";
-import {isMainPage} from "./utils";
+import {isDevel, isMainPage} from "./utils";
 import {when} from "lit-html/directives/when.js";
 
 export class OniMain extends ActivityPubObject {
@@ -21,7 +21,7 @@ export class OniMain extends ActivityPubObject {
     render() {
         return html`${until(this.renderHeader())}
             <slot></slot>
-            <oni-palette></oni-palette>
+            ${ isMainPage() && isDevel() ? until(html`<oni-palette palette=${this.palette}></oni-palette>`) : nothing }
         `;
     }
 }
