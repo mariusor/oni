@@ -2,23 +2,23 @@
 @import "reset.css";
 
 :root {
-    --bg-color: light-dark(#EFF0F1, #232627);
-    --fg-color: light-dark(#232627, #EFF0F1);
+    --bg-color: light-dark(#EFF0F1, #373637);
+    --fg-color: light-dark(#373637, #EFF0F1);
     --link-color: light-dark(#00008B, #6495ED); /* darkblue, cornflowerblue */
     --link-visited-color: light-dark(#663399, #9370DB); /* rebeccapurple, mediumpurple */
-    --accent-color: lch(from var(--link-color) l c calc(h + 80));
+    --accent-color: lch(from var(--link-visited-color) l calc(c + 20) calc(h + 20));
     --bri: 40%;
 
     overscroll-behavior-y: none;
     color-scheme: light dark;
     scrollbar-color: var(--accent-color) #0000;
     height: 100%;
-    font: clamp(.75em, .2em + 1.5vw, 1.25em) / 1.25 sans-serif;
+    font: clamp(.62em, .2em + 1.5vw, 1.25em) / 1.25 sans-serif;
 }
 
 @media (prefers-color-scheme: light) {
     :root {
-        --bri: 80%;
+        --bri: 120%;
     }
 }
 

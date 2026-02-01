@@ -3,6 +3,7 @@ import {average, prominent} from "color.js";
 import {ActivityPubItem, getHref} from "./activity-pub-item";
 import {css, html, LitElement, nothing, unsafeCSS} from "lit";
 import {map} from "lit-html/directives/map.js";
+import {when} from "lit-html/directives/when.js";
 
 class LightDark {
     light;
@@ -17,32 +18,19 @@ class LightDark {
     }
 }
 
-function fgColor(col) {
-    col = tc(col)?.desaturate(10)?.toHexString() || col;
-    const bgColor = lightDarkFromColor(col);
-    const fgColor = new LightDark();
-    [fgColor.light, fgColor.dark] = [bgColor.dark, bgColor.light];
-    return fgColor;
-}
-
-function bgColor(col) {
-    col = tc(col)?.desaturate(10)?.toHexString() || col;
-    return lightDarkFromColor(col);
-}
-
 function lightDarkFromColor(col) {
     const c = tc(col);
     console.debug(`received ${c.toHexString()}, brightness: ${c.getBrightness()} isLight: ${c.isLight()}, isDark: ${c.isDark()}`)
     const result = new LightDark();
     // NOTE(marius): we divide by 2.55 to get directly the percentage value passable to lighten()/darken()
-    const oppositeLightnessAmount = Math.abs(c.getBrightness()-128) / 2.55;
+    const oppositeLightnessAmount = Math.abs(c.getBrightness() - 128) / 2.55;
     if (c.isLight()) {
         result.light = c.toHexString();
-        result.dark = c.darken(2*oppositeLightnessAmount).toHexString();
+        result.dark = c.darken(2 * oppositeLightnessAmount).toHexString();
         console.debug(`computed ${oppositeLightnessAmount} dark-color: ${tc(result.dark).toHexString()}, brightness: ${tc(result.dark).getBrightness()}`)
-    }  else {
+    } else {
         result.dark = c.toHexString();
-        result.light = c.lighten(2*oppositeLightnessAmount).toHexString();
+        result.light = c.lighten(2 * oppositeLightnessAmount).toHexString();
         console.debug(`computed ${oppositeLightnessAmount} light-color: ${tc(result.light).toHexString()}, brightness: ${tc(result.light).getBrightness()}`)
     }
     return result;
@@ -69,8 +57,22 @@ export class Palette {
         this.linkVisitedColor = style.getPropertyValue('--link-visited-color').trim();
 
         darkMediaMatch.addEventListener("change", (e) => {
-            console.debug(`it is ${e.matches ? "dark" : "light"} prefersDark?: ${prefersDarkTheme()}`);
+            console.debug(`light/dark preference changed to ${e.matches ? "dark" : "light"} prefersDark?: ${prefersDarkTheme()}`);
         });
+    }
+
+
+    getFgColor(col) {
+        col = tc(col)?.desaturate(10)?.toHexString() || col;
+        const bgColor = lightDarkFromColor(col);
+        const fgColor = new LightDark();
+        [fgColor.light, fgColor.dark] = [bgColor.dark, bgColor.light];
+        return fgColor;
+    }
+
+    getBgColor(col) {
+        col = tc(col).desaturate(10)?.toHexString() || col;
+        return lightDarkFromColor(col);
     }
 
     matchItem(it) {
@@ -149,34 +151,34 @@ export class Palette {
     static async fromActivityPubItem(it) {
         if (!ActivityPubItem.isValid(it)) return null;
 
-        const imageURL = apURL(it?.image);
-        const iconURL = apURL(it?.icon);
-
         const palette = new Palette();
+        palette.imageURL = apURL(it?.image);
+        palette.iconURL = apURL(it?.icon);
 
-        if (imageURL) {
-            const colorCount = 10;
-            palette.imageURL = imageURL;
-            palette.imageColors = (await colorsFromImage(imageURL, colorCount));
-            const avgCol = await average(imageURL, {format: 'hex'});
-            palette.bgColor = bgColor(avgCol);
+        let colorCount = 15;
+        if (!palette.iconURL) {
+            colorCount = 25;
+        }
+        if (palette.imageURL) {
+            palette.imageColors = ((await colorsFromImage(palette.imageURL, colorCount)) || []).filter(noExtremes);
+            const avgCol = await average(palette.imageURL, {format: 'hex'});
+            palette.bgColor = palette.getBgColor(avgCol);
             console.debug(`loaded image ${palette.imageURL}: (bg ${palette.bgColor})`, palette.imageColors);
-            palette.linkColor = getLinkColor(palette.imageColors, palette.bgColor);
-            palette.accentColor = getAccentColor(palette.imageColors.filter(not(palette.linkColor)), palette.bgColor);
+        } else {
+            colorCount = 25;
         }
 
-        if (iconURL) {
-            const colorCount = 15;
-            palette.iconURL = iconURL;
-            palette.iconColors = (await colorsFromImage(iconURL, colorCount));
-            const avgCol = await average(iconURL, {format: 'hex'});
-            palette.fgColor = fgColor(avgCol);
+        if (palette.iconURL) {
+            palette.iconColors = ((await colorsFromImage(palette.iconURL, colorCount)) || []).filter(noExtremes);
+            const avgCol = await average(palette.iconURL, {format: 'hex'});
+            palette.fgColor = palette.getFgColor(avgCol);
             console.debug(`loaded icon ${palette.iconURL}: (avg ${palette.fgColor}) brightness(l:${tc(palette.fgColor.light).getBrightness()}, d:${tc(palette.fgColor.dark).getBrightness()})`, palette.iconColors);
-            palette.accentColor = getAccentColor(palette.iconColors, palette.bgColor);
-            if (!imageURL) {
-                palette.linkColor = getLinkColor(palette.iconColors.filter(not(palette.accentColor)), palette.bgColor);
-            }
         }
+
+        let colors = [...new Set([...palette.imageColors, ...palette.iconColors])];
+        palette.linkColor = getLinkColor(colors, palette.bgColor);
+        colors = colors.filter(notLightDark(palette.linkColor, 0.7));
+        palette.accentColor = getAccentColor(colors, palette.bgColor);
 
         palette.linkVisitedColor = new LightDark();
         palette.linkVisitedColor.light = tc(palette.linkColor.light).darken(20).toHexString();
@@ -216,18 +218,29 @@ export class PaletteElement extends LitElement {
         this.palette = this.palette || Palette.fromStorage();
 
         if (!this.palette) return nothing;
-        if (this.palette?.iconColors?.length+this.palette?.imageColors?.length === 0) return nothing;
+        if (this.palette?.iconColors?.length + this.palette?.imageColors?.length === 0) return nothing;
 
         const renderColor = (color, contrastColor, label) => html`
             <div style="background-color: ${color}; color: ${contrastColor}; border: 1px solid ${contrastColor};">
-                ${label}${color}: <data value="${contrast(color, this.palette.bgColor)}" title="contrast bg">
+                ${label}${color}:
+                <data value="${contrast(color, this.palette.bgColor)}" title="contrast bg">
                     ${contrast(color, this.palette.bgColor).toFixed(2)}
-                </data>:<data value="${tc(color).toHsl().h}" title="hue">
+                </data>
+                :
+                <data value="${tc(color).toHsl().h}" title="hue">
                     ${tc(color).toHsl().h.toFixed(2)}
-                </data>:<data value="${tc(color).toHsl().s}" title="saturation">
+                </data>
+                :
+                <data value="${tc(color).toHsl().s}" title="saturation">
                     ${tc(color).toHsl().s.toFixed(2)}
-                </data>:<data value="${tc(color).toHsl().l}" title="luminance">
+                </data>
+                :
+                <data value="${tc(color).toHsl().l}" title="luminance">
                     ${tc(color).toHsl().l.toFixed(2)}
+                </data>
+                :
+                <data value="${tc(color).getBrightness()}" title="brightness">
+                    ${tc(color).getBrightness().toFixed(2)}
                 </data>
             </div>
         `;
@@ -240,25 +253,67 @@ export class PaletteElement extends LitElement {
                 })}
             `;
         }
+
+        const bgColor = this.palette.bgColor;
+        const iconLightColors = getLightColors(this.palette.iconColors).sort(byContrastTo(bgColor.light));
+        const iconDarkColors = getDarkColors(this.palette.iconColors).sort(byContrastTo(bgColor.dark));
+        const imageLightColors = getLightColors(this.palette.imageColors).sort(byContrastTo(bgColor.light));
+        const imageDarkColors = getDarkColors(this.palette.imageColors).sort(byContrastTo(bgColor.dark));
+
         return html`
             ${renderColor(this.palette.bgColor, this.palette.fgColor, html`<b>Background:</b> `)}
             ${renderColor(this.palette.fgColor, this.palette.bgColor, html`<b>Foreground:</b> `)}
             ${renderColor(this.palette.accentColor, this.palette.bgColor, html`<b>Accent:</b> `)}
             ${renderColor(this.palette.linkColor, this.palette.bgColor, html`<b>Link:</b> `)}
             ${renderColor(this.palette.linkVisitedColor, this.palette.bgColor, html`<b>Visited Link:</b> `)}
-            <div class="colors">
-                ${when(this.palette.iconColors.length > 0,
-                        () => html`${colorMap(this.palette.iconColors.toSorted(byContrastTo(this.palette.bgColor)))}`,
-                        () => nothing,
-                )}
-                <hr style="width: 100%"/>
-                ${when(this.palette.imageColors.length > 0,
-                        () => html`${colorMap(this.palette.imageColors.toSorted(byContrastTo(this.palette.bgColor)))}`,
-                        () => nothing,
-                )}
-            </div>
+            ${when(
+                    this.palette.iconURL,
+                    () => html`
+                        <div class="colors">
+                            <img alt="t" src="${this.palette.iconURL}" style="max-width:300px; height:100%"/>
+                                <!--<div class="icon-colors">${html`${colorMap(this.palette.iconColors)}`}</div>-->
+
+                            <div class="light-icon-colors">${html`${colorMap(iconLightColors)}`}</div>
+                            <div class="dark-icon-colors">${html`${colorMap(iconDarkColors)}`}</div>
+                        </div>`
+            )}
+            ${when(
+                    this.palette.imageURL,
+                    () => html`
+                        <div class="colors">
+                            <img alt="t" src="${this.palette.imageURL}" style="max-width:300px; height: 100%;"/>
+                                <!--<div class="image-colors">${html`${colorMap(this.palette.imageColors)}`}</div>-->
+                            <div class="light-image-colors">${html`${colorMap(imageLightColors)}`}</div>
+                            <div class="dark-image-colors">${html`${colorMap(imageDarkColors)}`}</div>
+                        </div>`
+            )}
         `;
     }
+}
+
+function getDarkColors(colors) {
+    return colors.filter(isDark);
+}
+
+function getLightColors(colors) {
+    return colors.filter(isLight);
+}
+
+function bestColor(colors, toColor) {
+    const defaultLight = [defaultAccentColors.light]
+    const defaultDark = [defaultAccentColors.dark]
+
+    const light = [...new Set([...defaultLight, ...colors])]
+        .filter(isLight && wcagAA(toColor.light))
+        .sort((a, b) => byContrastTo(toColor.light)(a, b)).reverse();
+    const dark = [...new Set([...defaultDark, ...colors])]
+        .filter(isDark && wcagAA(toColor.dark))
+        .sort((a, b) => byContrastTo(toColor.dark)(a, b)).reverse();
+
+    const result = new LightDark();
+    result.light = light.at(0);
+    result.dark = dark.at(0);
+    return result;
 }
 
 const tc = (c) => new TinyColor(c);
@@ -276,37 +331,48 @@ export const mediumScreen = () => !!(mediumScreenMediaMatch?.matches);
 const largeScreenMediaMatch = window.matchMedia('(width > 1920px)')
 export const largeScreen = () => !!(largeScreenMediaMatch?.matches);
 
-const colorsFromImage = (url, amount) => prominent(url, {amount: amount || 10, group: 12, format: 'hex'});
+const colorsFromImage = (url, amount) => prominent(url, {amount: amount || 10, group: 40, format: 'hex'});
 
 const /* filter */ onLightness = (min, max) => (col) => {
     const hsl = tc(col)?.toHsl();
     return hsl?.l >= (min || 0) && hsl?.l <= (max || 1);
 }
-const /* filter */ isLight = (col) => tc(col)?.isLight()
+const /* filter */ isLight = (col) => tc(col)?.getBrightness() > 80;
 
-const /* filter */ isDark = (col) => tc(col)?.isDark()
+const /* filter */ isDark = (col) => tc(col)?.getBrightness() < 140;
 
 const /* filter */ onSaturation = (min, max) => (col) => {
     const hsl = tc(col)?.toHsl();
     return hsl?.s >= (min || 0) && hsl?.s <= (max || 1);
 }
 
+const /* filter */ wcagAAA = (base) => (col) => contrast(col, base) >= 7
+const /* filter */ wcagAA = (base) => (col) => contrast(col, base) >= 4.5
+
 const /* filter */ onContrastTo = (base, min, max) => (col) => {
     const con = contrast(col, base);
     return con >= (min || 0) && con <= (max || 21)
 };
+const /*filter */ noExtremes = (col) => {
+    col = tc(col);
+    return col.getBrightness() < 230 && col.getBrightness() > 30;
+}
 const /* filter */ not = (c, diff) => (n) => Math.abs(colorDiff(c, n)) >= (diff || 0.5);
+const /*filter */ notLightDark = (c, diff) => (n) => not(c.light, diff)(n) && not(c.dark, diff)(n)
 
+
+const /* sort */ byBrightness = (a, b) => tc(b).getBrightness() - tc(a).getBrightness()
 const /* sort */ byContrastTo = (base) => (a, b) => contrast(b, base) - contrast(a, base);
 const /* sort */ bySaturation = (a, b) => tc(b).toHsv().s - tc(a).toHsv().s;
 const /* sort */ byDiff = (base) => (a, b) => Math.abs(colorDiff(a, base)) - Math.abs(colorDiff(b, base));
 
-const defaultFgColors = ['#EFF0F1', '#232627'];
+const defaultFgColors = {light: '#EFF0F1', dark: '#232627'};
+const defaultAccentColors = {light: '#663399', dark: '#9370DB'};
 
 function getFgColor(colors, toColor, wantsDark) {
-    colors = Array.isArray(colors) ? [... new Set(colors)] : [];
+    colors = Array.isArray(colors) ? [...new Set(colors)] : [];
 
-    colors = [... new Set([...defaultFgColors, ...colors])];
+    colors = [...new Set([...[defaultFgColors.light, defaultFgColors.dark], ...colors])];
     const fgColors = colors
         .filter(onSaturation(0, 0.3))
         .filter(onContrastTo(toColor, 5, 19))
@@ -318,9 +384,9 @@ function getFgColor(colors, toColor, wantsDark) {
         most = fgColors.at(0);
     } else {
         if (wantsDark) {
-            most =  defaultFgColors[1];
+            most = defaultFgColors.dark;
         } else {
-            most = defaultFgColors[0];
+            most = defaultFgColors.light;
         }
     }
     most = tc(most).mix(toColor, 30);
@@ -352,34 +418,36 @@ function getClosestColor(colors, color, onColor) {
     return most;
 }
 
-const linkColors = (colors, toColor) => colors
-    .filter(onContrastTo(toColor, 2.8, 19))
-    .sort((a, b) => bySaturation(a, b) || byContrastTo(toColor)(a, b))
-    .reverse();
+const wcagColors = (colors, wcagFn) => colors
+    .filter(wcagFn)
+    .sort(bySaturation);
 
 function getLinkColor(colors, toColor) {
     colors = Array.isArray(colors) ? colors : [colors];
 
-    const lightColors = linkColors(colors.filter(isLight), toColor.light);
-    const darkColors = linkColors(colors.filter(isDark), toColor.dark);
+    console.debug(`colors`, colors)
+    const lightColors = getLightColors(colors).sort(byContrastTo(toColor.light));
+    const darkColors = getDarkColors(colors).sort(byContrastTo(toColor.dark));
 
-    console.debug(`link colors dark(${darkColors.at(0)}) light(${lightColors.at(0)})`)
+    console.debug(`dark colors`, darkColors);
+    console.debug(`light colors`, lightColors);
     const result = new LightDark();
     result.light = saturatedFromColor(lightColors.at(0), toColor.light, false).toHexString();
     result.dark = saturatedFromColor(darkColors.at(0), toColor.dark, true).toHexString();
     return result;
 }
 
-function getAccentColor(colors, contrastTo) {
+function getAccentColor(colors, toColor) {
     colors = Array.isArray(colors) ? colors : [colors];
 
-    const lightColors = colors.filter(isLight).sort((a, b) => byContrastTo(contrastTo.light)(a, b) || bySaturation(a, b)).reverse();
-    const darkColors = colors.filter(isDark).sort((a, b) => byContrastTo(contrastTo.dark)(a, b) || bySaturation(a, b)).reverse();
+    const lightColors = getLightColors(colors).sort(byContrastTo(toColor.light));
+    const darkColors = getDarkColors(colors).sort(byContrastTo(toColor.dark));
+    console.debug(`light`, lightColors);
+    console.debug(`dark`, darkColors);
 
-    console.debug(`accent colors dark(${darkColors.at(0)}) light(${lightColors.at(0)})`)
     const result = new LightDark();
-    result.light = saturatedFromColor(lightColors.at(0), contrastTo.light, false).toHexString();
-    result.dark = saturatedFromColor(darkColors.at(0), contrastTo.dark, true).toHexString();
+    result.light = saturatedFromColor(lightColors.at(0), toColor.light, false).toHexString();
+    result.dark = saturatedFromColor(darkColors.at(0), toColor.dark, true).toHexString();
     return result;
 }
 
@@ -409,7 +477,7 @@ function saturatedFromColor(original, contrastTo, wantsDark) {
 function changeDarkness(origColor, contrastTo, wantsDark) {
     let finalColor = tc(origColor);
     if (finalColor.toHsl().s > maxBgSaturation) {
-        finalColor = finalColor.desaturate(100*Math.abs(finalColor.toHsl().s - maxBgSaturation));
+        finalColor = finalColor.desaturate(100 * Math.abs(finalColor.toHsl().s - maxBgSaturation));
     }
 
     wantsDark = typeof wantsDark == 'undefined' ? prefersDarkTheme() : wantsDark;
@@ -422,7 +490,7 @@ function changeDarkness(origColor, contrastTo, wantsDark) {
             finalColor = finalColor.darken(2);
         }
         cnt++;
-    } while(contrast(contrastTo, finalColor) < minContrast && cnt < maxIter)
+    } while (contrast(contrastTo, finalColor) < minContrast && cnt < maxIter)
 
     return finalColor.toHexString();
 }

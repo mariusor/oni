@@ -222,14 +222,14 @@ export class ActivityPubActor extends ActivityPubObject {
     }
 
     async renderBackground() {
-        let palette = Palette.fromStorage();
-        if (!palette.matchItem(this.it)) {
-            palette = await Palette.fromActivityPubItem(this.it);
-            if (palette) Palette.toStorage(palette);
+        this.palette = Palette.fromStorage();
+        if (!this.palette.matchItem(this.it)) {
+            this.palette = await Palette.fromActivityPubItem(this.it);
+            if (this.palette) Palette.toStorage(this.palette);
         }
-        if (!palette) return nothing;
+        if (!this.palette) return nothing;
 
-        return palette.renderHeaderBackground();
+        return this.palette.renderHeaderBackground();
     }
 
     render() {
