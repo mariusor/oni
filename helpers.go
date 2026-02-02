@@ -117,7 +117,7 @@ func GenerateID(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) 
 
 	uuid := fmt.Sprintf("%d", time.Now().UTC().UnixMilli())
 
-	if vocab.ActivityTypes.Contains(typ) || vocab.IntransitiveActivityTypes.Contains(typ) {
+	if vocab.ActivityTypes.Match(typ) || vocab.IntransitiveActivityTypes.Match(typ) {
 		err := vocab.OnActivity(it, func(a *vocab.Activity) error {
 			return vocab.OnActor(a.Actor, func(author *vocab.Actor) error {
 				a.ID = vocab.Outbox.IRI(author).AddPath(uuid)

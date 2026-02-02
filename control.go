@@ -255,7 +255,7 @@ func (c *Control) GenKeyPair(actor *vocab.Actor) (*vocab.Actor, error) {
 	}
 
 	typ := actor.GetType()
-	if !vocab.ActorTypes.Contains(typ) {
+	if !vocab.ActorTypes.Match(typ) {
 		return actor, errors.Newf("trying to generate keys for invalid ActivityPub object type: %s", typ)
 	}
 

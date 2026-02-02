@@ -39,24 +39,24 @@ var (
 						return "items"
 					case vocab.FollowType == t:
 						return "follow"
-					case vocab.ActorTypes.Contains(t):
+					case vocab.ActorTypes.Match(t):
 						return "actor"
-					case vocab.ActivityVocabularyTypes{vocab.CreateType, vocab.UpdateType}.Contains(t):
+					case vocab.ActivityVocabularyTypes{vocab.CreateType, vocab.UpdateType}.Match(t):
 						return "create"
 					case vocab.AnnounceType == t:
 						return "announce"
-					case vocab.ActivityVocabularyTypes{vocab.LikeType, vocab.DislikeType}.Contains(t):
+					case vocab.ActivityVocabularyTypes{vocab.LikeType, vocab.DislikeType}.Match(t):
 						return "appreciation"
-					case vocab.ActivityTypes.Contains(t), vocab.IntransitiveActivityTypes.Contains(t):
+					case vocab.ActivityTypes.Match(t), vocab.IntransitiveActivityTypes.Match(t):
 						return "activity"
-					case vocab.CollectionTypes.Contains(t):
+					case vocab.CollectionTypes.Match(t):
 						return "collection"
-					case vocab.ActivityVocabularyTypes{vocab.ArticleType, vocab.NoteType}.Contains(t):
+					case vocab.ActivityVocabularyTypes{vocab.ArticleType, vocab.NoteType}.Match(t):
 						return template.HTML(vocab.NoteType)
-					case t == "":
+					case vocab.NilType.Match(t):
 						return "tag"
 					default:
-						return template.HTML(strings.ToLower(string(t)))
+						return template.HTML(strings.ToLower(typeToString(t)))
 					}
 				case vocab.NaturalLanguageValues:
 					return "natural-language-values"

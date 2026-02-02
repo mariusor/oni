@@ -98,15 +98,15 @@ func sanitizeItem(it vocab.Item) error {
 		_ = vocab.OnLink(it, sanitizeLink)
 	case vocab.IsObject(it):
 		switch {
-		case orderedCollectionTypes.Contains(it.GetType()):
+		case orderedCollectionTypes.Match(it.GetType()):
 			_ = vocab.OnOrderedCollectionPage(it, sanitizeOrderedCollectionPage)
-		case collectionTypes.Contains(it.GetType()):
+		case collectionTypes.Match(it.GetType()):
 			_ = vocab.OnCollectionPage(it, sanitizeCollectionPage)
-		case vocab.ActivityTypes.Contains(it.GetType()):
+		case vocab.ActivityTypes.Match(it.GetType()):
 			_ = vocab.OnActivity(it, sanitizeActivity)
-		case vocab.IntransitiveActivityTypes.Contains(it.GetType()):
+		case vocab.IntransitiveActivityTypes.Match(it.GetType()):
 			_ = vocab.OnIntransitiveActivity(it, sanitizeIntransitiveActivity)
-		case vocab.ActorTypes.Contains(it.GetType()):
+		case vocab.ActorTypes.Match(it.GetType()):
 			_ = vocab.OnActor(it, sanitizeActor)
 		default:
 			_ = vocab.OnObject(it, sanitizeObject)

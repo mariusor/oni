@@ -148,7 +148,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 func binDataFromItem(it vocab.Item, w io.Writer) (contentType ct.MediaType, updatedAt time.Time, err error) {
 	updatedAt = time.Now()
 	err = vocab.OnObject(it, func(ob *vocab.Object) error {
-		if !mediaTypes.Contains(ob.Type) {
+		if !mediaTypes.Match(ob.Type) {
 			return errors.NotSupportedf("invalid object")
 		}
 		if len(ob.Content) == 0 {
@@ -244,7 +244,7 @@ func loadItemFromStorage(s ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.
 
 	typ := it.GetType()
 	switch {
-	case orderedCollectionTypes.Contains(typ):
+	case orderedCollectionTypes.Match(typ):
 		_ = vocab.OnOrderedCollection(it, func(col *vocab.OrderedCollection) error {
 			filtered := make(vocab.ItemCollection, 0, len(col.OrderedItems))
 			for _, ob := range col.OrderedItems {
@@ -336,7 +336,7 @@ func cleanupMediaObjectFromItem(it vocab.Item) error {
 	if it.IsCollection() {
 		return vocab.OnCollectionIntf(it, cleanupMediaObjectsFromCollection)
 	}
-	if vocab.ActivityTypes.Contains(it.GetType()) {
+	if vocab.ActivityTypes.Match(it.GetType()) {
 		return vocab.OnActivity(it, cleanupMediaObjectFromActivity)
 	}
 	return vocab.OnObject(it, cleanupMediaObject)
@@ -408,9 +408,9 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 	return writeResponse(dat, it.GetType(), updatedAt, client.ContentTypeJsonLD, eTag)
 }
 
-func writeResponse(raw []byte, typ vocab.ActivityVocabularyType, updatedAt time.Time, contentType string, eTag string) http.HandlerFunc {
+func writeResponse(raw []byte, typ vocab.Typer, updatedAt time.Time, contentType string, eTag string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if vocab.ActivityTypes.Contains(typ) {
+		if vocab.ActivityTypes.Match(typ) {
 			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(activityCacheDuration.Seconds())))
 		} else {
 			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(objectCacheDuration.Seconds())))
@@ -595,7 +595,7 @@ func filtersCreateUpdate(ff filters.Checks) bool {
 	for _, vv := range filters.ToValues(filters.TypeChecks(ff...)...) {
 		for _, v := range vv {
 			t := vocab.ActivityVocabularyType(v)
-			if validActivityTypes.Contains(t) {
+			if validActivityTypes.Match(t) {
 				return true
 			}
 		}
@@ -694,7 +694,7 @@ func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 		}
 
 		eTag := fmt.Sprintf(`"%2x"`, md5.Sum(wrt.Bytes()))
-		if vocab.ActivityTypes.Contains(it.GetType()) {
+		if vocab.ActivityTypes.Match(it.GetType()) {
 			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, immutable", int(activityCacheDuration.Seconds())))
 		} else {
 			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(objectCacheDuration.Seconds())))
@@ -933,6 +933,16 @@ func (o *oni) oniActor(r *http.Request) vocab.Actor {
 
 var createTypes = vocab.ActivityVocabularyTypes{vocab.CreateType, vocab.UpdateType}
 
+func typeToString(typ vocab.Typer) string {
+	if tt, ok := typ.(vocab.ActivityVocabularyType); ok {
+		return string(tt)
+	}
+	if tt, ok := typ.(vocab.ActivityVocabularyTypes); ok {
+		return string(tt[0])
+	}
+	return ""
+}
+
 func titleFromItem(actor vocab.Actor, m vocab.Item, r *http.Request) func() template.HTML {
 	title := bluemonday.StripTagsPolicy().Sanitize(vocab.NameOf(m))
 	details := ""
@@ -940,7 +950,7 @@ func titleFromItem(actor vocab.Actor, m vocab.Item, r *http.Request) func() temp
 	if r != nil {
 		path := filepath.Base(r.URL.Path)
 		if path == "/" {
-			if vocab.ActorTypes.Contains(m.GetType()) {
+			if vocab.ActorTypes.Match(m.GetType()) {
 				details = "profile page"
 				title = fmt.Sprintf("%s :: fediverse %s", name, details)
 			}
@@ -953,15 +963,15 @@ func titleFromItem(actor vocab.Actor, m vocab.Item, r *http.Request) func() temp
 		if currentName != "" {
 			details = currentName
 		} else {
-			details = string(m.GetType())
-			if createTypes.Contains(m.GetType()) {
+			details = typeToString(m.GetType())
+			if createTypes.Match(m.GetType()) {
 				_ = vocab.OnActivity(m, func(act *vocab.Activity) error {
 					if act.Object == nil {
 						return nil
 					}
 					currentName = vocab.NameOf(act.Object)
 					if currentName == "" {
-						currentName = string(act.Object.GetType())
+						currentName = typeToString(act.Object.GetType())
 					}
 					return nil
 				})

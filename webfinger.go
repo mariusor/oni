@@ -815,7 +815,7 @@ func AddKeyToPerson(metaSaver MetadataStorage, typ string) func(act *vocab.Actor
 	//  for now we'll assume that if we're calling this, we want to do it
 	overwriteKeys := true
 	return func(act *vocab.Actor) error {
-		if !vocab.ActorTypes.Contains(act.Type) {
+		if !vocab.ActorTypes.Match(act.Type) {
 			return nil
 		}
 
