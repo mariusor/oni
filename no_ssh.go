@@ -4,6 +4,6 @@ package oni
 
 import m "git.sr.ht/~mariusor/servermux"
 
-func initSSHServer(app *Control) (m.Server, error) {
+func initSSHServer(app *oni) (m.Server, error) {
 	return nil, nil
 }
