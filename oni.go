@@ -207,7 +207,18 @@ func (o *oni) Run(c context.Context) error {
 	if err != nil {
 		return err
 	}
-	s, err := m.Mux(m.WithServer(httpSrv), m.GracefulWait(defaultGraceWait))
+	muxSetters := []m.MuxFn{m.WithServer(httpSrv), m.GracefulWait(defaultGraceWait)}
+
+	sshServ, err := initSSHServer(o)
+	if err != nil {
+		o.Logger.WithContext(lw.Ctx{"err": err}).Errorf("unable to open SSH connection")
+	}
+	if sshServ != nil {
+		// NOTE(marius): if the SSH Server could be initialized
+		muxSetters = append(muxSetters, m.WithServer(sshServ))
+	}
+
+	s, err := m.Mux(muxSetters...)
 	if err != nil {
 		return err
 	}

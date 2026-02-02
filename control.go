@@ -112,7 +112,7 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 	actor := &o
 	actor, err = c.AddActorWithPassword(actor, []byte(pw), o)
 	if err != nil {
-		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to save instance actor", it)
+		c.Logger.WithContext(lw.Ctx{"iri": iri, "err": err.Error()}).Errorf("Unable to save instance actor")
 		return nil, err
 	}
 
