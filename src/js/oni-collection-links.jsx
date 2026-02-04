@@ -57,7 +57,7 @@ export class OniCollectionLinks extends LitElement {
                 display: block;
             }
             :host ul {
-                width: 100vch;
+                width: 100%;
                 text-align: right;
             }
         }

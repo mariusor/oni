@@ -14,7 +14,7 @@ export class ActivityPubActor extends ActivityPubObject {
             padding: 1rem 1rem .2rem 1rem;
             display: flex;
             justify-content: start;
-            align-items: flex-end;
+            align-items: stretch;
             justify-items: start;
             column-gap: 1.4rem;
             background-size: cover;
@@ -24,10 +24,10 @@ export class ActivityPubActor extends ActivityPubObject {
         header section {
             display: flex;
             flex-direction: column;
-            flex-wrap: nowrap;
-            align-content: center;
-            justify-content: center;
+            place-content: flex-end;
             align-items: flex-start;
+            flex-wrap: wrap;
+            padding-bottom: .4rem;
         }
         section h1, section h2 {
             margin: .2rem 0;
@@ -70,8 +70,9 @@ export class ActivityPubActor extends ActivityPubObject {
         }
         @media(max-width: 480px) {
             :host header {
-                display: block;
                 width: auto;
+                flex-direction: row-reverse;
+                justify-content: space-between;
             }
             :host header h1 {
                 margin-top: 1rem;
