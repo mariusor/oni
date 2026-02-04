@@ -32,6 +32,9 @@ export class ActivityPubObject extends LitElement {
             padding: 0;
             margin: 0;
         }
+        article header h1 {
+            display: flex;
+        }
         h1 {
             margin-block: .78rem;
             font: 700 1.6rem / 1.125 sans-serif;
@@ -61,6 +64,7 @@ export class ActivityPubObject extends LitElement {
             flex-direction: column;
         }
         article header {
+            width: 100%;
             align-self: start;
         }
         article aside:has(img) {
