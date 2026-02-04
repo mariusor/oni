@@ -16,6 +16,11 @@
     font: clamp(.62em, .2em + 1.5vw, 1.25em) / 1.25 sans-serif;
 }
 
+::selection {
+    background: var(--accent-color);
+    color: var(--bg-color);
+}
+
 @media (prefers-color-scheme: light) {
     :root {
         --bri: 120%;
