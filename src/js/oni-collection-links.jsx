@@ -54,7 +54,7 @@ export class OniCollectionLinks extends LitElement {
                 overflow-x: clip;
             }
             :host nav {
-                display: block;
+                flex-direction: column;
             }
             :host ul {
                 width: 100%;
