@@ -15,6 +15,7 @@ export class OniCollectionLinks extends LitElement {
             display: flex;
             justify-content: space-between;
             border-bottom: 3px solid var(--accent-color);
+            padding-right: .4rem;
         }
         ::slotted {
             align-self: start;
@@ -55,10 +56,7 @@ export class OniCollectionLinks extends LitElement {
             }
             :host nav {
                 flex-direction: column;
-            }
-            :host ul {
-                width: 100%;
-                text-align: right;
+                padding-right: 1rem;
             }
         }
     `

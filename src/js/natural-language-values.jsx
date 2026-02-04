@@ -5,13 +5,17 @@ import {sanitize} from "./utils";
 
 export class NaturalLanguageValues extends LitElement {
     static styles = [css`
+        ul, ol {
+            margin-inline-start: .6rem;
+            padding-inline-start: .6rem;
+        }
         :host {
             display: inline;
         }
         :host div {
             display: inline-block;
         }
-        p {
+        p, ul, ol {
             margin-block-start: 0;
             margin-block-end: 0;
         }
