@@ -10,22 +10,22 @@ require (
 	git.sr.ht/~mariusor/servermux v0.0.0-20260113120515-73350ce7afad
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20250805090125-7286b55ea3f3
 	git.sr.ht/~mariusor/ssm v0.0.0-20250920150353-cc21fa885fda
-	git.sr.ht/~mariusor/storage-all v0.0.0-20260202152038-0d780682b60f
+	git.sr.ht/~mariusor/storage-all v0.0.0-20260208113557-f62deee203b8
 	git.sr.ht/~mariusor/wrapper v0.0.0-20260103185140-9873830de009
-	github.com/alecthomas/kong v1.13.0
+	github.com/alecthomas/kong v1.14.0
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309
 	github.com/charmbracelet/wish v1.4.7
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.27.1
-	github.com/go-ap/activitypub v0.0.0-20260202145439-631b210a777e
-	github.com/go-ap/auth v0.0.0-20260202150023-317a0aee15c2
-	github.com/go-ap/client v0.0.0-20260202145913-7e58599399bd
-	github.com/go-ap/errors v0.0.0-20251229095444-2702aa2d8569
-	github.com/go-ap/filters v0.0.0-20260202145851-13519aa34402
+	github.com/go-ap/activitypub v0.0.0-20260208110334-902f6cf8c2cc
+	github.com/go-ap/auth v0.0.0-20260209105202-3d7ef419f21b
+	github.com/go-ap/client v0.0.0-20260209104958-52253d42d1b0
+	github.com/go-ap/errors v0.0.0-20260208110149-e1b309365966
+	github.com/go-ap/filters v0.0.0-20260208110534-2b07661eb286
 	github.com/go-ap/jsonld v0.0.0-20251216162253-e38fa664ea77
-	github.com/go-ap/processing v0.0.0-20260202150047-e235b5b86265
-	github.com/go-chi/chi/v5 v5.2.4
+	github.com/go-ap/processing v0.0.0-20260209105220-7e6bf1e8db14
+	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-chi/cors v1.2.2
 	github.com/goburrow/cache v0.1.4
 	github.com/google/uuid v1.6.0
@@ -38,7 +38,7 @@ require (
 	github.com/srwiley/oksvg v0.0.0-20221011165216-be6e8873101c
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
 	github.com/valyala/fastjson v1.6.7
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.35.0
 	golang.org/x/term v0.39.0
 )
 
@@ -67,15 +67,15 @@ require (
 	github.com/clipperhouse/uax29/v2 v2.4.0 // indirect
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be // indirect
 	github.com/creack/pty v1.1.24 // indirect
-	github.com/dgraph-io/badger/v4 v4.9.0 // indirect
+	github.com/dgraph-io/badger/v4 v4.9.1 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/go-ap/cache v0.0.0-20260202145832-0f41cad1ea82 // indirect
-	github.com/go-ap/storage-badger v0.0.0-20260202151858-790d2ce9d86c // indirect
-	github.com/go-ap/storage-boltdb v0.0.0-20260202151656-4361872750cf // indirect
-	github.com/go-ap/storage-fs v0.0.0-20260202151537-1e4457df1089 // indirect
-	github.com/go-ap/storage-sqlite v0.0.0-20260202151752-7498adf5dade // indirect
+	github.com/go-ap/cache v0.0.0-20260208110517-9ae26d9d036b // indirect
+	github.com/go-ap/storage-badger v0.0.0-20260208113004-d40d38a49258 // indirect
+	github.com/go-ap/storage-boltdb v0.0.0-20260208112910-65e670b40bc7 // indirect
+	github.com/go-ap/storage-fs v0.0.0-20260208112815-566e3e1f4931 // indirect
+	github.com/go-ap/storage-sqlite v0.0.0-20260208113153-59db77a2411c // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -84,7 +84,7 @@ require (
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
-	github.com/klauspost/compress v1.18.3 // indirect
+	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mariusor/bubbles-tree v0.0.0-20240804164840-b0aaa013ef3a // indirect
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d // indirect
@@ -109,15 +109,15 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.etcd.io/bbolt v1.4.3 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel v1.39.0 // indirect
-	go.opentelemetry.io/otel/metric v1.39.0 // indirect
-	go.opentelemetry.io/otel/trace v1.39.0 // indirect
+	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/otel/metric v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	golang.org/x/crypto v0.47.0
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
 	golang.org/x/image v0.35.0 // indirect
 	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
