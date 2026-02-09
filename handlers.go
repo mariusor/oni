@@ -142,6 +142,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 		})
 		debugRequestMw := processing.RequestToDiskMw(o.StoragePath, InDebugMode.Load)
 		m.With(debugRequestMw).Method(http.MethodPost, "/*", o.ProcessActivity())
+		m.Method(http.MethodPost, "/proxyUrl", o.ProxyURL())
 	})
 }
 
@@ -1190,5 +1191,59 @@ func (o *oni) OutOfOrderMw(next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+// ProxyURL
+// Endpoint URI so this actor's clients may access remote ActivityStreams objects which require authentication to access.
+// To use this endpoint, the client posts an x-www-form-urlencoded id parameter with the value being the id of the
+// requested ActivityStreams object.
+//
+// https://www.w3.org/TR/activitypub/#proxyUrl
+func (o *oni) ProxyURL() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if contentType := r.Header.Get("Content-Type"); contentType != "application/x-www-form-urlencoded" {
+			errors.HandleError(errors.UnsupportedMediaTypef("content type is not supported by the proxy")).ServeHTTP(w, r)
+			return
+		}
+		lctx := lw.Ctx{}
+		id := r.FormValue("id")
+		if id == "" {
+			errors.HandleError(errors.NotFoundf(`invalid 'id' value for proxy retrieval`)).ServeHTTP(w, r)
+			return
+		}
+
+		// NOTE(marius): if we can load a valid actor from the request, we use it for fetching the/
+		// remote resource pointed at by "id"
+		actor := o.oniActor(r)
+
+		authorized := auth.AnonymousActor
+		_, err := o.ValidateRequest(r)
+		if err != nil {
+			errors.HandleError(err).ServeHTTP(w, r)
+			return
+		}
+		if stored, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
+			authorized = stored
+		}
+
+		var tr http.RoundTripper = &http.Transport{}
+		if InDebugMode.Load() {
+			tr = debug.New(debug.WithTransport(tr), debug.WithPath(o.StoragePath))
+		}
+		cl := o.Client(actor, tr, lctx)
+		res, err := cl.Get(id)
+		if err != nil {
+			errors.HandleError(errors.NotFoundf(`invalid 'id' value for proxy retrieval`)).ServeHTTP(w, r)
+			return
+		}
+		defer res.Body.Close()
+		o.Logger.WithContext(lw.Ctx{"iri": id, "actor": authorized.ID, "status": res.Status}).Infof("request proxied successfully")
+
+		w.WriteHeader(res.StatusCode)
+		for k := range res.Header {
+			w.Header().Set(k, res.Header.Get(k))
+		}
+		_, _ = io.Copy(w, res.Body)
 	})
 }

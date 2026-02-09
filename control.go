@@ -102,11 +102,13 @@ func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {
 	}
 
 	o := DefaultActor(iri)
+	iri = o.GetLink()
 	o.Followers = vocab.Followers.Of(iri)
 	o.Following = vocab.Following.Of(iri)
 	o.Endpoints = &vocab.Endpoints{
-		OauthAuthorizationEndpoint: o.GetLink().AddPath("oauth", "authorize"),
-		OauthTokenEndpoint:         o.GetLink().AddPath("oauth", "token"),
+		OauthAuthorizationEndpoint: iri.AddPath("oauth", "authorize"),
+		OauthTokenEndpoint:         iri.AddPath("oauth", "token"),
+		ProxyURL:                   iri.AddPath("proxyUrl"),
 	}
 
 	actor := &o
