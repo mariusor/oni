@@ -12,6 +12,7 @@ import (
 	mrand "math/rand/v2"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/mask"
@@ -180,7 +181,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 			m.backURL = backURL(r)
 
 			clientIRI := ar.Client.GetId()
-			if _, err := url.Parse(clientIRI); err != nil {
+			if !strings.HasPrefix(clientIRI, "http") {
 				clientIRI = fmt.Sprintf("https://%s", clientIRI)
 			}
 			it, err := o.Storage.Load(vocab.IRI(clientIRI))

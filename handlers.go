@@ -1218,11 +1218,6 @@ func (o *oni) ProxyURL() http.Handler {
 		actor := o.oniActor(r)
 
 		authorized := auth.AnonymousActor
-		_, err := o.ValidateRequest(r)
-		if err != nil {
-			errors.HandleError(err).ServeHTTP(w, r)
-			return
-		}
 		if stored, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 			authorized = stored
 		}
