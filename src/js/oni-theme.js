@@ -176,9 +176,8 @@ export class Palette {
         }
 
         let colors = [...new Set([...palette.imageColors, ...palette.iconColors])];
-        palette.linkColor = getLinkColor(colors, palette.bgColor);
-        colors = colors.filter(notLightDark(palette.linkColor, 0.7));
         palette.accentColor = getAccentColor(colors, palette.bgColor);
+        palette.linkColor = getLinkColor(colors, palette.bgColor);
 
         palette.linkVisitedColor = new LightDark();
         palette.linkVisitedColor.light = tc(palette.linkColor.light).darken(20).toHexString();
@@ -348,6 +347,7 @@ const /* filter */ onSaturation = (min, max) => (col) => {
 
 const /* filter */ wcagAAA = (base) => (col) => contrast(col, base) >= 7
 const /* filter */ wcagAA = (base) => (col) => contrast(col, base) >= 4.5
+const /* filter */ linkContrast = (base) => (col) => contrast(col, base) >= 3.2
 
 const /* filter */ onContrastTo = (base, min, max) => (col) => {
     const con = contrast(col, base);
@@ -425,12 +425,12 @@ const wcagColors = (colors, wcagFn) => colors
 function getLinkColor(colors, toColor) {
     colors = Array.isArray(colors) ? colors : [colors];
 
-    console.debug(`colors`, colors)
-    const lightColors = getLightColors(colors).sort(byContrastTo(toColor.light));
-    const darkColors = getDarkColors(colors).sort(byContrastTo(toColor.dark));
+    console.debug(`all link colors`, colors)
+    const lightColors = wcagColors(getLightColors(colors), linkContrast).sort(byContrastTo(toColor));
+    const darkColors = wcagColors(getDarkColors(colors), linkContrast).sort(byContrastTo(toColor));
 
-    console.debug(`dark colors`, darkColors);
-    console.debug(`light colors`, lightColors);
+    console.debug(`link dark colors`, darkColors);
+    console.debug(`link light colors`, lightColors);
     const result = new LightDark();
     result.light = saturatedFromColor(lightColors.at(0), toColor.light, false).toHexString();
     result.dark = saturatedFromColor(darkColors.at(0), toColor.dark, true).toHexString();
@@ -440,14 +440,16 @@ function getLinkColor(colors, toColor) {
 function getAccentColor(colors, toColor) {
     colors = Array.isArray(colors) ? colors : [colors];
 
-    const lightColors = getLightColors(colors).sort(byContrastTo(toColor.light));
-    const darkColors = getDarkColors(colors).sort(byContrastTo(toColor.dark));
-    console.debug(`light`, lightColors);
-    console.debug(`dark`, darkColors);
+    console.debug(`all accent colors`, colors)
+    const lightColors = wcagColors(getLightColors(colors), wcagAAA);
+    const darkColors = wcagColors(getDarkColors(colors), wcagAAA);
+    console.debug(`accent light`, lightColors);
+    console.debug(`accent dark`, darkColors);
 
     const result = new LightDark();
     result.light = saturatedFromColor(lightColors.at(0), toColor.light, false).toHexString();
     result.dark = saturatedFromColor(darkColors.at(0), toColor.dark, true).toHexString();
+
     return result;
 }
 
