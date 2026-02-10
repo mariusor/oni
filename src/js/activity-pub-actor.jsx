@@ -81,7 +81,7 @@ export class ActivityPubActor extends ActivityPubObject {
                 display: none;
             }
         }
-        section ul a, section ul a:visited, section ul a:active {
+        section ul a:any-link, section ul a svg {
             color: var(--accent-color);
             text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
         }
