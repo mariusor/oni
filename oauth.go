@@ -172,7 +172,17 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 		o.Error(errors.Annotatef(err, "Unable to initialize OAuth2 server"))
 		return
 	}
+
 	resp := s.NewResponse()
+	if IsValidAuthorizationRequest(r) {
+		clientActor, err := o.ValidateOrCreateClient(r, a)
+		if err != nil {
+			resp.SetError(osin.E_INVALID_REQUEST, err.Error())
+			o.redirectOrOutput(resp, w, r)
+			return
+		}
+		o.Logger.WithContext(lw.Ctx{"iri": clientActor.ID}).Debugf("valid client")
+	}
 
 	if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
 		if r.Method == http.MethodGet {
@@ -201,18 +211,17 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 
 			o.renderTemplate(r, w, "login", m)
 			return
-		} else {
-			if err := o.loadAccountFromPost(a, r); err != nil {
-				o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("wrong password")
-				resp.IsError = true
-				resp.ErrorStatusCode = errors.HttpStatus(err)
-				resp.SetErrorUri(osin.E_ACCESS_DENIED, "Wrong password", resp.URL, ar.State)
-			} else {
-				ar.Authorized = true
-				ar.UserData = a.ID
-			}
-			s.FinishAuthorizeRequest(resp, r, ar)
 		}
+		if err := o.loadAccountFromPost(a, r); err != nil {
+			o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("wrong password")
+			resp.IsError = true
+			resp.ErrorStatusCode = errors.HttpStatus(err)
+			resp.SetErrorUri(osin.E_ACCESS_DENIED, "Wrong password", resp.URL, ar.State)
+		} else {
+			ar.Authorized = true
+			ar.UserData = a.ID
+		}
+		s.FinishAuthorizeRequest(resp, r, ar)
 	}
 	if acc.Equal(applicationJson) {
 		// NOTE(marius): overwrite the response type if client has explicitly asked for JSON content
@@ -237,8 +246,12 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := s.NewResponse()
+	if err = o.SetupAuthServerWithDynamicClientData(r, a, s); err != nil {
+		o.Error(err).ServeHTTP(w, r)
+		return
+	}
 
+	resp := s.NewResponse()
 	actor := &auth.AnonymousActor
 	if ar := s.HandleAccessRequest(resp, r); ar != nil {
 		actorIRI := a.ID

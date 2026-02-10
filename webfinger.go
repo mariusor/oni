@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,8 +32,6 @@ type handler struct {
 	s []processing.ReadStore
 	l lw.Logger
 }
-
-var actors = vocab.CollectionPath("actors")
 
 func ValueMatchesLangRefs(val vocab.Content, toCheck ...vocab.NaturalLanguageValues) bool {
 	for _, lr := range toCheck {
@@ -491,6 +490,19 @@ type ClientRegistrationRequest struct {
 	SoftwareID *uuid.UUID `json:"software_id,omitempty"`
 }
 
+func loadEpochSeconds(r *fastjson.Value, epochSeconds *int64) error {
+	stringSeconds := ""
+	if err := loadString(r, &stringSeconds); err != nil {
+		return err
+	}
+	seconds, err := strconv.ParseInt(stringSeconds, 10, 64)
+	if err != nil {
+		return err
+	}
+	*epochSeconds = seconds
+	return nil
+}
+
 func loadString(r *fastjson.Value, s *string) error {
 	if r == nil {
 		return nil
@@ -586,9 +598,9 @@ func (c *ClientRegistrationRequest) UnmarshalJSON(data []byte) error {
 
 type ClientRegistrationResponse struct {
 	// ClientID REQUIRED. OAuth 2.0 client identifier string.  It SHOULD NOT be
-	//	currently valid for any other registered client, though an
-	//	authorization server MAY issue the same client identifier to
-	//	multiple instances of a registered client at its discretion.
+	// currently valid for any other registered client, though an
+	// authorization server MAY issue the same client identifier to
+	// multiple instances of a registered client at its discretion.
 	ClientID string `json:"client_id"`
 
 	// ClientSecret

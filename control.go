@@ -76,8 +76,7 @@ func (c *Control) Client(actor vocab.Actor, tr http.RoundTripper, lctx lw.Ctx) *
 	ua := fmt.Sprintf("%s@%s (+%s)", ProjectURL, Version, actor.GetLink())
 	tr = client.UserAgentTransport(ua, cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni"))))
 
-	baseClient := &http.Client{Transport: tr}
-
+	baseClient := Client(tr)
 	return client.New(
 		client.WithLogger(l.WithContext(lctx)),
 		client.WithHTTPClient(baseClient),
@@ -420,5 +419,9 @@ func (c *Control) AddActorWithPassword(p *vocab.Person, pw []byte, author vocab.
 		return nil, err
 	}
 
-	return p, c.Storage.PasswordSet(p.GetLink(), pw)
+	var err error
+	if pw != nil {
+		err = c.Storage.PasswordSet(p.GetLink(), pw)
+	}
+	return p, err
 }
