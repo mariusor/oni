@@ -254,10 +254,10 @@ export class PaletteElement extends LitElement {
         }
 
         const bgColor = this.palette.bgColor;
-        const iconLightColors = getLightColors(this.palette.iconColors).sort(byContrastTo(bgColor.light));
-        const iconDarkColors = getDarkColors(this.palette.iconColors).sort(byContrastTo(bgColor.dark));
-        const imageLightColors = getLightColors(this.palette.imageColors).sort(byContrastTo(bgColor.light));
-        const imageDarkColors = getDarkColors(this.palette.imageColors).sort(byContrastTo(bgColor.dark));
+        const iconLightColors = wcagColors(getLightColors(this.palette.iconColors), wcagAAA).sort(byContrastTo(bgColor.light));
+        const iconDarkColors = wcagColors(getDarkColors(this.palette.iconColors), wcagAAA).sort(byContrastTo(bgColor.dark));
+        const imageLightColors = wcagColors(getLightColors(this.palette.imageColors), wcagAAA).sort(byContrastTo(bgColor.light));
+        const imageDarkColors = wcagColors(getDarkColors(this.palette.imageColors), wcagAAA).sort(byContrastTo(bgColor.dark));
 
         return html`
             ${renderColor(this.palette.bgColor, this.palette.fgColor, html`<b>Background:</b> `)}
@@ -420,14 +420,15 @@ function getClosestColor(colors, color, onColor) {
 
 const wcagColors = (colors, wcagFn) => colors
     .filter(wcagFn)
+    .filter((c) => !tc(c).isMonochrome())
     .sort(bySaturation);
 
 function getLinkColor(colors, toColor) {
     colors = Array.isArray(colors) ? colors : [colors];
 
     console.debug(`all link colors`, colors)
-    const lightColors = wcagColors(getLightColors(colors), linkContrast).sort(byContrastTo(toColor));
-    const darkColors = wcagColors(getDarkColors(colors), linkContrast).sort(byContrastTo(toColor));
+    const darkColors = wcagColors(getLightColors(colors), wcagAA).sort(byContrastTo(toColor.light));
+    const lightColors = wcagColors(getDarkColors(colors), wcagAA).sort(byContrastTo(toColor.dark));
 
     console.debug(`link dark colors`, darkColors);
     console.debug(`link light colors`, lightColors);
@@ -441,8 +442,8 @@ function getAccentColor(colors, toColor) {
     colors = Array.isArray(colors) ? colors : [colors];
 
     console.debug(`all accent colors`, colors)
-    const lightColors = wcagColors(getLightColors(colors), wcagAAA);
-    const darkColors = wcagColors(getDarkColors(colors), wcagAAA);
+    const darkColors = wcagColors(getLightColors(colors), wcagAAA).sort(bySaturation);
+    const lightColors = wcagColors(getDarkColors(colors), wcagAAA).sort(bySaturation);
     console.debug(`accent light`, lightColors);
     console.debug(`accent dark`, darkColors);
 
