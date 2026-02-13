@@ -276,15 +276,15 @@ func (c *ClientMetadata) UnmarshalJSON(data []byte) error {
 var DefaultClient atomic.Pointer[http.Client]
 
 func Client(tr http.RoundTripper) *http.Client {
-	if cl := DefaultClient.Load(); cl != nil {
-		return cl
+	cl := DefaultClient.Load()
+	if cl == nil {
+		cl = &http.Client{}
 	}
 	if tr == nil {
 		tr = http.DefaultTransport
 	}
-	cl := http.Client{Transport: tr}
-	DefaultClient.Store(&cl)
-	return &cl
+	cl.Transport = tr
+	return cl
 }
 
 func FetchClientMetadata(clientID vocab.IRI) (*ClientMetadata, error) {
