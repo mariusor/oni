@@ -28,10 +28,6 @@ export class ActivityPubObject extends LitElement {
         a:has(oni-natural-language-values) {
             text-decoration: none;
         }
-        article header * {
-            padding: 0;
-            margin: 0;
-        }
         article header h1 {
             display: flex;
         }

@@ -5,19 +5,26 @@ import {sanitize} from "./utils";
 
 export class NaturalLanguageValues extends LitElement {
     static styles = [css`
+        ul, ol, li, p, h1, h2, h3, h4, h5, h6 {
+            margin-block: 0;
+            margin-inline: 0;
+            padding-block: 0;
+            padding-inline: 0;
+        }
         ul, ol {
             margin-inline-start: .6rem;
             padding-inline-start: .6rem;
         }
         :host {
+            line-height: 1.8rem;
             display: inline;
         }
         :host div {
             display: inline-block;
         }
-        p, ul, ol {
+        :host > *:not(:last-child), li:not(:last-child) {
             margin-block-start: 0;
-            margin-block-end: 0;
+            margin-block-end: .8rem;
         }
         :host([data-container-type="article"]) p {
             text-indent: 1.4rem;
