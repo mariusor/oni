@@ -1230,7 +1230,7 @@ func (o *oni) ProxyURL() http.Handler {
 		cl := o.Client(actor, tr, lctx)
 		res, err := cl.Get(id)
 		if err != nil {
-			errors.HandleError(errors.NotFoundf(`unable to fetch IRI %s through the proxy`, id)).ServeHTTP(w, r)
+			errors.HandleError(err).ServeHTTP(w, r)
 			return
 		}
 		defer res.Body.Close()
