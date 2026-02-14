@@ -8,9 +8,6 @@ import {unsafeHTML} from "lit-html/directives/unsafe-html.js";
 
 export class ActivityPubObject extends LitElement {
     static styles = css`
-        :host {
-            color: var(--fg-color);
-        }
         a:link {
             color: var(--link-color);
         }
@@ -23,7 +20,7 @@ export class ActivityPubObject extends LitElement {
             text-shadow: 0 0 1rem var(--c), 0 0 .3rem var(--bg-color);
         }
         a:active {
-            color: oklch(from var(--link-color) l c calc(h + .2));
+            color: oklch(from var(--link-visited-color) l c calc(h + .2));
         }
         a:has(oni-natural-language-values) {
             text-decoration: none;

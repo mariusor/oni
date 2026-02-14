@@ -54,7 +54,7 @@ a:hover {
 }
 
 a:active {
-    color: oklch(from var(--link-color) l c calc(h + .2));
+    color: oklch(from var(--link-visited-color) l c calc(h + .2));
 }
 
 a:has(oni-natural-language-values) {
