@@ -1221,6 +1221,7 @@ func (o *oni) ProxyURL() http.Handler {
 		if stored, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 			authorized = stored
 		}
+		lCtx := lw.Ctx{"iri": id, "actor": authorized.ID}
 
 		var tr http.RoundTripper = &http.Transport{}
 		if InDebugMode.Load() {
@@ -1229,16 +1230,27 @@ func (o *oni) ProxyURL() http.Handler {
 		cl := o.Client(actor, tr, lctx)
 		res, err := cl.Get(id)
 		if err != nil {
-			errors.HandleError(errors.NotFoundf(`invalid 'id' value for proxy retrieval`)).ServeHTTP(w, r)
+			errors.HandleError(errors.NotFoundf(`unable to fetch IRI %s through the proxy`, id)).ServeHTTP(w, r)
 			return
 		}
 		defer res.Body.Close()
-		o.Logger.WithContext(lw.Ctx{"iri": id, "actor": authorized.ID, "status": res.Status}).Infof("request proxied successfully")
+
+		ll := o.Logger.WithContext(lCtx, lw.Ctx{"status": res.Status})
+		logFn := ll.Infof
+		if res.StatusCode > http.StatusOK {
+			logFn = ll.Warnf
+		}
+		logFn("request proxied")
+
+		for k, v := range res.Header {
+			for _, vv := range v {
+				w.Header().Set(k, vv)
+			}
+		}
 
 		w.WriteHeader(res.StatusCode)
-		for k := range res.Header {
-			w.Header().Set(k, res.Header.Get(k))
+		if _, err = io.Copy(w, res.Body); err != nil {
+			ll.WithContext(lw.Ctx{"err": err}).Warnf("unable to passthrough the response body")
 		}
-		_, _ = io.Copy(w, res.Body)
 	})
 }
