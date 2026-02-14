@@ -226,3 +226,6 @@ export function urlRoot(iri) {
 export const toTitleCase = (s) => typeof s  === 'string'
     ? `${s?.at(0)?.toLocaleUpperCase()}${s?.substring(1)}`
     : nothing;
+
+export const formUrlEncode = (obj) => Object.keys(obj).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(obj[k])).join('&');
+
