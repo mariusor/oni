@@ -92,11 +92,6 @@ p {
     margin: unset;
 }
 
-cite {
-    font-weight: lighter;
-    font-style: normal;
-}
-
 oni-natural-language-values, oni-icon {
     display: inline-block;
 }

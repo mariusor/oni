@@ -13,12 +13,14 @@ export class ActivityPubTag extends ActivityPubNote {
         }
         :host a[rel~=mention], :host a[rel~=tag] {
             --tag-color: color-mix(in srgb, var(--accent-color), transparent 86%);
-            font-size: .72rem;
-            padding: .1rem .3rem;
+            font-size: .8rem;
+            padding: .02rem .2rem;
             border-radius: .3rem;
             border: .06rem solid var(--tag-color);
             background: var(--tag-color);
             text-decoration: none;
+            vertical-align: .01rem;
+            word-break: unset;
         }
     `, ActivityPubNote.styles];
 

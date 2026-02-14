@@ -53,15 +53,15 @@ export class NaturalLanguageValues extends LitElement {
         }
         a[rel~=mention], a[rel~=tag], 
         /* NOTE(marius): include Mastodon tag and mention classes on links */
-        a[class~=mention], a[class~=hashtag] {
+        a[class~=mention], a[class~=hashtag], cite {
             --tag-color: color-mix(in srgb, var(--accent-color), transparent 86%);
-            font-size: .72rem;
-            padding: .1rem .3rem;
+            font-size: .9rem;
+            padding: .02rem .2rem;
             border-radius: .3rem;
             border: .06rem solid var(--tag-color);
             background: var(--tag-color);
             text-decoration: none;
-            vertical-align: .09rem;
+            vertical-align: .01rem;
             word-break: unset;
         }
         /* This should take care of Mastodon links that have as content just the link href */
