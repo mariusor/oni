@@ -191,16 +191,15 @@ export class ActivityPubObject extends LitElement {
         if (!this.it.hasOwnProperty(prop)) {
             return null;
         }
-        // TODO(marius): need to take into account if the prop is an array of strings, or an array of ActivityPubItems
-        if (typeof this.it[prop] === 'string') {
-            fetchActivityPubIRI(this.it[prop]).then(it => this.it[prop] = it);
+        if (!Array.isArray(this.it[prop])) {
+            this.it[prop] = [this.it[prop]];
         }
+        this.it[prop]?.map(async it => await fetchActivityPubIRI(it)).forEach(console.debug);
     }
 
     async fetchAuthor() {
-        await this.dereferenceProperty('actor')
-        await this.dereferenceProperty('attributedTo');
-        return this.it.actor || this.it.attributedTo;
+        await Promise.any([this.dereferenceProperty('actor'), this.dereferenceProperty('attributedTo')]);
+        return this.it?.actor || this.it?.attributedTo;
     }
 
     async renderAuthor() {
