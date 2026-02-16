@@ -142,7 +142,7 @@ func authServer(o *oni, oniActor vocab.Actor) (*auth.Server, error) {
 	return auth.New(
 		auth.WithIRI(oniActor.GetLink()),
 		auth.WithStorage(o.Storage),
-		auth.WithClient(o.Client(oniActor, http.DefaultTransport, lw.Ctx{})),
+		auth.WithClient(o.Client(oniActor, lw.Ctx{})),
 		auth.WithLogger(o.Logger.WithContext(lw.Ctx{"log": "osin"})),
 	)
 }
@@ -233,20 +233,20 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 var errUnauthorized = errors.Unauthorizedf("Invalid username or password")
 
 func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
-	a, err := loadBaseActor(o, r)
+	oniActor, err := loadBaseActor(o, r)
 	if err != nil {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
 
-	s, err := authServer(o, a)
+	s, err := authServer(o, oniActor)
 	if err != nil {
 		o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to initialize OAuth2 server")
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
 
-	if err = o.SetupAuthServerWithDynamicClientData(r, a, s); err != nil {
+	if err = o.SetupAuthServerWithDynamicClientData(r, oniActor, s); err != nil {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
@@ -254,7 +254,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 	resp := s.NewResponse()
 	actor := &auth.AnonymousActor
 	if ar := s.HandleAccessRequest(resp, r); ar != nil {
-		actorIRI := a.ID
+		actorIRI := oniActor.ID
 		if iri, ok := ar.UserData.(string); ok {
 			actorIRI = vocab.IRI(iri)
 		}

@@ -19,6 +19,7 @@ import (
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/client"
+	"github.com/go-ap/client/debug"
 	"github.com/go-ap/client/s2s"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
@@ -55,7 +56,7 @@ func MkDirIfNotExists(p string) (err error, exists bool) {
 	return nil, exists
 }
 
-func (c *Control) Client(actor vocab.Actor, tr http.RoundTripper, lctx lw.Ctx) *client.C {
+func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 	lctx["log"] = "client"
 	st := c.Storage
 	l := c.Logger.WithContext(lctx)
@@ -65,6 +66,8 @@ func (c *Control) Client(actor vocab.Actor, tr http.RoundTripper, lctx lw.Ctx) *
 		cachePath = os.TempDir()
 	}
 
+	ua := fmt.Sprintf("%s@%s (+%s)", ProjectURL, Version, actor.GetLink())
+	tr := client.UserAgentTransport(ua, cache.Private(http.DefaultTransport, cache.FS(filepath.Join(cachePath, "oni"))))
 	if !vocab.PublicNS.Equals(actor.ID, true) {
 		if prv, _ := st.LoadKey(actor.ID); prv != nil {
 			tr = s2s.New(s2s.WithTransport(tr), s2s.WithActor(&actor, prv), s2s.WithLogger(l.WithContext(lw.Ctx{"log": "HTTP-Sig"})))
@@ -73,8 +76,9 @@ func (c *Control) Client(actor vocab.Actor, tr http.RoundTripper, lctx lw.Ctx) *
 		}
 	}
 
-	ua := fmt.Sprintf("%s@%s (+%s)", ProjectURL, Version, actor.GetLink())
-	tr = client.UserAgentTransport(ua, cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni"))))
+	if InDebugMode.Load() {
+		tr = debug.New(debug.WithTransport(tr), debug.WithPath(c.StoragePath))
+	}
 
 	baseClient := Client(tr)
 	return client.New(
@@ -308,7 +312,7 @@ func (c *Control) GenKeyPair(actor *vocab.Actor) (*vocab.Actor, error) {
 func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
 	// NOTE(marius): we initialize the client that we're going to use for Update
 	// dissemination with an HTTP-Signature based on the current private key.
-	cl := c.Client(*actor, http.DefaultTransport, lw.Ctx{"log": "client"})
+	cl := c.Client(*actor, lw.Ctx{"log": "client"})
 
 	st := c.Storage
 	l := c.Logger
@@ -410,7 +414,7 @@ func (c *Control) AddActorWithPassword(p *vocab.Person, pw []byte, author vocab.
 	lwCtx := lw.Ctx{"op": "bootstrap"}
 	ap := processing.New(
 		processing.WithLogger(c.Logger.WithContext(lwCtx)),
-		processing.WithClient(c.Client(author, nil, lwCtx)),
+		processing.WithClient(c.Client(author, lwCtx)),
 		processing.WithStorage(c.Storage),
 		processing.WithIDGenerator(GenerateID),
 		processing.WithIRI(author.ID),

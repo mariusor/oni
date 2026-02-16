@@ -22,7 +22,6 @@ import (
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/client"
-	"github.com/go-ap/client/debug"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
 	"github.com/go-ap/jsonld"
@@ -482,7 +481,7 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		author = loaded
 	} else {
-		solver := auth.Resolver(o.Client(auth.AnonymousActor, http.DefaultTransport, lw.Ctx{"log": "keyfetch"}),
+		solver := auth.Resolver(o.Client(auth.AnonymousActor, lw.Ctx{"log": "keyfetch"}),
 			auth.SolverWithStorage(o.Storage), auth.SolverWithLogger(logFn),
 			auth.SolverWithLocalIRIFn(isLocalIRI),
 		)
@@ -745,7 +744,7 @@ func (o *oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnor
 		}
 	}
 
-	c := o.Client(auth.AnonymousActor, http.DefaultTransport, lw.Ctx{})
+	c := o.Client(auth.AnonymousActor, lw.Ctx{})
 	s, err := auth.New(
 		auth.WithIRI(oniActor.GetLink()),
 		auth.WithStorage(o.Storage),
@@ -1103,11 +1102,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			author = stored
 		}
 
-		var tr http.RoundTripper = &http.Transport{}
-		if InDebugMode.Load() {
-			tr = debug.New(debug.WithTransport(tr), debug.WithPath(o.StoragePath))
-		}
-		cl := o.Client(actor, tr, lctx)
+		cl := o.Client(actor, lctx)
 		processor := processing.New(
 			processing.Async,
 			processing.WithLogger(o.Logger.WithContext(lctx, lw.Ctx{"log": "processing"})),
@@ -1223,11 +1218,7 @@ func (o *oni) ProxyURL() http.Handler {
 		}
 		lCtx := lw.Ctx{"iri": id, "actor": authorized.ID}
 
-		var tr http.RoundTripper = &http.Transport{}
-		if InDebugMode.Load() {
-			tr = debug.New(debug.WithTransport(tr), debug.WithPath(o.StoragePath))
-		}
-		cl := o.Client(actor, tr, lctx)
+		cl := o.Client(actor, lctx)
 		res, err := cl.Get(id)
 		if err != nil {
 			errors.HandleError(err).ServeHTTP(w, r)

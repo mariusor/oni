@@ -7,9 +7,9 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"sync/atomic"
 	"time"
 
+	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/client/debug"
@@ -37,7 +37,7 @@ func IsValidAuthorizationRequest(r *http.Request) bool {
 	return true
 }
 
-func (o *oni) ValidateOrCreateClient(r *http.Request, author vocab.Actor) (*vocab.Actor, error) {
+func (o *oni) ValidateOrCreateClient(r *http.Request, oniActor vocab.Actor) (*vocab.Actor, error) {
 	// NOTE(marius): we should try to use Evan's diagram:
 	// https://github.com/swicg/activitypub-api/issues/1#issuecomment-3708524521
 	_ = r.ParseForm()
@@ -53,7 +53,7 @@ func (o *oni) ValidateOrCreateClient(r *http.Request, author vocab.Actor) (*voca
 	repo := o.Storage
 
 	// check for existing application actor
-	clientActor, err := LoadClientActorByID(repo, author, clientID)
+	clientActor, err := LoadClientActorByID(repo, oniActor, clientID)
 	if err != nil && errors.IsNotFound(err) {
 		if err != nil {
 			return nil, err
@@ -74,7 +74,7 @@ func (o *oni) ValidateOrCreateClient(r *http.Request, author vocab.Actor) (*voca
 	if vocab.IsNil(clientActor) {
 		// NOTE(marius): if we were unable to find any local client matching ClientID,
 		// we attempt a OAuth Client ID Metadata Document based client registration mechanism.
-		res, err := FetchClientMetadata(clientID)
+		res, err := o.FetchClientMetadata(clientID, oniActor)
 		if err != nil {
 			return nil, err
 		}
@@ -86,8 +86,8 @@ func (o *oni) ValidateOrCreateClient(r *http.Request, author vocab.Actor) (*voca
 		}
 
 		res.ClientID = clientURL
-		newClient := GeneratedClientActor(author, res)
-		clientActor, err = o.AddActorWithPassword(newClient, nil, author)
+		newClient := GeneratedClientActor(oniActor, res)
+		clientActor, err = o.AddActorWithPassword(newClient, nil, oniActor)
 		if err != nil {
 			return nil, err
 		}
@@ -191,7 +191,7 @@ func LoadClientActorByID(repo FullStorage, app vocab.Actor, clientID vocab.IRI) 
 	return vocab.ToActor(clientActorItem)
 }
 
-func (o *oni) SetupAuthServerWithDynamicClientData(r *http.Request, a vocab.Actor, s *auth.Server) error {
+func (o *oni) SetupAuthServerWithDynamicClientData(r *http.Request, oniActor vocab.Actor, s *auth.Server) error {
 	if id := r.FormValue(clientIdKey); id != "" {
 		client, err := url.QueryUnescape(id)
 		if err != nil {
@@ -203,7 +203,7 @@ func (o *oni) SetupAuthServerWithDynamicClientData(r *http.Request, a vocab.Acto
 		}
 
 		s.Config.AllowClientSecretInParams = true
-		if vocab.IRI(client).Contains(a.ID, false) && r.FormValue("client_secret") == "" {
+		if vocab.IRI(client).Contains(oniActor.ID, false) && r.FormValue("client_secret") == "" {
 			// NOTE(marius): client ID and current server are on the same host
 			r.Form.Set("client_secret", cl.GetSecret())
 		}
@@ -214,14 +214,14 @@ func (o *oni) SetupAuthServerWithDynamicClientData(r *http.Request, a vocab.Acto
 		}
 
 		// check for existing application actor
-		clientActor, _ := LoadClientActorByID(o.Storage, a, vocab.IRI(auth.Username))
+		clientActor, _ := LoadClientActorByID(o.Storage, oniActor, vocab.IRI(auth.Username))
 		if vocab.IsNil(clientActor) {
 			// NOTE(marius): if we were unable to find any local client matching ClientID,
 			// we attempt a OAuth Client ID Metadata Document based client registration mechanism.
-			res, _ := FetchClientMetadata(vocab.IRI(auth.Username))
+			res, _ := o.FetchClientMetadata(vocab.IRI(auth.Username), oniActor)
 			if res != nil {
-				if clientID, err := generateClientID(a, res.SoftwareID); err == nil {
-					clientActor, err = LoadClientActorByID(o.Storage, a, clientID)
+				if clientID, err := generateClientID(oniActor, res.SoftwareID); err == nil {
+					clientActor, err = LoadClientActorByID(o.Storage, oniActor, clientID)
 					if err != nil && errors.IsNotFound(err) {
 						return err
 					}
@@ -273,13 +273,8 @@ func (c *ClientMetadata) UnmarshalJSON(data []byte) error {
 	return c.ClientRegistrationRequest.UnmarshalJSON(data)
 }
 
-var DefaultClient atomic.Pointer[http.Client]
-
 func Client(tr http.RoundTripper) *http.Client {
-	cl := DefaultClient.Load()
-	if cl == nil {
-		cl = &http.Client{}
-	}
+	cl := &http.Client{}
 	if tr == nil {
 		tr = http.DefaultTransport
 	}
@@ -287,7 +282,7 @@ func Client(tr http.RoundTripper) *http.Client {
 	return cl
 }
 
-func FetchClientMetadata(clientID vocab.IRI) (*ClientMetadata, error) {
+func (o *oni) FetchClientMetadata(clientID vocab.IRI, oniActor vocab.Actor) (*ClientMetadata, error) {
 	var tr http.RoundTripper = &http.Transport{}
 	if IsDev {
 		tr = debug.New(debug.WithTransport(tr), debug.WithPath(os.TempDir()))
@@ -302,7 +297,7 @@ func FetchClientMetadata(clientID vocab.IRI) (*ClientMetadata, error) {
 	// TODO(marius): Accept mime-type for Client Metadata Document is application/json
 	// https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-00.html#section-4.1-3
 
-	cl := DefaultClient.Load()
+	cl := o.Client(oniActor, lw.Ctx{"log": "client_metadata"})
 	res, err := cl.Do(req)
 	if err != nil {
 		return nil, err
