@@ -254,6 +254,8 @@ func ValidateClientMetadata(c ClientMetadata, clientID string) error {
 }
 
 type ClientMetadata struct {
+	// TODO(marius): look into how this struct is different from
+	//   https://pkg.go.dev/github.com/go-ap/webfinger#OAuthAuthorizationMetadata
 	ClientID string `json:"client_id"`
 	IssuedAt int64  `json:"client_id_issued_at"`
 	ClientRegistrationRequest
