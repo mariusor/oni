@@ -120,7 +120,7 @@ func (c corsLogger) Printf(f string, v ...interface{}) {
 func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	allowedOrigins := []string{"https://*"}
 	if IsDev {
-		allowedOrigins = append(allowedOrigins, "https://*")
+		allowedOrigins = append(allowedOrigins, "http://*")
 	}
 	c := cors.New(cors.Options{
 		AllowedOrigins:   allowedOrigins,
