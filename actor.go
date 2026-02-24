@@ -28,7 +28,7 @@ You're currently running version <code>{{ .Version }}</code>.<br/>
 The server can be accessed at <a href="{{ .URL }}">{{ .URL }}</a>.<br/>
 <hr/>
 In order to interact with your instance, you need to use the <a href="https://git.sr.ht/~mariusor/box">BOX</a> CLI helper.<br/>
-More details can be found on the <a href="https://man.sr.ht/~mariusor/go-activitypub/oni/index.md">official wiki</a>.
+More details can be found on the <a href="https://man.sr.ht/~mariusor/go-activitypub/apps/oni/index.md">official wiki</a>.
 </p>`))
 )
 
