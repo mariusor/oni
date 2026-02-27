@@ -51,7 +51,7 @@ func iriMatchesItem(iri vocab.IRI, it vocab.Item) bool {
 
 	match := false
 	if vocab.IsItemCollection(it) {
-		vocab.OnCollectionIntf(it, func(col vocab.CollectionInterface) error {
+		_ = vocab.OnCollectionIntf(it, func(col vocab.CollectionInterface) error {
 			for _, i := range col.Collection() {
 				if iri.Equals(i.GetLink(), true) {
 					match = true
@@ -64,19 +64,8 @@ func iriMatchesItem(iri vocab.IRI, it vocab.Item) bool {
 	return match
 }
 
-func And(checkFns ...func(actor vocab.Actor) bool) func(actor vocab.Actor) bool {
-	return func(actor vocab.Actor) bool {
-		for _, checkFn := range checkFns {
-			if !checkFn(actor) {
-				return false
-			}
-		}
-		return true
-	}
-}
-
-func AnyTrue(fns ...func(vocab.Actor) bool) func(actor vocab.Actor) bool {
-	return func(actor vocab.Actor) bool {
+func AnyTrue(fns ...func(vocab.Item) bool) func(actor vocab.Item) bool {
+	return func(actor vocab.Item) bool {
 		for _, fn := range fns {
 			if fn(actor) {
 				return true
@@ -86,10 +75,10 @@ func AnyTrue(fns ...func(vocab.Actor) bool) func(actor vocab.Actor) bool {
 	}
 }
 
-func AllTrue(fns ...func(vocab.Actor) bool) func(actor vocab.Actor) bool {
-	return func(actor vocab.Actor) bool {
+func AllTrue(fns ...func(vocab.Item) bool) func(vocab.Item) bool {
+	return func(it vocab.Item) bool {
 		for _, fn := range fns {
-			if !fn(actor) {
+			if !fn(it) {
 				return false
 			}
 		}
@@ -97,76 +86,67 @@ func AllTrue(fns ...func(vocab.Actor) bool) func(actor vocab.Actor) bool {
 	}
 }
 
-func CheckActorName(name string) func(actor vocab.Actor) bool {
-	return func(a vocab.Actor) bool {
-		return ValueMatchesLangRefs(vocab.Content(name), a.PreferredUsername, a.Name)
+func CheckItemName(name string) func(vocab.Item) bool {
+	matchFn := func(toMatch vocab.NaturalLanguageValues) bool {
+		return ValueMatchesLangRefs(vocab.Content(name), toMatch)
+	}
+	return func(it vocab.Item) bool {
+		matches := false
+		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
+			matches = matchFn(ob.Name)
+			return nil
+		})
+		_ = vocab.OnActor(it, func(act *vocab.Actor) error {
+			matches = matches || matchFn(act.PreferredUsername)
+			return nil
+		})
+		return matches
 	}
 }
 
-func CheckObjectURL(url string) func(actor vocab.Object) bool {
-	return func(a vocab.Object) bool {
-		return iriMatchesItem(vocab.IRI(url), a.URL)
+func CheckItemURL(url vocab.IRI) func(vocab.Item) bool {
+	return func(it vocab.Item) bool {
+		matches := false
+		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
+			matches = iriMatchesItem(url, ob.URL)
+			return nil
+		})
+		return matches
 	}
 }
 
-func CheckActorURL(url string) func(actor vocab.Actor) bool {
-	return func(a vocab.Actor) bool {
-		return iriMatchesItem(vocab.IRI(url), a.URL)
+func CheckItemID(url vocab.IRI) func(vocab.Item) bool {
+	return func(it vocab.Item) bool {
+		return iriMatchesItem(url, it.GetID())
 	}
 }
 
-func CheckActorHost(host string) func(actor vocab.Actor) bool {
-	return func(a vocab.Actor) bool {
-		u, err := a.ID.URL()
-		if err != nil {
-			return false
-		}
-		return u.Host == host
-	}
-}
-
-func CheckObjectID(url string) func(ob vocab.Object) bool {
-	return func(o vocab.Object) bool {
-		return iriMatchesItem(vocab.IRI(url), o.ID)
-	}
-}
-
-func CheckActorID(url string) func(actor vocab.Actor) bool {
-	return func(a vocab.Actor) bool {
-		return iriMatchesItem(vocab.IRI(url), a.ID)
-	}
-}
-
-func LoadIRI(db processing.ReadStore, what vocab.IRI, checkFns ...func(actor vocab.Object) bool) (vocab.Item, error) {
+func LoadIRI(db processing.ReadStore, what vocab.IRI, checkFns ...func(vocab.Item) bool) (vocab.Item, error) {
 	result, err := db.Load(what)
 	if err != nil {
 		return nil, errors.NewNotFound(err, "nothing was found at IRI: %s", what)
 	}
-	var found vocab.Item
-	err = vocab.OnObject(result, func(o *vocab.Object) error {
-		for _, fn := range checkFns {
-			if fn(*o) {
-				found = o
-			}
+
+	for _, fn := range checkFns {
+		if fn(result) {
+			return result, nil
 		}
-		return nil
-	})
-	return found, err
+	}
+	return nil, errors.NewNotFound(err, "nothing was found at IRI: %s", what)
 }
 
-func (o *oni) loadActorFromStorage(checkFns ...func(actor vocab.Actor) bool) (vocab.Item, error) {
+func (o *oni) loadActorFromStorage(checkFns ...func(vocab.Item) bool) (vocab.Item, error) {
 	for _, act := range o.a {
 		var found *vocab.Actor
-		err := vocab.OnActor(act, func(a *vocab.Actor) error {
-			for _, fn := range checkFns {
-				if fn(*a) {
-					found = a
-				}
+		for _, fn := range checkFns {
+			if !fn(act) {
+				continue
 			}
-			return nil
-		})
-		if err != nil {
-			return nil, errors.NewNotFound(err, "no matching actor found")
+			maybeActor, err := vocab.ToActor(act)
+			if err != nil {
+				return nil, errors.NewNotFound(err, "no matching actor found")
+			}
+			found = maybeActor
 		}
 		if !vocab.IsNil(found) {
 			return found, nil
@@ -241,34 +221,37 @@ func HandleWebFinger(o *oni) func(w http.ResponseWriter, r *http.Request) {
 		subject := res
 
 		var result vocab.Item
-		maybeUrl := fmt.Sprintf("https://%s", host)
-		filterFn := AnyTrue(CheckActorURL(maybeUrl), CheckActorID(maybeUrl))
+		maybeUrl := vocab.IRI("https://" + host)
+		filterFn := AnyTrue(CheckItemURL(maybeUrl), CheckItemID(maybeUrl))
 		if host != handle {
-			filterFn = AllTrue(CheckActorName(handle), filterFn)
+			filterFn = AllTrue(CheckItemName(handle), filterFn)
 		}
-		if typ == "acct" {
+		switch typ {
+		case "acct":
 			a, err := o.loadActorFromStorage(filterFn)
 			if err != nil {
-				handleErr(o.Logger)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
-				return
+				if !errors.IsNotFound(err) {
+					handleErr(o.Logger)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
+					return
+				}
+				a, err = LoadIRI(o.Storage, maybeUrl, filterFn)
 			}
-			if vocab.IsNil(a) {
-				handleErr(o.Logger)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
-				return
+			if !vocab.IsNil(a) {
+				result = a
 			}
-			result = a
-		}
-		if typ == "https" {
-			ob, err := LoadIRI(o.Storage, vocab.IRI(res), CheckObjectURL(res), CheckObjectID(res))
+		case "https":
+			ob, err := LoadIRI(o.Storage, vocab.IRI(res), CheckItemURL(vocab.IRI(res)), CheckItemID(vocab.IRI(res)))
 			if err != nil {
 				handleErr(o.Logger)(r, errors.NewNotFound(err, "resource not found %s", res)).ServeHTTP(w, r)
 				return
 			}
-			if vocab.IsNil(ob) {
-				handleErr(o.Logger)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
-				return
+			if !vocab.IsNil(ob) {
+				result = ob
 			}
-			result = ob
+		}
+		if vocab.IsNil(result) {
+			handleErr(o.Logger)(r, errors.NotFoundf("resource not found %s", res)).ServeHTTP(w, r)
+			return
 		}
 
 		id := result.GetID()

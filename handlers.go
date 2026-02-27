@@ -102,7 +102,7 @@ func (o *oni) setupRoutes() {
 	o.setupActivityPubRoutes(m)
 	o.setupOAuthRoutes(m)
 	o.setupStaticRoutes(m)
-	o.setupWebfingerRoutes(m)
+	o.setupWellKnownRoutes(m)
 
 	m.Mount("/debug", middleware.Profiler())
 
@@ -119,7 +119,7 @@ func (o *oni) setupStaticRoutes(m chi.Router) {
 	m.With(o.MaybeCreateRootActor).HandleFunc("/favicon.ico", o.ServeFavIcon)
 }
 
-func (o *oni) setupWebfingerRoutes(m chi.Router) {
+func (o *oni) setupWellKnownRoutes(m chi.Router) {
 	// TODO(marius): we need the nodeinfo handlers also
 	m.HandleFunc("/.well-known/webfinger", HandleWebFinger(o))
 	m.HandleFunc("/.well-known/host-meta", HandleHostMeta(o))
