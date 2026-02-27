@@ -79,10 +79,25 @@ func (o *oni) setupOAuthRoutes(m chi.Router) {
 }
 
 func (o *oni) setupRoutes() {
+	allowedOrigins := []string{"https://*"}
+	if IsDev {
+		allowedOrigins = append(allowedOrigins, "http://*")
+	}
+	c := cors.New(cors.Options{
+		AllowedOrigins:   allowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+		AllowOriginFunc:  checkOriginForBlockedActors,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+		Debug:            IsDev,
+	})
+	c.Log = corsLogger(o.Logger.WithContext(lw.Ctx{"log": "cors"}).Tracef)
+
 	m := chi.NewMux()
 
 	m.Use(o.OutOfOrderMw)
-	m.Use(Log(o.Logger))
+	m.Use(Log(o.Logger), c.Handler)
 
 	o.setupActivityPubRoutes(m)
 	o.setupOAuthRoutes(m)
@@ -118,24 +133,10 @@ func (c corsLogger) Printf(f string, v ...interface{}) {
 }
 
 func (o *oni) setupActivityPubRoutes(m chi.Router) {
-	allowedOrigins := []string{"https://*"}
-	if IsDev {
-		allowedOrigins = append(allowedOrigins, "http://*")
-	}
-	c := cors.New(cors.Options{
-		AllowedOrigins:   allowedOrigins,
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
-		AllowCredentials: true,
-		AllowOriginFunc:  checkOriginForBlockedActors,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-		Debug:            IsDev,
-	})
-	c.Log = corsLogger(o.Logger.WithContext(lw.Ctx{"log": "cors"}).Tracef)
 	m.Group(func(m chi.Router) {
 		m.Use(o.StopBlocked)
 		m.Group(func(m chi.Router) {
-			m.Use(c.Handler, o.MaybeCreateRootActor)
+			m.Use(o.MaybeCreateRootActor)
 			m.Get("/*", o.ActivityPubItem)
 			m.Head("/*", o.ActivityPubItem)
 		})
