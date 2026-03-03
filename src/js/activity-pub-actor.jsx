@@ -54,11 +54,11 @@ export class ActivityPubActor extends ActivityPubObject {
             max-height: 10em;
             margin-top: .4rem;
             padding: .32rem;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px) contrast(300%);
             border-radius: 0 1.6em 1.6em 1.6em;
             border: .1rem solid color-mix(in srgb, var(--link-color), transparent 30%);
             box-shadow: 0 0 1rem var(--link-color), 0 0 .3rem var(--link-color);
-            background-color: color-mix(in srgb, var(--link-color), transparent 85%);
+            background-color: color-mix(in srgb, var(--link-color), transparent 50%);
         }
         section ul {
             display: inline-block;
