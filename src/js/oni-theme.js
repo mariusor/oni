@@ -3,7 +3,7 @@ import {average, prominent} from "color.js";
 import {ActivityPubItem, getHref} from "./activity-pub-item";
 import {css, html, LitElement, nothing, unsafeCSS} from "lit";
 import {map} from "lit-html/directives/map.js";
-import {generateRandomColorRamp} from "fettepalette";
+import {generateColorRamp} from "rampensau";
 
 class LightDark {
     light;
@@ -29,6 +29,9 @@ export class Palette {
     accentColor;
     linkColor;
     linkVisitedColor;
+
+    avgColor;
+    tintColor;
 
     imageURL;
     iconURL;
@@ -105,6 +108,8 @@ export class Palette {
 
                 palette.isDark = _palette.isDark;
                 palette.main = _palette.main;
+                palette.tintColor = _palette.tintColor;
+                palette.avgColor = _palette.avgColor;
             }
         }
         return palette;
@@ -149,73 +154,58 @@ export class Palette {
             return palette;
         }
 
-        let colorCount = 2;
-
         // NOTE(marius): if we have an image, we build the background color from its average
         if (palette.imageURL) {
             const avgCol = await average(palette.imageURL, {format: 'hex'});
-            palette.main = getPalettedColors(avgCol, colorCount);
+            palette.avgColor = avgCol;
             palette.isDark = tc(avgCol).isDark();
-            palette.bgColor = getColorPairFromBase(avgCol, palette.main);
+            palette.bgColor = getBackgroundFromBase(avgCol);
             console.debug(`loaded image ${palette.imageURL}: (isDark ${palette.isDark}) (bg ${palette.bgColor})`, palette.main);
         }
 
         let paletteImageURL = palette.imageURL;
         // NOTE(marius): if we have an icon, we build the palette from its most prominent color
         if (palette.iconURL) {
+            palette.tintColor = await average(palette.iconURL, {format: 'hex'});
             paletteImageURL = palette.iconURL;
         }
-        const paletteColors = await paletteFromImage(paletteImageURL, 1);
-        console.debug(`palette colors ${paletteImageURL} ${paletteColors.length}`, paletteColors);
-        if (!palette.main.hasOwnProperty('base')) {
-            palette.main = lamePaletteRamp(paletteColors.at(0), 2);
-
-            palette.fgColor = new LightDark(
-                tcHSL(palette.main.dark.at(1)),
-                tcHSL(palette.main.light.at(-1))
-            );
-            palette.accentColor = new LightDark(
-                tcHSL(palette.main.base.at(0)),
-                tcHSL(palette.main.light.at(-1))
-            );
-            palette.linkColor = new LightDark(
-                tcHSL(palette.main.dark.at(0)),
-                tcHSL(palette.main.light.at(0))
-            );
-            palette.linkVisitedColor =  new LightDark(
-                tcHSL(palette.main.base.at(1)),
-                tcHSL(palette.main.base.at(1))
-            );
-        } else {
-            palette.fgColor = new LightDark(
-                tcHSL(palette.main.base.at(-1)),
-                tcHSL(palette.main.base.at(0))
-            );
-            palette.accentColor = new LightDark(
-                tcHSL(palette.main.light.at(-1)),
-                tcHSL(palette.main.light.at(0))
-            );
-            palette.linkColor = new LightDark(
-                tcHSL(palette.main.dark.at(-1)),
-                tcHSL(palette.main.dark.at(0))
-            );
-            palette.linkVisitedColor =  new LightDark(
-                tcHSL(palette.main.dark.at(1)),
-                tcHSL(palette.main.dark.at(1))
-            );
+        const paletteColors = asArray(await colorsFromImage(paletteImageURL, 3));
+        if (!palette.tintColor) {
+            palette.tintColor= paletteColors.filter(noExtremes).sort(bySaturation).at(0);
         }
+        palette.accentColor = getAccentPairFromBase(palette.tintColor);
+        palette.main = compoundRamp(palette.tintColor, 9);
+
+        palette.linkColor = getAccentPairFromBase(paletteColors.at(Math.ceil(paletteColors.length/2)+1));
+        palette.linkVisitedColor = getAccentPairFromBase(paletteColors.at(Math.floor(paletteColors.length/2)-1));
+        console.debug(`palette colors ${paletteImageURL} ${palette.main.length}`, palette.main, `color ${palette.tintColor}`);
         return palette;
     }
 }
 
-function getColorPairFromBase(base, palette) {
+function getAccentPairFromBase(base) {
+    const p = lightDarkPair(base);
+    let [l, d] = [tcHSL(p.at(1)), tcHSL(p.at(0))];
+    const hBase = tc(base).toHsl();
+    if (hBase.s > 0.65) {
+        if (hBase.l < 0.40) {
+            l = base;
+        } else if (hBase.l > 0.60) {
+            d = base;
+        }
+    }
+    return new LightDark(l, d);
+}
+
+function getBackgroundFromBase(base) {
     const c = new LightDark();
+    const p = lightDarkPair(base);
     if (tc(base).isDark()) {
+        c.light = tcHSL(p.at(0));
         c.dark = base;
-        c.light = tcHSL(palette.base.at(0));
     } else {
         c.light = base;
-        c.dark = tcHSL(palette.base.at(-1));
+        c.dark = tcHSL(p.at(1));
     }
     return c;
 }
@@ -226,42 +216,34 @@ const asArray = (colors) => {
     return Array.isArray(colors) ? [...new Set(colors)] : [];
 }
 
-const paletteFromImage = async (url, count) =>
-    (asArray(await colorsFromImage(url, count)))
-        .map(color => getPalettedColors(tc(color).toHsl().h, 3))
-        .map(palette => palette?.all)
-        .flatMap(c => c)
-        .map(c =>tcHSL(c))
-        .filter((value, index, array)  => array.indexOf(value) === index);
+const linearH = (x) => x;
+const linearS = (x) => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const linearL = (x) => -(Math.cos(Math.PI * x) - 1) / 2;
 
-const getPalettedColors = (base, count) => linearPaletteRamp(base, count)
+const lightDarkPair = (base) => generateColorRamp({
+    total: 4,
+    hStart: tc(base).toHsl().h,
+    hStartCenter: 0.5,
+    hCycles: 0,
+    hEasing: linearH,
+    sEasing: linearS,
+    lEasing: linearL,
+    sRange: [1.000, 0.300],
+    lRange: [1, 0],
+    colorMode: 'hsl',
+}).slice(1, 3);
 
-const linearPaletteRamp = (base, count) => generateRandomColorRamp({
-    centerHue: tc(base).toHsl().h,      // at what hue should the generation start at
-    total: 3,                           // total of base colors in the ramp
-    hueCycle: 0.05,                     // hsl spins how much should the hue change over the curve (0: not at all, 1: one full rainbow)
-    curveMethod: 'linear',              // offset for the tints
-    offsetTint: 0.15,                   // what method is used to draw the curve in the HSV color model, also takes a function
-    offsetShade: 0.15,                  // how accentuated is the curve (depends heavily on curveMethod)
-    minSaturationLight: [-0.09, 0.068], // defines the min saturation and light of all the colors
-    maxSaturationLight: [1, 1],         // defines the max saturation and light of all the colors
-    colorModel: 'hsl',                  // defines the color model of the returned colors hsv and hsl are supported
-});
-
-const lamePaletteRamp = (base, count) => generateRandomColorRamp({
-    centerHue: tc(base).toHsl().h,      // at what hue should the generation start at
-    total: 3,                       // total of base colors in the ramp
-    hueCycle: 0.05,                     // hsl spins how much should the hue change over the curve (0: not at all, 1: one full rainbow)
-    curveMethod: 'lamé',                // offset for the tints
-    curveAccent: 0.109,                 // offset of the shades
-    offsetTint: 0.15,                   // what method is used to draw the curve in the HSV color model, also takes a function
-    offsetShade: 0.2,                   // how accentuated is the curve (depends heavily on curveMethod)
-    tintShadeHueShift: 0,               // defines how shifted the hue is for the shades and the tints
-    offsetCurveModTint: 0,              // modifies the tint curve
-    offsetCurveModShade: 0,             // modifies the shade curve
-    minSaturationLight: [-0.2, 0.12],   // defines the min saturation and light of all the colors
-    maxSaturationLight: [0.941, 0.665], // defines the max saturation and light of all the colors
-    colorModel: 'hsl',                  // defines the color model of the returned colors hsv and hsl are supported
+const compoundRamp = (base, count) => generateColorRamp({
+    total: count,
+    hStart: tc(base).toHsl().h,
+    hStartCenter: 0.5,
+    hCycles: 1.0,
+    hEasing: linearH,
+    sEasing: linearS,
+    lEasing: linearL,
+    sRange: [1.000, 0.300],
+    lRange: [1, 0],
+    colorMode: 'hsl',
 });
 
 export class PaletteElement extends LitElement {
@@ -324,12 +306,18 @@ export class PaletteElement extends LitElement {
         }
 
         const colorPalette = (palette) => html`
-            <div class="light" style="width:33%; float:left">Light: ${map(palette.light, color => renderColor(tcHSL(color), palette.fgColor))}</div>
-            <div class="base" style="width:33%; float:left">Base: ${map(palette.base, color => renderColor(tcHSL(color), palette.fgColor))}</div>
-            <div class="dark" style="width:33%; float:left">Dark: ${map(palette.dark, color => renderColor(tcHSL(color), palette.fgColor))}</div>
+            <div>${map(palette??[], color => renderColor(tcHSL(color), palette.fgColor))}</div>
         `;
 
-        return html`<div class="colors">${html`${colorPalette(this.palette.main)}`}</div>`;
+        return html`
+            ${renderColor(this.palette.bgColor, this.palette.fgColor, html`<b>Background:</b> `)}
+            ${renderColor(this.palette.fgColor, this.palette.bgColor, html`<b>Foreground:</b> `)}
+            ${renderColor(this.palette.accentColor, this.palette.bgColor, html`<b>Accent:</b> `)}
+            ${renderColor(this.palette.linkColor, this.palette.bgColor, html`<b>Link:</b> `)}
+            ${renderColor(this.palette.linkVisitedColor, this.palette.bgColor, html`<b>Visited Link:</b> `)}
+            ${renderColor(this.palette.tintColor, this.palette.avgColor)}
+            ${renderColor(this.palette.avgColor, this.palette.tintColor)}
+            <div class="colors">${html`${colorPalette(this.palette.main)}`}</div>`;
     }
 }
 

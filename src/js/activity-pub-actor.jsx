@@ -56,9 +56,9 @@ export class ActivityPubActor extends ActivityPubObject {
             padding: .32rem;
             backdrop-filter: blur(10px) contrast(300%);
             border-radius: 0 1.6em 1.6em 1.6em;
-            border: .1rem solid color-mix(in srgb, var(--link-color), transparent 30%);
-            box-shadow: 0 0 1rem var(--link-color), 0 0 .3rem var(--link-color);
-            background-color: color-mix(in srgb, var(--link-color), transparent 50%);
+            border: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
+            box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
+            background-color: color-mix(in srgb, var(--accent-color), transparent 50%);
         }
         section ul {
             display: inline-block;
