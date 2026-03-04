@@ -38,9 +38,9 @@ export class OniHeader extends ActivityPubActor {
                 box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
                 background-color: color-mix(in srgb, var(--accent-color), transparent 50%);
             }
-            header a, header a:visited, header a:hover, header a:visited:hover  {
-                color: var(--accent-color);
-                text-shadow: 0 0 2rem var(--link-color), 0 0 .3rem var(--link-color);
+            header a, header a:visited, header a:hover, header a:visited:hover {
+                color: var(--fg-color);
+                text-shadow: 0 0 1rem var(--accent-color), 0 0 .4rem var(--accent-color), 0 0 .2rem var(--bg-color);
             }
             header a {
                 min-width: 0;
