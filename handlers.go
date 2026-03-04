@@ -851,7 +851,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 			accepts := getRequestAcceptedContentType(r)
 			if accepts(fallbackHTML) && (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
 				obFilters := make(filters.Checks, 0)
-				obFilters = append(obFilters, filters.Not(filters.NilID))
+				obFilters = append(obFilters, filters.NotNilItem)
 				if vocab.Outbox == whichCollection {
 					obFilters = append(obFilters, filters.NilInReplyTo)
 				}
@@ -862,7 +862,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 				if len(obFilters) > 0 {
 					colFilters = append(colFilters, filters.Object(obFilters...))
 				}
-				colFilters = append(colFilters, filters.Actor(filters.Not(filters.NilID)))
+				colFilters = append(colFilters, filters.Actor(filters.NotNilItem))
 			}
 		}
 		if vocab.ValidObjectCollection(whichCollection) {

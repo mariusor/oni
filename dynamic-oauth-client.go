@@ -307,11 +307,11 @@ func (o *oni) FetchClientMetadata(clientID vocab.IRI, oniActor vocab.Actor) (*Cl
 	defer res.Body.Close()
 
 	c := ClientMetadata{}
-	if err := json.NewDecoder(res.Body).Decode(&c); err != nil {
+	if err = json.NewDecoder(res.Body).Decode(&c); err != nil {
 		return nil, err
 	}
 
-	if err := ValidateClientMetadata(c, string(clientID)); err != nil {
+	if err = ValidateClientMetadata(c, string(clientID)); err != nil {
 		return nil, err
 	}
 	return &c, nil
