@@ -123,6 +123,8 @@ func (o *oni) setupWellKnownRoutes(m chi.Router) {
 	// TODO(marius): we need the nodeinfo handlers also
 	m.HandleFunc("/.well-known/webfinger", HandleWebFinger(o))
 	m.HandleFunc("/.well-known/host-meta", HandleHostMeta(o))
+	m.HandleFunc(NodeInfoDiscoverPath, HandleNodeInfoDiscover(o))
+	m.HandleFunc(NodeInfoPath, HandleNodeInfo(o))
 	m.With(o.MaybeCreateRootActor).HandleFunc("/.well-known/oauth-authorization-server", HandleOauthAuthorizationServer(o))
 }
 

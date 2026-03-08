@@ -14,24 +14,23 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
+	"git.sr.ht/~mariusor/storage-all"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/errors"
+	"github.com/go-ap/filters"
 	"github.com/go-ap/processing"
 	"github.com/google/uuid"
 	"github.com/openshift/osin"
 	"github.com/valyala/fastjson"
+	"github.com/writeas/go-nodeinfo"
 )
-
-type handler struct {
-	s []processing.ReadStore
-	l lw.Logger
-}
 
 func ValueMatchesLangRefs(val vocab.Content, toCheck ...vocab.NaturalLanguageValues) bool {
 	for _, lr := range toCheck {
@@ -165,30 +164,6 @@ func handleErr(l lw.Logger) func(r *http.Request, e error) errors.ErrorHandlerFn
 	}
 }
 
-func (h handler) findMatchingStorage(hosts ...string) (vocab.Actor, processing.ReadStore, error) {
-	var app vocab.Actor
-	for _, db := range h.s {
-		for _, host := range hosts {
-			host = "https://" + host + "/"
-			res, err := db.Load(vocab.IRI(host))
-			if err != nil {
-				continue
-			}
-			err = vocab.OnActor(res, func(actor *vocab.Actor) error {
-				app = *actor
-				return nil
-			})
-			if err != nil {
-				continue
-			}
-			if app.ID != "" {
-				return app, db, nil
-			}
-		}
-	}
-	return app, nil, fmt.Errorf("unable to find storage")
-}
-
 // HandleWebFinger serves /.well-known/webfinger/
 func HandleWebFinger(o *oni) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -283,12 +258,12 @@ func HandleWebFinger(o *oni) func(w http.ResponseWriter, r *http.Request) {
 				if u.Equals(id, true) {
 					continue
 				}
-				url := u.String()
-				wf.Aliases = append(wf.Aliases, url)
+				us := u.String()
+				wf.Aliases = append(wf.Aliases, us)
 				wf.Links = append(wf.Links, link{
 					Rel:  "https://webfinger.net/rel/profile-page",
 					Type: "text/html",
-					Href: url,
+					Href: us,
 				})
 			}
 
@@ -954,4 +929,211 @@ func splitResourceString(res string) (string, string) {
 		handle = handle[1:]
 	}
 	return typ, handle
+}
+
+type NodeInfoResolver struct {
+	users    int
+	comments int
+	posts    int
+}
+
+var (
+	ValidActorTypes   = vocab.ActivityVocabularyTypes{vocab.PersonType}
+	ValidContentTypes = vocab.ActivityVocabularyTypes{
+		vocab.ArticleType,
+		vocab.NoteType,
+		vocab.LinkType,
+		vocab.PageType,
+		vocab.DocumentType,
+		vocab.VideoType,
+		vocab.AudioType,
+	}
+
+	actorsFilter = filters.Object(filters.HasType(ValidActorTypes...))
+	postsFilter  = filters.Object(filters.NilInReplyTo, filters.HasType(ValidContentTypes...))
+	allFilter    = filters.Object(filters.HasType(ValidContentTypes...))
+)
+
+func NodeInfoResolverNew(r storage.ReadStore, app vocab.Actor) NodeInfoResolver {
+	n := NodeInfoResolver{}
+	if r == nil {
+		return n
+	}
+
+	inboxOf := vocab.Outbox.Of(app)
+	if vocab.IsNil(inboxOf) {
+		return n
+	}
+
+	ff := filters.Checks{
+		filters.HasType(vocab.CreateType),
+		filters.Object(filters.IDLike(string(app.ID))),
+	}
+	col, err := r.Load(inboxOf.GetLink(), ff...)
+	if err != nil {
+		return n
+	}
+	var allItems vocab.ItemCollection
+	_ = vocab.OnCollectionIntf(col, func(col vocab.CollectionInterface) error {
+		allItems = col.Collection()
+		return nil
+	})
+	// NOTE(marius): we start from 1, which is the root user
+	_ = vocab.OnCollectionIntf(filters.Checks{actorsFilter}.Run(allItems), func(col vocab.CollectionInterface) error {
+		n.users = len(col.Collection()) + 1
+		return nil
+	})
+	_ = vocab.OnCollectionIntf(filters.Checks{postsFilter}.Run(allItems), func(col vocab.CollectionInterface) error {
+		n.posts = len(col.Collection())
+		return nil
+	})
+	_ = vocab.OnCollectionIntf(filters.Checks{allFilter}.Run(allItems), func(col vocab.CollectionInterface) error {
+		n.comments = len(col.Collection())
+		return nil
+	})
+
+	n.comments -= n.posts
+	return n
+}
+
+func (n NodeInfoResolver) IsOpenRegistration() (bool, error) {
+	return false, nil
+}
+
+func (n NodeInfoResolver) Usage() (nodeinfo.Usage, error) {
+	u := nodeinfo.Usage{
+		Users: nodeinfo.UsageUsers{
+			Total: n.users,
+		},
+		LocalComments: n.comments,
+		LocalPosts:    n.posts,
+	}
+	return u, nil
+}
+
+func NodeInfoConfig(app vocab.Actor, ni WebInfo) nodeinfo.Config {
+	var baseURL string
+	if !vocab.IsNil(app.URL) {
+		baseURL = string(app.URL.GetLink())
+	}
+	var attributedToURL string
+	if !vocab.IsNil(app.AttributedTo) {
+		attributedToURL = string(app.AttributedTo.GetLink())
+	}
+	return nodeinfo.Config{
+		BaseURL: baseURL,
+		InfoURL: "/nodeinfo",
+
+		Metadata: nodeinfo.Metadata{
+			NodeName:        string(regexp.MustCompile(`<[/\w]+>`).ReplaceAll([]byte(ni.Title), []byte{})),
+			NodeDescription: ni.Summary,
+			Private:         false,
+			Software: nodeinfo.SoftwareMeta{
+				GitHub:   ProjectURL,
+				HomePage: baseURL,
+				Follow:   attributedToURL,
+			},
+		},
+		Protocols: []nodeinfo.NodeProtocol{
+			nodeinfo.ProtocolActivityPub,
+		},
+		Services: nodeinfo.Services{
+			Inbound:  []nodeinfo.NodeService{},
+			Outbound: []nodeinfo.NodeService{},
+		},
+		Software: nodeinfo.SoftwareInfo{
+			Name:    path.Base(AppName),
+			Version: Version,
+		},
+	}
+}
+
+type WebInfo struct {
+	Title       string   `json:"title"`
+	Email       string   `json:"email"`
+	Summary     string   `json:"summary"`
+	Description string   `json:"description"`
+	Thumbnail   string   `json:"thumbnail,omitempty"`
+	Languages   []string `json:"languages"`
+	URI         string   `json:"uri"`
+	Urls        []string `json:"urls,omitempty"`
+	Version     string   `json:"version"`
+}
+
+func reqBaseIRI(r http.Request, secure bool) vocab.IRI {
+	scheme := "http"
+	if secure || r.TLS != nil {
+		scheme = "https"
+	}
+	u := url.URL{
+		Scheme: scheme,
+		Host:   r.Host,
+	}
+	u.Scheme = scheme
+	u.Host = r.Host
+	return vocab.IRI(u.String())
+}
+
+func IconOf(it vocab.Item) string {
+	var iconURL string
+	if vocab.IsObject(it) {
+		_ = vocab.OnObject(it, func(ob *vocab.Object) error {
+			if ob.Icon != nil {
+				iconURL = string(ob.Icon.GetLink())
+			}
+			return nil
+		})
+	}
+	return iconURL
+}
+
+func setupNodeInfo(r *http.Request, o oni) (*nodeinfo.Service, error) {
+	app := o.oniActor(r)
+	name := vocab.NameOf(app)
+	if name == "" {
+		name = vocab.PreferredNameOf(app)
+	}
+	cfg := NodeInfoConfig(app, WebInfo{
+		Title:       name,
+		Email:       "",
+		Summary:     vocab.SummaryOf(app),
+		Description: vocab.ContentOf(app),
+		Thumbnail:   IconOf(app),
+		URI:         string(app.ID),
+		Urls:        nil,
+		Version:     Version,
+	})
+	return nodeinfo.NewService(cfg, NodeInfoResolverNew(o.Storage, app)), nil
+}
+
+const NodeInfoDiscoverPath = "/.well-known/nodeinfo"
+
+// HandleNodeInfoDiscover handles "/.well-known/nodeinfo"
+func HandleNodeInfoDiscover(o *oni) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ni, err := setupNodeInfo(r, *o)
+		if err != nil {
+			handleErr(o.Logger)(r, err).ServeHTTP(w, r)
+			return
+		}
+
+		ni.NodeInfoDiscover(w, r)
+		o.Logger.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
+	}
+}
+
+const NodeInfoPath = "/nodeinfo"
+
+// HandleNodeInfo handles "/nodeinfo"
+func HandleNodeInfo(o *oni) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ni, err := setupNodeInfo(r, *o)
+		if err != nil {
+			handleErr(o.Logger)(r, err).ServeHTTP(w, r)
+			return
+		}
+
+		ni.NodeInfo(w, r)
+		o.Logger.Debugf("%s %s%s %d %s", r.Method, r.Host, r.RequestURI, http.StatusOK, http.StatusText(http.StatusOK))
+	}
 }
