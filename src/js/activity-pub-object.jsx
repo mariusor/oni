@@ -80,8 +80,6 @@ export class ActivityPubObject extends LitElement {
         }
         figure {
             margin-bottom: 0;
-            position: relative;
-            max-width: fit-content;
         }
         details summary {
             cursor: pointer;
