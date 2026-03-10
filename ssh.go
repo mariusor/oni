@@ -13,18 +13,17 @@ import (
 	"strconv"
 	"strings"
 
+	tea "charm.land/bubbletea/v2"
+	"charm.land/wish/v2"
+	bm "charm.land/wish/v2/bubbletea"
+	"charm.land/wish/v2/logging"
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/mask"
 	"git.sr.ht/~mariusor/motley"
 	m "git.sr.ht/~mariusor/servermux"
-	"git.sr.ht/~mariusor/storage-all"
 	"github.com/alecthomas/kong"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	bm "github.com/charmbracelet/wish/bubbletea"
-	"github.com/charmbracelet/wish/logging"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/muesli/termenv"
 	"golang.org/x/crypto/ed25519"
@@ -88,7 +87,7 @@ func runSSHCommand(f *oni, s ssh.Session) error {
 		cmd,
 		kong.UsageOnError(),
 		kong.Name(kongDefaultVars["name"]),
-		kong.Description("${name} (version ${version}) ${URL}"),
+		kong.Description("${name} (version ${version})"),
 		kong.Writers(s, s.Stderr()),
 		kong.Exit(func(_ int) {}),
 		kongDefaultVars,
@@ -125,6 +124,7 @@ func MainTui(f *oni) wish.Middleware {
 		// NOTE(marius): this is not an interactive session, try to run the received command
 		if len(s.Command()) > 0 {
 			if err := runSSHCommand(f, s); err != nil {
+				_, _ = fmt.Fprintln(s.Stderr(), err.Error())
 				_ = s.Exit(1)
 			}
 			_ = s.Exit(0)
@@ -139,26 +139,15 @@ func MainTui(f *oni) wish.Middleware {
 			return nil
 		}
 
-		// Set the global color profile to ANSI256 for Docker compatibility
-		lipgloss.SetColorProfile(termenv.ANSI256)
-
-		fullStorage, ok := f.Storage.(storage.FullStorage)
-		if !ok {
-			_, _ = fmt.Fprintf(s.Stderr(), "Error: storage backend %T is not compatible with Motley", f.Storage)
-			_ = s.Exit(1)
+		env := "prod"
+		if IsDev {
+			env = "dev"
 		}
-		service, err := motley.FedBOX(f.Logger.WithContext(lwCtx), motley.Storage{
-			FullStorage: fullStorage,
-			Root:        acc,
-		})
-		if err != nil {
-			_, _ = fmt.Fprintf(s.Stderr(), "Error: %s", err)
-			_ = s.Exit(1)
-		}
-		return tea.NewProgram(motley.Model(service), tea.WithFPS(60), tea.WithInput(s), tea.WithOutput(s), tea.WithAltScreen())
+		st := motley.WithStore(f.Storage, acc, env)
+		return tea.NewProgram(motley.Model(f.Logger, st), tea.WithInput(s), tea.WithOutput(s))
 	}
 
-	return bm.MiddlewareWithProgramHandler(teaHandler, termenv.ANSI256)
+	return bm.MiddlewareWithProgramHandler(teaHandler)
 }
 
 func pwCheck(f *oni, id string, pw []byte) (*vocab.Actor, bool) {
@@ -271,12 +260,5 @@ func initSSHServer(ctl *oni) (m.Server, error) {
 	}
 	initFns = append(initFns, wish.WithAddress(sshListen))
 	ctl.Logger.WithContext(lw.Ctx{"socket": sshListen}).Debugf("Accepting SSH requests")
-	//if ctl.ServicePrivateKey != nil {
-	//	// NOTE(marius): use the service private key as a host key
-	//	if prvEnc, err := x509.MarshalPKCS8PrivateKey(ctl.ServicePrivateKey); err == nil {
-	//		r := pem.Block{Type: "PRIVATE KEY", Bytes: prvEnc}
-	//		initFns = append(initFns, wish.WithHostKeyPEM(pem.EncodeToMemory(&r)))
-	//	}
-	//}
 	return m.SSHServer(initFns...)
 }

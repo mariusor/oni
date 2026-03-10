@@ -16,6 +16,7 @@ import (
 
 	"git.sr.ht/~mariusor/cache"
 	"git.sr.ht/~mariusor/lw"
+	"git.sr.ht/~mariusor/storage-all"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/client"
@@ -27,7 +28,7 @@ import (
 )
 
 type Control struct {
-	Storage FullStorage
+	Storage storage.FullStorage
 	Logger  lw.Logger
 
 	StoragePath string

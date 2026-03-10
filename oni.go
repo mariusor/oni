@@ -147,7 +147,7 @@ func ParseStorageDSN(s string) (storage.Type, string) {
 	return storage.Type(sto[1]), string(sto[2])
 }
 
-func WithStorage(st FullStorage) optionFn {
+func WithStorage(st storage.FullStorage) optionFn {
 	return func(o *oni) {
 		o.Storage = st
 	}
