@@ -177,13 +177,6 @@ export function renderDuration(seconds) {
     return html`<span>${pluralize(Math.round(val), unit)}</span>`;
 }
 
-const defaultSanitizerConfig = {
-    ADD_TAGS: ['bandcamp-embed'],
-    ADD_ATTR: ['src', 'url', 'class'],
-    FORCE_BODY: true,
-};
-
-
 export function renderHtml(n) {
     if (!(n?.length > 0)) return null;
     const el = document.createElement('div');
@@ -198,8 +191,23 @@ export function renderHtmlText(n) {
     return el.innerText.trim() ?? '';
 }
 
+const defaultSanitizerConfig = {
+    removeElements: ['script'],
+};
+
+const defaultDOMPurifyConfig = {
+    ADD_TAGS: ['bandcamp-embed'],
+    ADD_ATTR: ['src', 'url', 'class'],
+    FORCE_BODY: true,
+};
+
 export function sanitize(value) {
-    return DOMPurify.sanitize(value, defaultSanitizerConfig);
+    if (!("Sanitizer" in window)) {
+        return DOMPurify.sanitize(value, defaultDOMPurifyConfig);
+    }
+    const div = document.createElement('div');
+    div.setHTML(value, defaultSanitizerConfig);
+    return div.innerHTML;
 }
 
 export function showBandCampEmbeds(e) {
