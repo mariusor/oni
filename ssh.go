@@ -22,10 +22,8 @@ import (
 	"git.sr.ht/~mariusor/motley"
 	m "git.sr.ht/~mariusor/servermux"
 	"github.com/alecthomas/kong"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/ssh"
 	vocab "github.com/go-ap/activitypub"
-	"github.com/muesli/termenv"
 	"golang.org/x/crypto/ed25519"
 	gossh "golang.org/x/crypto/ssh"
 )
