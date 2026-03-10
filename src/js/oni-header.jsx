@@ -19,6 +19,7 @@ export class OniHeader extends ActivityPubActor {
                 background-size: cover;
                 background-clip: padding-box;
                 background-position: center;
+                z-index: 10;
                 position: sticky;
                 top: 0px;
             }
