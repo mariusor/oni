@@ -19,7 +19,6 @@ import (
 	"charm.land/wish/v2/logging"
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/mask"
-	"git.sr.ht/~mariusor/motley"
 	m "git.sr.ht/~mariusor/servermux"
 	"github.com/alecthomas/kong"
 	"github.com/charmbracelet/ssh"
@@ -107,7 +106,7 @@ func runSSHCommand(f *oni, s ssh.Session) error {
 	return nil
 }
 
-func MainTui(f *oni) wish.Middleware {
+func AdminHandler(o *oni) wish.Middleware {
 	teaHandler := func(s ssh.Session) *tea.Program {
 		lwCtx := lw.Ctx{}
 		acc, ok := s.Context().Value("actor").(*vocab.Actor)
@@ -118,10 +117,10 @@ func MainTui(f *oni) wish.Middleware {
 		_, _, active := s.Pty()
 		lwCtx["active"] = active
 
-		f.Logger.WithContext(lwCtx).Infof("opening ssh session")
+		o.Logger.WithContext(lwCtx).Infof("opening ssh session")
 		// NOTE(marius): this is not an interactive session, try to run the received command
 		if len(s.Command()) > 0 {
-			if err := runSSHCommand(f, s); err != nil {
+			if err := runSSHCommand(o, s); err != nil {
 				_, _ = fmt.Fprintln(s.Stderr(), err.Error())
 				_ = s.Exit(1)
 			}
@@ -137,12 +136,7 @@ func MainTui(f *oni) wish.Middleware {
 			return nil
 		}
 
-		env := "prod"
-		if IsDev {
-			env = "dev"
-		}
-		st := motley.WithStore(f.Storage, acc, env)
-		return tea.NewProgram(motley.Model(f.Logger, st), tea.WithInput(s), tea.WithOutput(s))
+		return wishTUI(s, o)
 	}
 
 	return bm.MiddlewareWithProgramHandler(teaHandler)
@@ -232,24 +226,24 @@ func initSSHServer(ctl *oni) (m.Server, error) {
 		wish.WithPasswordAuth(SSHAuthPw(ctl)),
 		wish.WithMiddleware(
 			logging.MiddlewareWithLogger(justPrintLogger(ctl.Logger.Debugf)),
-			MainTui(ctl),
+			AdminHandler(ctl),
 		),
 	}
 
 	sshListen := "127.0.0.1:" + strconv.Itoa(defaultSSHPort)
 	if strings.Index(ctl.Listen, ":") >= 0 {
-		listenPices := strings.Split(ctl.Listen, ":")
+		listenPieces := strings.Split(ctl.Listen, ":")
 		var listenHost string
 		var listenPort int
-		if len(listenPices) == 1 || len(listenPices) == 2 {
-			if len(listenPices) == 1 {
-				if maybePort, err := strconv.Atoi(listenPices[1]); err == nil {
+		if len(listenPieces) == 1 || len(listenPieces) == 2 {
+			if len(listenPieces) == 1 {
+				if maybePort, err := strconv.Atoi(listenPieces[1]); err == nil {
 					listenPort = maybePort + 1
 				}
 			}
-			if len(listenPices) == 2 {
-				listenHost = listenPices[0]
-				if maybePort, err := strconv.Atoi(listenPices[1]); err == nil {
+			if len(listenPieces) == 2 {
+				listenHost = listenPieces[0]
+				if maybePort, err := strconv.Atoi(listenPieces[1]); err == nil {
 					listenPort = maybePort + 1
 				}
 			}
