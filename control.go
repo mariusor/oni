@@ -34,6 +34,36 @@ type Control struct {
 	StoragePath string
 }
 
+func SetupCtl(storagePath string, ll lw.Logger, typ storage.Type) (*Control, error) {
+	ctl := new(Control)
+	ctl.Logger = ll
+
+	initFns := []storage.InitFn{
+		storage.WithPath(storagePath),
+		storage.WithType(typ),
+		storage.WithLogger(ll),
+		storage.WithCache(true),
+	}
+	if err, exists := MkDirIfNotExists(storagePath); err != nil {
+		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to create path")
+		return nil, err
+	} else if !exists {
+		if err := storage.Bootstrap(initFns...); err != nil {
+			ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to bootstrap storage")
+			os.Exit(1)
+		}
+	}
+
+	st, err := storage.New(initFns...)
+	if err != nil {
+		ctl.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to initialize storage")
+		return nil, err
+	}
+
+	ctl.Storage = st
+	return ctl, nil
+}
+
 func MkDirIfNotExists(p string) (err error, exists bool) {
 	p, err = filepath.Abs(p)
 	if err != nil {

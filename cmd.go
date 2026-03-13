@@ -1,16 +1,18 @@
-package main
+package oni
 
 import (
 	"bytes"
+	"context"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"net/url"
 	"strings"
+	"syscall"
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
-	"git.sr.ht/~mariusor/oni"
+	"git.sr.ht/~mariusor/oni/internal/xdg"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
@@ -18,7 +20,199 @@ import (
 	"golang.org/x/term"
 )
 
-type Actor struct {
+type SSH struct {
+	OAuth2      OAuth2      `cmd:"" name:"oauth" description:"OAuth2 client and access token helper"`
+	Actor       ActorCmd    `cmd:"" description:"Actor helper"`
+	Block       Block       `cmd:"" description:"Block instances or actors"`
+	Debug       Debug       `cmd:"" help:"Toggle debug mode for the running ${name} server."`
+	Maintenance Maintenance `cmd:"" help:"Toggle maintenance mode for the running ${name} server."`
+	Reload      Reload      `cmd:"" help:"Reload the running ${name} server configuration"`
+	Stop        Stop        `cmd:"" help:"Stops the running ${name} server configuration"`
+}
+
+var CLI struct {
+	SSH
+	Path    string `default:"${default_path}" help:"Storage path (or DSN) for the ActivityPub storage. DSN can have the format type:///path/to/storage."`
+	Verbose bool   `default:"false" help:"Show verbose log output"`
+
+	Run Run `cmd:"" help:"Run the ${name} instance server (version: ${version})" default:"withargs"`
+}
+
+type Block struct {
+	For string   `description:"Which root actor to block for."`
+	URL []string `arg:"" description:"The URL of the instances or actors we want to block."`
+}
+
+func (b Block) Run(ctl *Control) error {
+	if b.For == "" {
+		return errors.Newf("Need to provide the client id")
+	}
+	cl, err := ctl.Storage.Load(vocab.IRI(b.For))
+	if err != nil {
+		return err
+	}
+	act, err := vocab.ToActor(cl)
+	if err != nil {
+		return errors.Annotatef(err, "unable to load actor from the client IRI")
+	}
+	service := *act
+
+	for _, u := range b.URL {
+		toBlock, _ := ctl.Storage.Load(vocab.IRI(u))
+		if vocab.IsNil(toBlock) {
+			// NOTE(marius): if we don't have a local representation of the blocked item
+			// we invent an empty object that we can block.
+			// This probably needs more investigation to check if we should at least try to remote load.
+			ctl.Logger.Warnf("Unable to load instance to block %s: %s", u, err)
+			if toBlock, err = ctl.Storage.Save(vocab.Object{ID: vocab.IRI(u)}); err != nil {
+				ctl.Logger.Warnf("Unable to save locally the instance to block %s: %s", u, err)
+			}
+		}
+
+		blockedIRI := processing.BlockedCollection.IRI(service)
+		col, _ := ctl.Storage.Load(blockedIRI)
+		if !vocab.IsObject(col) {
+			col = vocab.OrderedCollection{
+				ID:        blockedIRI,
+				Type:      vocab.OrderedCollectionType,
+				To:        vocab.ItemCollection{service.ID},
+				Published: time.Now().UTC(),
+			}
+
+			if col, err = ctl.Storage.Save(col); err != nil {
+				ctl.Logger.Warnf("Unable to save the blocked collection %s: %s", blockedIRI, err)
+			}
+		}
+		if err := ctl.Storage.AddTo(blockedIRI, vocab.IRI(u)); err != nil {
+			ctl.Logger.Warnf("Unable to block instance %s: %s", u, err)
+		}
+	}
+	return nil
+}
+
+type Run struct {
+	Listen string `default:"127.0.0.1:60123" short:"l" help:"Listen socket"`
+	URL    string `default:"${default_url}" help:"Default URL for the instance actor"`
+	Pw     string `default:"${default_pw}" help:"Default password to use for the instance actor"`
+}
+
+func (s Run) Run(ctl *Control) error {
+	return Oni(
+		WithPassword(s.Pw),
+		WithLogger(ctl.Logger),
+		WithStorage(ctl.Storage),
+		ListenOn(s.Listen),
+	).Run(context.Background())
+}
+
+func (c *Control) Close() {
+	if _, ok := c.Storage.(interface{ Open() error }); ok {
+		_ = c.SendSignal(syscall.SIGUSR1)
+	}
+	c.Storage.Close()
+}
+
+func (c *Control) Open() error {
+	if opener, ok := c.Storage.(interface{ Open() error }); ok {
+		_ = c.SendSignal(syscall.SIGUSR1)
+		return opener.Open()
+	}
+	return nil
+}
+
+type Maintenance struct{}
+
+func (m Maintenance) Run(ctl *Control) error {
+	return ctl.SendSignal(syscall.SIGUSR1)
+}
+
+type Debug struct{}
+
+func (d Debug) Run(ctl *Control) error {
+	return ctl.SendSignal(syscall.SIGUSR2)
+}
+
+type Reload struct{}
+
+func (m Reload) Run(ctl *Control) error {
+	return ctl.SendSignal(syscall.SIGHUP)
+}
+
+type Stop struct{}
+
+func (m Stop) Run(ctl *Control) error {
+	return ctl.SendSignal(syscall.SIGTERM)
+}
+
+func (c *Control) SendSignal(sig syscall.Signal) error {
+	pid, err := xdg.ReadPid(AppName)
+	if err != nil {
+		return errors.Annotatef(err, "unable to read pid file")
+	}
+	return syscall.Kill(pid, sig)
+}
+
+type FixCollections struct {
+	For []string `arg:"" description:"The root actors we want to run the operation for."`
+}
+
+func (f FixCollections) Run(ctl *Control) error {
+	if len(f.For) == 0 {
+		ctl.Logger.WithContext(lw.Ctx{"iri": DefaultURL}).Warnf("No arguments received adding actor with default URL")
+		f.For = append(f.For, DefaultURL)
+	}
+	for _, u := range f.For {
+		it, err := ctl.Storage.Load(vocab.IRI(u))
+		if err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor URL")
+			continue
+		}
+		actor, err := vocab.ToActor(it)
+		if err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Invalid actor found for URL")
+			continue
+		}
+		_, err = ctl.Storage.Save(actor)
+		if err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": u, "err": err.Error()}).Errorf("Unable to save main Actor")
+			continue
+		}
+		err = tryCreateCollection(ctl, actor.Outbox.GetLink(), actor)
+		if err != nil {
+			ctl.Logger.WithContext(lw.Ctx{"iri": actor.ID, "err": err.Error()}).Errorf("Unable to save Outbox collection for main Actor")
+			continue
+		}
+	}
+	return nil
+}
+
+type OAuth2 struct {
+	Token Token `cmd:"" name:"token" description:"OAuth2 authorization token management"`
+}
+
+type Token struct {
+	Add Add `cmd:"" description:"Adds an OAuth2 authorization token" alias:"new"`
+}
+
+type Add struct {
+	For string `required:"" description:"Which ONI root actor to create the authorization token for."`
+}
+
+func (a Add) Run(c *Control) error {
+	clientID := a.For
+	if clientID == "" {
+		return errors.Newf("Need to provide the root actor URL")
+	}
+
+	actor := clientID
+	tok, err := c.GenAccessToken(clientID, actor, nil)
+	if err == nil {
+		fmt.Printf("Authorization: Bearer %s\n", tok)
+	}
+	return err
+}
+
+type ActorCmd struct {
 	Add            AddActor       `cmd:"" description:"Add a new root actor"`
 	Move           Move           `cmd:"" description:"Move an existing actor to a new URL"`
 	FixCollections FixCollections `cmd:"" description:"Fix a root actor's collections"`
@@ -34,7 +228,7 @@ type AddActor struct {
 
 func (a AddActor) Run(ctl *Control) error {
 	if len(a.URL) == 0 {
-		a.URL = oni.DefaultURL
+		a.URL = DefaultURL
 	}
 	urls := []string{a.URL}
 	for _, maybeURL := range urls {
@@ -225,8 +419,8 @@ func (r RotateKey) Run(ctl *Control) error {
 	}
 
 	if len(r.URL) == 0 {
-		ctl.Logger.WithContext(lw.Ctx{"iri": oni.DefaultURL}).Warnf("No arguments received adding actor with default URL")
-		r.URL = append(r.URL, oni.DefaultURL)
+		ctl.Logger.WithContext(lw.Ctx{"iri": DefaultURL}).Warnf("No arguments received adding actor with default URL")
+		r.URL = append(r.URL, DefaultURL)
 	}
 	for _, u := range r.URL {
 		it, err := ctl.Storage.Load(vocab.IRI(u))
@@ -258,7 +452,7 @@ func newOrderedCollection(id vocab.IRI, base vocab.IRI) *vocab.OrderedCollection
 	}
 }
 
-func tryCreateCollection(ctl *Control, colIRI vocab.IRI) error {
+func tryCreateCollection(ctl *Control, colIRI vocab.IRI, author vocab.Item) error {
 	var collection *vocab.OrderedCollection
 	items, err := ctl.Storage.Load(colIRI.GetLink())
 	if err != nil {
@@ -266,7 +460,7 @@ func tryCreateCollection(ctl *Control, colIRI vocab.IRI) error {
 			ctl.Logger.Errorf("Unable to load %s: %s", colIRI, err)
 			return err
 		}
-		it, err := ctl.Storage.Create(newOrderedCollection(colIRI.GetLink(), ctl.Service.GetLink()))
+		it, err := ctl.Storage.Create(newOrderedCollection(colIRI.GetLink(), author.GetLink()))
 		if err != nil {
 			ctl.Logger.Errorf("Unable to create collection %s: %s", colIRI, err)
 			return err

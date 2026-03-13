@@ -56,10 +56,9 @@ func SSHAuthPublicKey(f *oni) ssh.PublicKeyHandler {
 var kongDefaultVars = kong.Vars{
 	"version":    Version,
 	"name":       AppName,
+	"default_pw": DefaultOAuth2ClientPw,
 	"defaultEnv": "dev",
 }
-
-type SSH struct{}
 
 func runSSHCommand(f *oni, s ssh.Session) error {
 	args := s.Command()
@@ -67,16 +66,10 @@ func runSSHCommand(f *oni, s ssh.Session) error {
 	if len(args) == 0 {
 		return fmt.Errorf("PTY is not interactive and no command was sent")
 	}
-	ctl := new(oni)
+	ctl := new(Control)
 	ctl.Logger = f.Logger
-	//ctl.Service = f.Service
-	//ctl.ServicePrivateKey = f.ServicePrivateKey
 	ctl.Storage = f.Storage
-	ctl.pw = f.pw
-	ctl.a = f.a
-	//ctl.out = s
-	//ctl.in = s
-	//ctl.err = s.Stderr()
+	ctl.StoragePath = f.StoragePath
 
 	cmd := new(SSH)
 	kongDefaultVars["name"] = "ONI SSH"
