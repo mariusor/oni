@@ -12,6 +12,7 @@ import (
 	"math/rand/v2"
 	"strconv"
 	"strings"
+	"sync/atomic"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/wish/v2"
@@ -23,16 +24,34 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/charmbracelet/ssh"
 	vocab "github.com/go-ap/activitypub"
+	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/crypto/ed25519"
 	gossh "golang.org/x/crypto/ssh"
 )
 
 func SSHAuthPw(f *oni) ssh.PasswordHandler {
+	// NOTE(marius): this is useful for cases where we use the maintenance command to close the storage
+	lastUsedPwHash := atomic.Pointer[[]byte]{}
+
+	validateStoredPw := func(pw string) bool {
+		hash := lastUsedPwHash.Load()
+		if hash == nil {
+			return false
+		}
+		return bcrypt.CompareHashAndPassword(*hash, []byte(pw)) == nil
+	}
+
 	return func(ctx ssh.Context, pw string) bool {
 		acc, ok := pwCheck(f, ctx.User(), []byte(pw))
 		if !ok {
-			f.Logger.WithContext(lw.Ctx{"iri": ctx.User(), "pw": mask.S(pw)}).Warnf("failed password authentication")
-			return false
+			if !validateStoredPw(pw) {
+				f.Logger.WithContext(lw.Ctx{"iri": ctx.User(), "pw": mask.S(pw)}).Warnf("failed password authentication")
+				return false
+			}
+		} else {
+			if hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost); err == nil {
+				lastUsedPwHash.Store(&hash)
+			}
 		}
 
 		ctx.SetValue("actor", acc)
@@ -41,11 +60,38 @@ func SSHAuthPw(f *oni) ssh.PasswordHandler {
 }
 
 func SSHAuthPublicKey(f *oni) ssh.PublicKeyHandler {
+	// NOTE(marius): this is useful for cases where we use the maintenance command to close the storage
+	lastUsedPK := atomic.Pointer[ssh.PublicKey]{}
+	validateStoredPK := func(key ssh.PublicKey) bool {
+		stK := lastUsedPK.Load()
+		if stK == nil {
+			return false
+		}
+		sessPubKey, ok := key.(gossh.CryptoPublicKey)
+		if !ok {
+			return false
+		}
+		switch pub := sessPubKey.CryptoPublicKey().(type) {
+		case *rsa.PublicKey:
+			return !pub.Equal(key)
+		case *ecdsa.PrivateKey:
+			return pub.Equal(key)
+		case ed25519.PrivateKey:
+			return pub.Equal(key)
+		default:
+			return false
+		}
+	}
+
 	return func(ctx ssh.Context, key ssh.PublicKey) bool {
 		acc, ok := publicKeyCheck(f, ctx.User(), key)
 		if !ok {
-			f.Logger.WithContext(lw.Ctx{"iri": ctx.User()}).Warnf("failed public key authentication")
-			return false
+			if !validateStoredPK(key) {
+				f.Logger.WithContext(lw.Ctx{"iri": ctx.User()}).Warnf("failed public key authentication")
+				return false
+			}
+		} else {
+			lastUsedPK.Store(&key)
 		}
 
 		ctx.SetValue("actor", acc)
@@ -105,8 +151,8 @@ func runSSHCommand(f *oni, s ssh.Session) error {
 func AdminHandler(o *oni) wish.Middleware {
 	teaHandler := func(s ssh.Session) *tea.Program {
 		lwCtx := lw.Ctx{}
-		acc, ok := s.Context().Value("actor").(*vocab.Actor)
-		if ok {
+		acc, _ := s.Context().Value("actor").(*vocab.Actor)
+		if acc != nil {
 			lwCtx["actor"] = acc.GetLink()
 		}
 
