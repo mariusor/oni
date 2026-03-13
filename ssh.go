@@ -70,6 +70,9 @@ func runSSHCommand(f *oni, s ssh.Session) error {
 	ctl.Logger = f.Logger
 	ctl.Storage = f.Storage
 	ctl.StoragePath = f.StoragePath
+	ctl.out = s
+	ctl.in = s
+	ctl.err = s.Stderr()
 
 	cmd := new(SSH)
 	kongDefaultVars["name"] = "ONI SSH"

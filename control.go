@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -32,6 +33,10 @@ type Control struct {
 	Logger  lw.Logger
 
 	StoragePath string
+
+	out io.Writer
+	err io.Writer
+	in  io.Reader
 }
 
 func SetupCtl(storagePath string, ll lw.Logger, typ storage.Type) (*Control, error) {
@@ -59,8 +64,17 @@ func SetupCtl(storagePath string, ll lw.Logger, typ storage.Type) (*Control, err
 		ctl.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to initialize storage")
 		return nil, err
 	}
-
 	ctl.Storage = st
+
+	if ctl.in == nil {
+		ctl.in = os.Stdin
+	}
+	if ctl.out == nil {
+		ctl.out = os.Stdout
+	}
+	if ctl.err == nil {
+		ctl.err = os.Stderr
+	}
 	return ctl, nil
 }
 
