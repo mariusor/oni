@@ -16,6 +16,7 @@ export class OniHeader extends ActivityPubActor {
                 padding-top: .4rem;
                 display: grid;
                 align-items: end;
+                backdrop-filter: blur(40px);
                 background-size: cover;
                 background-clip: padding-box;
                 background-position: center;
