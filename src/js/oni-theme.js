@@ -169,9 +169,10 @@ export class Palette {
             palette.tintColor = await average(palette.iconURL, {format: 'hex'});
             paletteImageURL = palette.iconURL;
         }
-        const paletteColors = asArray(await colorsFromImage(paletteImageURL, 3));
+        const paletteColors = asArray(await colorsFromImage(paletteImageURL, 5));
         if (!palette.tintColor) {
             palette.tintColor= paletteColors.filter(noExtremes).sort(bySaturation).at(0);
+            console.debug(`loaded image ${paletteImageURL}: (isDark ${tc(palette.tintColor).isDark()}) (accent ${palette.accentColor})`);
         }
         palette.accentColor = getAccentPairFromBase(palette.tintColor);
         palette.main = compoundRamp(palette.tintColor, 9);

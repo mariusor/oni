@@ -153,11 +153,6 @@ export function activity(outbox, update, extraHeaders = {}, success = () => {}) 
     return fetch(outbox, req)
 }
 
-export function showError(e) {
-    console.warn(e);
-    alert(e);
-}
-
 export function renderTimestamp(published, relative = true) {
     if (!published) {
         return nothing;
@@ -194,15 +189,15 @@ export function renderHtmlText(n) {
 const defaultElements = [
     'div', 'ul', 'ol', 'li', 'p', 'style',
     {
-        name:'bandcamp-embed'
+        name: 'bandcamp-embed'
     },
     {
-        name:'a',
+        name: 'a',
         attributes: ['rel']
     },
     {
-        name:'nav',
-        attributes:['class']
+        name: 'nav',
+        attributes: ['class']
     }
 ];
 
@@ -220,8 +215,8 @@ export function sanitize(value) {
     return DOMPurify.sanitize(value, defaultDOMPurifyConfig);
     // NOTE(marius): unable to find the correct configuration for the Sanitizer API
     // that would reproduce the same behaviour as DOMPurify.
-     if (("Sanitizer" in window)) {
-        const san = new Sanitizer({removeElements:['script']});
+    if (("Sanitizer" in window)) {
+        const san = new Sanitizer({removeElements: ['script']});
         const div = document.createElement('div');
         div.setHTML(value, san);
         return div.innerHTML;
@@ -249,9 +244,8 @@ export function urlRoot(iri) {
     return iri.toString()
 }
 
-export const toTitleCase = (s) => typeof s  === 'string'
+export const toTitleCase = (s) => typeof s === 'string'
     ? `${s?.at(0)?.toLocaleUpperCase()}${s?.substring(1)}`
     : nothing;
 
 export const formUrlEncode = (obj) => Object.keys(obj).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(obj[k])).join('&');
-
