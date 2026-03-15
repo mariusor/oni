@@ -191,8 +191,23 @@ export function renderHtmlText(n) {
     return el.innerText.trim() ?? '';
 }
 
+const defaultElements = [
+    'div', 'ul', 'ol', 'li', 'p', 'style',
+    {
+        name:'bandcamp-embed'
+    },
+    {
+        name:'a',
+        attributes: ['rel']
+    },
+    {
+        name:'nav',
+        attributes:['class']
+    }
+];
+
 const defaultSanitizerConfig = {
-    removeElements: ['script'],
+    elements: defaultElements,
 };
 
 const defaultDOMPurifyConfig = {
@@ -202,12 +217,15 @@ const defaultDOMPurifyConfig = {
 };
 
 export function sanitize(value) {
-    if (!("Sanitizer" in window)) {
-        return DOMPurify.sanitize(value, defaultDOMPurifyConfig);
+    return DOMPurify.sanitize(value, defaultDOMPurifyConfig);
+    // NOTE(marius): unable to find the correct configuration for the Sanitizer API
+    // that would reproduce the same behaviour as DOMPurify.
+     if (("Sanitizer" in window)) {
+        const san = new Sanitizer({removeElements:['script']});
+        const div = document.createElement('div');
+        div.setHTML(value, san);
+        return div.innerHTML;
     }
-    const div = document.createElement('div');
-    div.setHTML(value, defaultSanitizerConfig);
-    return div.innerHTML;
 }
 
 export function showBandCampEmbeds(e) {
