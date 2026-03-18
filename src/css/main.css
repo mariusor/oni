@@ -98,11 +98,6 @@ oni-main {
     max-width: 100vw;
 }
 
-oni-main > * {
-    display: block;
-    margin: 0 1rem;
-}
-
 oni-main > oni-actor {
     grid-template-columns: 100%;
     margin: 0;
@@ -111,6 +106,7 @@ oni-main > oni-actor {
 
 oni-main > * {
     padding: 1rem;
+    margin: 0 1rem;
     display: grid;
     grid-template-columns: min(100%, 90ch);
     justify-content: center;
@@ -119,4 +115,11 @@ oni-main > * {
 oni-note footer, oni-event footer, oni-video footer, oni-audio footer, oni-image footer, oni-tag footer,
 oni-activity footer , oni-announce footer , oni-create footer {
     align-self: end;
+}
+
+@media(max-width: 536px) {
+    oni-main > * {
+        padding: .2rem;
+        margin: 0 .2rem;
+    }
 }

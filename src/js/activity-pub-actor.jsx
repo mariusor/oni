@@ -68,19 +68,6 @@ export class ActivityPubActor extends ActivityPubObject {
             backdrop-filter: blur(2px);
             background-color: color-mix(in srgb, var(--accent-color), transparent 85%);
         }
-        @media(max-width: 480px) {
-            :host header {
-                width: auto;
-                flex-direction: row-reverse;
-                justify-content: space-between;
-            }
-            :host header h1 {
-                margin-top: 1rem;
-            }
-            section ul {
-                display: none;
-            }
-        }
         section ul a:any-link, section ul a svg {
             color: var(--accent-color);
             text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
@@ -123,6 +110,23 @@ export class ActivityPubActor extends ActivityPubObject {
         @media (max-width: 1050px) {
              a.inline span {
                 display: none;
+            }
+        }
+        @media(max-width: 536px) {
+            :host header {
+                width: auto;
+                flex-direction: row-reverse;
+                justify-content: space-between;
+                padding: 0.2rem;
+            }
+            :host header h1 {
+                margin-top: 1rem;
+            }
+            section ul {
+                display: none;
+            }
+            :host oni-natural-language-values[name=content] {
+                margin: 0 .2rem;
             }
         }
     `, ActivityPubObject.styles];

@@ -57,7 +57,7 @@ export class OniCollectionLinks extends LitElement {
             }
             :host nav {
                 flex-direction: column;
-                padding-right: 1rem;
+                padding-right: .6rem;
             }
         }
     `
