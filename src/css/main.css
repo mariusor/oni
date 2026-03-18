@@ -13,7 +13,7 @@
     color-scheme: light dark;
     scrollbar-color: var(--accent-color) #0000;
     height: 100%;
-    font: clamp(1.15em, calc(1em + .15vw), 1.4em) / 1.6 sans-serif;
+    font: clamp(1.1em, calc(.9em + .3vw), 1.4em) / 1.6 sans-serif;
 }
 
 ::selection {
