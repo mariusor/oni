@@ -15,7 +15,7 @@ export class ActivityPubImage extends ActivityPubObject {
             padding: 0 2px 0;
         }
         img {
-            border-radius: .4rem;
+            border-radius: var(--spacing-m);
             outline: .08rem solid color-mix(in srgb, var(--accent-color), transparent 55%);
             outline-offset: -.08rem;
             max-width: 100%;
@@ -55,9 +55,9 @@ export class ActivityPubImage extends ActivityPubObject {
             position: absolute;
             right: 0;
             display: inline-block;
-            margin: 1rem 2rem 0 0;
-            padding: .2rem .4rem;
-            border-radius: .4rem;
+            margin: var(--spacing-l) calc(2 * var(--spacing-l)) 0 0;
+            padding: var(--spacing-s) var(--spacing-m);
+            border-radius: var(--spacing-m);
             z-index: 1;
             backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(var(--bri));
             outline: none;
@@ -182,7 +182,7 @@ export class ActivityPubImage extends ActivityPubObject {
 class ImageAlt extends LitElement {
     static styles = [css`
         details[open] summary {
-            padding-bottom: .4rem;
+            padding-bottom: var(--spacing-m);
         }
         details {
             color: var(--fg-color);
@@ -190,15 +190,15 @@ class ImageAlt extends LitElement {
             font-size: .9rem;
             line-height: 1.4rem;
             backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(var(--bri));
-            padding: .2rem .4rem;
-            border-radius: .4rem;
+            padding: var(--spacing-s) var(--spacing-m);
+            border-radius: var(--spacing-m);
         }
         summary {
             font-size: .75rem;
             list-style-type: none;
             font-variant: small-caps;
             font-weight: bold;
-            padding: 0 .2rem;
+            padding: 0 var(--spacing-s);
         }
     `];
 
@@ -244,7 +244,7 @@ class ImageAlt extends LitElement {
 class ImagePopUp extends LitElement {
     static styles = [css`
         img {
-            border-radius: .4rem;
+            border-radius: var(--spacing-m);
             outline: .08rem solid color-mix(in srgb, var(--accent-color), transparent 55%);
             outline-offset: -.08rem;
             max-width: 100%;
@@ -271,8 +271,8 @@ class ImagePopUp extends LitElement {
             position: absolute;
             display: inline-block;
             margin: 1rem 2rem 0 0;
-            padding: .2rem .4rem;
-            border-radius: .4rem;
+            padding: var(--spacing-s) var(--spacing-m);
+            border-radius:  var(--spacing-m);
             z-index: 1;
             backdrop-filter: blur(10px) saturate(180%) contrast(85%) brightness(var(--bri));
             outline: none;

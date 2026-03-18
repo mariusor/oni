@@ -22,15 +22,18 @@ export class NaturalLanguageValues extends LitElement {
         :host div {
             display: inline-block;
         }
-        :host > *:not(:last-child), li:not(:last-child) {
-            margin-block-end: .8rem;
+        li:not(:last-child) {
+            margin-block-end: var(--spacing-s);
+        }
+        :host > *:not(:last-child) {
+            margin-block-end: var(--spacing-m);
         }
         :host([data-container-type="article"]) p {
             text-indent: 1.4rem;
             text-align: justify;
         }
         :host([data-container-type="article"]) p + p, :host([data-container-type="article"]) p:first-of-type {
-            margin-block-start: .8rem;
+            margin-block-start: var(--spacing-m);
         }
         :host([name=summary]) p, :host([name=name]) p, :host([name=preferredUsername]) p {
             display: inline-block;
@@ -39,7 +42,7 @@ export class NaturalLanguageValues extends LitElement {
         aside > p {
             display: inline-block;
             border: 1px solid var(--fg-color);
-            padding: .4rem;
+            padding: var(--spacing-m);
             font-size: 0.9rem;
             background-color: color-mix(in srgb, var(--accent-color) 20%, transparent);
         }
@@ -55,8 +58,8 @@ export class NaturalLanguageValues extends LitElement {
         a[class~=mention], a[class~=hashtag], cite {
             --tag-color: color-mix(in srgb, var(--accent-color), transparent 86%);
             font-size: .9rem;
-            padding: .02rem .2rem;
-            border-radius: .3rem;
+            padding: .02rem var(--spacing-s);
+            border-radius: calc(1.5 * var(--spacing-s));
             border: .06rem solid var(--tag-color);
             background: var(--tag-color);
             text-decoration: none;
@@ -71,7 +74,7 @@ export class NaturalLanguageValues extends LitElement {
             border-color: var(--accent-color);
         }
         p img {
-            border-radius: .4rem;
+            border-radius: var(--spacing-m);
             outline: .08rem solid color-mix(in srgb, var(--accent-color), transparent 55%);
             outline-offset: -.08rem;
             max-width: 100%;

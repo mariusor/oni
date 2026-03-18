@@ -8,6 +8,9 @@
     --link-visited-color: light-dark(#663399, #9370DB); /* rebeccapurple, mediumpurple */
     --accent-color: lch(from var(--link-visited-color) l calc(c + 20) calc(h + 20));
     --bri: 40%;
+    --spacing-s: .2em;
+    --spacing-m: calc(2 * var(--spacing-s));
+    --spacing-l: calc(5 * var(--spacing-s));
 
     overscroll-behavior-y: none;
     color-scheme: light dark;
@@ -48,7 +51,7 @@ a:visited {
 a:hover {
     --c: oklch(from var(--link-color) calc(l - .2) c h);
     color: var(--c);
-    text-shadow: 0 0 1rem var(--c), 0 0 .3rem var(--bg-color);
+    text-shadow: 0 0 var(--spacing-l) var(--c), 0 0 var(--spacing-m) var(--bg-color);
 }
 
 a:active {
@@ -64,11 +67,11 @@ hr {
 }
 
 body > footer {
-    padding: .8rem 0;
     width: auto;
     align-self: end;
     text-align: end;
-    margin: 0 1rem;
+    margin: 0 var(--spacing-l);
+    padding: var(--spacing-l) 0;
 }
 
 body > footer ul {
@@ -105,8 +108,8 @@ oni-main > oni-actor {
 }
 
 oni-main > * {
-    padding: 1rem;
-    margin: 0 1rem;
+    padding: var(--spacing-l);
+    margin: 0 var(--spacing-l);
     display: grid;
     grid-template-columns: min(100%, 90ch);
     justify-content: center;
@@ -119,7 +122,7 @@ oni-activity footer , oni-announce footer , oni-create footer {
 
 @media(max-width: 536px) {
     oni-main > * {
-        padding: .2rem;
-        margin: 0 .2rem;
+        padding: var(--spacing-s);
+        margin: 0 var(--spacing-s);
     }
 }

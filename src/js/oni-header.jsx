@@ -13,7 +13,7 @@ export class OniHeader extends ActivityPubActor {
     static styles = [
         css`
             :host header {
-                padding-top: .4rem;
+                padding-top: var(--spacing-m);
                 display: grid;
                 align-items: end;
                 backdrop-filter: blur(40px);
@@ -32,23 +32,23 @@ export class OniHeader extends ActivityPubActor {
             header a img, header a svg { 
                 aspect-ratio: 1;
                 height: 2rem;
-                border-radius: 0 20% 20% 20%;
+                border-radius: 0 var(--spacing-s) var(--spacing-s) var(--spacing-s);
                 shape-outside: margin-box;
-                padding: .2rem;
-                margin-top: .4rem;
-                margin-bottom: -.4rem;
+                padding: calc(.5*var(--spacing-s));
+                margin-top: var(--spacing-s);
+                margin-bottom: calc(-1 * var(--spacing-s));
                 backdrop-filter: blur(10px) contrast(300%);
                 border: .01rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
-                box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
+                box-shadow: 0 0 var(--spacing-m) var(--accent-color), 0 0 var(--spacing-s) var(--accent-color);
                 background-color: color-mix(in srgb, var(--accent-color), transparent 50%);
             }
             header a, header a:visited, header a:hover, header a:visited:hover {
                 color: var(--fg-color);
-                text-shadow: 0 0 1rem var(--accent-color), 0 0 .4rem var(--accent-color), 0 0 .2rem var(--bg-color);
+                text-shadow: 0 0 var(--spacing-l) var(--accent-color), 0 0 var(--spacing-m) var(--accent-color), 0 0 var(--spacing-s) var(--bg-color);
             }
             header a {
                 min-width: 0;
-                margin-left: .4em;
+                margin-left: var(--spacing-m);
                 font-size: 1.6rem;
                 text-decoration: none;
                 display: inline-block;

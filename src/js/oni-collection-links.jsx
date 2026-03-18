@@ -15,14 +15,14 @@ export class OniCollectionLinks extends LitElement {
             display: flex;
             justify-content: space-between;
             border-bottom: 3px solid var(--accent-color);
-            padding-right: .4rem;
-            margin-top: -.1rem;
+            padding-right: var(--spacing-m);
+            margin-top: -.05rem;
         }
         ::slotted {
             align-self: start;
         }
         :host ul {
-            margin: .2rem .4rem 0;
+            margin: var(--spacing-s) var(--spacing-m) 0;
             padding: 0;
             align-self: end;
         }
@@ -34,15 +34,15 @@ export class OniCollectionLinks extends LitElement {
             text-align: center;
             list-style: none;
             display: inline-block;
-            padding: 0 1rem 0 .6rem;
-            margin: 0 .2rem;
+            padding: 0 var(--spacing-l) 0 var(--spacing-m);
+            margin: 0 var(--spacing-s);
             backdrop-filter: blur(2px);
-            border-radius: 0 .3rem 0 0;
-            text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
+            border-radius: 0 calc(1.5 * var(--spacing-s)) 0 0;
+            text-shadow: 0 0 var(--spacing-l) var(--bg-color), 0 0 var(--spacing-m) var(--accent-color);
             background-color: color-mix(in srgb, var(--accent-color), transparent 85%);
         }
         :host li:first-child {
-            margin-right: -.2rem;
+            margin-right: calc(-1*var(--spacing-s));
         }
         :host li.active {
             background-color: var(--accent-color);
@@ -51,13 +51,13 @@ export class OniCollectionLinks extends LitElement {
         @media (max-width: 576px) {
             :host li {
                 line-height: 1.2rem;
-                padding: .2rem .4rem 0;
-                margin: 0 .1rem;
+                padding: var(--spacing-s) var(--spacing-m) 0;
+                margin: 0 calc(var(--spacing-s)/2);
                 overflow-x: clip;
             }
             :host nav {
                 flex-direction: column;
-                padding-right: .6rem;
+                padding-right: var(--spacing-s);
             }
         }
     `
@@ -149,12 +149,12 @@ const LinkStyle = css`
             text-transform: capitalize;
             text-decoration: none;
             color: var(--accent-color);
-            text-shadow: 0 0 1em var(--accent-color), 0 0 .4em var(--bg-color);
+            text-shadow: 0 0 var(--spacing-l) var(--accent-color), 0 0 var(--spacing-m)var(--bg-color);
             display: inline-block;
         }
         :host a.active, :host a:visited.active {
             color: var(--bg-color);
-            text-shadow: 0 0 1em var(--accent-color), 0 0 .4rem var(--bg-color);
+            text-shadow: 0 0 var(--spacing-l) var(--accent-color), 0 0 var(--spacing-m) var(--bg-color);
         }
         :host oni-image {
             max-width: 1.1rem;

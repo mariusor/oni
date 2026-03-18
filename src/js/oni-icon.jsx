@@ -9,19 +9,19 @@ export class OniIcon extends LitElement {
         fill: currentColor;
         color: currentColor;
         vertical-align: middle;
-        padding: 0 .2rem;
+        padding: 0 var(--spacing-s);
     }
     svg[data-name=inbox], svg[data-name=outbox]  {
-        margin-bottom: .1rem;
+        margin-bottom: calc(.5 * var(--spacing-s));
     }
     svg[data-name=clock], svg[data-name=announce], svg[data-name=like], svg[data-name=dislike] {
-        margin: -.1rem -.2rem 0 0;
+        margin: calc(-.5 * var(--spacing-s)) calc(-1*var(--spacing-s)) 0 0;
     }
     svg[data-name=external-href] {
-        margin: -.1rem -.2rem .2rem 0;
+        margin: calc(-.5 * var(--spacing-s)) calc(-1*var(--spacing-s)) var(--spacing-s) 0;
     }
     svg[data-name=external-href], svg[data-name=bookmark] {
-        margin: -.1rem -.2rem 0 0;
+        margin: calc(-.5 * var(--spacing-s)) calc(-1*var(--spacing-s)) 0 0;
     }
     svg[data-name=following] {
         transform: rotateY(180deg);

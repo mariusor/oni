@@ -14,8 +14,8 @@ export class ActivityPubTag extends ActivityPubNote {
         :host a[rel~=mention], :host a[rel~=tag] {
             --tag-color: color-mix(in srgb, var(--accent-color), transparent 86%);
             font-size: .8rem;
-            padding: .02rem .2rem;
-            border-radius: .3rem;
+            padding: .02rem var(--spacing-s);
+            border-radius: calc(1.5 * var(--spacing-s));
             border: .06rem solid var(--tag-color);
             background: var(--tag-color);
             text-decoration: none;

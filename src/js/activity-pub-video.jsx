@@ -11,7 +11,7 @@ export class ActivityPubVideo extends ActivityPubObject {
             max-width: 100%; 
             max-height: 100%; 
             align-self: start;
-            border-radius: .4rem;
+            border-radius: var(--spacing-m);
             outline: .08rem solid color-mix(in srgb, var(--accent-color), transparent 55%);
             outline-offset: -.08rem;
         }
@@ -20,7 +20,7 @@ export class ActivityPubVideo extends ActivityPubObject {
         }
         figcaption {
             position: absolute;
-            padding: 1rem;
+            padding: var(--spacing-l);
             display: inline-block;
             max-width: 30%;
         }

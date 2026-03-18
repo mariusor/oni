@@ -20,7 +20,7 @@ export class ActivityPubItems extends ActivityPubObject {
         }
         :host(.attachment) ul {
             display: flex;
-            gap: .2rem;
+            gap: var(--spacing-s);
             justify-content: flex-start;
             flex-wrap: wrap;
         }
@@ -52,7 +52,7 @@ export class ActivityPubItems extends ActivityPubObject {
             flex: 1 1 32%;
         }
         details ul li {
-            margin-left: 1.2rem;
+            margin-left: calc(var(--spacing-l) + var(--spacing-s));
         }
     `, ActivityPubObject.styles];
 

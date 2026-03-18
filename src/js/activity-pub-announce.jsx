@@ -8,7 +8,7 @@ export class ActivityPubAnnounce extends ActivityPubCreate {
     static styles = [
         css`
             footer {
-                padding-bottom: .2rem;
+                padding-bottom: var(--spacing-s);
             }
         `,
         ActivityPubActivity.styles];

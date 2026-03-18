@@ -13,7 +13,7 @@ export class ActivityPubAudio extends ActivityPubObject {
             width: 100%;
             outline: .08rem solid color-mix(in srgb, var(--accent-color), transparent 55%);
             outline-offset: -0.08rem;
-            border-radius: 0.4rem;
+            border-radius: var(--spacing-m);
         }
         figure {
             margin: auto;

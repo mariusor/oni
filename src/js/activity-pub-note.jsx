@@ -18,7 +18,7 @@ export class ActivityPubNote extends ActivityPubObject {
         text-decoration: none;
     }
     p {
-        margin: 0 .2rem;
+        margin: 0 var(--spacing-s);
     }
     `, ActivityPubObject.styles];
 

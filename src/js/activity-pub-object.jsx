@@ -17,7 +17,7 @@ export class ActivityPubObject extends LitElement {
         a:hover {
             --c: oklch(from var(--link-color) calc(l - .2) c h);
             color: var(--c);
-            text-shadow: 0 0 1rem var(--c), 0 0 .3rem var(--bg-color);
+            text-shadow: 0 0 var(--spacing-l) var(--c), 0 0 var(--spacing-m) var(--bg-color);
         }
         a:active {
             color: oklch(from var(--link-visited-color) l c calc(h + .2));
@@ -64,18 +64,18 @@ export class ActivityPubObject extends LitElement {
             display: grid;
             justify-content: center;
             grid-auto-flow: column;
-            gap: 1rem;
+            gap: var(--spacing-l);
         }
         :host footer {
             border-bottom: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
             font-size: .84rem;
-            margin-top: .3rem;
+            margin-top: var(--spacing-m);
             width: 100%;
             display: flex;
             flex-direction: row;
             align-self: end;
             justify-content: space-between;
-            gap: 1rem;
+            gap: var(--spacing-l);
             min-height: 1.2rem;
         }
         figure {
@@ -97,7 +97,7 @@ export class ActivityPubObject extends LitElement {
         .attachment {
             display: flex;
             flex-wrap: wrap;
-            gap: .2rem;
+            gap: var(--spacing-s);
             justify-content: flex-start;
         }
         .tag {

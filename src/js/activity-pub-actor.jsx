@@ -11,12 +11,12 @@ import {Palette} from "./oni-theme";
 export class ActivityPubActor extends ActivityPubObject {
     static styles = [css`
         :host header {
-            padding: 1rem 1rem .2rem 1rem;
+            padding: var(--spacing-l) var(--spacing-l) var(--spacing-s) var(--spacing-l);
             display: flex;
             justify-content: start;
             align-items: stretch;
             justify-items: start;
-            column-gap: 1.4rem;
+            column-gap: calc(var(--spacing-l) + var(--spacing-s));
             background-size: cover;
             background-clip: padding-box;
             background-position: center;
@@ -27,17 +27,17 @@ export class ActivityPubActor extends ActivityPubObject {
             place-content: flex-end;
             align-items: flex-start;
             flex-wrap: wrap;
-            padding-bottom: .4rem;
+            padding-bottom: var(--spacing-m);
         }
         section h1, section h2 {
-            margin: .2rem 0;
+            margin: var(--spacing-s) 0;
         }
         section h2 {
             font-weight: 300;
         }
         header section * {
             color: var(--fg-color);
-            text-shadow: 0 0 1rem var(--accent-color), 0 0 .4rem var(--accent-color), 0 0 .2rem var(--bg-color);
+            text-shadow: 0 0 var(--spacing-l) var(--accent-color), 0 0 var(--spacing-m) var(--accent-color), 0 0 var(--spacing-s) var(--bg-color);
         }
         header > a svg {
             color: var(--accent-color);
@@ -52,30 +52,30 @@ export class ActivityPubActor extends ActivityPubObject {
             object-fit: cover;
             shape-outside: margin-box;
             max-height: 10em;
-            margin-top: .4rem;
+            margin-top: var(--spacing-m);
             padding: .32rem;
             backdrop-filter: blur(10px) contrast(300%);
             border-radius: 0 1.6em 1.6em 1.6em;
             border: .1rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
-            box-shadow: 0 0 1rem var(--accent-color), 0 0 .3rem var(--accent-color);
+            box-shadow: 0 0 var(--spacing-l) var(--accent-color), 0 0 var(--spacing-m) var(--accent-color);
             background-color: color-mix(in srgb, var(--accent-color), transparent 50%);
         }
         section ul {
             display: inline-block;
-            margin: 0.3rem 0 0 -1.2rem;
-            padding: 0.3rem 1.4rem;
+            margin: var(--spacing-s) 0 0 calc(-1 * var(--spacing-l));
+            padding: var(--spacing-s) var(--spacing-l);
             border-radius: 1.6em;
             backdrop-filter: blur(2px);
             background-color: color-mix(in srgb, var(--accent-color), transparent 85%);
         }
         section ul a:any-link, section ul a svg {
             color: var(--accent-color);
-            text-shadow: 0 0 1rem var(--bg-color), 0 0 .3rem var(--accent-color);
+            text-shadow: 0 0 var(--spacing-l) var(--bg-color), 0 0 var(--spacing-s) var(--accent-color);
         }
         section ul li {
             list-style: none;
             display: inline-block;
-            margin-right: .8rem;
+            margin-right: calc(var(--spacing-m) + var(--spacing-s));
         }
         :host aside small::before {
             content: "(";
@@ -89,7 +89,7 @@ export class ActivityPubActor extends ActivityPubObject {
         }
         :host oni-natural-language-values[name=content] {
             display: block;
-            margin: 0 1rem;
+            margin: 0 var(--spacing-l);
         }
         :host oni-natural-language-values[name=summary] {
             font-size: .8em;
@@ -97,7 +97,7 @@ export class ActivityPubActor extends ActivityPubObject {
         a.inline img {
             max-height: 1.2rem;
             vertical-align: middle;
-            margin: -.14rem -.2rem .1rem 0;
+            margin: calc(-.14 * var(--spacing-s)) calc(-1*var(--spacing-s)) var(.5 * var(--spacing-s)) 0;
             border: .01rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
         }
         a.inline span {
@@ -117,16 +117,16 @@ export class ActivityPubActor extends ActivityPubObject {
                 width: auto;
                 flex-direction: row-reverse;
                 justify-content: space-between;
-                padding: 0.2rem;
+                padding: var(--spacing-s);
             }
             :host header h1 {
-                margin-top: 1rem;
+                margin-top: var(--spacing-l);
             }
             section ul {
                 display: none;
             }
             :host oni-natural-language-values[name=content] {
-                margin: 0 .2rem;
+                margin: 0 var(--spacing-s);
             }
         }
     `, ActivityPubObject.styles];
