@@ -16,6 +16,7 @@ export class OniCollectionLinks extends LitElement {
             justify-content: space-between;
             border-bottom: 3px solid var(--accent-color);
             padding-right: .4rem;
+            margin-top: -.1rem;
         }
         ::slotted {
             align-self: start;
