@@ -30,11 +30,11 @@ export class ActivityPubObject extends LitElement {
         }
         h1 {
             margin-block: .78rem;
-            font: 700 1.6rem / 1.125 sans-serif;
+            font: 700 1.7rem / 1.125 sans-serif;
         }
         h2 {
             margin-block: .7rem;
-            font: 700 1.4rem / 1.125 sans-serif;
+            font: 700 1.45rem / 1.125 sans-serif;
         }
         h3 {
             margin-block: .62rem;
@@ -42,15 +42,15 @@ export class ActivityPubObject extends LitElement {
         }
         h4 {
             margin-block: .6rem;
-            font: 600 1.125rem / 1.125 sans-serif;
+            font: 600 1.1rem / 1.125 sans-serif;
         }
         h5 {
             margin-block: .58rem;
-            font: 600 1.04rem / 1.125 sans-serif;
+            font: 600 1rem / 1.1
         }
         h6 {
             margin-block: .56rem;
-            font: 600 .98rem / 1.125 sans-serif;
+            font: 600 .96rem / 1.1 sans-serif;
         }
         article {
             display: flex;

@@ -23,7 +23,6 @@ export class NaturalLanguageValues extends LitElement {
             display: inline-block;
         }
         :host > *:not(:last-child), li:not(:last-child) {
-            margin-block-start: 0;
             margin-block-end: .8rem;
         }
         :host([data-container-type="article"]) p {
