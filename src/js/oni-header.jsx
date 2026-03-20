@@ -16,7 +16,7 @@ export class OniHeader extends ActivityPubActor {
                 padding-top: var(--spacing-m);
                 display: grid;
                 align-items: end;
-                backdrop-filter: blur(40px);
+                backdrop-filter: blur(20px);
                 background-size: cover;
                 background-clip: padding-box;
                 background-position: center;
@@ -29,15 +29,15 @@ export class OniHeader extends ActivityPubActor {
                stroke-width: 1.5;
                stroke:currentColor;
             }
-            header a img, header a svg { 
+            header a img, header a svg {
                 aspect-ratio: 1;
                 height: 2rem;
                 border-radius: 0 var(--spacing-s) var(--spacing-s) var(--spacing-s);
                 shape-outside: margin-box;
-                padding: calc(.5*var(--spacing-s));
+                padding: calc(.5 * var(--spacing-s));
                 margin-top: var(--spacing-s);
                 margin-bottom: calc(-1 * var(--spacing-s));
-                backdrop-filter: blur(10px) contrast(300%);
+                backdrop-filter: blur(20px) contrast(300%);
                 border: .01rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
                 box-shadow: 0 0 var(--spacing-m) var(--accent-color), 0 0 var(--spacing-s) var(--accent-color);
                 background-color: color-mix(in srgb, var(--accent-color), transparent 50%);
