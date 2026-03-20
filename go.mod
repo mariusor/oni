@@ -24,7 +24,7 @@ require (
 	github.com/go-ap/errors v0.0.0-20260208110149-e1b309365966
 	github.com/go-ap/filters v0.0.0-20260318121108-558e05da8dfd
 	github.com/go-ap/jsonld v0.0.0-20251216162253-e38fa664ea77
-	github.com/go-ap/processing v0.0.0-20260318131548-fbde43790227
+	github.com/go-ap/processing v0.0.0-20260320164548-639d10ea1879
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -80,7 +80,7 @@ require (
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
-	github.com/klauspost/compress v1.18.4 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
 	github.com/mariusor/bubbles-tree v0.0.0-20260310132554-299ab79a89cb // indirect
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d // indirect
