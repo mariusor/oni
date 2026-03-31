@@ -104,7 +104,7 @@ $ box post --as https://johndoe.example.com --id https://johndoe.example.com/pos
 --name "First Post" --content "Hello Fediverse⁂!"
 ```
 
-![First post](https://git.sr.ht/~mariusor/go-activitypub-doc/blob/master/oni/img/oni-first-post.png)
+![First post](https://git.sr.ht/~mariusor/go-activitypub-doc/blob/master/apps/oni/img/oni-first-post.png)
 
 ### Upload an image
 
