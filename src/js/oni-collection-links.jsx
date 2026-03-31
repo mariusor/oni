@@ -25,7 +25,7 @@ export class OniCollectionLinks extends LitElement {
             margin: var(--spacing-s) var(--spacing-m) 0;
             padding: 0;
             align-self: end;
-            line-height: 1rem;
+            line-height: calc(1rem + var(--spacing-m));
         }
         :host li {
             border-width: 1px;
