@@ -40,7 +40,7 @@ export class OniHeader extends ActivityPubActor {
                 backdrop-filter: blur(20px) contrast(300%);
                 border: .01rem solid color-mix(in srgb, var(--accent-color), transparent 30%);
                 box-shadow: 0 0 var(--spacing-m) var(--accent-color), 0 0 var(--spacing-s) var(--accent-color);
-                background-color: color-mix(in srgb, var(--accent-color), transparent 50%);
+                background-color: color-mix(in srgb, var(--accent-color), transparent 20%);
             }
             header a, header a:visited, header a:hover, header a:visited:hover {
                 color: var(--fg-color);
@@ -54,6 +54,7 @@ export class OniHeader extends ActivityPubActor {
                 display: inline-block;
                 align-self: start;
                 font-weight: bold;
+                line-height: 1.5rem;
             }
         `,
         ActivityPubObject.styles

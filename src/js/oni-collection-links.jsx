@@ -25,6 +25,7 @@ export class OniCollectionLinks extends LitElement {
             margin: var(--spacing-s) var(--spacing-m) 0;
             padding: 0;
             align-self: end;
+            line-height: 1rem;
         }
         :host li {
             border-width: 1px;
@@ -34,7 +35,7 @@ export class OniCollectionLinks extends LitElement {
             text-align: center;
             list-style: none;
             display: inline-block;
-            padding: 0 var(--spacing-l) 0 var(--spacing-m);
+            padding: 0 calc(1.5 * var(--spacing-s)) 0 var(--spacing-s);
             margin: 0 var(--spacing-s);
             backdrop-filter: blur(2px);
             border-radius: 0 calc(1.5 * var(--spacing-s)) 0 0;
