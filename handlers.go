@@ -391,10 +391,20 @@ func cleanupMediaObject(o *vocab.Object) error {
 	if contentHasBinaryData(o.Content) {
 		// NOTE(marius): remove inline content from media ActivityPub objects
 		o.Content = make(vocab.NaturalLanguageValues)
-		if o.URL == nil {
-			// Add an explicit URL if missing.
-			o.URL = o.ID
-		}
+		_ = vocab.OnItem(o.URL, func(u vocab.Item) error {
+			if _, ok := u.(vocab.IRI); ok {
+				o.URL = o.ID
+			}
+			_ = vocab.OnObject(u, func(uu *vocab.Object) error {
+				uu.ID = o.ID
+				return nil
+			})
+			_ = vocab.OnLink(u, func(uu *vocab.Link) error {
+				uu.Href = o.ID
+				return nil
+			})
+			return nil
+		})
 	}
 	var err error
 	o.Attachment, err = cleanupMediaObjectFromItem(o.Attachment)
