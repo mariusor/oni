@@ -331,35 +331,48 @@ var mediaTypes = vocab.ActivityVocabularyTypes{
 	vocab.ImageType, vocab.AudioType, vocab.VideoType, vocab.DocumentType,
 }
 
-func cleanupMediaObjectFromItem(it vocab.Item) error {
+func cleanupMediaObjectFromItem(it vocab.Item) (vocab.Item, error) {
 	if it == nil {
-		return nil
+		return it, nil
+	}
+	if it.IsCollection() {
+		err := vocab.OnCollectionIntf(it, cleanupMediaObjectsFromCollection)
+		return it, err
 	}
 	it = vocab.Clone(it)
-	if it.IsCollection() {
-		return vocab.OnCollectionIntf(it, cleanupMediaObjectsFromCollection)
-	}
 	if vocab.ActivityTypes.Match(it.GetType()) {
-		return vocab.OnActivity(it, cleanupMediaObjectFromActivity)
+		err := vocab.OnActivity(it, cleanupMediaObjectFromActivity)
+		return it, err
 	}
-	return vocab.OnObject(it, cleanupMediaObject)
+	err := vocab.OnObject(it, cleanupMediaObject)
+	return it, err
 }
 
 func cleanupMediaObjectsFromCollection(col vocab.CollectionInterface) error {
 	errs := make([]error, 0)
-	for _, it := range col.Collection() {
-		if err := cleanupMediaObjectFromItem(it); err != nil {
-			errs = append(errs, err)
+
+	icMediaCleanupFn := func(ic *vocab.ItemCollection) error {
+		for i, it := range *ic {
+			var err error
+			if (*ic)[i], err = cleanupMediaObjectFromItem(it); err != nil {
+				errs = append(errs, err)
+			}
 		}
+		return nil
 	}
+	_ = vocab.OnItemCollection(col, icMediaCleanupFn)
+	_ = vocab.OnOrderedCollection(col, func(c *vocab.OrderedCollection) error {
+		return icMediaCleanupFn(&c.OrderedItems)
+	})
 	return errors.Join(errs...)
 }
 
 func cleanupMediaObjectFromActivity(act *vocab.Activity) error {
-	if err := cleanupMediaObjectFromItem(act.Object); err != nil {
+	var err error
+	if act.Object, err = cleanupMediaObjectFromItem(act.Object); err != nil {
 		return err
 	}
-	if err := cleanupMediaObjectFromItem(act.Target); err != nil {
+	if act.Target, err = cleanupMediaObjectFromItem(act.Target); err != nil {
 		return err
 	}
 	return nil
@@ -383,7 +396,9 @@ func cleanupMediaObject(o *vocab.Object) error {
 			o.URL = o.ID
 		}
 	}
-	return cleanupMediaObjectFromItem(o.Attachment)
+	var err error
+	o.Attachment, err = cleanupMediaObjectFromItem(o.Attachment)
+	return err
 }
 
 const (
@@ -392,7 +407,7 @@ const (
 )
 
 func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
-	_ = cleanupMediaObjectFromItem(it)
+	it, _ = cleanupMediaObjectFromItem(it)
 
 	dat, err := jsonld.WithContext(jsonld.IRI(vocab.ActivityBaseURI), jsonld.IRI(vocab.SecurityContextURI)).Marshal(it)
 	if err != nil {

@@ -92,7 +92,7 @@ func renderJson(it any) []byte {
 		res, _ := json.Marshal(it)
 		return res
 	}
-	_ = cleanupMediaObjectFromItem(ob)
+	ob, _ = cleanupMediaObjectFromItem(ob)
 	_ = sanitizeItem(ob)
 	res, _ := json.Marshal(ob)
 	return res
