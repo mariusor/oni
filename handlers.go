@@ -339,7 +339,6 @@ func cleanupMediaObjectFromItem(it vocab.Item) (vocab.Item, error) {
 		err := vocab.OnCollectionIntf(it, cleanupMediaObjectsFromCollection)
 		return it, err
 	}
-	it = vocab.Clone(it)
 	if vocab.ActivityTypes.Match(it.GetType()) {
 		err := vocab.OnActivity(it, cleanupMediaObjectFromActivity)
 		return it, err

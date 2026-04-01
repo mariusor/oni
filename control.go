@@ -47,7 +47,6 @@ func SetupCtl(storagePath string, ll lw.Logger, typ storage.Type) (*Control, err
 		storage.WithPath(storagePath),
 		storage.WithType(typ),
 		storage.WithLogger(ll),
-		storage.WithCache(true),
 	}
 	if err, exists := MkDirIfNotExists(storagePath); err != nil {
 		ll.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed to create path")
