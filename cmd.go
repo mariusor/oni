@@ -460,7 +460,7 @@ func tryCreateCollection(ctl *Control, colIRI vocab.IRI, author vocab.Item) erro
 			ctl.Logger.Errorf("Unable to load %s: %s", colIRI, err)
 			return err
 		}
-		it, err := ctl.Storage.Create(newOrderedCollection(colIRI.GetLink(), author.GetLink()))
+		it, err := ctl.Storage.Save(newOrderedCollection(colIRI.GetLink(), author.GetLink()))
 		if err != nil {
 			ctl.Logger.Errorf("Unable to create collection %s: %s", colIRI, err)
 			return err
