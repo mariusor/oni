@@ -242,6 +242,9 @@ export class ActivityPubObject extends LitElement {
         if (!Array.isArray(attachment)) {
             attachment = [attachment];
         }
+        if (attachment.length === 0) {
+            return nothing;
+        }
         return html`
             <details @toggle=${showBandCampEmbeds} class="attachments">
                 <summary>${pluralize(attachment.length, 'attachment')}</summary>
