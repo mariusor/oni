@@ -219,6 +219,9 @@ export class ActivityPubObject extends LitElement {
         if (!Array.isArray(tags)) {
             tags = [tags];
         }
+        if (tags.length === 0) {
+            return nothing;
+        }
         if (textualObjectTypes.indexOf(this.it.type) >= 0) {
             const allText = `${this.it.getContent().join()}${this.it.getSummary().join()}`;
             tags = tags.filter(tag => {
