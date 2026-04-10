@@ -100,7 +100,7 @@ func (s Run) Run(ctl *Control) error {
 	return Oni(
 		WithPassword(s.Pw),
 		WithLogger(ctl.Logger),
-		WithStorage(ctl.Storage),
+		WithStorage(ctl.Storage, ctl.StoragePath),
 		ListenOn(s.Listen),
 	).Run(context.Background())
 }

@@ -64,6 +64,7 @@ func SetupCtl(storagePath string, ll lw.Logger, typ storage.Type) (*Control, err
 		return nil, err
 	}
 	ctl.Storage = st
+	ctl.StoragePath = storagePath
 
 	if ctl.in == nil {
 		ctl.in = os.Stdin

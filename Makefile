@@ -11,7 +11,7 @@ ENV ?= dev
 VERSION ?= HEAD
 
 LDFLAGS ?= -X git.sr.ht/~mariusor/oni.Version=$(VERSION)
-BUILDFLAGS ?= -a -ldflags '$(LDFLAGS)' -tags "$(TAGS)"
+BUILDFLAGS ?= -ldflags '$(LDFLAGS)' -tags "$(TAGS)"
 TEST_FLAGS ?= -count=1
 
 UPX = upx
