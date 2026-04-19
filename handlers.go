@@ -500,17 +500,13 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 		return baseIRIs.Contains(iri)
 	}
 
-	var logFn auth.LoggerFn = func(ctx lw.Ctx, msg string, p ...interface{}) {
-		o.Logger.WithContext(lw.Ctx{"log": "auth"}, ctx).Debugf(msg, p...)
-	}
-
 	author := auth.AnonymousActor
 	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		author = loaded
 	} else {
 		solver := auth.Resolver(o.Client(auth.AnonymousActor, lw.Ctx{"log": "keyfetch"}),
-			auth.SolverWithStorage(o.Storage), auth.SolverWithLogger(logFn),
-			auth.SolverWithLocalIRIFn(isLocalIRI),
+			auth.ConfigWithStorage(o.Storage), auth.ConfigWithLogger(o.Logger.WithContext(lw.Ctx{"log": "auth"})),
+			auth.ConfigWithLocalIRIFn(isLocalIRI),
 		)
 
 		fetched, err := solver.Verify(r)
@@ -759,29 +755,29 @@ func (o *oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnor
 	if ok && !auth.AnonymousActor.Equals(act) {
 		return act, nil
 	}
+
+	initFns := []auth.ConfigInitFn{
+		auth.ConfigWithLocalIRIFn(oniActor.GetLink().Equal),
+		auth.ConfigWithStorage(o.Storage),
+		auth.ConfigWithLogger(o.Logger),
+		auth.ConfigWithIgnoreList(toIgnore...),
+	}
+
+	cl := o.Client(auth.AnonymousActor, lw.Ctx{})
 	if cookieAuth, _ := r.Cookie("auth"); cookieAuth != nil {
+		s := auth.OAuth2(cl, initFns...)
 		// NOTE(marius): try to load from encoded token cookie - this happens in the login-link success path
 		if rawJson, err := url.QueryUnescape(cookieAuth.Value); err == nil {
 			tok := new(oauth2.Token)
 			if err := json.Unmarshal([]byte(rawJson), tok); err == nil {
-				if act, err := auth.LoadActorFromOAuthToken(o.Storage, tok); err == nil && !auth.AnonymousActor.Equals(act) {
+				if act, err := s.VerifyAccessCode(tok.AccessToken); err == nil && !auth.AnonymousActor.Equals(act) {
 					return act, nil
 				}
 			}
 		}
 	}
-
-	c := o.Client(auth.AnonymousActor, lw.Ctx{})
-	s, err := auth.New(
-		auth.WithIRI(oniActor.GetLink()),
-		auth.WithStorage(o.Storage),
-		auth.WithClient(c),
-		auth.WithLogger(o.Logger.WithContext(lw.Ctx{"log": "osin"})),
-	)
-	if err != nil {
-		return auth.AnonymousActor, errors.Errorf("OAuth server not initialized")
-	}
-	return s.LoadActorFromRequest(r, toIgnore...)
+	s := auth.Resolver(cl, initFns...)
+	return s.Verify(r)
 }
 
 func checkOriginForBlockedActors(r *http.Request, origin string) bool {

@@ -11,7 +11,6 @@ import (
 
 	"git.sr.ht/~mariusor/lw"
 	vocab "github.com/go-ap/activitypub"
-	"github.com/go-ap/auth"
 	"github.com/go-ap/client/debug"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
@@ -191,7 +190,7 @@ func LoadClientActorByID(repo FullStorage, app vocab.Actor, clientID vocab.IRI) 
 	return vocab.ToActor(clientActorItem)
 }
 
-func (o *oni) SetupAuthServerWithDynamicClientData(r *http.Request, oniActor vocab.Actor, s *auth.Server) error {
+func (o *oni) SetupAuthServerWithDynamicClientData(r *http.Request, oniActor vocab.Actor, s *osin.Server) error {
 	if id := r.FormValue(clientIdKey); id != "" {
 		client, err := url.QueryUnescape(id)
 		if err != nil {

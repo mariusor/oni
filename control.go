@@ -295,6 +295,11 @@ func (c *Control) GenAccessToken(clientID, actorIdentifier string, dat interface
 	return ad.AccessToken, nil
 }
 
+type Metadata struct {
+	Pw         []byte `jsonld:"pw,omitempty"`
+	PrivateKey []byte `jsonld:"key,omitempty"`
+}
+
 func (c *Control) GenKeyPair(actor *vocab.Actor) (*vocab.Actor, error) {
 	st := c.Storage
 	l := c.Logger
@@ -311,7 +316,7 @@ func (c *Control) GenKeyPair(actor *vocab.Actor) (*vocab.Actor, error) {
 
 	iri := actor.ID
 
-	m := new(auth.Metadata)
+	m := new(Metadata)
 	if err = st.LoadMetadata(iri, m); err != nil && !errors.IsNotFound(err) {
 		return actor, err
 	}

@@ -789,7 +789,7 @@ func AddKeyToPerson(metaSaver MetadataStorage, typ string) func(act *vocab.Actor
 			return nil
 		}
 
-		m := new(auth.Metadata)
+		m := new(Metadata)
 		_ = metaSaver.LoadMetadata(act.ID, m)
 		var pubB, prvB pem.Block
 		if m.PrivateKey == nil || overwriteKeys {
@@ -842,8 +842,8 @@ type OauthAuthorizationMetadata struct {
 }
 
 func defaultGrantTypes() []osin.AccessRequestType {
-	grants := make([]osin.AccessRequestType, 0, len(auth.DefaultAccessTypes))
-	for _, typ := range auth.DefaultAccessTypes {
+	grants := make([]osin.AccessRequestType, 0, len(DefaultAccessTypes))
+	for _, typ := range DefaultAccessTypes {
 		if typ == osin.IMPLICIT {
 			typ = "implicit"
 		}

@@ -138,13 +138,44 @@ func loadBaseActor(o *oni, r *http.Request) (vocab.Actor, error) {
 	return actor, err
 }
 
-func authServer(o *oni, oniActor vocab.Actor) (*auth.Server, error) {
-	return auth.New(
-		auth.WithIRI(oniActor.GetLink()),
-		auth.WithStorage(o.Storage),
-		auth.WithClient(o.Client(oniActor, lw.Ctx{})),
-		auth.WithLogger(o.Logger.WithContext(lw.Ctx{"log": "osin"})),
-	)
+// ID is the type of authorization that IndieAuth is using
+const ID = osin.AuthorizeRequestType("id")
+
+var (
+	DefaultAuthorizeTypes = osin.AllowedAuthorizeType{osin.CODE, osin.TOKEN, ID}
+	DefaultAccessTypes    = osin.AllowedAccessType{osin.AUTHORIZATION_CODE, osin.REFRESH_TOKEN, osin.PASSWORD, osin.CLIENT_CREDENTIALS}
+
+	DefaultConfig = osin.ServerConfig{
+		AuthorizationExpiration:     86400,
+		AccessExpiration:            2678400,
+		TokenType:                   "Bearer",
+		AllowedAuthorizeTypes:       DefaultAuthorizeTypes,
+		AllowedAccessTypes:          DefaultAccessTypes,
+		ErrorStatusCode:             http.StatusForbidden,
+		AllowClientSecretInParams:   false,
+		AllowGetAccessRequest:       false,
+		RetainTokenAfterRefresh:     true,
+		RedirectUriSeparator:        "\n",
+		RequirePKCEForPublicClients: true,
+	}
+)
+
+// logger is our internal implementation of an OSIN compatible logger.
+type logger struct {
+	lw.Logger
+}
+
+func (l logger) Printf(format string, v ...any) {
+	if l.Logger == nil {
+		return
+	}
+	l.Logger.Infof(format, v...)
+}
+
+func authServer(o *oni) *osin.Server {
+	s := osin.NewServer(&DefaultConfig, o.Storage)
+	s.Logger = logger{Logger: o.Logger.WithContext(lw.Ctx{"log": "auth"})}
+	return s
 }
 
 func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
@@ -167,13 +198,8 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := authServer(o, a)
-	if err != nil {
-		o.Error(errors.Annotatef(err, "Unable to initialize OAuth2 server"))
-		return
-	}
-
-	resp := s.NewResponse()
+	os := authServer(o)
+	resp := os.NewResponse()
 	if IsValidAuthorizationRequest(r) {
 		clientActor, err := o.ValidateOrCreateClient(r, a)
 		if err != nil {
@@ -184,7 +210,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 		o.Logger.WithContext(lw.Ctx{"iri": clientActor.ID}).Debugf("valid client")
 	}
 
-	if ar := s.HandleAuthorizeRequest(resp, r); ar != nil {
+	if ar := os.HandleAuthorizeRequest(resp, r); ar != nil {
 		if r.Method == http.MethodGet {
 			// this is basically the login page, with client being set
 			m := login{title: "Login"}
@@ -221,7 +247,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 			ar.Authorized = true
 			ar.UserData = a.ID
 		}
-		s.FinishAuthorizeRequest(resp, r, ar)
+		os.FinishAuthorizeRequest(resp, r, ar)
 	}
 	if acc.Equal(applicationJson) {
 		// NOTE(marius): overwrite the response type if client has explicitly asked for JSON content
@@ -239,21 +265,15 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s, err := authServer(o, oniActor)
-	if err != nil {
-		o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Unable to initialize OAuth2 server")
+	os := authServer(o)
+	if err = o.SetupAuthServerWithDynamicClientData(r, oniActor, os); err != nil {
 		o.Error(err).ServeHTTP(w, r)
 		return
 	}
 
-	if err = o.SetupAuthServerWithDynamicClientData(r, oniActor, s); err != nil {
-		o.Error(err).ServeHTTP(w, r)
-		return
-	}
-
-	resp := s.NewResponse()
+	resp := os.NewResponse()
 	actor := &auth.AnonymousActor
-	if ar := s.HandleAccessRequest(resp, r); ar != nil {
+	if ar := os.HandleAccessRequest(resp, r); ar != nil {
 		actorIRI := oniActor.ID
 		if iri, ok := ar.UserData.(string); ok {
 			actorIRI = vocab.IRI(iri)
@@ -273,7 +293,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 
 		ar.Authorized = !actor.GetID().Equals(auth.AnonymousActor.ID, true)
 		ar.UserData = actor.GetLink()
-		s.FinishAccessRequest(resp, r, ar)
+		os.FinishAccessRequest(resp, r, ar)
 	}
 
 	acc, _, _ := ct.GetAcceptableMediaType(r, []ct.MediaType{fallbackHTML, applicationJson})
