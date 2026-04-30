@@ -281,7 +281,7 @@ func (o *oni) Run(c context.Context) error {
 		},
 	}).Exec(ctx, s.Start)
 	if o.Logger != nil {
-		o.Logger.Infof("Stopped")
+		o.Logger.WithContext(logCtx).Infof("Stopped")
 	}
 	return err
 }

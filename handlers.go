@@ -496,17 +496,14 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 		_ = baseIRIs.Append(act.GetID())
 	}
 
-	isLocalIRI := func(iri vocab.IRI) bool {
-		return baseIRIs.Contains(iri)
-	}
-
 	author := auth.AnonymousActor
 	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		author = loaded
 	} else {
-		solver := auth.Resolver(o.Client(auth.AnonymousActor, lw.Ctx{"log": "keyfetch"}),
-			auth.ConfigWithStorage(o.Storage), auth.ConfigWithLogger(o.Logger.WithContext(lw.Ctx{"log": "auth"})),
-			auth.ConfigWithLocalIRIFn(isLocalIRI),
+		solver := auth.Verifier(
+			auth.WithClient(o.Client(auth.AnonymousActor, lw.Ctx{"log": "keyfetch"})),
+			auth.WithStorage(o.Storage),
+			auth.WithLogger(o.Logger.WithContext(lw.Ctx{"log": "auth"})),
 		)
 
 		fetched, err := solver.Verify(r)
@@ -756,27 +753,26 @@ func (o *oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnor
 		return act, nil
 	}
 
-	initFns := []auth.ConfigInitFn{
-		auth.ConfigWithLocalIRIFn(oniActor.GetLink().Equal),
-		auth.ConfigWithStorage(o.Storage),
-		auth.ConfigWithLogger(o.Logger),
-		auth.ConfigWithIgnoreList(toIgnore...),
+	cl := o.Client(auth.AnonymousActor, lw.Ctx{})
+	initFns := []auth.InitFn{
+		auth.WithClient(cl),
+		auth.WithStorage(o.Storage),
+		auth.WithLogger(o.Logger),
 	}
 
-	cl := o.Client(auth.AnonymousActor, lw.Ctx{})
 	if cookieAuth, _ := r.Cookie("auth"); cookieAuth != nil {
-		s := auth.OAuth2(cl, initFns...)
+		s := auth.OAuth2(initFns...)
 		// NOTE(marius): try to load from encoded token cookie - this happens in the login-link success path
 		if rawJson, err := url.QueryUnescape(cookieAuth.Value); err == nil {
 			tok := new(oauth2.Token)
-			if err := json.Unmarshal([]byte(rawJson), tok); err == nil {
+			if err = json.Unmarshal([]byte(rawJson), tok); err == nil {
 				if act, err := s.VerifyAccessCode(tok.AccessToken); err == nil && !auth.AnonymousActor.Equals(act) {
 					return act, nil
 				}
 			}
 		}
 	}
-	s := auth.Resolver(cl, initFns...)
+	s := auth.Verifier(initFns...)
 	return s.Verify(r)
 }
 
@@ -832,8 +828,7 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 		if !oniActor.Equals(auth.AnonymousActor) {
 			blocked := o.loadBlockedActors(oniActor)
 			act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor, blocked...)
-			ctx := r.Context()
-			ctx = context.WithValue(ctx, blockedActorsCtxKey, blocked)
+			ctx := context.WithValue(r.Context(), blockedActorsCtxKey, blocked)
 			if !act.GetLink().Equal(auth.AnonymousActor.GetLink()) {
 				ctx = context.WithValue(ctx, authorizedActorCtxKey, act)
 				for _, blockedIRI := range blocked {
