@@ -96,8 +96,9 @@ func (o *oni) setupRoutes() {
 
 	m := chi.NewMux()
 
+	rl := o.Logger.WithContext(lw.Ctx{"log": "req"})
 	m.Use(o.OutOfOrderMw)
-	m.Use(Log(o.Logger), c.Handler)
+	m.Use(Log(rl), c.Handler)
 
 	o.setupActivityPubRoutes(m)
 	o.setupOAuthRoutes(m)
