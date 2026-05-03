@@ -1238,8 +1238,14 @@ func (o *oni) ProxyURL() http.Handler {
 		lCtx := lw.Ctx{"iri": id, "actor": authorized.ID}
 
 		cl := o.Client(actor, lctx)
-		httpCl := client.HTTPClient(cl)
-		res, err := httpCl.Get(id)
+
+		proxyReq, err := cl.FetchRequest(r.Context(), id)
+		if err != nil {
+			errors.HandleError(err).ServeHTTP(w, r)
+			return
+		}
+
+		res, err := cl.Do(proxyReq)
 		if err != nil {
 			errors.HandleError(err).ServeHTTP(w, r)
 			return
