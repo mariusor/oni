@@ -748,13 +748,13 @@ type _ctxKey string
 const authorizedActorCtxKey _ctxKey = "__authorizedActor"
 const blockedActorsCtxKey _ctxKey = "__blockedActors"
 
-func (o *oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor, toIgnore ...vocab.IRI) (vocab.Actor, error) {
+func (o *oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor) (vocab.Actor, error) {
 	act, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor)
 	if ok && !auth.AnonymousActor.Equals(act) {
 		return act, nil
 	}
 
-	cl := o.Client(auth.AnonymousActor, lw.Ctx{})
+	cl := o.Client(oniActor, lw.Ctx{"log": "authorized-actor"})
 	initFns := []auth.InitFn{
 		auth.WithClient(cl),
 		auth.WithStorage(o.Storage),
@@ -828,14 +828,14 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 
 		if !oniActor.Equals(auth.AnonymousActor) {
 			blocked := o.loadBlockedActors(oniActor)
-			act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor, blocked...)
+			act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor)
 			ctx := context.WithValue(r.Context(), blockedActorsCtxKey, blocked)
 			if !act.GetLink().Equal(auth.AnonymousActor.GetLink()) {
 				ctx = context.WithValue(ctx, authorizedActorCtxKey, act)
 				for _, blockedIRI := range blocked {
 					if blockedIRI.Contains(act.ID, false) {
 						o.Logger.WithContext(lw.Ctx{"actor": act.ID, "by": oniActor.ID}).Warnf("Blocked")
-						o.Error(errors.Gonef("nothing to see here, please move along")).ServeHTTP(w, r)
+						o.Error(errors.NotFoundf("nothing to see here, please move along")).ServeHTTP(w, r)
 						return
 					}
 				}
@@ -858,7 +858,7 @@ func hasPath(iri vocab.IRI) bool {
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
 
-	authActor, _ := o.loadAuthorizedActor(r, auth.AnonymousActor)
+	authActor, _ := o.loadAuthorizedActor(r, o.oniActor(r))
 
 	colFilters := make(filters.Checks, 0)
 	if vocab.ValidCollectionIRI(iri) {

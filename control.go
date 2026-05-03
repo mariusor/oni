@@ -115,13 +115,13 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 	tr := client.UserAgentTransport(ua, cache.Private(http.DefaultTransport, cache.FS(filepath.Join(cachePath, "oni"))))
 	if !vocab.PublicNS.Equals(actor.ID, true) {
 		if prv, _ := st.LoadKey(actor.ID); prv != nil {
-			tr = s2s.New(
-				s2s.WithTransport(tr), s2s.WithActor(&actor, prv),
-				s2s.WithLogger(l.WithContext(lw.Ctx{"log": "HTTP-Sig"})),
-				s2s.WithCoveredComponents("@method", "@target-uri", "content-digest"),
-			)
 			lctx["transport"] = "HTTP-Sig"
 			lctx["actor"] = actor.GetLink()
+			tr = s2s.New(
+				s2s.WithTransport(tr), s2s.WithActor(&actor, prv),
+				s2s.WithLogger(l.WithContext(lctx)),
+				s2s.WithCoveredComponents("@method", "@target-uri"),
+			)
 		}
 	}
 
@@ -131,9 +131,9 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 
 	baseClient := Client(tr)
 	return client.New(
-		client.WithLogger(l.WithContext(lctx)),
 		client.WithHTTPClient(baseClient),
 		client.SkipTLSValidation(IsDev),
+		client.WithLogger(l.WithContext(lctx)),
 	)
 }
 
