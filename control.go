@@ -111,7 +111,7 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 		cachePath = os.TempDir()
 	}
 
-	ua := fmt.Sprintf("%s@%s (+%s)", ProjectURL, Version, actor.GetLink())
+	ua := fmt.Sprintf("%s@%s (+%s %s)", nameOni, Version, actor.GetLink(), ProjectURL)
 	tr := client.UserAgentTransport(ua, cache.Private(http.DefaultTransport, cache.FS(filepath.Join(cachePath, "oni"))))
 	if !vocab.PublicNS.Equals(actor.ID, true) {
 		if prv, _ := st.LoadKey(actor.ID); prv != nil {

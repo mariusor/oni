@@ -144,8 +144,10 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 			m.Head("/*", o.ActivityPubItem)
 		})
 		debugRequestMw := processing.RequestToDiskMw(o.StoragePath, InDebugMode.Load)
-		m.With(debugRequestMw).Method(http.MethodPost, "/*", o.ProcessActivity())
-		m.Method(http.MethodPost, "/proxyUrl", o.ProxyURL())
+		m.With(debugRequestMw).Group(func(m chi.Router) {
+			m.Method(http.MethodPost, "/*", o.ProcessActivity())
+			m.Method(http.MethodPost, "/proxyUrl", o.ProxyURL())
+		})
 	})
 }
 
