@@ -10,21 +10,21 @@ require (
 	git.sr.ht/~mariusor/mask v0.0.0-20250114195353-98705a6977b7
 	git.sr.ht/~mariusor/motley v0.0.0-20260316084024-27f1802279e5
 	git.sr.ht/~mariusor/servermux v0.0.0-20260310142041-b6c9be7e7820
-	git.sr.ht/~mariusor/sizefmt v0.0.0-20250805090125-7286b55ea3f3
-	git.sr.ht/~mariusor/ssm v0.0.0-20260501135826-a14ca690af5f
-	git.sr.ht/~mariusor/storage-all v0.0.0-20260504131702-d1117dedbb8a
+	git.sr.ht/~mariusor/sizefmt v0.0.0-20260506142007-654c9c8b3833
+	git.sr.ht/~mariusor/ssm v0.0.0-20260505081700-875e54c38633
+	git.sr.ht/~mariusor/storage-all v0.0.0-20260504134016-d570d5ee964a
 	git.sr.ht/~mariusor/wrapper v0.0.0-20260103185140-9873830de009
 	github.com/alecthomas/kong v1.15.0
 	github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.28.0
 	github.com/go-ap/activitypub v0.0.0-20260416122353-fb80985e153a
-	github.com/go-ap/auth v0.0.0-20260504104254-87e885f93a0c
-	github.com/go-ap/client v0.0.0-20260504104113-6e860cd1b447
+	github.com/go-ap/auth v0.0.0-20260507172545-d9da889aeb99
+	github.com/go-ap/client v0.0.0-20260506165700-8c38f5c93569
 	github.com/go-ap/errors v0.0.0-20260208110149-e1b309365966
 	github.com/go-ap/filters v0.0.0-20260416122840-724cb3c8974c
 	github.com/go-ap/jsonld v0.0.0-20251216162253-e38fa664ea77
-	github.com/go-ap/processing v0.0.0-20260504104350-0189f47e38cd
+	github.com/go-ap/processing v0.0.0-20260507172628-8bf9a3690410
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0

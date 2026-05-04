@@ -830,7 +830,7 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 
 		if !oniActor.Equals(auth.AnonymousActor) {
 			blocked := o.loadBlockedActors(oniActor)
-			act, _ := o.loadAuthorizedActor(r, auth.AnonymousActor)
+			act, _ := o.loadAuthorizedActor(r, oniActor)
 			ctx := context.WithValue(r.Context(), blockedActorsCtxKey, blocked)
 			if !act.GetLink().Equal(auth.AnonymousActor.GetLink()) {
 				ctx = context.WithValue(ctx, authorizedActorCtxKey, act)
