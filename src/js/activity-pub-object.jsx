@@ -97,8 +97,8 @@ export class ActivityPubObject extends LitElement {
         .attachment {
             display: flex;
             flex-wrap: wrap;
-            gap: var(--spacing-s);
             justify-content: flex-start;
+            gap: var(--spacing-s);
         }
         .tag {
             display: inline;

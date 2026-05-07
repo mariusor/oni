@@ -37,7 +37,7 @@ export class ActivityPubActor extends ActivityPubObject {
         }
         header section * {
             color: var(--fg-color);
-            text-shadow: 0 0 var(--spacing-l) var(--accent-color), 0 0 var(--spacing-m) var(--accent-color), 0 0 var(--spacing-s) var(--bg-color);
+            text-shadow: 0 0 var(--spacing-l) var(--accent-color), 0 0 var(--spacing-m) var(--accent-color), 0 0 var(--spacing-s) var(--bg-color), 0 0 3px var(--bg-color);
         }
         header > a svg {
             color: var(--accent-color);

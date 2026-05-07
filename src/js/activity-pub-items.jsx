@@ -20,9 +20,9 @@ export class ActivityPubItems extends ActivityPubObject {
         }
         :host(.attachment) ul {
             display: flex;
-            gap: var(--spacing-s);
             justify-content: flex-start;
             flex-wrap: wrap;
+            gap: var(--spacing-s);
         }
         :host(.tag) ul {
             display: inline;
