@@ -511,7 +511,7 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 
 		fetched, err := solver.Verify(r)
 		if err != nil {
-			o.Logger.WithContext(lw.Ctx{"log": "auth", "err": err.Error()}).Warnf("Failed to load actor")
+			o.Logger.WithContext(lw.Ctx{"log": "auth", "err": fmt.Sprintf("%+v", err)}).Warnf("Failed to load actor")
 		}
 		*r = *r.WithContext(context.WithValue(r.Context(), authorizedActorCtxKey, fetched))
 		author = fetched
@@ -830,7 +830,10 @@ func (o *oni) StopBlocked(next http.Handler) http.Handler {
 
 		if !oniActor.Equals(auth.AnonymousActor) {
 			blocked := o.loadBlockedActors(oniActor)
-			act, _ := o.loadAuthorizedActor(r, oniActor)
+			act, err := o.loadAuthorizedActor(r, oniActor)
+			if err != nil {
+				o.Logger.WithContext(lw.Ctx{"actor": act.ID, "by": oniActor.ID, "log": "auth", "err": fmt.Sprintf("%+v", err)}).Warnf("Failed to load actor")
+			}
 			ctx := context.WithValue(r.Context(), blockedActorsCtxKey, blocked)
 			if !act.GetLink().Equal(auth.AnonymousActor.GetLink()) {
 				ctx = context.WithValue(ctx, authorizedActorCtxKey, act)
