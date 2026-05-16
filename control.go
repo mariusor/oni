@@ -434,7 +434,7 @@ func (c *Control) CreateOAuth2ClientAlways(i vocab.IRI, pw string) error {
 		RedirectUri: strings.Join(uris, "\n"),
 		UserData:    i,
 	}
-	return c.Storage.CreateClient(cl)
+	return c.Storage.SaveClient(cl)
 }
 
 func (c *Control) AddActorWithPassword(p *vocab.Person, pw []byte, author vocab.Actor) (*vocab.Person, error) {

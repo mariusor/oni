@@ -18,6 +18,7 @@ import (
 
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/ssm"
+	"git.sr.ht/~mariusor/storage-all"
 	ct "github.com/elnormous/contenttype"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
@@ -226,7 +227,7 @@ func isObjectProp(prop string) bool {
 	return slices.Contains(objectProps, prop)
 }
 
-func loadItemFromStorage(s ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.Item, error) {
+func loadItemFromStorage(s storage.ReadStore, iri vocab.IRI, f ...filters.Check) (vocab.Item, error) {
 	var isObjProperty bool
 	var prop string
 

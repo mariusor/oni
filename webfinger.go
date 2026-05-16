@@ -709,7 +709,7 @@ func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 				UserData:    userData,
 			}
 
-			if err = o.Storage.CreateClient(d); err != nil {
+			if err = o.Storage.SaveClient(d); err != nil {
 				o.Error(errors.Newf("unable to save OAuth2 client application")).ServeHTTP(w, r)
 				return
 			}

@@ -391,7 +391,7 @@ func (c ChangePassword) Run(ctl *Control) error {
 			RedirectUri: client.GetRedirectUri(),
 			UserData:    client.GetUserData(),
 		}
-		if err := ctl.Storage.UpdateClient(&toUpdate); err != nil {
+		if err := ctl.Storage.SaveClient(&toUpdate); err != nil {
 			return err
 		}
 	}

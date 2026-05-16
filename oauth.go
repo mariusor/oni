@@ -2,7 +2,6 @@ package oni
 
 import (
 	"bytes"
-	"crypto"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -20,71 +19,9 @@ import (
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/auth"
 	"github.com/go-ap/errors"
-	"github.com/go-ap/filters"
 	"github.com/openshift/osin"
 	"golang.org/x/oauth2"
 )
-
-type ClientSaver interface {
-	// UpdateClient updates the client (identified by it's id) and replaces the values with the values of client.
-	UpdateClient(c osin.Client) error
-	// CreateClient stores the client in the database and returns an error, if something went wrong.
-	CreateClient(c osin.Client) error
-	// RemoveClient removes a client (identified by id) from the database. Returns an error if something went wrong.
-	RemoveClient(id string) error
-}
-
-type ClientLister interface {
-	GetClient(id string) (osin.Client, error)
-}
-
-type FullStorage interface {
-	ClientSaver
-	ClientLister
-	PasswordChanger
-	osin.Storage
-	Store
-	KeyLoader
-	MetadataStorage
-}
-
-type KeyLoader interface {
-	LoadKey(vocab.IRI) (crypto.PrivateKey, error)
-}
-
-type Store interface {
-	ReadStore
-	WriteStore
-	CollectionStore
-}
-
-type ReadStore interface {
-	// Load returns an Item or an ItemCollection from an IRI
-	// after filtering it through the FilterFn list of filtering functions. Eg ANY()
-	Load(vocab.IRI, ...filters.Check) (vocab.Item, error)
-}
-
-// WriteStore saves ActivityStreams objects.
-type WriteStore interface {
-	// Save saves the incoming ActivityStreams Object, and returns it together with any properties
-	// populated by the method's side effects. (eg, Published property can point to the current time, etc.).
-	Save(vocab.Item) (vocab.Item, error)
-	// Delete deletes completely from storage the ActivityStreams Object
-	Delete(vocab.Item) error
-}
-
-// CollectionStore allows operations on ActivityStreams collections
-type CollectionStore interface {
-	// AddTo adds "it" element to the "col" collection.
-	AddTo(vocab.IRI, ...vocab.Item) error
-	// RemoveFrom removes "it" item from "col" collection
-	RemoveFrom(vocab.IRI, ...vocab.Item) error
-}
-
-type PasswordChanger interface {
-	PasswordSet(vocab.IRI, []byte) error
-	PasswordCheck(vocab.IRI, []byte) error
-}
 
 type authModel struct {
 	AuthorizeURL string `json:"authorizeURL"`

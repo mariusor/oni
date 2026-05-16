@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"git.sr.ht/~mariusor/lw"
+	"git.sr.ht/~mariusor/storage-all"
 	vocab "github.com/go-ap/activitypub"
 	"github.com/go-ap/client/debug"
 	"github.com/go-ap/errors"
@@ -161,7 +162,7 @@ func generateClientID(by vocab.Item, uid *uuid.UUID) (vocab.ID, error) {
 	return by.GetLink().AddPath("clients").AddPath(uid.String()), nil
 }
 
-func LoadClientActorByID(repo FullStorage, app vocab.Actor, clientID vocab.IRI) (*vocab.Actor, error) {
+func LoadClientActorByID(repo storage.FullStorage, app vocab.Actor, clientID vocab.IRI) (*vocab.Actor, error) {
 	// check for existing application actor
 	clientActorItem, err := repo.Load(clientID)
 	if err == nil || !errors.IsNotFound(err) {
@@ -316,7 +317,7 @@ func (o *oni) FetchClientMetadata(clientID vocab.IRI, oniActor vocab.Actor) (*Cl
 	return &c, nil
 }
 
-func CreateOAuthClient(st FullStorage, clientActor *vocab.Actor, redirect []string, pw, userData []byte) (osin.Client, error) {
+func CreateOAuthClient(st storage.FullStorage, clientActor *vocab.Actor, redirect []string, pw, userData []byte) (osin.Client, error) {
 	id := string(clientActor.GetID())
 	if id == "" {
 		return nil, errors.Newf("invalid actor saved, id is null")
@@ -333,7 +334,7 @@ func CreateOAuthClient(st FullStorage, clientActor *vocab.Actor, redirect []stri
 		UserData:    userData,
 	}
 
-	if err := st.CreateClient(d); err != nil {
+	if err := st.SaveClient(d); err != nil {
 		return nil, errors.Annotatef(err, "unable to save OAuth2 client application")
 	}
 	return d, nil
