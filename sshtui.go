@@ -4,6 +4,8 @@ package oni
 
 import (
 	"fmt"
+	"io"
+	"log/slog"
 
 	tea "charm.land/bubbletea/v2"
 	"git.sr.ht/~mariusor/motley"
@@ -25,5 +27,6 @@ func wishTUI(s ssh.Session, o *oni) *tea.Program {
 	}
 	opts := []tea.ProgramOption{tea.WithInput(s), tea.WithOutput(s), tea.WithColorProfile(colorprofile.ANSI256)}
 	st := motley.WithStore(o.Storage, acc, env)
-	return tea.NewProgram(motley.Model(o.Logger, st), opts...)
+	ll := slog.New(slog.NewTextHandler(io.Discard, nil))
+	return tea.NewProgram(motley.Model(ll, st), opts...)
 }
