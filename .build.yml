@@ -47,6 +47,12 @@ tasks:
       echo "${_user}:10000:65536" | sudo tee /etc/subuid
       echo "${_user}:10000:65536" | sudo tee /etc/subgid
       podman system migrate
+      
+      ## NOTE(marius): without these, building the images with podman 1.44 fails with permission errors on
+      ## /run/containers/storage and /var/lib/containers/storage/storage.lock
+      sudo mkdir -p /run/containers/storage
+      sudo chown build: -R /run/containers
+      sudo chown build: -R /var/lib/containers
 
       podman login -u="${BUILDAH_USER}" -p="${BUILDAH_SECRET}" quay.io
 
