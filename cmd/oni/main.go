@@ -49,11 +49,11 @@ func main() {
 		oni.CLI.Path = path
 	}
 
-	ll := lw.Dev()
-	if oni.CLI.Verbose {
-		ll = lw.Dev(lw.SetLevel(lw.DebugLevel))
-	}
-	ll = ll.WithContext(lw.Ctx{"path": oni.CLI.Path})
+	// NOTE(marius): no verbosity means show only warnings and errors
+	// verbosity = 1 means show info messages
+	// verbosity = 2 debug messages
+	// verbosity = 3 tracing messages
+	ll := lw.Dev(lw.SetLevel(lw.WarnLevel - lw.Level(oni.CLI.Verbose))).WithContext(lw.Ctx{"path": oni.CLI.Path})
 	ctl, err := oni.SetupCtl(oni.CLI.Path, ll, storageType)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)

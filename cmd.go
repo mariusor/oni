@@ -33,7 +33,7 @@ type SSH struct {
 var CLI struct {
 	SSH
 	Path    string `default:"${default_path}" help:"Storage path (or DSN) for the ActivityPub storage. DSN can have the format type:///path/to/storage."`
-	Verbose bool   `default:"false" help:"Show verbose log output"`
+	Verbose int    `default:"0" help:"Show verbose log output" type:"counter" short:"v"`
 
 	Run Run `cmd:"" help:"Run the ${name} instance server (version: ${version})" default:"withargs"`
 }
