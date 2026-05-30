@@ -1,10 +1,10 @@
 # Oni
 
-Is a single user ActivityPub server compatible with Mastodon and the rest of the Fediverse.
+Is a single user ActivityPub server compatible with the Fediverse.
 
 It is part of the tools built for and with the help with of the [GoActivityPub](https://github.com/go-ap) library.
 
-![ONI main page after fresh install](https://git.sr.ht/~mariusor/go-activitypub-doc/blob/master/oni/img/oni-index.png)
+![ONI main page after fresh install](https://go-activitypub.federated.id/apps/oni/img/oni-index.avif)
 
 ## Getting the source
 
@@ -22,7 +22,7 @@ Another option for running ONI is to use the pre-built images. More details abou
 Posting to an ONI instance is done using Client to Server ActivityPub. 
 Currently, the client that supports most features is [BOX](https://git.sr.ht/~mariusor/box).
 
-The application supports text posts, image, audio and video uploads.
+The application supports text posts, image, audio and short video uploads.
 
 ## Compiling
 
@@ -81,9 +81,9 @@ $ oni block --client https://johndoe.example.com https://naughty.social
 ### Documentation
 
 Further reading on how to use ONI can be found on
-the [SourceHut wiki](https://man.sr.ht/~mariusor/go-activitypub/oni/index.md).
+the [wiki](https://go-activitypub.federated.id/apps/oni/).
 
-The wiki also contains [more examples](https://man.sr.ht/~mariusor/go-activitypub/oni/box-cli-examples.md) than the ones
+The wiki also contains [more examples](https://go-activitypub.federated.id/apps/oni/box-cli-examples.html) than the ones
 detailed here about how to use BOX for managing an ONI instance.
 
 ### Authorization
@@ -104,7 +104,7 @@ $ box post --as https://johndoe.example.com --iri https://johndoe.example.com/po
 --name "First Post" --content "Hello Fediverse⁂!"
 ```
 
-![First post](https://git.sr.ht/~mariusor/go-activitypub-doc/blob/master/apps/oni/img/oni-first-post.png)
+![First post](https://go-activitypub.federated.id/apps/oni/img/oni-first-post.avif)
 
 ### Upload an image
 
