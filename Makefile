@@ -95,7 +95,7 @@ clean: ## Cleanup the build workspace.
 	$(GO) clean
 	$(MAKE) -C images $@
 
-images: ## Build podman images.
+images: ## Build OCI images.
 	$(MAKE) -C images $@
 
 test: TEST_TARGET := ./...

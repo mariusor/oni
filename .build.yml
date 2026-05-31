@@ -5,7 +5,6 @@ secrets:
 packages:
   - go
   - yarn
-  - podman
   - buildah
 sources:
   - https://git.sr.ht/~mariusor/oni
@@ -43,18 +42,18 @@ tasks:
 
       _user=$(id -un)
 
-      echo 'unqualified-search-registries = ["docker.io"]' | sudo tee /etc/containers/registries.conf.d/unq-search.conf
       echo "${_user}:10000:65536" | sudo tee /etc/subuid
       echo "${_user}:10000:65536" | sudo tee /etc/subgid
-      podman system migrate
-      
-      ## NOTE(marius): without these, building the images with podman 1.44 fails with permission errors on
-      ## /run/containers/storage and /var/lib/containers/storage/storage.lock
-      sudo mkdir -p /run/containers/storage
-      sudo chown build: -R /run/containers
-      sudo chown build: -R /var/lib/containers
 
-      podman login -u="${BUILDAH_USER}" -p="${BUILDAH_SECRET}" quay.io
+      echo 'unqualified-search-registries = ["docker.io"]' | sudo tee /etc/containers/registries.conf.d/unq-search.conf
+
+      # setting up rootless storage options
+      sudo mkdir -p /etc/containers/storage.rootless.conf.d/
+      echo '[storage]' | sudo tee /etc/containers/storage.rootless.conf.d/default.conf
+      echo 'runroot = "/tmp/buildah/storage"' | sudo tee -a /etc/containers/storage.rootless.conf.d/default.conf
+      echo 'graphroot = "/tmp/buildah/containers/"' | sudo tee -a /etc/containers/storage.rootless.conf.d/default.conf
+
+      buildah login -u="${BUILDAH_USER}" -p="${BUILDAH_SECRET}" quay.io
 
       set --
 
