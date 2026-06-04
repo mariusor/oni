@@ -108,7 +108,7 @@ func pemEncodePublicKey(prvKey *rsa.PrivateKey) string {
 	return string(pem.EncodeToMemory(&p))
 }
 
-func GenerateID(it vocab.Item, col vocab.Item, by vocab.Item) (vocab.ID, error) {
+func GenerateID(it vocab.Item, by vocab.Item) (vocab.ID, error) {
 	if it.GetID() != "" {
 		return it.GetID(), nil
 	}

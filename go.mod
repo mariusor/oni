@@ -12,7 +12,7 @@ require (
 	git.sr.ht/~mariusor/servermux v0.0.0-20260310142041-b6c9be7e7820
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20260506142007-654c9c8b3833
 	git.sr.ht/~mariusor/ssm v0.0.0-20260505081700-875e54c38633
-	git.sr.ht/~mariusor/storage-all v0.0.0-20260602085951-92e3932ba2c4
+	git.sr.ht/~mariusor/storage-all v0.0.0-20260604131814-cb63838e6039
 	git.sr.ht/~mariusor/wrapper v0.0.0-20260103185140-9873830de009
 	github.com/alecthomas/kong v1.15.0
 	github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309
@@ -24,7 +24,7 @@ require (
 	github.com/go-ap/errors v0.0.0-20260208110149-e1b309365966
 	github.com/go-ap/filters v0.0.0-20260602081319-5ed1fa02cd11
 	github.com/go-ap/jsonld v0.0.0-20251216162253-e38fa664ea77
-	github.com/go-ap/processing v0.0.0-20260604101118-4daf6b9077ba
+	github.com/go-ap/processing v0.0.0-20260604130410-7fcdc47e0723
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
