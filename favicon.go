@@ -98,7 +98,7 @@ func (o *oni) ServeFavIcon(w http.ResponseWriter, r *http.Request) {
 		orig, err = svgDecode(&f)
 	default:
 	}
-	if err != nil {
+	if err != nil || orig == nil {
 		o.Error(errors.NotFoundf("failed to open image: %s", err)).ServeHTTP(w, r)
 		return
 	}
