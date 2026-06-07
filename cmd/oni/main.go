@@ -13,6 +13,8 @@ import (
 	"github.com/alecthomas/kong"
 )
 
+var DefaultLogLevel = lw.WarnLevel
+
 func main() {
 	if build, ok := debug.ReadBuildInfo(); ok && oni.Version == "HEAD" {
 		if build.Main.Version != "(devel)" {
@@ -53,7 +55,7 @@ func main() {
 	// verbosity = 1 means show info messages
 	// verbosity = 2 debug messages
 	// verbosity = 3 tracing messages
-	ll := lw.Dev(lw.SetLevel(lw.WarnLevel - lw.Level(oni.CLI.Verbose)))
+	ll := lw.Dev(lw.SetLevel(DefaultLogLevel - lw.Level(oni.CLI.Verbose)))
 	ctl, err := oni.SetupCtl(oni.CLI.Path, ll, storageType)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
