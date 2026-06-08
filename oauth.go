@@ -3,12 +3,10 @@ package oni
 import (
 	"bytes"
 	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
-	mrand "math/rand/v2"
 	"net/http"
 	"net/url"
 	"strings"
@@ -111,6 +109,10 @@ func authServer(o *oni) *osin.Server {
 	return s
 }
 
+func randStateBytes() string {
+	return rand.Text()[:16]
+}
+
 func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 	a, err := loadBaseActor(o, r)
 	if err != nil {
@@ -121,7 +123,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 	acceptableMediaTypes := []ct.MediaType{fallbackHTML, applicationJson}
 	acc, _, _ := ct.GetAcceptableMediaType(r, acceptableMediaTypes)
 	if r.Method == http.MethodGet && !acc.EqualsMIME(fallbackHTML) {
-		state := base64.URLEncoding.EncodeToString(authKey())
+		state := randStateBytes()
 		m := authModel{
 			AuthorizeURL: AuthorizeURL(a, state),
 			State:        state,
@@ -297,30 +299,6 @@ const (
 	// from the client side. See: https://www.rfc-editor.org/rfc/rfc8252#section-7.3
 	DefaultBOXAppRedirectURL = "http://127.0.0.1"
 )
-
-var authKey = func() []byte {
-	v1 := mrand.Int()
-	v2 := mrand.Int()
-	b := [16]byte{
-		byte(0xff & v1),
-		byte(0xff & v2),
-		byte(0xff & (v1 >> 8)),
-		byte(0xff & (v2 >> 8)),
-		byte(0xff & (v1 >> 16)),
-		byte(0xff & (v2 >> 16)),
-		byte(0xff & (v1 >> 24)),
-		byte(0xff & (v2 >> 24)),
-		byte(0xff & (v1 >> 32)),
-		byte(0xff & (v2 >> 32)),
-		byte(0xff & (v1 >> 40)),
-		byte(0xff & (v2 >> 40)),
-		byte(0xff & (v1 >> 48)),
-		byte(0xff & (v2 >> 48)),
-		byte(0xff & (v1 >> 56)),
-		byte(0xff & (v2 >> 56)),
-	}
-	return b[:]
-}
 
 func backURL(r *http.Request) template.URL {
 	if r.URL == nil || r.URL.Query() == nil {
