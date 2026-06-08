@@ -36,7 +36,7 @@ export async function fetchActivityPubIRI(iri) {
                 if (response.status === 200) {
                     response.json().then(v => resolve(new ActivityPubItem(v)));
                 } else {
-                    reject(`Invalid status received ${response.status}: ${response.statusText}`);jj
+                    reject(`Invalid status received ${response.status}: ${response.statusText}`);
                 }
             }).catch(e => reject(e));
         }

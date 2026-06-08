@@ -195,18 +195,15 @@ func (o *oni) Run(c context.Context) error {
 		sockType = "TCP"
 		setters = append(setters, m.OnTCP(o.Listen))
 	}
-	logCtx := lw.Ctx{
-		"version": Version,
-		"socket":  o.Listen,
-	}
-	if sockType != "" {
-		logCtx["socket"] = o.Listen + "[" + sockType + "]"
-	}
+	logCtx := lw.Ctx{"version": Version, "path": o.StoragePath}
 
 	// Get start/stop functions for the http server
 	httpSrv, err := m.HttpServer(setters...)
 	if err != nil {
 		return err
+	}
+	if sockType != "" {
+		o.Logger.WithContext(lw.Ctx{"socket": o.Listen, "type": sockType}).Debugf("Accepting HTTP requests")
 	}
 	muxSetters := []m.MuxFn{m.WithServer(httpSrv), m.GracefulWait(defaultGraceWait)}
 

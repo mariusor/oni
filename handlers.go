@@ -1161,10 +1161,8 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
 		}
 		if it, err = processor.ProcessActivity(it, author, receivedIn); err != nil {
-			lctx["err"] = err.Error()
-			o.Logger.WithContext(lctx).Errorf("Failed processing activity")
-			err = errors.Annotatef(err, "Can't save %q activity to %s", it.GetType(), receivedIn)
-			return it, errors.HttpStatus(err), err
+			o.Logger.WithContext(lctx, lw.Ctx{"err": err.Error()}).Errorf("Failed processing activity")
+			return it, http.StatusBadRequest, errors.Annotatef(err, "Can't save %q activity to %s", it.GetType(), receivedIn)
 		}
 
 		// NOTE(marius): if we received a Follow from a remote actor we automatically Accept

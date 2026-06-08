@@ -121,7 +121,7 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 			tr = s2s.New(
 				s2s.WithTransport(tr), s2s.WithActor(&actor, prv),
 				s2s.WithLogger(l.WithContext(lctx)),
-				s2s.WithCoveredComponents("@method", "@target-uri"),
+				s2s.WithCoveredComponents(s2s.FetchCoveredComponents...),
 			)
 		}
 	}

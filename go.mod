@@ -12,19 +12,19 @@ require (
 	git.sr.ht/~mariusor/servermux v0.0.0-20260310142041-b6c9be7e7820
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20260506142007-654c9c8b3833
 	git.sr.ht/~mariusor/ssm v0.0.0-20260505081700-875e54c38633
-	git.sr.ht/~mariusor/storage-all v0.0.0-20260607144547-cf7378c10a3f
+	git.sr.ht/~mariusor/storage-all v0.0.0-20260608182844-541139ef950b
 	git.sr.ht/~mariusor/wrapper v0.0.0-20260103185140-9873830de009
 	github.com/alecthomas/kong v1.15.0
 	github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.28.0
 	github.com/go-ap/activitypub v0.0.0-20260607141243-4f8aa4005e65
-	github.com/go-ap/auth v0.0.0-20260608124115-b86a727ac4f9
-	github.com/go-ap/client v0.0.0-20260608124537-75b34b81c020
+	github.com/go-ap/auth v0.0.0-20260608182917-5a37f28b85e8
+	github.com/go-ap/client v0.0.0-20260608175636-b68cfe199b10
 	github.com/go-ap/errors v0.0.0-20260607141156-afed270859b6
 	github.com/go-ap/filters v0.0.0-20260607141701-131281f883a2
 	github.com/go-ap/jsonld v0.0.0-20260607140920-737b40e0ca38
-	github.com/go-ap/processing v0.0.0-20260608124615-1650b296cb07
+	github.com/go-ap/processing v0.0.0-20260608181948-5ffcf84b88fe
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -37,7 +37,7 @@ require (
 	github.com/srwiley/rasterx v0.0.0-20220730225603-2ab79fcdd4ef
 	github.com/valyala/fastjson v1.6.10
 	golang.org/x/oauth2 v0.36.0
-	golang.org/x/term v0.43.0
+	golang.org/x/term v0.44.0
 )
 
 require (
@@ -120,13 +120,13 @@ require (
 	go.opentelemetry.io/otel v1.44.0 // indirect
 	go.opentelemetry.io/otel/metric v1.44.0 // indirect
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
-	golang.org/x/crypto v0.52.0
+	golang.org/x/crypto v0.53.0
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/image v0.41.0 // indirect
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
 	modernc.org/libc v1.73.0 // indirect
