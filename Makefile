@@ -8,7 +8,6 @@ MAKEFLAGS += --no-builtin-rules
 PROJECT_NAME ?= oni
 APP_HOSTNAME ?= $(PROJECT_NAME)
 ENV ?= dev
-VERSION ?= HEAD
 
 LDFLAGS ?= -X git.sr.ht/~mariusor/oni.Version=$(VERSION)
 BUILDFLAGS ?= -ldflags '$(LDFLAGS)' -tags "$(TAGS)"
