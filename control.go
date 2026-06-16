@@ -122,6 +122,7 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 				s2s.WithTransport(tr), s2s.WithActor(&actor, prv), s2s.WithAlg(s2s.KeyTypePKCS),
 				s2s.WithLogger(l.WithContext(lctx)),
 				s2s.WithCoveredComponents(s2s.FetchCoveredComponents...),
+				s2s.NoRFC9421,
 			)
 		}
 	}
