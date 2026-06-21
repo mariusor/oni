@@ -97,9 +97,14 @@ func (o *oni) ServeFavIcon(w http.ResponseWriter, r *http.Request) {
 	case contentType.Matches(imageSvg):
 		orig, err = svgDecode(&f)
 	default:
+		err = errors.Newf("invalid image type: %s", contentType)
 	}
-	if err != nil || orig == nil {
-		o.Error(errors.NotFoundf("failed to open image: %s", err)).ServeHTTP(w, r)
+	if err != nil {
+		o.Error(errors.NewNotFound(err, "failed to open image")).ServeHTTP(w, r)
+		return
+	}
+	if orig == nil {
+		o.Error(errors.NotFoundf("failed to open image")).ServeHTTP(w, r)
 		return
 	}
 
