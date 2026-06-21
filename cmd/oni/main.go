@@ -16,18 +16,8 @@ import (
 var DefaultLogLevel = lw.WarnLevel
 
 func main() {
-	if build, ok := debug.ReadBuildInfo(); ok && oni.Version == "HEAD" {
-		if build.Main.Version != "(devel)" {
-			oni.Version = build.Main.Version
-		}
-		for _, bs := range build.Settings {
-			if bs.Key == "vcs.revision" {
-				oni.Version = bs.Value[:8]
-			}
-			if bs.Key == "vcs.modified" {
-				oni.Version += "-git"
-			}
-		}
+	if build, ok := debug.ReadBuildInfo(); ok && oni.Version == "HEAD" && build.Main.Version != "(devel)" {
+		oni.Version = build.Main.Version
 	}
 
 	ctx := kong.Parse(&oni.CLI,
