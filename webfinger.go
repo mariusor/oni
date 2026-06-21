@@ -17,7 +17,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/storage-all"
@@ -612,7 +611,7 @@ func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 		var d osin.Client
 		var status int
 
-		now := time.Now().UTC()
+		now := TimeNow()
 		name := regReq.ClientName
 		urls := make(vocab.ItemCollection, 0)
 

@@ -152,6 +152,8 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 	})
 }
 
+var TimeNow = func() time.Time { return time.Now().Truncate(time.Millisecond).UTC() }
+
 func binDataFromItem(it vocab.Item, w io.Writer) (contentType ct.MediaType, updatedAt time.Time, err error) {
 	updatedAt = TimeNow()
 	err = vocab.OnObject(it, func(ob *vocab.Object) error {
