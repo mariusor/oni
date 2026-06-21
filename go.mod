@@ -19,10 +19,11 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.28.0
 	github.com/go-ap/activitypub v0.0.0-20260607141243-4f8aa4005e65
-	github.com/go-ap/client v0.0.0-20260602081403-3bc9311bcf94
+	github.com/go-ap/client v0.0.0-20260621130221-3f12a15c3bce
 	github.com/go-ap/errors v0.0.0-20260607141156-afed270859b6
 	github.com/go-ap/filters v0.0.0-20260607141701-131281f883a2
 	github.com/go-ap/jsonld v0.0.0-20260607140920-737b40e0ca38
+	github.com/go-ap/processing v0.0.0-20260621130550-bf12ca788e7d
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -51,7 +52,7 @@ require (
 	github.com/captncraig/cors v0.0.0-20190703115713-e80254a89df1 // indirect
 	github.com/carlmjohnson/requests v0.25.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/charmbracelet/colorprofile v0.4.3
+	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/keygen v0.5.4 // indirect
 	github.com/charmbracelet/ultraviolet v0.0.0-20260615092913-2399af76d5b1 // indirect
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect
@@ -68,9 +69,8 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-ap/auth v0.0.0-20260602081500-3c51b86328e7 // indirect
+	github.com/go-ap/auth v0.0.0-20260621130523-1e4e4f6887a1
 	github.com/go-ap/cache v0.0.0-20260607141501-80f9206d91a9 // indirect
-	github.com/go-ap/processing v0.0.0-20260602081600-df6c8e2144fa // indirect
 	github.com/go-ap/storage-badger v0.0.0-20260607143812-c8e1da0a5729 // indirect
 	github.com/go-ap/storage-boltdb v0.0.0-20260607144013-66c998cda8bd // indirect
 	github.com/go-ap/storage-fs v0.0.0-20260607142707-cbd5ea08c8ae // indirect
@@ -97,7 +97,7 @@ require (
 	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/mattn/go-runewidth v0.0.24 // indirect
-	github.com/mattn/go-sqlite3 v1.14.45 // indirect
+	github.com/mattn/go-sqlite3 v1.14.46 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
@@ -132,6 +132,6 @@ require (
 	modernc.org/libc v1.73.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.52.0 // indirect
+	modernc.org/sqlite v1.53.0 // indirect
 	quamina.net/go/quamina/v2 v2.0.2 // indirect
 )

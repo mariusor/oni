@@ -11,6 +11,7 @@ import (
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/storage-all"
 	vocab "github.com/go-ap/activitypub"
+	"github.com/go-ap/client"
 	"github.com/go-ap/client/debug"
 	"github.com/go-ap/errors"
 	"github.com/go-ap/filters"
@@ -290,7 +291,7 @@ func (o *oni) FetchClientMetadata(clientID vocab.IRI, oniActor vocab.Actor) (*Cl
 	}
 
 	ctx := context.Background()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, clientID.String(), nil)
+	req, err := client.FetchRequest(ctx, clientID.String(), http.MethodGet)
 	if err != nil {
 		return nil, err
 	}

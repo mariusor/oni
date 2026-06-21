@@ -112,16 +112,20 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 	}
 
 	ua := fmt.Sprintf("%s@%s (+%s %s)", nameOni, Version, actor.GetLink(), ProjectURL)
-	tr := client.UserAgentTransport(ua, cache.Private(http.DefaultTransport, cache.FS(filepath.Join(cachePath, "oni"))))
+	tr := http.DefaultTransport
+	if IsDev {
+		tr = cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni")))
+	}
+	tr = client.UserAgentTransport(ua, tr)
 	if !vocab.PublicNS.Equals(actor.ID, true) {
 		if prv, _ := st.LoadKey(actor.ID); prv != nil {
 			lctx["transport"] = "HTTP-Sig"
 			lctx["actor"] = actor.GetLink()
 			tr = s2s.New(
-				s2s.WithTransport(tr), s2s.WithActor(&actor, prv), s2s.WithAlg(s2s.KeyTypePKCS),
+				s2s.WithTransport(tr), s2s.WithActor(&actor, prv),
 				s2s.WithLogger(l.WithContext(lctx)),
 				s2s.WithCoveredComponents(s2s.FetchCoveredComponents...),
-				s2s.NoRFC9421,
+				s2s.WithAlg(s2s.KeyTypePKCS),
 			)
 		}
 	}
