@@ -30,3 +30,20 @@ $ podman run --network=host --name=ONI -v /var/cache/oni:/storage quay.io/go-ap/
 $ podman exec ONI oni reload
 ```
 
+### Running commands using ssh
+
+As you could see from the run command example, the service by default listens for SSH connections, which accept
+the same commands that can be executed through the CLI.
+
+This however requires that you have the root actor's password available to you, or whichever actor you use for the commands.
+
+So for the server above we could execute the following:
+
+```sh
+# https://oni.example.com is the "username" sent by the ssh client to ONI.
+# Currently this needs to be the full Actor IRI.
+#
+# ⚠️ The '-tt' flag forces ssh to allocate a PTY for the command execution, which is advised in order for the
+# password inputs to not get echoed upon typing them.
+$ ssh -tt https://oni.example.com@127.0.2.1 -p 4022 -- reload
+```
