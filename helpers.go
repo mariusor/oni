@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
-	"time"
 
 	vocab "github.com/go-ap/activitypub"
 )
@@ -115,7 +114,7 @@ func GenerateID(it vocab.Item, by vocab.Item) (vocab.ID, error) {
 
 	typ := it.GetType()
 
-	uuid := fmt.Sprintf("%d", time.Now().UTC().UnixMilli())
+	uuid := fmt.Sprintf("%d", TimeNow().UnixMilli())
 
 	if vocab.ActivityTypes.Match(typ) || vocab.IntransitiveActivityTypes.Match(typ) {
 		err := vocab.OnActivity(it, func(a *vocab.Activity) error {

@@ -24,7 +24,7 @@ func Log(l lw.Logger) func(next http.Handler) http.Handler {
 			buf := bytes.NewBuffer(make([]byte, 0, 512))
 			ww.Tee(buf)
 
-			t1 := time.Now()
+			t1 := time.Now().Truncate(time.Millisecond).UTC()
 			defer func() {
 				entry.Write(ww.Status(), ww.BytesWritten(), ww.Header(), time.Since(t1), nil)
 			}()

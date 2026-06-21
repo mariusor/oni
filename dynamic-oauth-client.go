@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/storage-all"
@@ -114,7 +113,7 @@ func (o *oni) ValidateOrCreateClient(r *http.Request, oniActor vocab.Actor) (*vo
 }
 
 func GeneratedClientActor(author vocab.Item, clientRequest *ClientMetadata) *vocab.Actor {
-	now := time.Now().Truncate(time.Second).UTC()
+	now := TimeNow()
 
 	// NOTE(marius): when we create a new Application client actor based on Dynamic Metadata Document the
 	// client ID we loaded from there will not correspond to the local generated Application Actor ID, but

@@ -153,7 +153,7 @@ func (o *oni) setupActivityPubRoutes(m chi.Router) {
 }
 
 func binDataFromItem(it vocab.Item, w io.Writer) (contentType ct.MediaType, updatedAt time.Time, err error) {
-	updatedAt = time.Now()
+	updatedAt = TimeNow()
 	err = vocab.OnObject(it, func(ob *vocab.Object) error {
 		if !mediaTypes.Match(ob.Type) {
 			return errors.NotSupportedf("invalid object")
@@ -428,7 +428,7 @@ func (o *oni) ServeActivityPubItem(it vocab.Item) http.HandlerFunc {
 	}
 
 	eTag := fmt.Sprintf(`"%2x"`, md5.Sum(dat))
-	updatedAt := time.Now()
+	updatedAt := TimeNow()
 	_ = vocab.OnObject(it, func(o *vocab.Object) error {
 		updatedAt = o.Published
 		if !o.Updated.IsZero() {
@@ -685,7 +685,7 @@ func tryPushStaticAssets(w http.ResponseWriter, r *http.Request) error {
 func (o *oni) ServeHTML(it vocab.Item) http.HandlerFunc {
 	templatePath := "components/item"
 
-	updatedAt := time.Now()
+	updatedAt := TimeNow()
 	_ = vocab.OnObject(it, func(o *vocab.Object) error {
 		updatedAt = o.Published
 		if !o.Updated.IsZero() {

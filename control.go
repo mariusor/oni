@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"git.sr.ht/~mariusor/cache"
 	"git.sr.ht/~mariusor/lw"
@@ -217,7 +216,7 @@ func (c *Control) GenAccessToken(clientID, actorIdentifier string, dat interface
 		return "", err
 	}
 
-	now := time.Now().UTC()
+	now := TimeNow()
 
 	u, err := url.Parse(actorIdentifier)
 	if err != nil {
@@ -391,7 +390,7 @@ func (c *Control) UpdateActorKey(actor *vocab.Actor) (*vocab.Actor, error) {
 	upd.Type = vocab.UpdateType
 	upd.Actor = actor.GetLink()
 	upd.Object = actor
-	upd.Published = time.Now().UTC()
+	upd.Published = TimeNow()
 	upd.To = vocab.ItemCollection{vocab.PublicNS}
 	upd.CC = vocab.ItemCollection{followers}
 
@@ -447,7 +446,7 @@ func (c *Control) AddActorWithPassword(p *vocab.Person, pw []byte, author vocab.
 		return nil, errors.Errorf("invalid parent actor")
 	}
 
-	createdAt := time.Now().UTC()
+	createdAt := TimeNow()
 	create := vocab.Activity{
 		Type:    vocab.CreateType,
 		To:      vocab.ItemCollection{vocab.PublicNS},

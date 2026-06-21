@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"strings"
 	"syscall"
-	"time"
 
 	"git.sr.ht/~mariusor/lw"
 	"git.sr.ht/~mariusor/oni/internal/xdg"
@@ -76,7 +75,7 @@ func (b Block) Run(ctl *Control) error {
 				ID:        blockedIRI,
 				Type:      vocab.OrderedCollectionType,
 				To:        vocab.ItemCollection{service.ID},
-				Published: time.Now().UTC(),
+				Published: TimeNow(),
 			}
 
 			if col, err = ctl.Storage.Save(col); err != nil {
@@ -448,7 +447,7 @@ func newOrderedCollection(id vocab.IRI, base vocab.IRI) *vocab.OrderedCollection
 		ID:        id,
 		Type:      vocab.OrderedCollectionType,
 		Generator: base,
-		Published: time.Now().UTC(),
+		Published: TimeNow(),
 	}
 }
 
