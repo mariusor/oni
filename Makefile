@@ -25,7 +25,7 @@ ROBOTS_TXT := $(wildcard src/robots.txt)
 
 ONI_BIN_SOURCES := $(wildcard ./cmd/oni/*.go)
 
-TAGS := $(ENV),ssh
+TAGS := $(ENV),ssh,tui
 
 export CGO_ENABLED=0
 export GOEXPERIMENT=greenteagc
