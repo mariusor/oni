@@ -38,6 +38,7 @@ body {
     background-color: var(--bg-color);
     align-items: start;
     min-height: 100vh;
+    scrollbar-gutter: stable;
 }
 
 a:link {
