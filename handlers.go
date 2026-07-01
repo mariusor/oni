@@ -158,10 +158,10 @@ func binDataFromItem(it vocab.Item, w io.Writer) (contentType ct.MediaType, upda
 	updatedAt = TimeNow()
 	err = vocab.OnObject(it, func(ob *vocab.Object) error {
 		if !mediaTypes.Match(ob.Type) {
-			return errors.NotSupportedf("invalid object")
+			return errors.UnsupportedMediaTypef("invalid object type: %s", ob.Type)
 		}
 		if len(ob.Content) == 0 {
-			return errors.NotSupportedf("invalid object content")
+			return errors.BadRequestf("invalid object content")
 		}
 		typ, raw, err := getBinData(ob.Content, ob.MediaType)
 		if err != nil {
@@ -491,10 +491,10 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 		return false, errors.MethodNotAllowedf("invalid HTTP method")
 	}
 	if !validContentType(contType) {
-		return false, errors.NotValidf("invalid content type")
+		return false, errors.UnsupportedMediaTypef("invalid object type: %s", contType)
 	}
 	if !validActivityCollection(r) {
-		return false, errors.NotValidf("invalid collection")
+		return false, errors.BadRequestf("invalid collection")
 	}
 
 	baseIRIs := make(vocab.IRIs, 0)
@@ -1141,17 +1141,17 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		if err != nil {
 			lctx["err"] = err.Error()
 			o.Logger.WithContext(lctx).Errorf("Failed loading body")
-			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
+			return it, http.StatusBadRequest, errors.NewBadRequest(err, "unable to read request body")
 		}
 		if len(body) == 0 {
 			o.Logger.WithContext(lctx).Errorf("Empty body received")
-			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to read request body")
+			return it, http.StatusInternalServerError, errors.Annotatef(err, "unable to read request body")
 		}
 
 		if it, err = vocab.UnmarshalJSON(body); err != nil {
 			lctx["err"] = err.Error()
 			o.Logger.WithContext(lctx).Errorf("Failed unmarshalling jsonld body")
-			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to unmarshal JSON request")
+			return it, http.StatusInternalServerError, errors.Annotatef(err, "unable to unmarshal JSON request")
 		}
 		if vocab.IsNil(it) {
 			return it, http.StatusInternalServerError, errors.BadRequestf("unable to unmarshal JSON request")
@@ -1160,7 +1160,7 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		if err != nil {
 			lctx["err"] = err.Error()
 			o.Logger.WithContext(lctx).Errorf("Failed initializing the Activity processor")
-			return it, http.StatusInternalServerError, errors.NewNotValid(err, "unable to initialize processor")
+			return it, http.StatusInternalServerError, errors.Annotatef(err, "unable to initialize processor")
 		}
 		if it, err = processor.ProcessActivity(it, author, receivedIn); err != nil {
 			o.Logger.WithContext(lctx, lw.Ctx{"err": err.Error()}).Errorf("Failed processing activity")

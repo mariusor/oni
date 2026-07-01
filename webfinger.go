@@ -597,7 +597,7 @@ func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 		body, err := io.ReadAll(r.Body)
 		if err != nil || len(body) == 0 {
 			o.Logger.WithContext(lw.Ctx{"err": err.Error()}).Errorf("Failed loading body")
-			o.Error(errors.NewNotValid(err, "unable to read request body")).ServeHTTP(w, r)
+			o.Error(errors.Annotatef(err, "unable to read request body")).ServeHTTP(w, r)
 			return
 		}
 
