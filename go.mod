@@ -19,11 +19,11 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.28.0
 	github.com/go-ap/activitypub v0.0.0-20260701132640-13f25467c431
-	github.com/go-ap/client v0.0.0-20260701132857-1eae75312fd8
+	github.com/go-ap/client v0.0.0-20260702141114-0578ecc0f151
 	github.com/go-ap/errors v0.0.0-20260701132509-92e5e4fd6394
 	github.com/go-ap/filters v0.0.0-20260701132827-4ad866f2a41d
 	github.com/go-ap/jsonld v0.0.0-20260607140920-737b40e0ca38
-	github.com/go-ap/processing v0.0.0-20260701132947-60cc9bce5def
+	github.com/go-ap/processing v0.0.0-20260702141713-c4563ff6c078
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -69,7 +69,7 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-ap/auth v0.0.0-20260701132931-4a449a92c47b
+	github.com/go-ap/auth v0.0.0-20260702141640-3b46b8663c0c
 	github.com/go-ap/cache v0.0.0-20260701132808-71a22e0f7796 // indirect
 	github.com/go-ap/storage-badger v0.0.0-20260701133418-ed201252e077 // indirect
 	github.com/go-ap/storage-boltdb v0.0.0-20260701133355-1aabc0c30181 // indirect
