@@ -116,30 +116,32 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 	if IsDev {
 		tr = cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni")))
 	}
-	tr = client.UserAgentTransport(ua, tr)
-	if !vocab.PublicNS.Equals(actor.ID, true) {
-		if prv, _ := st.LoadKey(actor.ID); prv != nil {
-			lctx["transport"] = "HTTP-Sig"
-			lctx["actor"] = actor.GetLink()
-			tr = s2s.New(
-				s2s.WithTransport(tr), s2s.WithActor(&actor, prv),
-				s2s.WithLogger(l.WithContext(lctx)),
-				s2s.WithCoveredComponents(s2s.FetchCoveredComponents...),
-				s2s.WithAlg(s2s.KeyTypePKCS),
-			)
-		}
-	}
-
 	if InDebugMode.Load() {
 		tr = debug.New(debug.WithTransport(tr), debug.WithPath(c.StoragePath))
 	}
 
 	baseClient := Client(tr)
-	return client.New(
+	initFns := []client.OptionFn{
+		client.WithUserAgent(ua),
 		client.WithHTTPClient(baseClient),
 		client.SkipTLSValidation(IsDev),
 		client.WithLogger(l.WithContext(lctx)),
-	)
+	}
+	if !vocab.PublicNS.Equals(actor.ID, true) {
+		if prv, _ := st.LoadKey(actor.ID); prv != nil {
+			lctx["transport"] = "HTTP-Sig"
+			lctx["actor"] = actor.GetLink()
+			signer, err := s2s.New(
+				s2s.WithActor(&actor, prv),
+				s2s.WithCoveredComponents(s2s.FetchCoveredComponents...),
+				s2s.WithAlg(s2s.KeyTypePKCS),
+			)
+			if err == nil {
+				initFns = append(initFns, client.WithAuthorizationFn(signer.SignRFC9421, signer.SignDraft))
+			}
+		}
+	}
+	return client.New(initFns...)
 }
 
 func (c *Control) CreateActor(iri vocab.IRI, pw string) (*vocab.Actor, error) {

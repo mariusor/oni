@@ -3,7 +3,7 @@ module git.sr.ht/~mariusor/oni
 go 1.25.9
 
 require (
-	charm.land/bubbletea/v2 v2.0.7
+	charm.land/bubbletea/v2 v2.0.8
 	charm.land/wish/v2 v2.0.1
 	git.sr.ht/~mariusor/cache v0.0.0-20260516133819-5427e9c3067b
 	git.sr.ht/~mariusor/lw v0.0.0-20250325163623-1639f3fb0e0d
@@ -19,11 +19,11 @@ require (
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.28.0
 	github.com/go-ap/activitypub v0.0.0-20260701132640-13f25467c431
-	github.com/go-ap/client v0.0.0-20260702141114-0578ecc0f151
+	github.com/go-ap/client v0.0.0-20260706114127-4a63a8b8a82f
 	github.com/go-ap/errors v0.0.0-20260701132509-92e5e4fd6394
 	github.com/go-ap/filters v0.0.0-20260701132827-4ad866f2a41d
 	github.com/go-ap/jsonld v0.0.0-20260607140920-737b40e0ca38
-	github.com/go-ap/processing v0.0.0-20260702141713-c4563ff6c078
+	github.com/go-ap/processing v0.0.0-20260706114434-884f18e4ce28
 	github.com/go-chi/chi/v5 v5.3.0
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -40,8 +40,8 @@ require (
 )
 
 require (
-	charm.land/bubbles/v2 v2.1.0 // indirect
-	charm.land/lipgloss/v2 v2.0.4 // indirect
+	charm.land/bubbles/v2 v2.1.1 // indirect
+	charm.land/lipgloss/v2 v2.0.5 // indirect
 	charm.land/log/v2 v2.0.0 // indirect
 	git.sr.ht/~mariusor/go-xsd-duration v0.0.0-20220703122237-02e73435a078 // indirect
 	github.com/RoaringBitmap/roaring v1.9.4 // indirect
@@ -54,7 +54,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/keygen v0.5.4 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260622092850-f39628c8a989 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260703014108-f5a850f9c2b7 // indirect
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect
 	github.com/charmbracelet/x/conpty v0.2.0 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
@@ -69,7 +69,7 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.4.0 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-ap/auth v0.0.0-20260702141640-3b46b8663c0c
+	github.com/go-ap/auth v0.0.0-20260706114402-71082cfd541a
 	github.com/go-ap/cache v0.0.0-20260701132808-71a22e0f7796 // indirect
 	github.com/go-ap/storage-badger v0.0.0-20260701133418-ed201252e077 // indirect
 	github.com/go-ap/storage-boltdb v0.0.0-20260701133355-1aabc0c30181 // indirect
