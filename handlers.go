@@ -1157,6 +1157,12 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			return it, http.StatusInternalServerError, errors.BadRequestf("unable to unmarshal JSON request")
 		}
 
+		// NOTE(marius): don't bother if it's a remote Delete and unable to load the Actor from the Signature
+		if processing.IsInbox(receivedIn) && it.GetType() == vocab.DeleteType && author.Equals(auth.AnonymousActor) {
+			o.Logger.WithContext(lctx).Infof("Skipping processing Delete activity with unknown actor")
+			return it, http.StatusUnauthorized, errors.Unauthorizedf("Unable to authorize activity actor")
+		}
+
 		if err != nil {
 			lctx["err"] = err.Error()
 			o.Logger.WithContext(lctx).Errorf("Failed initializing the Activity processor")
