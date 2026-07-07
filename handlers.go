@@ -485,16 +485,17 @@ func validActivityCollection(r *http.Request) bool {
 	return validActivityCollections.Contains(processing.Typer.Type(r))
 }
 
-func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
+func (o *oni) ValidateRequest(r *http.Request) (vocab.Actor, error) {
+	author := auth.AnonymousActor
 	contType := r.Header.Get("Content-Type")
 	if r.Method != http.MethodPost {
-		return false, errors.MethodNotAllowedf("invalid HTTP method")
+		return author, errors.MethodNotAllowedf("invalid HTTP method")
 	}
 	if !validContentType(contType) {
-		return false, errors.UnsupportedMediaTypef("invalid object type: %s", contType)
+		return author, errors.UnsupportedMediaTypef("invalid object type: %s", contType)
 	}
 	if !validActivityCollection(r) {
-		return false, errors.BadRequestf("invalid collection")
+		return author, errors.BadRequestf("invalid collection")
 	}
 
 	baseIRIs := make(vocab.IRIs, 0)
@@ -502,7 +503,6 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 		_ = baseIRIs.Append(act.GetID())
 	}
 
-	author := auth.AnonymousActor
 	if loaded, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
 		author = loaded
 	} else {
@@ -521,10 +521,10 @@ func (o *oni) ValidateRequest(r *http.Request) (bool, error) {
 	}
 
 	if author.Equals(auth.AnonymousActor) {
-		return false, errors.Unauthorizedf("authorized Actor is invalid")
+		return author, errors.Unauthorizedf("authorized Actor is invalid")
 	}
 
-	return true, nil
+	return author, nil
 }
 
 var (
@@ -1118,24 +1118,12 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		actor := o.oniActor(r)
 		lctx["oni"] = actor.GetLink()
 
-		author := auth.AnonymousActor
-		_, err := o.ValidateRequest(r)
+		author, err := o.ValidateRequest(r)
 		if err != nil {
 			lctx["err"] = err.Error()
 			o.Logger.WithContext(lctx).Errorf("Failed request validation")
 			return it, errors.HttpStatus(err), err
 		}
-		if stored, ok := r.Context().Value(authorizedActorCtxKey).(vocab.Actor); ok {
-			author = stored
-		}
-
-		cl := o.Client(actor, lctx)
-		processor := processing.New(
-			processing.Async,
-			processing.WithLogger(o.Logger.WithContext(lctx, lw.Ctx{"log": "processing"})),
-			processing.WithClient(cl), processing.WithStorage(o.Storage),
-			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(o.IRIHasLocalParent()),
-		)
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
@@ -1157,17 +1145,13 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 			return it, http.StatusInternalServerError, errors.BadRequestf("unable to unmarshal JSON request")
 		}
 
-		// NOTE(marius): don't bother if it's a remote Delete and unable to load the Actor from the Signature
-		if processing.IsInbox(receivedIn) && it.GetType() == vocab.DeleteType && author.Equals(auth.AnonymousActor) {
-			o.Logger.WithContext(lctx).Infof("Skipping processing Delete activity with unknown actor")
-			return it, http.StatusUnauthorized, errors.Unauthorizedf("Unable to authorize activity actor")
-		}
+		processor := processing.New(
+			processing.Async,
+			processing.WithLogger(o.Logger.WithContext(lctx, lw.Ctx{"log": "processing"})),
+			processing.WithClient(o.Client(actor, lctx)), processing.WithStorage(o.Storage),
+			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(o.IRIHasLocalParent()),
+		)
 
-		if err != nil {
-			lctx["err"] = err.Error()
-			o.Logger.WithContext(lctx).Errorf("Failed initializing the Activity processor")
-			return it, http.StatusInternalServerError, errors.Annotatef(err, "unable to initialize processor")
-		}
 		if it, err = processor.ProcessActivity(it, author, receivedIn); err != nil {
 			o.Logger.WithContext(lctx, lw.Ctx{"err": err.Error()}).Errorf("Failed processing activity")
 			return it, http.StatusBadRequest, errors.Annotatef(err, "Can't save %q activity to %s", it.GetType(), receivedIn)
