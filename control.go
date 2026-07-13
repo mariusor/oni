@@ -131,14 +131,12 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 		if prv, _ := st.LoadKey(actor.ID); prv != nil {
 			lctx["transport"] = "HTTP-Sig"
 			lctx["actor"] = actor.GetLink()
-			signer, err := s2s.New(
+			signer := s2s.New(
 				s2s.WithActor(&actor, prv),
 				s2s.WithCoveredComponents(s2s.FetchCoveredComponents...),
 				s2s.WithAlg(s2s.KeyTypePKCS),
 			)
-			if err == nil {
-				initFns = append(initFns, client.WithAuthorizationFn(signer.SignRFC9421, signer.SignDraft))
-			}
+			initFns = append(initFns, client.WithAuthorizationFn(signer.SignRFC9421, signer.SignDraft))
 		}
 	}
 	return client.New(initFns...)

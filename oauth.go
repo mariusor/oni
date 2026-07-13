@@ -165,7 +165,7 @@ func (o *oni) Authorize(w http.ResponseWriter, r *http.Request) {
 				m.client = it
 				m.state = ar.State
 			} else {
-				resp.SetError(osin.E_INVALID_REQUEST, fmt.Sprintf("Invalid client: %+s", err))
+				resp.SetError(osin.E_INVALID_REQUEST, fmt.Sprintf("Invalid client: %v", err))
 				o.redirectOrOutput(resp, w, r)
 				return
 			}
@@ -238,7 +238,7 @@ func (o *oni) Token(w http.ResponseWriter, r *http.Request) {
 	o.redirectOrOutput(resp, w, r)
 }
 
-func annotatedRsError(status int, old error, msg string, args ...interface{}) error {
+func annotatedRsError(status int, old error, msg string, args ...any) error {
 	var err error
 	switch status {
 	case http.StatusForbidden:
