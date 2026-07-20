@@ -472,7 +472,7 @@ func writeResponse(raw []byte, typ vocab.Typer, updatedAt time.Time, contentType
 }
 
 func validContentType(c string) bool {
-	if c == client.ContentTypeActivityJson || c == client.ContentTypeJsonLD {
+	if c == client.ContentTypeJsonActivity || c == client.ContentTypeJsonLD {
 		return true
 	}
 
@@ -528,7 +528,7 @@ func (o *oni) ValidateRequest(r *http.Request) (vocab.Actor, error) {
 }
 
 var (
-	applicationJsonActivity = ct.NewMediaType(client.ContentTypeActivityJson)
+	applicationJsonActivity = ct.NewMediaType(client.ContentTypeJsonActivity)
 	applicationJsonLD       = ct.NewMediaType(client.ContentTypeJsonLD)
 	applicationJson         = ct.NewMediaType("application/json")
 	fallbackHTML            = ct.NewMediaType("text/html;q=0.1")
