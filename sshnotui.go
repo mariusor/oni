@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 )
 
 func wishTUI(s ssh.Session, _ *oni) *tea.Program {

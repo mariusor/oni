@@ -1,29 +1,29 @@
 module git.sr.ht/~mariusor/oni
 
-go 1.25.9
+go 1.25.12
 
 require (
 	charm.land/bubbletea/v2 v2.0.8
-	charm.land/wish/v2 v2.0.1
+	charm.land/ssh v0.4.1
+	charm.land/wish/v2 v2.0.2
 	git.sr.ht/~mariusor/cache v0.0.0-20260516133819-5427e9c3067b
 	git.sr.ht/~mariusor/lw v0.0.0-20250325163623-1639f3fb0e0d
 	git.sr.ht/~mariusor/mask v0.0.0-20250114195353-98705a6977b7
-	git.sr.ht/~mariusor/motley v0.0.0-20260701134918-ee840538d90b
-	git.sr.ht/~mariusor/servermux v0.0.0-20260310142041-b6c9be7e7820
+	git.sr.ht/~mariusor/motley v0.0.0-20260730182519-ef7943634124
+	git.sr.ht/~mariusor/servermux v0.0.0-20260730181755-b356bceeedee
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20260506142007-654c9c8b3833
 	git.sr.ht/~mariusor/ssm v0.0.0-20260505081700-875e54c38633
-	git.sr.ht/~mariusor/storage-all v0.0.0-20260720134348-fc68655b1df2
+	git.sr.ht/~mariusor/storage-all v0.0.0-20260730171407-df9fe516b63c
 	git.sr.ht/~mariusor/wrapper v0.0.0-20260103185140-9873830de009
 	github.com/alecthomas/kong v1.15.0
-	github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.28.0
-	github.com/go-ap/activitypub v0.0.0-20260720130625-e2c76676dde7
-	github.com/go-ap/client v0.0.0-20260720131204-e2a338936cfd
+	github.com/go-ap/activitypub v0.0.0-20260730100035-a64b9d392262
+	github.com/go-ap/client v0.0.0-20260730164540-d95e618f8fd4
 	github.com/go-ap/errors v0.0.0-20260701132509-92e5e4fd6394
-	github.com/go-ap/filters v0.0.0-20260720130825-55f4e622346f
+	github.com/go-ap/filters v0.0.0-20260730164443-1e2ebeb8cf42
 	github.com/go-ap/jsonld v0.0.0-20260607140920-737b40e0ca38
-	github.com/go-ap/processing v0.0.0-20260711153455-0b1a404b5c7a
+	github.com/go-ap/processing v0.0.0-20260730181109-fa9606d86786
 	github.com/go-chi/chi/v5 v5.3.1
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -54,31 +54,32 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/keygen v0.5.4 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260720091822-7cc6674724ac // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260730003005-19049f296fa9 // indirect
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect
 	github.com/charmbracelet/x/conpty v0.2.0 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.2.2 // indirect
+	github.com/charmbracelet/x/xpty v0.1.4 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be // indirect
 	github.com/creack/pty v1.1.24 // indirect
 	github.com/dadrus/httpsig v0.9.0 // indirect
-	github.com/dgraph-io/badger/v4 v4.9.4 // indirect
+	github.com/dgraph-io/badger/v4 v4.9.5 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.2 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-ap/auth v0.0.0-20260720131932-148d55cb6dc6
-	github.com/go-ap/cache v0.0.0-20260720130756-5966f822532a // indirect
-	github.com/go-ap/storage-badger v0.0.0-20260720133651-9a77f79975eb // indirect
-	github.com/go-ap/storage-boltdb v0.0.0-20260720133541-b3b4068d37ec // indirect
-	github.com/go-ap/storage-fs v0.0.0-20260720133415-df574ee684e8 // indirect
-	github.com/go-ap/storage-pg v0.0.0-20260720133924-78f126369345 // indirect
-	github.com/go-ap/storage-sqlite v0.0.0-20260720133505-c65c4f80114e // indirect
+	github.com/go-ap/auth v0.0.0-20260730164658-94e2f18a0969
+	github.com/go-ap/cache v0.0.0-20260730100116-cf6babfea406 // indirect
+	github.com/go-ap/storage-badger v0.0.0-20260730170950-963ad898c1d4 // indirect
+	github.com/go-ap/storage-boltdb v0.0.0-20260730170924-206d14fbeeaa // indirect
+	github.com/go-ap/storage-fs v0.0.0-20260730170634-9fed06fcc21f // indirect
+	github.com/go-ap/storage-pg v0.0.0-20260730171159-b25ad4bf6bf7 // indirect
+	github.com/go-ap/storage-sqlite v0.0.0-20260730170739-1d5f73079625 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
-	github.com/go-logr/logr v1.4.3 // indirect
+	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/flatbuffers v25.12.19+incompatible // indirect
 	github.com/gorilla/css v1.0.1 // indirect
@@ -95,15 +96,16 @@ require (
 	github.com/mariusor/bubbles-tree v0.0.0-20260519151908-a3185afecf1e // indirect
 	github.com/mariusor/qstring v0.0.0-20200204164351-5a99d46de39d // indirect
 	github.com/mattn/go-colorable v0.1.15 // indirect
-	github.com/mattn/go-isatty v0.0.23 // indirect
-	github.com/mattn/go-runewidth v0.0.24 // indirect
-	github.com/mattn/go-sqlite3 v1.14.48 // indirect
+	github.com/mattn/go-isatty v0.0.24 // indirect
+	github.com/mattn/go-runewidth v0.0.27 // indirect
+	github.com/mattn/go-sqlite3 v1.14.49 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
+	github.com/pires/go-proxyproto v0.15.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
@@ -121,7 +123,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.44.0 // indirect
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	golang.org/x/crypto v0.54.0
-	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
+	golang.org/x/exp v0.0.0-20260727155853-b88d891fe743 // indirect
 	golang.org/x/image v0.43.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
@@ -129,9 +131,9 @@ require (
 	golang.org/x/text v0.40.0 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
-	modernc.org/libc v1.74.3 // indirect
+	modernc.org/libc v1.74.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.54.0 // indirect
+	modernc.org/sqlite v1.55.0 // indirect
 	quamina.net/go/quamina/v2 v2.0.2 // indirect
 )
