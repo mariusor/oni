@@ -1,11 +1,11 @@
 package oni
 
 import (
-	"bytes"
 	"context"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"net/url"
 	"strings"
 	"syscall"
@@ -16,7 +16,7 @@ import (
 	"github.com/go-ap/errors"
 	"github.com/go-ap/processing"
 	"github.com/openshift/osin"
-	"golang.org/x/term"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 type SSH struct {
@@ -351,19 +351,38 @@ type ChangePassword struct {
 	IRI vocab.IRI `arg:"" optional:"" name:"for" help:"The actor IRI to change the password for."`
 }
 
-func loadPwFromStdin(confirm bool, prompt string) ([]byte, error) {
-	fmt.Printf("%s pw: ", prompt)
-	pw1, _ := term.ReadPassword(0)
-	fmt.Println()
-	if confirm {
-		fmt.Printf("pw again: ")
-		pw2, _ := term.ReadPassword(0)
-		fmt.Println()
-		if !bytes.Equal(pw1, pw2) {
-			return nil, errors.Errorf("Passwords do not match")
-		}
+type muxReadWriter struct {
+	io.Reader
+	io.Writer
+}
+
+func (w muxReadWriter) Read(p []byte) (n int, err error) {
+	if w.Reader != nil {
+		return w.Reader.Read(p)
 	}
-	return pw1, nil
+	return 0, nil
+}
+
+func (w muxReadWriter) Write(p []byte) (n int, err error) {
+	if w.Writer != nil {
+		return w.Writer.Write(p)
+	}
+	return 0, nil
+}
+
+var _ io.Reader = muxReadWriter{}
+
+func loadPwFromStdin(rw io.ReadWriter, prompt string) ([]byte, error) {
+	term := terminal.NewTerminal(rw, prompt)
+	pw1, _ := term.ReadPassword("Password: ")
+	if len(pw1) == 0 {
+		return nil, errors.Errorf("empty password")
+	}
+	pw2, _ := term.ReadPassword(" Confirm: ")
+	if pw1 != pw2 {
+		return nil, errors.Errorf("passwords do not match")
+	}
+	return []byte(pw1), nil
 }
 
 func (c ChangePassword) Run(ctl *Control) error {
@@ -375,7 +394,9 @@ func (c ChangePassword) Run(ctl *Control) error {
 	if err != nil {
 		return err
 	}
-	pw, err := loadPwFromStdin(true, fmt.Sprintf("%s's", vocab.PreferredNameOf(actor)))
+
+	rw := muxReadWriter{Reader: ctl.in, Writer: ctl.out}
+	pw, err := loadPwFromStdin(rw, fmt.Sprintf("%s's", vocab.PreferredNameOf(actor)))
 	if err != nil {
 		return err
 	}
