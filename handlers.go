@@ -132,7 +132,7 @@ func (o *oni) setupWellKnownRoutes(m chi.Router) {
 
 type corsLogger func(string, ...any)
 
-func (c corsLogger) Printf(f string, v ...interface{}) {
+func (c corsLogger) Printf(f string, v ...any) {
 	c(f, v...)
 }
 
@@ -543,12 +543,7 @@ var (
 func checkAcceptMediaType(accepted ct.MediaType) func(check ...ct.MediaType) bool {
 	matchFn := accepted.Matches
 	return func(toCheck ...ct.MediaType) bool {
-		for _, checked := range toCheck {
-			if matchFn(checked) {
-				return true
-			}
-		}
-		return false
+		return slices.ContainsFunc(toCheck, matchFn)
 	}
 }
 
@@ -652,12 +647,7 @@ func requestMatchesETag(h http.Header, eTag string) bool {
 		return false
 	}
 
-	for _, ifNoneMatch := range noneMatchValues {
-		if ifNoneMatch == eTag {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(noneMatchValues, eTag)
 }
 
 var pushableStaticAssets = [...]string{
