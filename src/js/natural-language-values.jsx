@@ -65,6 +65,10 @@ export class NaturalLanguageValues extends LitElement {
             text-decoration: none;
             vertical-align: .01rem;
             word-break: unset;
+
+            &:focus-visible {
+                outline-style: solid;
+            }
         }
         /* This should take care of Mastodon links that have as content just the link href */
         a {
