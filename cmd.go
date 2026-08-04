@@ -496,7 +496,7 @@ func tryCreateCollection(ctl *Control, colIRI vocab.IRI, author vocab.Item) erro
 		return nil
 	}
 
-	if !items.IsCollection() {
+	if !vocab.IsCollection(items) {
 		if _, err := ctl.Storage.Save(items); err != nil {
 			ctl.Logger.Errorf("Unable to save object %s: %s", items.GetLink(), err)
 			return err

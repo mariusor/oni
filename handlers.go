@@ -341,7 +341,7 @@ func cleanupMediaObjectFromItem(it vocab.Item) (vocab.Item, error) {
 	if it == nil {
 		return it, nil
 	}
-	if it.IsCollection() {
+	if vocab.IsCollection(it) {
 		err := vocab.OnCollectionIntf(it, cleanupMediaObjectsFromCollection)
 		return it, err
 	}

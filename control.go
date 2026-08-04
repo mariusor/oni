@@ -235,7 +235,7 @@ func (c *Control) GenAccessToken(clientID, actorIdentifier string, dat interface
 		return "", errors.NotFoundf("not found")
 	}
 	var actor vocab.Item
-	if list.IsCollection() {
+	if vocab.IsCollection(list) {
 		err = vocab.OnCollectionIntf(list, func(c vocab.CollectionInterface) error {
 			f := c.Collection().First()
 			if f == nil {

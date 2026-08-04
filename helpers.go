@@ -129,7 +129,7 @@ func GenerateID(it vocab.Item, by vocab.Item) (vocab.ID, error) {
 	var id vocab.ID
 	if by != nil {
 		id = by.GetLink().AddPath("object")
-		if it.IsLink() {
+		if vocab.IsLink(it) {
 			return id, vocab.OnLink(it, func(l *vocab.Link) error {
 				l.ID = id
 				return nil
