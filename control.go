@@ -477,6 +477,7 @@ func (c *Control) AddActorWithPassword(p *vocab.Person, pw []byte, author vocab.
 		processing.WithStorage(c.Storage),
 		processing.WithIDGenerator(GenerateID),
 		processing.WithIRI(author.ID),
+		processing.SkipInboundCollectionValidation,
 	)
 	if _, err := ap.ProcessClientActivity(create, author, outbox.GetLink()); err != nil {
 		return nil, err

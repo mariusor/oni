@@ -1040,9 +1040,8 @@ func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
 
 	f.AttributedTo = accepter.GetLink()
 	accept.Actor = accepter
-	oniOutbox := vocab.Outbox.IRI(accepter)
-	_, err := p.ProcessClientActivity(accept, accepter, oniOutbox)
-	if err != nil {
+
+	if _, err := p.ProcessClientActivity(accept, accepter, vocab.Outbox.IRI(accepter)); err != nil {
 		o.Logger.WithContext(l).Errorf("Failed processing %T[%s]: %s: %+s", accept, accept.Type, accept.ID, err)
 		return err
 	}

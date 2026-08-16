@@ -13,17 +13,17 @@ require (
 	git.sr.ht/~mariusor/servermux v0.0.0-20260730181755-b356bceeedee
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20260506142007-654c9c8b3833
 	git.sr.ht/~mariusor/ssm v0.0.0-20260505081700-875e54c38633
-	git.sr.ht/~mariusor/storage-all v0.0.0-20260811145205-81c6e98094cc
+	git.sr.ht/~mariusor/storage-all v0.0.0-20260815110633-12dc8f74f77e
 	git.sr.ht/~mariusor/wrapper v0.0.0-20260103185140-9873830de009
 	github.com/alecthomas/kong v1.16.0
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.28.0
-	github.com/go-ap/activitypub v0.0.0-20260811143456-e874d5d2264f
-	github.com/go-ap/client v0.0.0-20260811144037-7278d72a74a5
+	github.com/go-ap/activitypub v0.0.0-20260815104113-332035d9625d
+	github.com/go-ap/client v0.0.0-20260815105221-ff3fba39f098
 	github.com/go-ap/errors v0.0.0-20260701132509-92e5e4fd6394
-	github.com/go-ap/filters v0.0.0-20260811143713-b24d703996ba
+	github.com/go-ap/filters v0.0.0-20260815105140-8a3b6cff7b6a
 	github.com/go-ap/jsonld v0.0.0-20260607140920-737b40e0ca38
-	github.com/go-ap/processing v0.0.0-20260811144204-601debf29e82
+	github.com/go-ap/processing v0.0.0-20260815123905-813a5eb03f2b
 	github.com/go-chi/chi/v5 v5.3.1
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -47,13 +47,13 @@ require (
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/bits-and-blooms/bitset v1.24.6 // indirect
+	github.com/bits-and-blooms/bitset v1.25.0 // indirect
 	github.com/captncraig/cors v0.0.0-20190703115713-e80254a89df1 // indirect
 	github.com/carlmjohnson/requests v0.25.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/keygen v0.5.4 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260811164956-006e29f97886 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260812204455-68fa937c71be // indirect
 	github.com/charmbracelet/x/ansi v0.11.8 // indirect
 	github.com/charmbracelet/x/conpty v0.2.0 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
@@ -67,15 +67,15 @@ require (
 	github.com/dadrus/httpsig v0.9.0 // indirect
 	github.com/dgraph-io/badger/v4 v4.9.6 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.2 // indirect
-	github.com/dunglas/httpsfv v1.1.0 // indirect
+	github.com/dunglas/httpsfv v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-ap/auth v0.0.0-20260811144108-c1614f43d394
-	github.com/go-ap/cache v0.0.0-20260811143546-9a4c231043c6 // indirect
-	github.com/go-ap/storage-badger v0.0.0-20260811144852-5c8ede446cc2 // indirect
-	github.com/go-ap/storage-boltdb v0.0.0-20260811144908-3cc123deb778 // indirect
-	github.com/go-ap/storage-fs v0.0.0-20260811144510-0d553e50b891 // indirect
-	github.com/go-ap/storage-pg v0.0.0-20260811145046-c3aa5fe59887 // indirect
-	github.com/go-ap/storage-sqlite v0.0.0-20260811144807-a62d8457a814 // indirect
+	github.com/go-ap/auth v0.0.0-20260815105352-e20dc2c10acb
+	github.com/go-ap/cache v0.0.0-20260815104900-82f51c5a155a // indirect
+	github.com/go-ap/storage-badger v0.0.0-20260815110258-a4fc9f85c962 // indirect
+	github.com/go-ap/storage-boltdb v0.0.0-20260815110339-5457dd8908c7 // indirect
+	github.com/go-ap/storage-fs v0.0.0-20260815110057-4126653a6f4c // indirect
+	github.com/go-ap/storage-pg v0.0.0-20260815110450-1824591db0ea // indirect
+	github.com/go-ap/storage-sqlite v0.0.0-20260815110158-40a3db670f57 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
@@ -122,9 +122,9 @@ require (
 	go.opentelemetry.io/otel/metric v1.45.0 // indirect
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
 	golang.org/x/crypto v0.55.0
-	golang.org/x/exp v0.0.0-20260811152304-ee035b5b010f // indirect
+	golang.org/x/exp v0.0.0-20260813180055-c1d0aacb2297 // indirect
 	golang.org/x/image v0.44.0 // indirect
-	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/term v0.45.0 // indirect
