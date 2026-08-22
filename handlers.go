@@ -1007,7 +1007,7 @@ func titleFromItem(actor vocab.Actor, m vocab.Item, r *http.Request) func() temp
 
 const MaxItems = 20
 
-func acceptFollows(o oni, f vocab.Follow, p processing.P) error {
+func acceptFollows(o oni, f vocab.Follow, p *processing.P) error {
 	var accepter vocab.Actor
 	for _, act := range o.a {
 		if toBeFollowed := f.Object.GetID(); act.ID.Equals(toBeFollowed, true) {
