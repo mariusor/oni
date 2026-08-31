@@ -892,8 +892,8 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		// NOTE(marius): this extracts the IRI corresponding to the current collection from the authorized actor
-		// and if it matches the current requested IRI, we consider the authorized actor as a-priori valid,
-		// no need for extra checks.
+		//  and if it matches the current requested IRI, we consider the authorized actor as a-priori valid,
+		//  no need for extra checks.
 		if col := whichCollection.IRI(authActor); !col.Equal(iri) {
 			colFilters = append(colFilters, filters.Authorized(authActor.ID))
 		}
