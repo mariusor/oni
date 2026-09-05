@@ -509,6 +509,7 @@ func (o *oni) ValidateRequest(r *http.Request) (vocab.Actor, error) {
 		solver := auth.Verifier(
 			auth.WithClient(o.Client(auth.AnonymousActor, lw.Ctx{"log": "keyfetch"})),
 			auth.WithStorage(o.Storage),
+			auth.WithOAuth2Storage(o.Storage),
 			auth.WithLogger(o.Logger.WithContext(lw.Ctx{"log": "auth"})),
 		)
 
@@ -752,7 +753,7 @@ func (o *oni) loadAuthorizedActor(r *http.Request, oniActor vocab.Actor) (vocab.
 	cl := o.Client(oniActor, lw.Ctx{"log": "authorized-actor"})
 	initFns := []auth.InitFn{
 		auth.WithClient(cl),
-		auth.WithStorage(o.Storage),
+		auth.WithStorage(o.Storage), auth.WithOAuth2Storage(o.Storage),
 		auth.WithLogger(o.Logger),
 	}
 
@@ -853,6 +854,8 @@ func hasPath(iri vocab.IRI) bool {
 	return false
 }
 
+var needObjectFilterCollections = vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}
+
 func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 	iri := irif(r)
 
@@ -865,7 +868,7 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 		colFilters = filters.FromValues(r.URL.Query())
 		if vocab.ValidActivityCollection(whichCollection) {
 			accepts := getRequestAcceptedContentType(r)
-			if accepts(fallbackHTML) && (vocab.CollectionPaths{vocab.Outbox, vocab.Inbox}).Contains(whichCollection) {
+			if accepts(fallbackHTML) && needObjectFilterCollections.Contains(whichCollection) {
 				obFilters := make(filters.Checks, 0)
 				obFilters = append(obFilters, filters.NotNilItem)
 				if vocab.Outbox == whichCollection {

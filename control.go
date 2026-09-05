@@ -106,14 +106,13 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 	st := c.Storage
 	l := c.Logger.WithContext(lctx)
 
-	cachePath, err := os.UserCacheDir()
-	if err != nil {
-		cachePath = os.TempDir()
-	}
-
 	ua := fmt.Sprintf("%s@%s (+%s %s)", nameOni, Version, actor.GetLink(), ProjectURL)
 	tr := http.DefaultTransport
 	if IsDev {
+		cachePath, err := os.UserCacheDir()
+		if err != nil {
+			cachePath = os.TempDir()
+		}
 		tr = cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni")))
 	}
 	if InDebugMode.Load() {
