@@ -23,7 +23,7 @@ require (
 	github.com/go-ap/errors v0.0.0-20260701132509-92e5e4fd6394
 	github.com/go-ap/filters v0.0.0-20260831130242-f116eb702ce2
 	github.com/go-ap/jsonld v0.0.0-20260607140920-737b40e0ca38
-	github.com/go-ap/processing v0.0.0-20260904095107-cd62877b17d4
+	github.com/go-ap/processing v0.0.0-20260905151925-d6997bfd0e03
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -69,7 +69,7 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.4.2 // indirect
 	github.com/dunglas/httpsfv v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-ap/auth v0.0.0-20260903141521-2470102fcbae
+	github.com/go-ap/auth v0.0.0-20260905151425-c65b146155c7
 	github.com/go-ap/cache v0.0.0-20260831124102-1153c19aa428 // indirect
 	github.com/go-ap/storage-badger v0.0.0-20260831134646-1acd44095edf // indirect
 	github.com/go-ap/storage-boltdb v0.0.0-20260831134539-6e2411d66e3e // indirect
