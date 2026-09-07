@@ -861,52 +861,49 @@ func (o *oni) ActivityPubItem(w http.ResponseWriter, r *http.Request) {
 
 	authActor, _ := o.loadAuthorizedActor(r, o.oniActor(r))
 
-	colFilters := make(filters.Checks, 0)
+	checks := make(filters.Checks, 0)
 	if vocab.ValidCollectionIRI(iri) {
 		_, whichCollection := vocab.Split(iri)
 
-		colFilters = filters.FromValues(r.URL.Query())
-		if vocab.ValidActivityCollection(whichCollection) {
-			accepts := getRequestAcceptedContentType(r)
-			if accepts(fallbackHTML) && needObjectFilterCollections.Contains(whichCollection) {
-				obFilters := make(filters.Checks, 0)
-				obFilters = append(obFilters, filters.NotNilItem)
+		checks = filters.FromValues(r.URL.Query())
+		if accepts := getRequestAcceptedContentType(r); accepts(fallbackHTML) {
+			switch {
+			case needObjectFilterCollections.Contains(whichCollection):
+				obChecks := make(filters.Checks, 0)
+				obChecks = append(obChecks, filters.NotNilItem)
 				if vocab.Outbox == whichCollection {
-					obFilters = append(obFilters, filters.NilInReplyTo)
+					obChecks = append(obChecks, filters.NilInReplyTo)
 				}
-				if filtersCreateUpdate(colFilters) && !iriHasObjectTypeFilter(iri) {
-					obFilters = append(obFilters, filters.HasType(validObjectTypes...))
+				if filtersCreateUpdate(checks) && !iriHasObjectTypeFilter(iri) {
+					obChecks = append(obChecks, filters.HasType(validObjectTypes...))
 				}
-				colFilters = append(colFilters, filters.HasType(vocab.CreateType, vocab.UpdateType, vocab.AnnounceType))
-				if len(obFilters) > 0 {
-					colFilters = append(colFilters, filters.Object(obFilters...))
+				checks = append(checks, filters.HasType(vocab.CreateType, vocab.UpdateType, vocab.AnnounceType))
+				if len(obChecks) > 0 {
+					checks = append(checks, filters.Object(obChecks...))
 				}
-				colFilters = append(colFilters, filters.Actor(filters.NotNilItem))
+				checks = append(checks, filters.Actor(filters.NotNilItem))
+			case vocab.Replies == whichCollection:
+				checks = append(checks, filters.NilInReplyTo)
+				checks = append(checks, filters.HasType(validObjectTypes...))
 			}
-		}
-		if vocab.ValidObjectCollection(whichCollection) {
-			colFilters = append(colFilters, filters.NilInReplyTo)
-			colFilters = append(colFilters, filters.HasType(validObjectTypes...))
 		}
 
 		if u, err := iri.URL(); err == nil {
 			if !u.Query().Has("maxItems") {
-				colFilters = append(colFilters, filters.WithMaxCount(MaxItems))
+				checks = append(checks, filters.WithMaxCount(MaxItems))
 			}
 		}
 		// NOTE(marius): this extracts the IRI corresponding to the current collection from the authorized actor
 		//  and if it matches the current requested IRI, we consider the authorized actor as a-priori valid,
 		//  no need for extra checks.
 		if col := whichCollection.IRI(authActor); !col.Equal(iri) {
-			colFilters = append(colFilters, filters.Authorized(authActor.ID))
+			checks = append(checks, filters.Authorized(authActor.ID))
 		}
 	} else {
-		if authActor.ID != "" {
-			colFilters = append(colFilters, filters.Authorized(authActor.ID))
-		}
+		checks = append(checks, filters.Authorized(authActor.ID))
 	}
 
-	it, err := loadItemFromStorage(o.Storage, iri, colFilters...)
+	it, err := loadItemFromStorage(o.Storage, iri, checks...)
 	if err != nil {
 		if errors.IsNotFound(err) && len(o.a) == 1 && !hasPath(iri) {
 			if a := o.a[0]; !a.ID.Equals(iri, true) {
