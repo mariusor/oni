@@ -119,12 +119,13 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 		tr = debug.New(debug.WithTransport(tr), debug.WithPath(c.StoragePath))
 	}
 
+	ll := l.WithContext(lctx)
 	baseClient := Client(tr)
 	initFns := []client.OptionFn{
 		client.WithUserAgent(ua),
 		client.WithHTTPClient(baseClient),
 		client.SkipTLSValidation(IsDev),
-		client.WithLogger(l.WithContext(lctx)),
+		client.WithLogger(ll),
 	}
 	if !vocab.PublicNS.Equals(actor.ID, true) {
 		if prv, _ := st.LoadKey(actor.ID); prv != nil {
@@ -134,6 +135,8 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 				s2s.WithActor(&actor, prv),
 				s2s.WithCoveredComponents(s2s.FetchCoveredComponents...),
 				s2s.WithAlg(s2s.KeyTypePKCS),
+				s2s.WithLogger(ll),
+				s2s.WithNonce(func() (string, error) { return "", nil }),
 			)
 			initFns = append(initFns, client.WithAuthorizationFn(signer.SignRFC9421, signer.SignDraft))
 		}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"runtime/debug"
 	"slices"
@@ -13,7 +14,7 @@ import (
 	"github.com/alecthomas/kong"
 )
 
-var DefaultLogLevel = lw.WarnLevel
+var DefaultLogLevel = slog.LevelWarn
 
 func main() {
 	if build, ok := debug.ReadBuildInfo(); ok && oni.Version == "HEAD" && build.Main.Version != "(devel)" {
@@ -45,7 +46,7 @@ func main() {
 	// verbosity = 1 means show info messages
 	// verbosity = 2 debug messages
 	// verbosity = 3 tracing messages
-	ll := lw.Dev(lw.SetLevel(DefaultLogLevel - lw.Level(oni.CLI.Verbose)))
+	ll := lw.Dev(lw.SetLevel(DefaultLogLevel - slog.Level(4*oni.CLI.Verbose)))
 	ctl, err := oni.SetupCtl(oni.CLI.Path, ll, storageType)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
