@@ -106,14 +106,19 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 	st := c.Storage
 	l := c.Logger.WithContext(lctx)
 
-	ua := fmt.Sprintf("%s@%s (+%s %s)", nameOni, Version, actor.GetLink(), ProjectURL)
+	host := strings.TrimPrefix(string(actor.ID), "https://")
+	if au, err := actor.GetLink().URL(); err == nil {
+		host = au.Host
+	}
+
+	ua := fmt.Sprintf("%s@%s (+%s %s)", AppName, Version, host, ProjectURL)
 	tr := http.DefaultTransport
 	if IsDev {
 		cachePath, err := os.UserCacheDir()
 		if err != nil {
 			cachePath = os.TempDir()
 		}
-		tr = cache.Private(tr, cache.FS(filepath.Join(cachePath, "oni")))
+		tr = cache.Private(tr, cache.FS(filepath.Join(cachePath, AppName, host)))
 	}
 	if InDebugMode.Load() {
 		tr = debug.New(debug.WithTransport(tr), debug.WithPath(c.StoragePath))
