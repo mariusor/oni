@@ -24,6 +24,7 @@ func main() {
 
 func buildJS(prod bool) error {
 	opt := api.BuildOptions{
+		Color:       api.ColorIfTerminal,
 		LogLevel:    api.LogLevelDebug,
 		EntryPoints: []string{"src/js/main.jsx"},
 		Bundle:      true,
@@ -54,6 +55,7 @@ func buildJS(prod bool) error {
 
 func buildCSS(prod bool) error {
 	opt := api.BuildOptions{
+		Color:       api.ColorIfTerminal,
 		LogLevel:    api.LogLevelDebug,
 		EntryPoints: []string{"src/css/main.css"},
 		Bundle:      true,
