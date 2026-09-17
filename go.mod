@@ -7,23 +7,23 @@ require (
 	charm.land/ssh v0.4.3
 	charm.land/wish/v2 v2.0.4
 	git.sr.ht/~mariusor/cache v0.0.0-20260911160635-3a397efbb885
-	git.sr.ht/~mariusor/lw v0.0.0-20260910124117-d80376e1433e
+	git.sr.ht/~mariusor/lw v0.0.0-20260917101519-2e0b081e156c
 	git.sr.ht/~mariusor/mask v0.0.0-20250114195353-98705a6977b7
-	git.sr.ht/~mariusor/motley v0.0.0-20260817113911-c37ff7152433
+	git.sr.ht/~mariusor/motley v0.0.0-20260917104612-9263845d8ce7
 	git.sr.ht/~mariusor/servermux v0.0.0-20260730181755-b356bceeedee
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20260506142007-654c9c8b3833
 	git.sr.ht/~mariusor/ssm v0.0.0-20260505081700-875e54c38633
-	git.sr.ht/~mariusor/storage-all v0.0.0-20260912150008-9a276e82ec97
+	git.sr.ht/~mariusor/storage-all v0.0.0-20260917095023-52f95138d21d
 	git.sr.ht/~mariusor/wrapper v0.0.0-20260103185140-9873830de009
 	github.com/alecthomas/kong v1.16.1
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.28.2
-	github.com/go-ap/activitypub v0.0.0-20260912133130-64400e895afb
-	github.com/go-ap/client v0.0.0-20260912143512-3b253ad1ec1f
+	github.com/go-ap/activitypub v0.0.0-20260916121612-da08652e08dc
+	github.com/go-ap/client v0.0.0-20260916122137-21c2c7868ee9
 	github.com/go-ap/errors v0.0.0-20260701132509-92e5e4fd6394
-	github.com/go-ap/filters v0.0.0-20260912142558-3ae29b7e3a3a
+	github.com/go-ap/filters v0.0.0-20260916121847-9aca56ef40a8
 	github.com/go-ap/jsonld v0.0.0-20260607140920-737b40e0ca38
-	github.com/go-ap/processing v0.0.0-20260912144509-7a4f18ac60b1
+	github.com/go-ap/processing v0.0.0-20260916125148-3f6b7f14615e
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -67,15 +67,15 @@ require (
 	github.com/dadrus/httpsig v0.9.0 // indirect
 	github.com/dgraph-io/badger/v4 v4.9.6 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.4.2 // indirect
-	github.com/dunglas/httpsfv v1.1.1 // indirect
+	github.com/dunglas/httpsfv v1.1.2 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-ap/auth v0.0.0-20260912144444-325c013fc6f6
-	github.com/go-ap/cache v0.0.0-20260912142504-87ce83a0c318 // indirect
-	github.com/go-ap/storage-badger v0.0.0-20260912145754-9215b269a243 // indirect
-	github.com/go-ap/storage-boltdb v0.0.0-20260912145204-d72d789033e1 // indirect
-	github.com/go-ap/storage-fs v0.0.0-20260912144746-ae1c86972b21 // indirect
-	github.com/go-ap/storage-pg v0.0.0-20260912145726-4ec5425fe73d // indirect
-	github.com/go-ap/storage-sqlite v0.0.0-20260912145538-e2dcab10b8a1 // indirect
+	github.com/go-ap/auth v0.0.0-20260916123042-d8d54e0d96be
+	github.com/go-ap/cache v0.0.0-20260916121817-c59ee0716a68 // indirect
+	github.com/go-ap/storage-badger v0.0.0-20260917093916-aa2a2e83083d // indirect
+	github.com/go-ap/storage-boltdb v0.0.0-20260917093540-55deb39f1ac9 // indirect
+	github.com/go-ap/storage-fs v0.0.0-20260917093102-cfd6343846ec // indirect
+	github.com/go-ap/storage-pg v0.0.0-20260917094200-1788f2be9fc7 // indirect
+	github.com/go-ap/storage-sqlite v0.0.0-20260917093702-6d41bbb83020 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
@@ -104,6 +104,7 @@ require (
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pires/go-proxyproto v0.15.0 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/samber/slog-http v1.12.1 // indirect
@@ -112,7 +113,7 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/writeas/go-nodeinfo v1.0.0
 	github.com/writeas/go-webfinger v1.1.0 // indirect
-	github.com/xo/terminfo v1.0.0 // indirect
+	github.com/xo/terminfo v1.2.0 // indirect
 	go.etcd.io/bbolt v1.5.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.46.0 // indirect
@@ -128,9 +129,9 @@ require (
 	golang.org/x/text v0.42.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
-	modernc.org/libc v1.75.7 // indirect
+	modernc.org/libc v1.76.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
-	modernc.org/sqlite v1.58.0 // indirect
-	quamina.net/go/quamina/v2 v2.0.2 // indirect
+	modernc.org/sqlite v1.59.0 // indirect
+	quamina.net/go/quamina/v2 v2.0.3 // indirect
 )
