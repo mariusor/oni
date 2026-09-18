@@ -652,8 +652,8 @@ func HandleOAuthClientRegistration(o *oni) func(w http.ResponseWriter, r *http.R
 			Generator:         self.GetLink(),
 			Published:         now,
 			Updated:           now,
-			PreferredUsername: vocab.DefaultNaturalLanguage(name),
-			Summary:           vocab.DefaultNaturalLanguage("Generated actor"),
+			PreferredUsername: vocab.DefaultLangValue(name),
+			Summary:           vocab.DefaultLangValue("Generated actor"),
 			URL:               urls,
 		}
 		if regReq.LogoURI != "" {

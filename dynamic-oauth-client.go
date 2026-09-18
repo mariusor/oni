@@ -134,8 +134,8 @@ func GeneratedClientActor(author vocab.Item, clientRequest *ClientMetadata) *voc
 		Audience:          vocab.ItemCollection{vocab.PublicNS},
 		Published:         now,
 		Updated:           now,
-		PreferredUsername: vocab.DefaultNaturalLanguage(clientRequest.ClientName),
-		Summary:           vocab.DefaultNaturalLanguage("Generated actor"),
+		PreferredUsername: vocab.DefaultLangValue(clientRequest.ClientName),
+		Summary:           vocab.DefaultLangValue("Generated actor"),
 		URL:               urls,
 	}
 	if !vocab.IsNil(author) {
