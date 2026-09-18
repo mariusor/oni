@@ -148,7 +148,7 @@ export class ActivityPubActor extends ActivityPubObject {
                 return html`<img loading="lazy" src="${url}" alt="icon"/>`;
             }
             const cont = new ActivityPubItem(icon).getContent().at(0);
-            if (cont?.length > 0) {
+            if (cont?.length > 0 && cont?.startsWith('<svg')) {
                 try {
                     return unsafeHTML(cont);
                 } catch (e) {
