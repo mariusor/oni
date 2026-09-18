@@ -114,10 +114,10 @@ export class OniCollectionLinks extends LitElement {
         this.buildCollections();
         if (!(this.collections?.length > 0)) return nothing;
 
-        const json = document.querySelector('oni-collection script')?.text;
+        const doc = document.querySelector('oni-collection script')?.text;
         return map(this.collections,(iri) => {
-            if (isCurrentPage(iri) && json) {
-                return html`<li class="active"><oni-collection-link it=${json}></oni-collection-link></li>`;
+            if (isCurrentPage(iri) && doc) {
+                return html`<li class="active"><oni-collection-link it=${doc}></oni-collection-link></li>`;
             }
             return until(
                     fetchActivityPubIRI(iri)
