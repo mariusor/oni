@@ -3,7 +3,7 @@ module git.sr.ht/~mariusor/oni
 go 1.26.8
 
 require (
-	charm.land/bubbletea/v2 v2.0.9
+	charm.land/bubbletea/v2 v2.0.10
 	charm.land/ssh v0.4.3
 	charm.land/wish/v2 v2.0.4
 	git.sr.ht/~mariusor/cache v0.0.0-20260911160635-3a397efbb885
@@ -13,17 +13,17 @@ require (
 	git.sr.ht/~mariusor/servermux v0.0.0-20260730181755-b356bceeedee
 	git.sr.ht/~mariusor/sizefmt v0.0.0-20260506142007-654c9c8b3833
 	git.sr.ht/~mariusor/ssm v0.0.0-20260505081700-875e54c38633
-	git.sr.ht/~mariusor/storage-all v0.0.0-20260921151938-ba5cef33766a
+	git.sr.ht/~mariusor/storage-all v0.0.0-20260925155028-59864c7cd27d
 	git.sr.ht/~mariusor/wrapper v0.0.0-20260103185140-9873830de009
 	github.com/alecthomas/kong v1.16.1
 	github.com/elnormous/contenttype v1.0.4
 	github.com/evanw/esbuild v0.28.2
-	github.com/go-ap/activitypub v0.0.0-20260918155011-090adf72874a
-	github.com/go-ap/client v0.0.0-20260921115125-25a486bb6497
+	github.com/go-ap/activitypub v0.0.0-20260924153054-b014c6959a68
+	github.com/go-ap/client v0.0.0-20260925153857-09cd6d11cd9e
 	github.com/go-ap/errors v0.0.0-20260701132509-92e5e4fd6394
-	github.com/go-ap/filters v0.0.0-20260921115004-5ba28ceac6b8
+	github.com/go-ap/filters v0.0.0-20260925153747-c771950b56d6
 	github.com/go-ap/jsonld v0.0.0-20260607140920-737b40e0ca38
-	github.com/go-ap/processing v0.0.0-20260921115403-0680032e0775
+	github.com/go-ap/processing v0.0.0-20260925154041-ccb8c2bc70ce
 	github.com/go-chi/chi/v5 v5.3.2
 	github.com/go-chi/cors v1.2.2
 	github.com/google/uuid v1.6.0
@@ -53,7 +53,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/keygen v0.5.4 // indirect
-	github.com/charmbracelet/ultraviolet v0.0.0-20260910203606-6c9e17dc7a16 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260922123528-4e49372c11f9 // indirect
 	github.com/charmbracelet/x/ansi v0.11.8 // indirect
 	github.com/charmbracelet/x/conpty v0.2.0 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
@@ -69,13 +69,13 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.4.2 // indirect
 	github.com/dunglas/httpsfv v1.1.2 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
-	github.com/go-ap/auth v0.0.0-20260921115339-289d60428705
-	github.com/go-ap/cache v0.0.0-20260918155104-22e0a7768d84 // indirect
-	github.com/go-ap/storage-badger v0.0.0-20260921115656-4d2c9799c200 // indirect
-	github.com/go-ap/storage-boltdb v0.0.0-20260921151637-6cefebe99ea4 // indirect
-	github.com/go-ap/storage-fs v0.0.0-20260921115515-99f55820d52d // indirect
-	github.com/go-ap/storage-pg v0.0.0-20260921115857-66e38195928e // indirect
-	github.com/go-ap/storage-sqlite v0.0.0-20260921115545-d849bdcb4b66 // indirect
+	github.com/go-ap/auth v0.0.0-20260925154002-2a0604e357a0
+	github.com/go-ap/cache v0.0.0-20260925153643-9e8b52f19978 // indirect
+	github.com/go-ap/storage-badger v0.0.0-20260925154619-3b10c232f3d7 // indirect
+	github.com/go-ap/storage-boltdb v0.0.0-20260925154520-337f54589c56 // indirect
+	github.com/go-ap/storage-fs v0.0.0-20260925154327-9807683c2426 // indirect
+	github.com/go-ap/storage-pg v0.0.0-20260925154824-8d2a6bd9c821 // indirect
+	github.com/go-ap/storage-sqlite v0.0.0-20260925154441-05dddda902d9 // indirect
 	github.com/go-fed/httpsig v1.1.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.1 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
@@ -89,7 +89,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jdkato/prose v1.2.1 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
-	github.com/klauspost/compress v1.20.0 // indirect
+	github.com/klauspost/compress v1.20.1 // indirect
 	github.com/leporo/sqlf v1.4.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.1 // indirect
 	github.com/mariusor/bubbles-tree v0.0.0-20260804092904-048968f1532d // indirect
@@ -129,7 +129,7 @@ require (
 	golang.org/x/text v0.42.0 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.7 // indirect
-	modernc.org/libc v1.77.0 // indirect
+	modernc.org/libc v1.77.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 	modernc.org/sqlite v1.59.0 // indirect
