@@ -298,6 +298,8 @@ const (
 	// GoActivityPub client library. We're using the http://127.0.0.1 explicitly to allow for wildcard ports
 	// from the client side. See: https://www.rfc-editor.org/rfc/rfc8252#section-7.3
 	DefaultBOXAppRedirectURL = "http://127.0.0.1"
+
+	OAuthOOBRedirectURN = "urn:ietf:wg:oauth:2.0:oob:auto"
 )
 
 func backURL(r *http.Request) template.URL {

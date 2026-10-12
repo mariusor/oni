@@ -1135,7 +1135,6 @@ func (o *oni) ProcessActivity() processing.ActivityHandlerFn {
 		}
 
 		processor := processing.New(
-			processing.Async,
 			processing.WithLogger(o.Logger.WithContext(lctx, lw.Ctx{"log": "processing"})),
 			processing.WithClient(o.Client(actor, lctx)), processing.WithStorage(o.Storage),
 			processing.WithIDGenerator(GenerateID), processing.WithLocalIRIChecker(o.IRIHasLocalParent()),

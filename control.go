@@ -437,7 +437,7 @@ func (c *Control) CreateOAuth2ClientAlways(i vocab.IRI, pw string) error {
 
 	id := string(uriRootIRI(u))
 	uris := append(
-		[]string{id, DefaultOniAppRedirectURL, DefaultBOXAppRedirectURL, processing.OAuthOOBRedirectURN},
+		[]string{id, DefaultOniAppRedirectURL, DefaultBOXAppRedirectURL, OAuthOOBRedirectURN},
 		strings.Split(ExtraRedirectURL, "\n")...,
 	)
 	cl := &osin.DefaultClient{
@@ -484,7 +484,7 @@ func (c *Control) AddActorWithPassword(p *vocab.Person, pw []byte, author vocab.
 		processing.WithStorage(c.Storage),
 		processing.WithIDGenerator(GenerateID),
 		processing.WithIRI(author.ID),
-		processing.SkipInboundCollectionValidation,
+		processing.WithInboundCollectionValidationSkip,
 	)
 	if _, err := ap.ProcessClientActivity(create, author, outbox.GetLink()); err != nil {
 		return nil, err
