@@ -139,9 +139,7 @@ func (c *Control) Client(actor vocab.Actor, lctx lw.Ctx) *client.C {
 			signer := s2s.New(
 				s2s.WithActor(&actor, prv),
 				s2s.WithCoveredComponents(s2s.FetchCoveredComponents...),
-				s2s.WithAlg(s2s.KeyTypePKCS),
 				s2s.WithLogger(ll),
-				s2s.WithNonce(func() (string, error) { return "", nil }),
 			)
 			initFns = append(initFns, client.WithAuthorizationFn(signer.SignRFC9421, signer.SignDraft))
 		}
