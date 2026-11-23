@@ -521,7 +521,7 @@ func tryCreateCollection(ctl *Control, colIRI vocab.IRI, author vocab.Item) erro
 	collection.OrderedItems = nil
 	_, err = ctl.Storage.Save(collection)
 	if err != nil {
-		ctl.Logger.Errorf("Unable to save collection with updated totalItems", err)
+		ctl.Logger.Errorf("Unable to save collection with updated totalItems: %v", err)
 		return err
 	}
 
